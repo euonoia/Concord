@@ -1,6 +1,7 @@
-<?
+<?php
+
 use Illuminate\Support\Facades\Route;
 
-Route::get('/ping', function () {
+Route::get('/cloudflare/ping', function () {
     return response()->json(['status' => 'ok']);
 });
