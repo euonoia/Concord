@@ -2,12 +2,12 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: laravel_app
+      dockerfile: dockerfile.dev
+    container_name: concord_app
     ports:
-      - "8000:80"  
+      - "8000:80"
     env_file:
-      - .env       
+      - .env
     volumes:
       - .:/var/www/html
     depends_on:
@@ -15,8 +15,8 @@ services:
 
   db:
     image: postgres:15
-    container_name: Concord
-    restart: always
+    container_name: concord_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:-laravel}
       POSTGRES_USER: ${DB_USERNAME:-laravel}
