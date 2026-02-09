@@ -5,43 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [
     laravel({
-      input: [
-        'resources/css/app.css',
-        'resources/js/app.js',
-      ],
-      refresh: [
-        'resources/views/**/*.blade.php',
-        'routes/**/*.php',
-        'app/**/*.php',
-      ],
+      input: ['resources/css/app.css', 'resources/js/app.js'],
+      refresh: true,
     }),
-
-    tailwindcss(),
+    tailwindcss(), 
   ],
-
-  server: {
-    host: '0.0.0.0',    
-    port: 5173,
-    strictPort: true,
-
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 5173,
-    },
-
-    watch: {
-      usePolling: true,   
-      interval: 300,
-      ignored: [
-        '**/storage/**',
-        '**/vendor/**',
-        '**/node_modules/**',
-      ],
-    },
-  },
-
-  build: {
-    sourcemap: true,     
-  },
 })
