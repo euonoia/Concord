@@ -41,4 +41,5 @@ RUN chown -R www-data:www-data /var/www/html \
 RUN rm -f public/hot
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+
+CMD php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground
