@@ -32,6 +32,8 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
+    
+RUN rm -f public/hot
 
 EXPOSE 80
 CMD ["apache2-foreground"]
