@@ -11,7 +11,7 @@ RUN rm -f tailwind.config.js postcss.config.js postcss.config.cjs
 RUN npm run build
 
 # STAGE 2: PHP & Apache
-FROM php:8.2-apache
+FROM php:8.4-apache
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y \
