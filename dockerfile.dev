@@ -1,8 +1,8 @@
-
-FROM php:8.5-apache
+FROM php:8.4-apache
 
 WORKDIR /var/www/html
 
+# 1. Added libmariadb-dev for MySQL support
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,35 +11,36 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    libpq-dev \
+    libmariadb-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && docker-php-ext-install \
-        pdo_pgsql \
+        pdo_mysql \
         mbstring \
         exif \
         pcntl \
         bcmath \
         gd \
     && rm -rf /var/lib/apt/lists/*
+
 RUN a2enmod rewrite headers
 
+
+RUN mkdir -p storage/app/certs
 
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-
 COPY . .
 
 
-RUN composer install
+RUN composer install --no-interaction --optimize-autoloader
 
 
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
-
 
 CMD ["apache2-foreground"]
