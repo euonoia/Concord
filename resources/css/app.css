@@ -1,13 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@import "tailwindcss";
+
+/* 2. Custom theme variables (if using v4 @theme block) */
 @import './theme.css';
 
-/* Global */
-@import "./base/**/*.css";
 
-/* Components */
-@import "./components/**/*.css";
+@import "./base/index.css"; 
 
-/* Pages */
-@import "./pages/**/*.css";
+/* 4. Components */
+@import "./components/index.css";
+
+/* 5. Pages */
+@import "./pages/index.css";
+
