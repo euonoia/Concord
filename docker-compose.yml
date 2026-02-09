@@ -12,6 +12,19 @@ services:
       - .:/var/www/html
     depends_on:
       - db
+      - vite
+
+  vite:
+    image: node:20-alpine
+    container_name: concord_vite
+    working_dir: /var/www/html
+    command: npm run dev -- --host
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - NODE_ENV=development
 
   db:
     image: postgres:15
