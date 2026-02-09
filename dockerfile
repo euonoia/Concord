@@ -1,21 +1,16 @@
-# --- Stage 1: Build Frontend Assets (Node) ---
+# STAGE 1: Node.js to build assets
 FROM node:20 AS asset-builder
 WORKDIR /app
-
-# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
-
-# Copy source code and build assets
 COPY . .
 RUN npm run build
 
-# --- Stage 2: Production Server (PHP/Apache) ---
+# STAGE 2: PHP & Apache
 FROM php:8.2-apache
-
 WORKDIR /var/www/html
 
-# Install System Dependencies
+# Install PHP extensions
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd \
@@ -28,17 +23,16 @@ RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy the entire application
+# Copy App code
 COPY . .
 
-# CRITICAL STEP: Copy the compiled assets from Stage 1
-# This moves the built CSS/JS into the final production image
+# COPY THE BUILT ASSETS FROM STAGE 1
 COPY --from=asset-builder /app/public/build ./public/build
 
-# Install PHP dependencies
+# Install Dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set Permissions
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 

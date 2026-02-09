@@ -1,7 +1,5 @@
-vendor
 node_modules
-npm-debug.log
-Dockerfile
-.dockerignore
+vendor
+public/build
 .git
 .env
