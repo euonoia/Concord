@@ -58,10 +58,11 @@ return [
                 'strict' => true,
                 'engine' => null,
 
-                'options' => extension_loaded('pdo_mysql') ? [
-                    PDO::MYSQL_ATTR_SSL_CA => base_path('storage/certs/tidb-ca.pem'),
+               'options' => extension_loaded('pdo_mysql') ? [
+                    PDO::MYSQL_ATTR_SSL_CA => '/etc/secrets/isrgrootx1.pem',
                     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
                 ] : [],
+
             ],
 
 
