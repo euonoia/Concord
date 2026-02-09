@@ -43,33 +43,27 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
-       'mysql' => [
-            'driver' => 'mysql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '4000'), 
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (defined('Pdo\Mysql::ATTR_SSL_CA') ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) 
-                    => env('MYSQL_ATTR_SSL_CA') 
-                        ? (str_starts_with(env('MYSQL_ATTR_SSL_CA'), '/') 
-                            ? env('MYSQL_ATTR_SSL_CA') // It's already absolute (Render)
-                            : realpath(base_path(env('MYSQL_ATTR_SSL_CA')))) // It's relative (Local)
-                        : null,
-                
-                (defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) 
-                    => false,
-            ]) : [],
-        ],
+            'mysql' => [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT', 4000),
+                'database' => env('DB_DATABASE'),
+                'username' => env('DB_USERNAME'),
+                'password' => env('DB_PASSWORD'),
+
+                'unix_socket' => '',
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => true,
+                'engine' => null,
+
+                'options' => extension_loaded('pdo_mysql') ? [
+                    PDO::MYSQL_ATTR_SSL_CA => base_path('storage/certs/tidb-ca.pem'),
+                    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+                ] : [],
+            ],
+
 
         'mariadb' => [
             'driver' => 'mariadb',
