@@ -43,27 +43,44 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
-            'mysql' => [
-                'driver' => 'mysql',
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT', 4000),
-                'database' => env('DB_DATABASE'),
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+          'mysql' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '4000'),
+            'database' => env('DB_DATABASE', 'test'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (defined('Pdo\Mysql::ATTR_SSL_CA') ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) 
+                    => (function() {
+                        $rawCert = env('MYSQL_ATTR_SSL_CA');
+                        
+                       
+                        if ($rawCert && str_starts_with($rawCert, '/') && file_exists($rawCert)) {
+                            return $rawCert;
+                        }
 
-                'unix_socket' => '',
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix' => '',
-                'strict' => true,
-                'engine' => null,
+                        
+                        if ($rawCert && str_contains($rawCert, 'BEGIN CERTIFICATE')) {
+                            $path = storage_path('app/certs/tidb_ca.pem');
+                            if (!file_exists($path) || file_get_contents($path) !== $rawCert) {
+                                file_put_contents($path, $rawCert);
+                            }
+                            return $path;
+                        }
 
-               'options' => extension_loaded('pdo_mysql') ? [
-                    PDO::MYSQL_ATTR_SSL_CA => '/etc/secrets/isrgrootx1.pem',
-                    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
-                ] : [],
-
-            ],
+                       
+                        return $rawCert ? base_path($rawCert) : null;
+                    })(),
+                (defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT) 
+                    => false,
+            ]) : [],
+        ],
 
 
         'mariadb' => [
