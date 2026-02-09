@@ -1,8 +1,29 @@
+# 1️⃣ Build stage
+FROM node:20-alpine AS build
+
+WORKDIR /var/www/html
+
+# Copy package files
+COPY package*.json ./
+COPY vite.config.js ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
+
+# Install npm dependencies
+RUN npm install
+
+# Copy all resources for Vite build
+COPY resources/ ./resources/
+
+# Build production assets
+RUN npm run build
+
+# 2️⃣ Production stage
 FROM php:8.5-apache
 
 WORKDIR /var/www/html
 
-# Install system dependencies
+# Install PHP dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,8 +33,6 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
-    nodejs \
-    npm \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
@@ -24,18 +43,16 @@ RUN apt-get update && apt-get install -y \
         gd \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache modules
 RUN a2enmod rewrite headers
-
-# Point Apache to public folder
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' \
     /etc/apache2/sites-available/000-default.conf
 
-# Copy composer binary
+# Copy PHP app
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Copy application code
 COPY . .
+
+# Copy built assets from Node stage
+COPY --from=build /var/www/html/public/build ./public/build
 
 # Install PHP dependencies
 RUN composer install \
@@ -44,15 +61,10 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader
 
-# Install Node dependencies and build Vite assets
-RUN npm install
-RUN npm run build
-
 # Fix permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
-# Start Apache
 CMD ["apache2-foreground"]
