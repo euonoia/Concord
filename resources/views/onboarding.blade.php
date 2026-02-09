@@ -7,9 +7,9 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?fam ily=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-    @vite(['resources/css/pages/onboarding.css'])
-@endif
+    @if (file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif  
 
 </head>
 <body>
