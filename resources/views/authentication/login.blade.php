@@ -1,8 +1,8 @@
-<form action="/login" method="POST">
+<form action="{{ route('portal.login.submit') }}" method="POST">
     @csrf
     <div>
         <label>Email:</label>
-        <input type="email" name="email" required>
+        <input type="email" name="email" value="{{ old('email') }}" required>
     </div>
     <div>
         <label>Password:</label>
