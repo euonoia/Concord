@@ -37,6 +37,11 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 | HR2             | Programmer      | John Macdarren Benigno |
 | HR2             | System Analyst  | Mario Jr Candiasan |
 | HR2             | Document Specialist | Angelo Generalao |
+| HR3             | Leader          | Dhel Mark A. Gomez |
+| HR3             | Programmer      | Andrea Jane Villanos |
+| HR3             | Programmer      | Dexter Garais |
+| HR3             | System Analyst  | Yllen May Jane C Cortez |
+| HR3             | Document Specialist | Luis Jhovan B. Misola |
 | HR4             | Leader          | John Mackie Acuña |
 | HR4             | Programmer      | Jayson Pinggoy |
 | HR4             | Programmer      | Stanley Asorio |
