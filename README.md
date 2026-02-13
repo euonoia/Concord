@@ -69,4 +69,4 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 - Authentication: Laravel Breeze  
 - Other: Composer, NPM, TailwindCSS  
 
-
+EOL
