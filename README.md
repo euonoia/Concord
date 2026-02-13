@@ -51,6 +51,14 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 | Logistics2           | System Analyst  | Enguerra Yves |
 | Logistics2           | Document Specialist | Robles Mark Joseph |
 
+| Financials Module Team | Role / Position | Name |
+|------------------------|----------------|------|
+| Financials            | Leader          | Mary Joy Turado |
+| Financials            | Programmer      | Junnel Molenilla |
+| Financials            | Programmer      | John Paul Paran |
+| Financials            | System Analyst  | Reynan Peralta |
+| Financials            | Document Specialist | Jemarieangel Calixtro |
+
 ---
 
 ## Subsystems & Descriptions
