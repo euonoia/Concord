@@ -1,4 +1,3 @@
-cat <<EOL > README.md
 # Hospital Management System (HMS) – School Project
 
 ## Project Overview
@@ -69,4 +68,4 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 - Authentication: Laravel Breeze  
 - Other: Composer, NPM, TailwindCSS  
 
-EOL
+
