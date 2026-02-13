@@ -17,13 +17,20 @@
 <form action="{{ route('portal.login.submit') }}" method="POST">
     @csrf
     
+    @if($errors->has('login'))
+        <div style="color: red; margin-bottom: 10px; font-size: 0.875rem;">
+            {{ $errors->first('login') }}
+        </div>
+    @endif
+
     <div>
-        <label for="email">Email Address:</label>
-        <input type="email" 
-               id="email" 
-               name="email" 
-               value="{{ old('email') }}" 
-               placeholder="name@hospital.com"
+        <label for="login">Email or Patient Code:</label>
+        <input type="text" 
+               id="login" 
+               name="login" 
+               value="{{ old('login') }}" 
+               placeholder="Enter email or PAT-XXXXX"
+               style="display: block; width: 100%; margin-top: 5px;"
                required 
                autofocus>
     </div>
@@ -36,20 +43,23 @@
                id="password" 
                name="password" 
                placeholder="••••••••"
+               style="display: block; width: 100%; margin-top: 5px;"
                required>
     </div>
 
     <br>
 
     <div class="form-options">
-        <label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" name="remember"> Remember Me
         </label>
     </div>
 
     <br>
 
-    <button type="submit">Sign In to Portal</button>
+    <button type="submit" style="width: 100%; padding: 10px; cursor: pointer;">
+        Sign In to Portal
+    </button>
 </form>
 
 <p>

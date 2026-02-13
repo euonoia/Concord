@@ -35,31 +35,50 @@ class AuthController extends Controller
         return redirect()->route('patient.dashboard');
     }
 
-    public function login(Request $request)
-        {
-            $credentials = $request->validate([
-                'email' => ['required', 'email'],
-                'password' => ['required'],
-            ]);
+  public function login(Request $request)
+{
+    // 1. Validate the input as a generic 'login' string
+    $request->validate([
+        'login'    => ['required', 'string'],
+        'password' => ['required'],
+    ]);
 
-            if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password'], 'is_active' => 1])) {
-                
-                /** @var \App\Models\User $user */
-                $user = Auth::user(); 
-                
-                $request->session()->regenerate();
+    // 2. Determine if the input is an email or a username
+    // filter_var returns the email if valid, or false if it's just a string
+    $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-              
-                $user->update([
-                    'last_login_at' => now(),
-                    'last_login_ip' => $request->ip(),
-                ]);
+    // 3. Prepare credentials with the robust 'is_active' check
+    $credentials = [
+        $loginType   => $request->login,
+        'password'   => $request->password,
+        'is_active'  => 1, // Only allow active users
+        'deleted_at' => null, // Ensure they aren't soft-deleted
+    ];
 
-                return $this->redirectByUserRole($user);
-            }
+    $remember = $request->has('remember');
 
-            return back()->withErrors(['email' => 'Invalid credentials.']);
-        }
+    // 4. Attempt login
+    if (Auth::attempt($credentials, $remember)) {
+        $request->session()->regenerate();
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        
+        // Audit log update
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ]);
+
+        // Use our robust redirection logic
+        return $this->redirectByUserRole($user);
+    }
+
+    // 5. If failed, return with input so they don't have to re-type the username
+    return back()->withErrors([
+        'login' => 'The provided credentials do not match our records or account is inactive.',
+    ])->withInput($request->only('login'));
+}
 
     /**
      * Logic to send users to their specific subsystem
