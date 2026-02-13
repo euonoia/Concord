@@ -14,7 +14,7 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 
 | Core Module Team | Role / Position | Name |
 |-----------------|----------------|------|
-| Core1           | Leader          | John Christopher V. Atinado |
+| Core1           | Leader/programmer | John Christopher V. Atinado |
 | Core1           | Programmer      | Justin Ansilig |
 | Core1           | Programmer      | Milchor Buctot |
 | Core1           | System Analyst  | Carl Vincent Pintucan |
@@ -32,17 +32,17 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 | HR1             | Programmer      | Vincent James Sasi |
 | HR1             | System Analyst  | Erica Ablaza |
 | HR1             | Document Specialist | Lorie Rivero |
-| HR2             | Leader          | Ken Española |
+| HR2             | Leader/programmer | Ken Española |
 | HR2             | Programmer      | TJ Balansag |
 | HR2             | Programmer      | John Macdarren Benigno |
 | HR2             | System Analyst  | Mario Jr Candiasan |
 | HR2             | Document Specialist | Angelo Generalao |
-| HR3             | Leader          | Dhel Mark A. Gomez |
+| HR3             | Leader/programmer | Dhel Mark A. Gomez |
 | HR3             | Programmer      | Andrea Jane Villanos |
 | HR3             | Programmer      | Dexter Garais |
 | HR3             | System Analyst  | Yllen May Jane C Cortez |
 | HR3             | Document Specialist | Luis Jhovan B. Misola |
-| HR4             | Leader          | John Mackie Acuña |
+| HR4             | Leader/programmer | John Mackie Acuña |
 | HR4             | Programmer      | Jayson Pinggoy |
 | HR4             | Programmer      | Stanley Asorio |
 | HR4             | System Analyst  | Christian Astillo |
@@ -58,7 +58,7 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 
 | Financials Module Team | Role / Position | Name |
 |------------------------|----------------|------|
-| Financials            | Leader          | Mary Joy Turado |
+| Financials            |Leader/programmer | Mary Joy Turado |
 | Financials            | Programmer      | Junnel Molenilla |
 | Financials            | Programmer      | John Paul Paran |
 | Financials            | System Analyst  | Reynan Peralta |
