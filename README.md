@@ -24,7 +24,6 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 | Core2           | Programmer      | John Dominic Castro |
 | Core2           | System Analyst  | Carl Laurence Gaddi |
 | Core2           | Document Specialist | Ruby Ann Largo |
-| Core2           | Member          | Francis |
 
 | HR Module Team | Role / Position | Name |
 |-----------------|----------------|------|
