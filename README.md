@@ -19,7 +19,7 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 | Core1           | Programmer      | Milchor Buctot |
 | Core1           | System Analyst  | Carl Vincent Pintucan |
 | Core1           | Document Specialist | Den Rell Dave John Silva |
-| Core2           | Leader          | Jhon Marwin Batis |
+| Core2           | Leader / programmer         | Jhon Marwin Batis |
 | Core2           | Programmer      | John Phaul Baytamo |
 | Core2           | Programmer      | John Dominic Castro |
 | Core2           | System Analyst  | Carl Laurence Gaddi |
