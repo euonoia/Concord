@@ -27,7 +27,7 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 
 | HR Module Team | Role / Position | Name |
 |-----------------|----------------|------|
-| HR1             | Leader          | Francis Caibigan |
+| HR1             | Leader/programmer | Francis Caibigan |
 | HR1             | Programmer      | Axel Casamingo |
 | HR1             | Programmer      | Vincent James Sasi |
 | HR1             | System Analyst  | Erica Ablaza |
