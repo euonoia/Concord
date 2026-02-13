@@ -9,16 +9,11 @@ Route::get('/', function () {
     return view('onboarding');
 });
 
-Route::get('/login', function () {
-    return view('authentication.login');
-})->name('login')->middleware('guest');
-
-
 Route::resource('tasks', TaskController::class);
 
+
+// --- Public Portal Routes ---
 Route::prefix('portal')->group(function () {
-    
-    // 1. Show Login View
     Route::get('/', function () {
         return view('authentication.login');
     })->name('portal.home');
@@ -27,51 +22,45 @@ Route::prefix('portal')->group(function () {
         return view('authentication.login');
     })->name('portal.login');
 
-    // 2. Show Register View
     Route::get('/register', function () {
         return view('authentication.register');
     })->name('portal.register');
 
-    // 3. Logic Processes
     Route::post('/login', [AuthController::class, 'login'])->name('portal.login.submit');
     Route::post('/register', [AuthController::class, 'store'])->name('portal.register.submit');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('portal.logout');
 });
 
-// 4. Protected Core Routes (The "Inside" of the App)
-Route::middleware(['auth'])->prefix('core')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('core.dashboard');
-    })->name('dashboard');
-});
+// --- Protected Subsystem Routes ---
+Route::middleware(['auth'])->group(function () {
 
-// --- Employee/Staff Routes ---
-Route::prefix('staff')->group(function () {
-    
-   
-    Route::get('/', function () {
-        return redirect()->route('staff.login');
+    // 1. CORE / CLINICAL (Doctors, Nurses, Admin)
+    Route::prefix('core')->group(function () {
+        Route::get('/dashboard', function () { return view('core.dashboard'); })->name('core.dashboard');
+        // Add clinical routes here
     });
 
-  
-    Route::get('/login', [EmployeeAuthController::class, 'showLogin'])->name('staff.login');
+    // 2. HR SUBSYSTEM
+    Route::prefix('hr')->group(function () {
+        Route::get('/dashboard', function () { return view('hr.dashboard'); })->name('hr.dashboard');
+        // Add payroll, staff management here
+    });
 
-  
-    Route::get('/register', function () {
-        return view('authentication.employee_register');
-    })->name('staff.register');
+    // 3. LOGISTICS SUBSYSTEM
+    Route::prefix('logistics')->group(function () {
+        Route::get('/dashboard', function () { return view('logistics.dashboard'); })->name('logistics.dashboard');
+        // Add inventory, procurement here
+    });
 
-   
-    Route::post('/login', [EmployeeAuthController::class, 'login'])->name('staff.login.submit');
-    Route::post('/register', [EmployeeAuthController::class, 'store'])->name('staff.register.submit');
-    Route::post('/logout', [EmployeeAuthController::class, 'destroy'])->name('staff.logout');
-    
-});
-Route::middleware(['auth:employee'])->group(function () {
-    
-    Route::get('/hr/dashboard', function () {
-       
-        return view('hr.dashboard'); 
-    })->name('hr.dashboard');
+    // 4. FINANCIALS SUBSYSTEM
+    Route::prefix('financials')->group(function () {
+        Route::get('/dashboard', function () { return view('financials.dashboard'); })->name('finance.dashboard');
+        // Add billing, accounting here
+    });
 
+    // 5. PATIENT PORTAL
+    Route::prefix('patient')->group(function () {
+        Route::get('/dashboard', function () { return view('patient.dashboard'); })->name('patient.portal');
+        // Add lab results, appointments here
+    });
 });

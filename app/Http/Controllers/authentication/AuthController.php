@@ -1,71 +1,87 @@
 <?php
-
-namespace App\Http\Controllers\authentication;
+namespace App\Http\Controllers\Authentication;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash; // Required for password encryption
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
     /**
-     * Handle user registration (Patient)
+     * Registration is usually only for Patients in a Hospital System.
+     * Staff are usually created by an Admin/HR.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'username' => 'required|string|max:50|unique:users',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed', // Requires a password_confirmation field in your form
-            'patient_code' => 'required|unique:users,patient_code',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        // 1. Create the Patient User
         $user = User::create([
+            'username' => $validated['username'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']), 
-            'patient_code' => $validated['patient_code'],
-            'status' => 'active',
+            'password' => Hash::make($validated['password']),
+            'user_type' => 'patient',           // Default for self-reg
+            'role_slug' => 'patient_standard',  // Default role
+            'is_active' => true,
         ]);
 
-        // 2. Log the user in immediately
         Auth::login($user);
-
-        // 3. Redirect to the dashboard
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        return redirect()->route('patient.dashboard');
     }
 
-    /**
-     * Handle user login
-     */
     public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        {
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+            if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password'], 'is_active' => 1])) {
+                
+                /** @var \App\Models\User $user */
+                $user = Auth::user(); 
+                
+                $request->session()->regenerate();
 
-            return redirect()->intended('core/dashboard');
+              
+                $user->update([
+                    'last_login_at' => now(),
+                    'last_login_ip' => $request->ip(),
+                ]);
+
+                return $this->redirectByUserRole($user);
+            }
+
+            return back()->withErrors(['email' => 'Invalid credentials.']);
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ]);
+    /**
+     * Logic to send users to their specific subsystem
+     */
+    protected function redirectByUserRole($user)
+    {
+        return match ($user->role_slug) {
+            'hr_admin', 'hr_employee'           => redirect()->route('hr.dashboard'),
+            'logistics_admin', 'logistics_employee' => redirect()->route('logistics.dashboard'),
+            'finance_admin', 'finance_employee' => redirect()->route('finance.dashboard'),
+            'core_admin', 'core_employee'       => redirect()->route('core.dashboard'),
+            'sys_super_admin'                   => redirect()->route('admin.dashboard'),
+            'patient_standard', 'patient_guardian' => redirect()->route('patient.portal'),
+            default => redirect('/'),
+        };
     }
 
-    /**
-     * Handle user logout
-     */
     public function destroy(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect()->route('portal.login');
     }
 }
