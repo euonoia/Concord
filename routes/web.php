@@ -3,6 +3,9 @@ use App\Http\Controllers\authentication\AuthController;
 use App\Http\Middleware\RedirectIfGuest;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    return view('onboarding');
+});
 // --- Public Portal Routes ---
 Route::prefix('portal')->group(function () {
     Route::get('/', function () { return view('authentication.login'); })->name('portal.home');
