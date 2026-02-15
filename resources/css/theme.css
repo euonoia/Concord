@@ -131,7 +131,7 @@ a:hover {
 .bg-highlight {
     background-color: var(--highlight);
     color: var(--text-dark);
-}
+}a
 
 .rounded-sm { border-radius: var(--radius-sm); }
 .rounded-md { border-radius: var(--radius-md); }
