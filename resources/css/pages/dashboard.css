@@ -1,0 +1,331 @@
+/* =========================================================
+   DASHBOARD-SCOPED THEME VARIABLES
+   Only active when <body class="dashboard">
+   ========================================================= */
+body.dashboard {
+    --primary: #1B3C53;
+    --primary-hover: #234C6A;
+    --accent: #456882;
+    --highlight: #D2C1B6;
+    --bg: #f7f8fa;
+    --sidebar-bg: #ffffff;
+    --text-dark: #1B3C53;
+    --text-light: #6b7280;
+
+    font-family: "Inter", Arial, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    display: flex;
+    color: var(--text-dark);
+    height: 100vh;
+}
+
+/* Scope global behavior */
+.dashboard * { box-sizing: border-box; transition: all 0.3s ease; }
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+.dashboard .sidebar {
+    width: 240px;
+    background: var(--sidebar-bg); /* Now solid white */
+    color: var(--primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px 0;
+    position: fixed;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Higher z-index to stay on top */
+    transition: width 0.3s ease;
+    border-right: 1px solid #e5e7eb; /* Adds definition to white bg */
+}
+
+.dashboard .sidebar.collapsed { width: 80px; }
+
+.dashboard .sidebar.collapsed .logo-text,
+.dashboard .sidebar.collapsed nav a span { 
+    display: none; 
+}
+
+.dashboard .sidebar .logo {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard .sidebar .logo img {
+    width: 60px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    margin-bottom: 8px;
+}
+
+.dashboard .logo-text {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--highlight);
+    opacity: 1;
+}
+
+.dashboard .collapsed .logo-text { opacity: 0; visibility: hidden; }
+
+.dashboard .sidebar nav {
+    width: 100%;
+    display: flex;            
+    flex-direction: column;   
+    align-items: stretch;     
+}
+.dashboard .sidebar nav a {
+    display: flex;            
+    align-items: center;
+    gap: 15px;             
+    padding: 15px 25px;     
+    width: 100%;              
+    color: var(--primary);
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.dashboard .sidebar nav a:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.dashboard .sidebar nav a.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.dashboard .sidebar nav a i {
+    font-size: 20px;
+    min-width: 25px; 
+    text-align: center;
+}
+.dashboard .collapsed nav a span { opacity: 0; visibility: hidden; }
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+.dashboard .topbar {
+    display: none;
+    background: var(--primary);
+    color: #fff;
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 200;
+}
+
+.dashboard .menu-toggle {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.dashboard .topbar .title {
+    font-weight: 600;
+    color: #fff;
+    font-size: 18px;
+}
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+.dashboard .main {
+    margin-left: 240px; /* Space for the fixed sidebar */
+    padding: 40px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+.dashboard .sidebar.collapsed ~ .main { 
+    margin-left: 80px; 
+}
+
+.dashboard .main-inner {
+    max-width: 1000px;
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.dashboard .header {
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.dashboard .header h2 {
+    margin: 0;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.dashboard .header p {
+    color: var(--text-light);
+    margin-top: 6px;
+    font-size: 15px;
+}
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+.dashboard form {
+    background: var(--bg);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.dashboard select,
+.dashboard textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.dashboard button {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dashboard button:hover { background: var(--primary-hover); }
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+.dashboard table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.dashboard th,
+.dashboard td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+}
+
+.dashboard th {
+    background: var(--bg);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.dashboard tr:hover { background: #f9fafb; }
+
+/* =========================================================
+   STATUS + COMPONENTS
+   ========================================================= */
+.dashboard .status-pending { color: #f59e0b; font-weight: bold; }
+.dashboard .status-approved { color: #16a34a; font-weight: bold; }
+.dashboard .status-rejected { color: #dc2626; font-weight: bold; }
+.dashboard .status-closed { color: #6b7280; font-weight: bold; }
+
+.dashboard .enroll-btn {
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dashboard .enroll-btn:hover { background: var(--primary-hover); }
+
+.dashboard .message {
+    padding: 10px;
+    background: #22c55e;
+    color: #fff;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* =========================================================
+   GRID + CARDS
+   ========================================================= */
+.dashboard .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.dashboard .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border-top: 4px solid var(--accent);
+    transition: all 0.2s ease;
+}
+
+.dashboard .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-top-color: var(--primary-hover);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 1024px) {
+    .dashboard .main { padding: 25px; }
+}
+
+@media (max-width: 768px) {
+    .dashboard .sidebar { 
+        transform: translateX(-100%); 
+        width: 240px; /* Don't collapse on mobile, just hide */
+    }
+    
+    .dashboard .sidebar.show { 
+        transform: translateX(0); 
+    }
+
+    .dashboard .main {
+        margin-left: 0 !important; /* Remove margin so content fills screen */
+        padding-top: 80px; /* Space for the topbar */
+    }
+
+    .dashboard .topbar { 
+        display: flex; 
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard .header h2 { font-size: 20px; }
+}
