@@ -14,27 +14,41 @@ class AuthController extends Controller
      * Registration is usually only for Patients in a Hospital System.
      * Staff are usually created by an Admin/HR.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'username' => 'required|string|max:50|unique:users',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-        ]);
+   public function store(Request $request)
+{
+    // 1. Validate the incoming request
+    $validated = $request->validate([
+        'username'  => 'required|string|max:50|unique:users',
+        'email'     => 'required|email|unique:users,email',
+        'password'  => 'required|min:8|confirmed',
+        'role_slug' => 'required|string|in:hr_employee,logistics_employee,finance_employee,core_employee,patient_standard,patient_guardian', 
+    ]);
 
-        $user = User::create([
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'user_type' => 'patient',           // Default for self-reg
-            'role_slug' => 'patient_standard',  // Default role
-            'is_active' => true,
-        ]);
+    // 2. Robust Type Detection
+    // Maps roles to the consolidated 'staff' or 'patient' types
+    $userType = match (true) {
+        str_contains($validated['role_slug'], 'employee') => 'staff',
+        str_contains($validated['role_slug'], 'patient')  => 'patient',
+        default                                           => 'patient',
+    };
 
-        Auth::login($user);
-        return redirect()->route('patient.dashboard');
-    }
+    // 3. Create the User
+    $user = User::create([
+        'username'  => $validated['username'],
+        'email'     => $validated['email'],
+        'password'  => Hash::make($validated['password']),
+        'user_type' => $userType, // Will be 'staff' or 'patient'
+        'role_slug' => $validated['role_slug'], 
+        'is_active' => true,
+        'uuid'   => (string) \Illuminate\Support\Str::uuid(),
+    ]);
 
+    // 4. Authenticate
+    Auth::login($user);
+
+    // 5. Redirect based on your existing match logic
+    return $this->redirectByUserRole($user);
+}
   public function login(Request $request)
 {
     // 1. Validate the input as a generic 'login' string
