@@ -157,12 +157,13 @@
                 <p>Deliver compassionate patient care in a supportive environment.</p>
             </div>
 
+        <a href="{{ route('careers.residency') }}" class="text-decoration-none text-dark">
             <div class="career-card">
                 <i class="bi bi-clipboard2-pulse"></i>
                 <h4>Residency & Fellowship</h4>
-                <p>Work alongside experienced physicians using modern medical technologies.</p>
+                <p>Apply for our 2026-2027 clinical tracks. Advance your specialization with elite mentorship and research opportunities.</p>
             </div>
-
+        </a>
             <div class="career-card">
                 <i class="bi bi-journal-text"></i>
                 <h4>Internship</h4>
