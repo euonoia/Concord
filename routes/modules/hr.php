@@ -6,5 +6,4 @@ Route::get('/dashboard', function () {
     return view('hr.dashboard'); 
 })->name('hr.dashboard');
 
-// Competencies CRUD
 Route::resource('competencies', CompetencyController::class);

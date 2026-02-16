@@ -1,9 +1,17 @@
 
 .residency-recruitment .hero-gradient {
-    background: linear-gradient(135deg, var(--primary-base) 0%, var(--primary-dark) 100%);
-    color: #ffffff;
-    padding: var(--space-3xl) 0;
-    margin-top: -1px; /* Prevents tiny gaps from navbar */
+    /* Overlay + Background Image */
+    background: linear-gradient(
+        rgba(27, 60, 83, 0.85), /* --primary-base with 85% opacity */
+        rgba(18, 43, 59, 0.9)   /* --primary-dark with 90% opacity */
+    ), 
+    url('../hospitaal.jpg'); 
+    
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 120px 0;
+    color: white;
 }
 
 .residency-recruitment .hero-gradient h1 {
