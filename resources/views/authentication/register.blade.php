@@ -48,7 +48,7 @@
                     <option value="" disabled selected>Select your role</option>
                     
                     <optgroup label="Patient Portal">
-                        <option value="patient_standard" {{ old('role_slug') == 'patient_standard' ? 'selected' : '' }}>Standard Patient</option>
+                        <option value="patient" {{ old('role_slug') == 'patient' ? 'selected' : '' }}> Patient</option>
                         <option value="patient_guardian" {{ old('role_slug') == 'patient_guardian' ? 'selected' : '' }}>Patient Guardian</option>
                     </optgroup>
 
