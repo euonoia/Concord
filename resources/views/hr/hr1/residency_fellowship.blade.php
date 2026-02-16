@@ -4,8 +4,8 @@
 <header class="hero-gradient">
     <div class="container text-center">
         <span class="badge bg-info mb-3 text-uppercase px-3 py-2">Now Hiring: 2026-2027 Cohort</span>
-        <h1 class="display-3 fw-bold mb-4">Shape the Future of <br>Modern Medicine</h1>
-        <p class="lead mb-5 opacity-75 mx-auto" style="max-width: 700px;">
+        <h1 class="display-3 fw-bold mb-4 text-white">Shape the Future of <br>Modern Medicine</h1>
+        <p class="lead mb-5 opacity-75 mx-auto text-white" style="max-width: 700px;">
             We don't just train doctors and nurses; we cultivate clinical leaders. Join a legacy of excellence with access to the nation's most advanced medical technology.
         </p>
         <div class="d-flex justify-content-center gap-3">
