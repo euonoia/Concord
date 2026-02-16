@@ -24,11 +24,12 @@ Route::prefix('portal')->group(function () {
 // --- Protected Subsystem Routes ---
 Route::middleware([RedirectIfGuest::class])->group(function () {
 
+
+    Route::prefix('admin')->group(base_path('routes/modules/admin.php'));
+
     Route::prefix('core')->group(base_path('routes/modules/core.php'));
     Route::prefix('hr')->group(base_path('routes/modules/hr.php'));
     Route::prefix('logistics')->group(base_path('routes/modules/logistics.php'));
     Route::prefix('financials')->group(base_path('routes/modules/financials.php'));
     Route::prefix('patient')->group(base_path('routes/modules/patients.php'));
-
-
 });

@@ -1,0 +1,113 @@
+/* resources/css/pages/admin.css */
+
+/* ---------- Layout Structure ---------- */
+.admin-dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg);
+}
+
+.admin-sidebar {
+    width: 260px;
+    background-color: var(--primary-base);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.admin-main {
+    flex: 1;
+    margin-left: 260px; /* Same as sidebar width */
+    padding: var(--space-2xl);
+}
+
+/* ---------- Sidebar Elements ---------- */
+.admin-sidebar .brand-section {
+    padding: var(--space-xl);
+    text-align: center;
+    border-bottom: 1px solid var(--primary-dark);
+}
+
+.admin-sidebar .nav-link {
+    color: var(--neutral-300);
+    padding: var(--space-md) var(--space-xl);
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+    border-radius: 0;
+    font-weight: 500;
+}
+
+.admin-sidebar .nav-link i {
+    font-size: 1.2rem;
+    margin-right: var(--space-md);
+}
+
+.admin-sidebar .nav-link:hover {
+    color: #ffffff;
+    background-color: var(--primary-dark);
+    text-decoration: none;
+}
+
+.admin-sidebar .nav-link.active {
+    color: #ffffff;
+    background-color: var(--accent-base);
+    border-left: 4px solid var(--highlight);
+}
+
+/* ---------- Dashboard Components ---------- */
+.admin-stat-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--neutral-200);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.admin-stat-card .icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-md);
+}
+
+.admin-table-container {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--neutral-200);
+}
+
+.admin-table thead th {
+    background-color: var(--neutral-100);
+    color: var(--neutral-700);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    border: none;
+}
+
+/* ---------- Utility Overrides ---------- */
+.btn-admin-logout {
+    margin: var(--space-xl);
+    background-color: var(--danger);
+    color: white;
+    border: none;
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+}

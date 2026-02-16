@@ -14,38 +14,37 @@ class AuthController extends Controller
      * Registration is usually only for Patients in a Hospital System.
      * Staff are usually created by an Admin/HR.
      */
-   public function store(Request $request)
+  public function store(Request $request)
 {
     $validated = $request->validate([
         'username'  => 'required|string|max:50|unique:users',
         'email'     => 'required|email|unique:users,email',
         'password'  => 'required|min:8|confirmed',
-        'role_slug' => 'required|string|in:hr_employee,logistics_employee,finance_employee,core_employee,patient,patient_guardian', 
+        'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_employee,patient,patient_guardian',
     ]);
 
+    // Determine user type based on role_slug
     $userType = match (true) {
-        str_contains($validated['role_slug'], 'employee') => 'staff',
+        str_contains($validated['role_slug'], 'employee') || str_contains($validated['role_slug'], 'admin') => 'staff',
         str_contains($validated['role_slug'], 'patient')  => 'patient',
         default                                           => 'patient',
     };
-
 
     $user = User::create([
         'username'  => $validated['username'],
         'email'     => $validated['email'],
         'password'  => Hash::make($validated['password']),
-        'user_type' => $userType, 
-        'role_slug' => $validated['role_slug'], 
+        'user_type' => $userType,
+        'role_slug' => $validated['role_slug'],
         'is_active' => true,
-        'uuid'   => (string) \Illuminate\Support\Str::uuid(),
+        'uuid'      => (string) \Illuminate\Support\Str::uuid(),
     ]);
 
-  
     Auth::login($user);
 
-    
     return $this->redirectByUserRole($user);
 }
+
   public function login(Request $request)
 {
 
@@ -91,18 +90,21 @@ class AuthController extends Controller
 }
 
   
-    protected function redirectByUserRole($user)
-    {
-        return match ($user->role_slug) {
-            'hr_admin', 'hr_employee'           => redirect()->route('hr.dashboard'),
-            'logistics_admin', 'logistics_employee' => redirect()->route('logistics.dashboard'),
-            'finance_admin', 'finance_employee' => redirect()->route('finance.dashboard'),
-            'core_admin', 'core_employee'       => redirect()->route('core.dashboard'),
-            'sys_super_admin'                   => redirect()->route('admin.dashboard'),
-            'patient', 'patient_guardian' => redirect()->route('patients.dashboard'),
-            default => redirect('/'),
-        };
-    }
+   protected function redirectByUserRole($user)
+{
+    return match ($user->role_slug) {
+       
+        'hr_admin'                          => redirect()->route('admin.dashboard'),
+        
+        'hr_employee'                       => redirect()->route('hr.dashboard'),
+        'logistics_admin', 'logistics_employee' => redirect()->route('logistics.dashboard'),
+        'finance_admin', 'finance_employee' => redirect()->route('finance.dashboard'),
+        'core_admin', 'core_employee'       => redirect()->route('core.dashboard'),
+        'sys_super_admin'                   => redirect()->route('admin.dashboard'),
+        'patient', 'patient_guardian'       => redirect()->route('patients.dashboard'),
+        default                             => redirect('/'),
+    };
+}
 
     public function destroy(Request $request)
     {
