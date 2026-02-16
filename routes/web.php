@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('onboarding');
 });
+Route::get('/careers/residency-fellowship', function () {
+    return view('hr.hr1.residency_fellowship');
+})->name('careers.residency');
 
 Route::prefix('portal')->group(function () {
     Route::get('/', function () { return view('authentication.login'); })->name('portal.home');
@@ -26,5 +29,6 @@ Route::middleware([RedirectIfGuest::class])->group(function () {
     Route::prefix('logistics')->group(base_path('routes/modules/logistics.php'));
     Route::prefix('financials')->group(base_path('routes/modules/financials.php'));
     Route::prefix('patient')->group(base_path('routes/modules/patients.php'));
+
 
 });

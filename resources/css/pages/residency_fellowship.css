@@ -1,0 +1,58 @@
+
+.residency-recruitment .hero-gradient {
+    background: linear-gradient(135deg, var(--primary-base) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
+    padding: var(--space-3xl) 0;
+    margin-top: -1px; /* Prevents tiny gaps from navbar */
+}
+
+.residency-recruitment .hero-gradient h1 {
+    color: #ffffff; /* Override default heading color for dark bg */
+}
+
+.residency-recruitment .btn-recruit {
+    padding: var(--space-md) var(--space-xl);
+    font-weight: 600;
+    border-radius: var(--radius-xl);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.residency-recruitment .btn-recruit:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.residency-recruitment .benefit-icon {
+    height: 60px;
+    width: 60px;
+    background-color: var(--accent-light);
+    color: var(--accent-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-md);
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.residency-recruitment .card {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--neutral-200);
+    transition: all 0.3s ease;
+}
+
+.residency-recruitment .hover-shadow:hover {
+    box-shadow: var(--shadow-xl) !important;
+    border-color: var(--primary-light);
+}
+
+.residency-recruitment .navbar {
+    border-bottom: 1px solid var(--neutral-200);
+    padding: var(--space-md) 0;
+}
+
+.residency-recruitment .badge-info {
+    background-color: var(--info);
+    color: white;
+}
