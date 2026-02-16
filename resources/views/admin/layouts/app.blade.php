@@ -26,12 +26,12 @@
     </div>
 
     <nav>
-        <a href="{{ route('hr.dashboard') }}" class="{{ request()->routeIs('hr2.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+       <a href="{{ route('competencies.index') }}" class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
             <i class="bi bi-lightbulb"></i>
             <span>Competencies</span>
         </a>

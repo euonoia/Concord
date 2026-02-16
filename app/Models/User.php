@@ -12,7 +12,7 @@ class User extends Authenticatable
 
    
     protected $keyType = 'int';
-    public $incrementing = false; 
+    public $incrementing = true; 
 
     protected $fillable = [
         'uuid',
