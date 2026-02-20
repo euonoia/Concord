@@ -27,7 +27,7 @@
     </select>
     
     <input type="text" name="duration" placeholder="Duration (e.g., 2 hours)">
-    
+      
     <button type="submit">Add Module</button>
 </form>
 
