@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers\Hr;
+namespace App\Http\Controllers\Hr\hr2;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hr\hr2\Competency;
