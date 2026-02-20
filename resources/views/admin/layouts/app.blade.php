@@ -46,7 +46,7 @@
             <span>Training</span>
         </a>
         
-        <a href="{{ route('hr.dashboard') }}"
+        <a href="{{ route('succession.index') }}"
             class="{{ request()->routeIs('hr2.succession') ? 'active' : '' }}">
                 <i class="bi bi-tree"></i>
                 <span>Succession</span>
