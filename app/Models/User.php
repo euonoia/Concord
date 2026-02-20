@@ -5,12 +5,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Employee;
 class User extends Authenticatable
 {
     use Notifiable, SoftDeletes;
 
-   
     protected $keyType = 'int';
     public $incrementing = true; 
 
@@ -37,7 +36,14 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-    
+    /**
+     * Relationship to the Employee Profile
+     */
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id', 'id');
+    }
+
     protected static function boot()
     {
         parent::boot();
