@@ -1,8 +1,8 @@
 <?php
-namespace App\Http\Controllers\Hr\hr2;
+namespace App\Http\Controllers\admin\Hr\hr2;
 
 use App\Http\Controllers\Controller;
-use App\Models\Hr\hr2\Competency;
+use App\Models\admin\Hr\hr2\Competency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
