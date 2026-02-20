@@ -52,7 +52,7 @@
                 <span>Succession</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+        <a href="{{ route('ess.index') }}">
             <i class="bi bi-pencil-square"></i>
             <span>ESS</span>
         </a>

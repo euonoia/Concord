@@ -60,7 +60,7 @@ class AdminSuccessionController extends Controller
 
         $validated = $request->validate([
             'position_id'      => 'required|exists:succession_positions_hr2,branch_id',
-            'employee_id'      => 'required|exists:users,id', // Update table name to your actual employee/user table
+            'employee_id'      => 'required|exists:users,id',
             'readiness'        => 'required|in:ready,not_ready',
             'effective_at'     => 'required|date',
             'development_plan' => 'nullable|string',

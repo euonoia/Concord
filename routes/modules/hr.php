@@ -4,7 +4,7 @@ use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
 use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
 use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
 use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
-
+use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 Route::get('/dashboard', function () { 
     return view('hr.dashboard'); 
 })->name('hr.dashboard');
@@ -19,4 +19,8 @@ Route::prefix('succession')->group(function () {
     Route::post('/candidate', [AdminSuccessionController::class, 'storeCandidate'])->name('succession.candidate.store');
     Route::delete('/position/{id}', [AdminSuccessionController::class, 'destroyPosition'])->name('succession.position.destroy');
     Route::delete('/candidate/{id}', [AdminSuccessionController::class, 'destroyCandidate'])->name('succession.candidate.destroy');
+});
+Route::prefix('ess')->group(function () {
+    Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
+    Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
 });
