@@ -36,7 +36,7 @@
             <span>Competencies</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+        <a href="{{ route('learning.index') }}">
             <i class="bi bi-book"></i>
             <span>Learning</span>
         </a>
