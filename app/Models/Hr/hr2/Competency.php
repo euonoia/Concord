@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace App\Models\Hr\hr2;
 
 use Illuminate\Database\Eloquent\Model;
 

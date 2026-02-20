@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Hr;
 
 use App\Http\Controllers\Controller;
-use App\Models\Competency;
+use App\Models\Hr\hr2\Competency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,7 +24,7 @@ class CompetencyController extends Controller
         $this->authorizeHrAdmin();
         
         $competencies = Competency::all(); 
-        return view('admin.competencies', compact('competencies'));
+        return view('admin.hr2.competencies', compact('competencies'));
     }
 
     // Save a new one
@@ -39,7 +39,7 @@ class CompetencyController extends Controller
             'description'      => 'nullable|string',
         ]);
 
-        \App\Models\Competency::create($validated);
+     Competency::create($validated);
 
         return redirect()->back()->with('success', 'New competency added successfully!');
     }
