@@ -31,7 +31,7 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+        <a href="{{ route('user.competencies.index') }}">
             <i class="bi bi-lightbulb"></i>
             <span>Competencies</span>
         </a>
