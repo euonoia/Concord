@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models\Hr2;
+namespace App\Models\user\Hr\hr2;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\hr2\CourseEnroll;
+use App\Models\user\Hr\hr2\CourseEnroll;
 
 class Course extends Model
 {

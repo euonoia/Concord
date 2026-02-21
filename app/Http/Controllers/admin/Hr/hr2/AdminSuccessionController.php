@@ -27,7 +27,7 @@ class AdminSuccessionController extends Controller
             ->orderBy('branch_id')
             ->get();
             
-        // Assuming your employee data is in the User model or a specific Employee model
+      
         $employees = Employee::orderBy('first_name')->get();
 
         return view('admin.hr2.succession', compact('positions', 'candidates', 'employees'));
@@ -42,7 +42,7 @@ class AdminSuccessionController extends Controller
             'criticality'    => 'required|in:low,medium,high',
         ]);
 
-        // Generate a random Branch ID
+
         $branch_id = 'BR' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
 
         SuccessionPosition::create([
