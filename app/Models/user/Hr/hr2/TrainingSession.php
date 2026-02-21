@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models\Hr2;
+namespace App\Models\user\Hr\hr2;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\hr2\TrainingEnroll;
+use App\Models\user\Hr\hr2\TrainingEnroll;
 
 class TrainingSession extends Model
 {
