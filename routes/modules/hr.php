@@ -1,36 +1,16 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
-use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
-use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
-use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
-use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 use App\Http\Controllers\user\Hr\hr2\UserCompetencyController;
 use App\Http\Controllers\user\Hr\hr2\UserLearningController;
 use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
+use App\Http\Controllers\user\Hr\hr2\UserEssController;
 
 Route::get('/dashboard', function () { 
     return view('hr.dashboard'); 
 })->name('hr.dashboard');
 
-// --- Hr2 Admin ---
-Route::resource('competencies', CompetencyController::class);
-Route::resource('learning', AdminLearningController::class);
-Route::resource('training', AdminTrainingController::class);
-Route::prefix('succession')->group(function () {
-    Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
-    Route::post('/position', [AdminSuccessionController::class, 'storePosition'])->name('succession.position.store');
-    Route::post('/candidate', [AdminSuccessionController::class, 'storeCandidate'])->name('succession.candidate.store');
-    Route::delete('/position/{id}', [AdminSuccessionController::class, 'destroyPosition'])->name('succession.position.destroy');
-    Route::delete('/candidate/{id}', [AdminSuccessionController::class, 'destroyCandidate'])->name('succession.candidate.destroy');
-});
-Route::prefix('ess')->group(function () {
-    Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
-    Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
-});
 // --- Hr2 employee ---
-
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
 Route::get('/learning', [UserLearningController::class, 'index'])->name('user.learning.index');
 Route::post('/learning/enroll/{id}', [UserLearningController::class, 'enroll'])->name('user.learning.enroll');
@@ -39,3 +19,6 @@ Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user
 Route::post('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
 // Succession Planning Route
 Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
+// ESS (Employee Self-Service) Routes
+Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
+Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');

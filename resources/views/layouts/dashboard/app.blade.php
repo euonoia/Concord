@@ -56,8 +56,8 @@
                 <span>Succession</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}"
-            class="{{ request()->routeIs('user.training.index') ? 'active' : '' }}">
+        <a href="{{ route('user.ess.index') }}"
+            class="{{ request()->routeIs('user.ess.index') ? 'active' : '' }}">
             <i class="bi bi-pencil-square"></i>
             <span>ESS</span>
         </a>
