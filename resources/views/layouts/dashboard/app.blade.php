@@ -26,33 +26,38 @@
     </div>
 
     <nav>
-        <a href="{{ route('hr.dashboard') }}" class="{{ request()->routeIs('hr2.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('hr.dashboard') }}" 
+        class="{{ request()->routeIs('hr2.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('user.competencies.index') }}">
+        <a href="{{ route('user.competencies.index') }}"
+           class="{{ request()->routeIs('user.competencies.index') ? 'active' : '' }}">
             <i class="bi bi-lightbulb"></i>
             <span>Competencies</span>
         </a>
 
-        <a href="{{ route('user.learning.index') }}">
+        <a href="{{ route('user.learning.index') }}"
+           class="{{ request()->routeIs('user.learning.index') ? 'active' : '' }}">     
             <i class="bi bi-book"></i>
             <span>Learning</span>
         </a>
 
-        <a href="{{ route('user.training.index') }}">
+        <a href="{{ route('user.training.index') }}"
+            class="{{ request()->routeIs('user.training.index') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>
             <span>Training</span>
         </a>
         
-        <a href="{{ route('hr.dashboard') }}"
-            class="{{ request()->routeIs('hr2.succession') ? 'active' : '' }}">
+        <a href="{{ route('user.succession.index') }}"
+            class="{{ request()->routeIs('user.succession.index') ? 'active' : '' }}">
                 <i class="bi bi-tree"></i>
                 <span>Succession</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+        <a href="{{ route('hr.dashboard') }}"
+            class="{{ request()->routeIs('user.training.index') ? 'active' : '' }}">
             <i class="bi bi-pencil-square"></i>
             <span>ESS</span>
         </a>
