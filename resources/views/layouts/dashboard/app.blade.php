@@ -41,7 +41,7 @@
             <span>Learning</span>
         </a>
 
-        <a href="{{ route('hr.dashboard') }}">
+        <a href="{{ route('user.training.index') }}">
             <i class="bi bi-mortarboard"></i>
             <span>Training</span>
         </a>

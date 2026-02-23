@@ -7,6 +7,7 @@ use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
 use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 use App\Http\Controllers\user\Hr\hr2\UserCompetencyController;
 use App\Http\Controllers\user\Hr\hr2\UserLearningController;
+use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 
 Route::get('/dashboard', function () { 
     return view('hr.dashboard'); 
@@ -32,3 +33,6 @@ Route::prefix('ess')->group(function () {
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
 Route::get('/learning', [UserLearningController::class, 'index'])->name('user.learning.index');
 Route::post('/learning/enroll/{id}', [UserLearningController::class, 'enroll'])->name('user.learning.enroll');
+// Training Routes
+Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
+Route::post('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
