@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Authentication;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Employee; // Import your Employee model
+use App\Models\Employee; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +15,7 @@ class AuthController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'username'  => 'required|string|max:50|unique:users', // e.g., PAT-12345
+            'username'  => 'required|string|max:50|unique:users', 
             'email'     => 'required|email|unique:users,email',
             'password'  => 'required|min:8|confirmed',
             'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_employee,patient,patient_guardian',
@@ -47,8 +47,8 @@ class AuthController extends Controller
             // 2. Create the Employee Profile if the user is staff
             if ($userType === 'staff') {
                 Employee::create([
-                    'user_id'     => $user->id,          // Link to the BigInt ID
-                    'employee_id' => $user->username,    // Copy PAT-12345 here
+                    'user_id'     => $user->id,         
+                    'employee_id' => $user->username,   
                     'first_name'  => $request->first_name,
                     'last_name'   => $request->last_name,
                     'hire_date'   => now(),

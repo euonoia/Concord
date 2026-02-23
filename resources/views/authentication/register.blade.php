@@ -28,57 +28,66 @@
             @csrf
 
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Username / ID Code</label>
-                <input type="text" name="username" value="{{ old('username') }}" 
-                       placeholder="Enter your assigned ID or code"
-                       class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                <input type="email" name="email" value="{{ old('email') }}" 
-                       placeholder="yourname@hospital.com"
-                       class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
-            </div>
-
-           <label class="block text-sm font-medium text-slate-700 mb-1">Account Role & Department</label>
-                <select name="role_slug" 
+                <label class="block text-sm font-medium text-slate-700 mb-1">Account Role & Department</label>
+                <select id="role_slug" name="role_slug" 
                         class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
-
                     <option value="" disabled selected>Select your role</option>
-                    
                     <optgroup label="Patient Portal">
                         <option value="patient" {{ old('role_slug') == 'patient' ? 'selected' : '' }}>Patient</option>
                         <option value="patient_guardian" {{ old('role_slug') == 'patient_guardian' ? 'selected' : '' }}>Patient Guardian</option>
                     </optgroup>
-
                     <optgroup label="Staff Departments">
-                        <!-- NEW HR ADMIN -->
                         <option value="hr_admin" {{ old('role_slug') == 'hr_admin' ? 'selected' : '' }}>HR Administrator</option>
                         <option value="hr_employee" {{ old('role_slug') == 'hr_employee' ? 'selected' : '' }}>Human Resources</option>
                         <option value="logistics_employee" {{ old('role_slug') == 'logistics_employee' ? 'selected' : '' }}>Logistics & Supply Chain</option>
                         <option value="finance_employee" {{ old('role_slug') == 'finance_employee' ? 'selected' : '' }}>Finance & Billing</option>
                         <option value="core_employee" {{ old('role_slug') == 'core_employee' ? 'selected' : '' }}>Core Medical Operations</option>
                     </optgroup>
-
                 </select>
+            </div>
 
+            <div id="staff_fields" class="grid grid-cols-2 gap-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                    <input type="text" name="first_name" value="{{ old('first_name') }}" 
+                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                    <input type="text" name="last_name" value="{{ old('last_name') }}" 
+                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Username / ID Code</label>
+                <input type="text" name="username" value="{{ old('username') }}" 
+                       placeholder="Enter your assigned ID"
+                       class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                <input type="email" name="email" value="{{ old('email') }}" 
+                       placeholder="yourname@hospital.com"
+                       class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required>
+            </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
                     <input type="password" name="password" 
-                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
+                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
                     <input type="password" name="password_confirmation" 
-                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
+                           class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
                 </div>
             </div>
 
             <button type="submit" 
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition duration-200">
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-md hover:shadow-lg transition duration-200">
                 Register & Sign In
             </button>
         </form>
@@ -90,5 +99,22 @@
         </div>
     </div>
 
+    <script>
+        const roleSelect = document.getElementById('role_slug');
+        const staffFields = document.getElementById('staff_fields');
+
+        function toggleFields() {
+            const val = roleSelect.value;
+            // Show names if role contains 'employee' or 'admin'
+            if (val.includes('employee') || val.includes('admin')) {
+                staffFields.classList.remove('hidden');
+            } else {
+                staffFields.classList.add('hidden');
+            }
+        }
+
+        roleSelect.addEventListener('change', toggleFields);
+        window.addEventListener('DOMContentLoaded', toggleFields); 
+    </script>
 </body>
 </html>

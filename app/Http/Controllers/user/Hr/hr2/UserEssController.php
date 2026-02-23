@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user\Hr\hr2;
 use App\Http\Controllers\Controller;
 use App\Models\user\Hr\hr2\EssRequest;
 use App\Models\user\Hr\hr2\EssRequestArchive;
+use App\Models\Employee; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,37 +17,43 @@ class UserEssController extends Controller
             return redirect()->route('portal.login');
         }
 
-        $employee = Auth::user();
+        
+        $employee = Employee::where('user_id', Auth::id())->first();
 
-        // Fetch from active table
-        $active = EssRequest::where('employee_id', $employee->id)->get();
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee record not found.');
+        }
 
-        // Fetch from archive table
-        $archived = EssRequestArchive::where('employee_id', $employee->id)->get();
+        $active = EssRequest::where('employee_id', $employee->employee_id)->get();
+        $archived = EssRequestArchive::where('employee_id', $employee->employee_id)->get();
 
-        // Combine and sort by date descending
         $requests = $active->concat($archived)->sortByDesc('created_at');
 
-        return view('hr.hr2.ess', compact('requests'));
+        return view('hr.hr2.ess', compact('requests', 'employee'));
     }
 
     public function store(Request $request)
     {
-        $employee = Auth::user();
+        if (!Auth::check()) {
+            return redirect()->route('portal.login');
+        }
+
+      
+        $employee = Employee::where('user_id', Auth::id())->first();
 
         $request->validate([
             'type' => 'required|string|max:255',
             'details' => 'required|string|max:2000',
         ]);
 
-        // Generate unique ESS ID (e.g., ESS0001)
-        $lastEss = EssRequest::orderBy('id', 'desc')->first();
+    
+        $lastEss = EssRequest::orderBy('created_at', 'desc')->first();
         $lastNumber = $lastEss ? (int) preg_replace('/\D/', '', $lastEss->ess_id) : 0;
         $ess_id = 'ESS' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
 
         EssRequest::create([
             'ess_id' => $ess_id,
-            'employee_id' => $employee->id,
+            'employee_id' => $employee->employee_id, 
             'type' => $request->type,
             'details' => $request->details,
             'status' => 'pending',
