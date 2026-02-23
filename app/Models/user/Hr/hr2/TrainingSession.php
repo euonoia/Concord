@@ -9,7 +9,10 @@ class TrainingSession extends Model
 {
     protected $table = 'training_sessions_hr2';
 
+   
     protected $primaryKey = 'training_id';
+    
+    // Set to string because you mentioned using varchar(20) in TiDB
     protected $keyType = 'string';
     public $incrementing = false;
 
@@ -20,12 +23,13 @@ class TrainingSession extends Model
         'end_datetime'   => 'datetime',
     ];
 
+    
     public function enrolls()
     {
         return $this->hasMany(
             TrainingEnroll::class,
-            'training_id',
-            'training_id'
+            'training_id',   
+            'training_id'    
         );
     }
 }

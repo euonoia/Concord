@@ -18,7 +18,6 @@ class EssRequest extends Model
    
     public function employee()
     {
-        // This links the employee_id in this table to the employee_id in the employees table
         return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }

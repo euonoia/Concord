@@ -45,10 +45,12 @@
                         @elseif($session->start_datetime < now())
                             <button class="btn btn-sm btn-secondary" disabled>Expired</button>
                         @else
-                            <form action="{{ route('user.training.enroll', $session->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-primary">Join Session</button>
-                            </form>
+                      <form action="{{ route('user.training.enroll', $session->training_id) }}" method="POST">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Are you sure you want to join?')">
+                                Join Session
+                            </button>
+                        </form>
                         @endif
                     </td>
                 </tr>

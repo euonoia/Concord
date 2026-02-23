@@ -16,7 +16,7 @@ Route::get('/learning', [UserLearningController::class, 'index'])->name('user.le
 Route::post('/learning/enroll/{id}', [UserLearningController::class, 'enroll'])->name('user.learning.enroll');
 // Training Routes
 Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
-Route::post('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
+Route::any('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
 // Succession Planning Route
 Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
 // ESS (Employee Self-Service) Routes
