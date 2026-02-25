@@ -12,17 +12,33 @@ class SuccessionPosition extends Model
 
     protected $table = 'succession_positions_hr2';
     protected $primaryKey = 'id';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
+        'position_id',    
         'position_title',
-        'branch_id',
+        'department_id',
+        'department_name',
+        'specialization',
         'criticality',
+        'is_active',
     ];
 
     // Relationship to candidates
     public function candidates()
     {
-        return $this->hasMany(SuccessorCandidate::class, 'branch_id', 'branch_id');
+        return $this->hasMany(SuccessorCandidate::class, 'position_id', 'id');
+    }
+
+    // Relationship to department
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'id');
+    }
+
+    // Scope for active positions only
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 1);
     }
 }

@@ -11,6 +11,9 @@ Route::get('/dashboard', function () {
     return view('admin.dashboard');
 })->name('admin.dashboard');
 
+Route::get('/hr2/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
+    ->name('departments.specializations');
+
 // --- Hr2 Admin ---
 Route::resource('competencies', CompetencyController::class);
 Route::resource('learning', AdminLearningController::class);
@@ -26,3 +29,5 @@ Route::prefix('ess')->group(function () {
     Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
     Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
 });
+Route::get('/hr2/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
+    ->name('departments.specializations');
