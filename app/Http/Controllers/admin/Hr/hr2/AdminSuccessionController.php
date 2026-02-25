@@ -11,37 +11,41 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminSuccessionController extends Controller
 {
-    private function authorizeHrAdmin()
+    /**
+     * Standard Authorization check used by all methods
+     */
+    private function checkAccess()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
-            abort(403, 'Unauthorized action.');
+            abort(403, 'Unauthorized access to HR2 Succession Planning.');
         }
     }
 
     public function index()
     {
-        $this->authorizeHrAdmin();
+        $this->checkAccess();
 
         $positions = SuccessionPosition::withCount('candidates')->orderBy('position_title')->get();
+        
+        // Ordered by readiness: Ready Now first
         $candidates = SuccessorCandidate::with(['position', 'employee'])
-            ->orderBy('branch_id')
-            ->get();
+            ->get()
+            ->sortBy(function($candidate) {
+                $order = ['Ready Now' => 1, '1-2 Years' => 2, '3+ Years' => 3, 'Emergency' => 4];
+                return $order[$candidate->readiness] ?? 5;
+            });
             
-      
         $employees = Employee::orderBy('first_name')->get();
 
         return view('admin.hr2.succession', compact('positions', 'candidates', 'employees'));
     }
 
-    public function storePosition(Request $request)
+      public function storePosition(Request $request)
     {
-        $this->authorizeHrAdmin();
-
         $validated = $request->validate([
             'position_title' => 'required|string|max:255',
             'criticality'    => 'required|in:low,medium,high',
         ]);
-
 
         $branch_id = 'BR' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
 
@@ -56,38 +60,33 @@ class AdminSuccessionController extends Controller
 
     public function storeCandidate(Request $request)
     {
-        $this->authorizeHrAdmin();
+        $this->checkAccess();
 
         $validated = $request->validate([
             'position_id'      => 'required|exists:succession_positions_hr2,branch_id',
-            'employee_id'      => 'required|exists:users,id',
-            'readiness'        => 'required|in:ready,not_ready',
+            'employee_id'      => 'required|exists:employees,id',
+            'readiness'        => 'required|in:Ready Now,1-2 Years,3+ Years,Emergency',
+            'perf_score'       => 'required|numeric|min:1|max:10',
+            'pot_score'        => 'required|numeric|min:1|max:10',
+            'retention_risk'   => 'required|in:High,Medium,Low',
             'effective_at'     => 'required|date',
             'development_plan' => 'nullable|string',
         ]);
 
         SuccessorCandidate::create([
-            'branch_id'        => $validated['position_id'],
-            'employee_id'      => $validated['employee_id'],
-            'readiness'        => $validated['readiness'],
-            'effective_at'     => $validated['effective_at'],
-            'development_plan' => $validated['development_plan'],
+            'branch_id'         => $validated['position_id'],
+            'employee_id'       => $validated['employee_id'],
+            'readiness'         => $validated['readiness'],
+            'performance_score' => $validated['perf_score'],
+            'potential_score'   => $validated['pot_score'],
+            'retention_risk'    => $validated['retention_risk'],
+            'effective_at'      => $validated['effective_at'],
+            'development_plan'  => $validated['development_plan'],
+            'is_active'         => 1,
         ]);
 
-        return redirect()->back()->with('success', 'Candidate added to succession plan.');
+        return redirect()->back()->with('success', 'Candidate added successfully.');
     }
-
-    public function destroyPosition($id)
-    {
-        $this->authorizeHrAdmin();
-        SuccessionPosition::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Position removed.');
-    }
-
-    public function destroyCandidate($id)
-    {
-        $this->authorizeHrAdmin();
-        SuccessorCandidate::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Candidate removed.');
-    }
+    
+   
 }

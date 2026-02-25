@@ -11,7 +11,7 @@
 
     <div class="succession-list" style="display: flex; flex-direction: column; gap: 15px;">
         @forelse($nominations as $nomination)
-            <div class="card" style="border-left: 5px solid #f39c12; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div class="card" style=" ; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <span style="text-transform: uppercase; font-size: 0.75rem; color: #e67e22; font-weight: bold;">
@@ -32,7 +32,7 @@
                 <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
                     <small style="color: #777;">Development Plan:</small>
                     <p style="margin: 5px 0 0; font-size: 0.9rem;">
-                        {{ $nomination->development_notes ?? 'Your training path for this role is currently being drafted by HR.' }}
+                        {{ $nomination->development_plan ?? 'Your training path for this role is currently being drafted by HR.' }}
                     </p>
                 </div>
             </div>
