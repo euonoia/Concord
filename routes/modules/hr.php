@@ -8,7 +8,7 @@ use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
 use App\Http\Controllers\user\Hr\hr2\UserEssController;
 
 //Dashboard 
-Route::get('/hr/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
+Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
 
 // --- Hr2 employee ---
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
