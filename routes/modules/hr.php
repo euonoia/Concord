@@ -1,14 +1,14 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\user\Hr\UserDashboardController;
 use App\Http\Controllers\user\Hr\hr2\UserCompetencyController;
 use App\Http\Controllers\user\Hr\hr2\UserLearningController;
 use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
 use App\Http\Controllers\user\Hr\hr2\UserEssController;
 
-Route::get('/dashboard', function () { 
-    return view('hr.dashboard'); 
-})->name('hr.dashboard');
+//Dashboard 
+Route::get('/hr/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
 
 // --- Hr2 employee ---
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
