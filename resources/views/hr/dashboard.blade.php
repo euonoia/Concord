@@ -1,54 +1,99 @@
 @extends('layouts.dashboard.app')
 
 @section('content')
-<div class="dashboard_container" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-    <div class="header-section" style="margin-bottom: 2rem;">
-        <p style="color: #718096; font-size: 1rem;">Here’s your HR2 summary overview and quick access to your development tools.</p>
+<div class="dashboard-wrapper" style="padding: 2.5rem 1.5rem; max-width: 1300px; margin: 0 auto; font-family: 'Inter', sans-serif; background-color: #f8fafc; min-height: 100vh;">
+    
+    <div class="header-section" style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1 style="color: #1a202c; font-size: 1.875rem; font-weight: 700; margin: 0; letter-spacing: -0.025em;">
+                Welcome back, {{ $employee->first_name }}!
+            </h1>
+            <p style="color: #64748b; font-size: 1rem; margin-top: 0.5rem;">
+                Here’s what’s happening with your development profile today.
+            </p>
+        </div>
+        <div class="date-chip" style="background: #ffffff; padding: 0.5rem 1rem; border-radius: 99px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> {{ date('F j, Y') }}
+        </div>
     </div>
 
-    <div class="dashboard_grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+    <div class="dashboard_grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
         
-        <div class="dashboard_card" style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 1.5rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 1.25rem; border-bottom: 2px solid #edf2f7; padding-bottom: 0.75rem;">
-                <i class="fas fa-user-circle" style="color: #4a5568; font-size: 1.25rem; margin-right: 10px;"></i>
-                <h3 style="margin: 0; font-size: 1.15rem; color: #1a202c;">Profile Details</h3>
+        <div class="dashboard_card" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden;">
+            <div style="background: #f1f5f9; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: #475569; color: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Personnel Profile</h3>
+                </div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700;">Verified</span>
             </div>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f7fafc;">
-                    <span style="color: #718096;"><i class="fas fa-id-badge" style="width: 20px;"></i> Employee ID</span>
-                    <strong style="color: #2d3748;">{{ $employee->employee_id ?? 'Pending' }}</strong>
-                </li>
-                <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f7fafc;">
-                    <span style="color: #718096;"><i class="fas fa-font" style="width: 20px;"></i> Full Name</span>
-                    <strong style="color: #2d3748;">{{ $employee->first_name }} {{ $employee->last_name }}</strong>
-                </li>
-                <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f7fafc;">
-                    <span style="color: #718096;"><i class="fas fa-building" style="width: 20px;"></i> Department</span>
-                    <strong style="color: #2d3748;">{{ $employee->department ?? 'General' }}</strong>
-                </li>
-                <li style="display: flex; justify-content: space-between; padding: 0.75rem 0;">
-                    <span style="color: #718096;"><i class="fas fa-star" style="width: 20px;"></i> Specialization</span>
-                    <strong style="color: #2d3748;">{{ $employee->specialization ?? 'N/A' }}</strong>
-                </li>
-            </ul>
+
+            <div style="padding: 1.5rem;">
+                <div class="info-row" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color:#374151; font-size: 0.9rem; font-weight: 500;">EMPLOYEE ID</span>
+                        <span style="color: #1e293b; font-weight: 600; background: #f8fafc; padding: 4px 12px; border-radius: 6px; border: 1px solid #f1f5f9;">
+                            #{{ $employee->employee_id ?? 'PENDING' }}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color:#374151; font-size: 0.9rem; font-weight: 500;">FULL NAME</span>
+                        <span style="color: #1e293b; font-weight: 600;">{{ $employee->first_name }} {{ $employee->last_name }}</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #374151; font-size: 0.9rem; font-weight: 500;">DEPARTMENT</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                            <span style="color: #1e293b; font-weight: 600;">{{ $employee->department ?? 'General Operations' }}</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color:#374151; font-size: 0.9rem; font-weight: 500;">SPECIALIZATION</span>
+                        <span style="color: #6366f1; font-weight: 600; background: #eef2ff; padding: 4px 12px; border-radius: 6px;">
+                            {{ $employee->specialization ?? 'Unassigned' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="dashboard_card" style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); padding: 1.5rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 1.25rem; border-bottom: 2px solid #edf2f7; padding-bottom: 0.75rem;">
-                <i class="fas fa-bolt" style="color: #ed8936; font-size: 1.25rem; margin-right: 10px;"></i>
-                <h3 style="margin: 0; font-size: 1.15rem; color: #1a202c;">Quick Actions</h3>
+        <div class="dashboard_card" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
+                    <div style="background: #fff7ed; color: #ea580c; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Quick Actions</h3>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <a href="{{ route('user.training.index') }}" style="transition: all 0.2s; background-color: #2B5F6B; color: white; padding: 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: space-between; group">
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-graduation-cap"></i> Browse Available Trainings
+                        </span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                    </a>
+
+                    <a href="{{ route('user.learning.index') }}" style="transition: all 0.2s; background-color: #374151; color: white; padding: 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa- project-diagram"></i> My Learning Path
+                        </span>
+                        <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                    </a>
+                </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <a href="{{ route('user.training.index') }}" class="btn" style="background-color: #3182ce; color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <i class="fas fa-chalkboard-teacher"></i> Browse Trainings
-                </a>
-                <a href="{{ route('user.learning.index') }}" class="btn" style="background-color: #805ad5; color: white; padding: 0.75rem; border-radius: 8px; text-decoration: none; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <i class="fas fa-book-open"></i> My Learning Modules
-                </a>
+
+            <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
+                <p style="margin: 0; font-size: 0.85rem; color: #64748b;">
+                    <i class="fas fa-headset" style="margin-right: 5px;"></i> 
+                    Issues with your data? <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600;">Contact IT Support</a>
+                </p>
             </div>
-            <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #a0aec0; text-align: center;">
-                <i class="fas fa-info-circle"></i> Need help? Contact HR Support.
-            </p>
         </div>
 
     </div>
