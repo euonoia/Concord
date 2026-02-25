@@ -12,7 +12,7 @@
                 <select name="position_id" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b8daff; margin-top: 5px;" required>
                     <option value="">-- Select Position --</option>
                     @foreach($positions as $p)
-                        <option value="{{ $p->id }}">{{ $p->position_title }} ({{ $p->department->name ?? 'N/A' }})</option>
+                        <option value="{{ $p->id }}">{{ $p->position_title }} ({{ $p->department_name ?? 'N/A' }})</option>
                     @endforeach
                 </select>
             </div>
