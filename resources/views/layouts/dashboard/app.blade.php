@@ -15,14 +15,14 @@
         onclick="document.querySelector('.dashboard .sidebar').classList.toggle('show')">
         ☰
     </button>
-    <div class="title">HR2</div>
+    <div class="title">HR</div>
 </div>
 
 <!-- Sidebar -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
     <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="HR2 Logo">
-        <div class="logo-text">HR2</div>
+        <img src="{{ asset('images/logo.png') }}" alt="HR Logo">
+        <div class="logo-text">Human Resource</div>
     </div>
 
     <nav>
