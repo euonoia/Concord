@@ -112,8 +112,7 @@
         </form>
     </div>
 
-    {{-- Include Candidates Table --}}
-    @include('admin.hr2.candidates')
+   
 </div>
 
 {{-- JS for Dynamic Dropdowns --}}
