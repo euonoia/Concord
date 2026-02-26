@@ -52,7 +52,7 @@ class AdminLearningController extends Controller
             'duration'      => $request->duration,
         ]);
 
-        // Redirect back using the new route name naming convention
+       
         return redirect()->back()->with('success', 'Learning module added successfully.');
     }
 

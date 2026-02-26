@@ -1,4 +1,4 @@
-{{-- Add New Critical Position --}}
+{{-- Add New Critical Position 
 <div style="background: #ffffff; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eef0f2;">
     <form method="POST" action="{{ route('succession.position.store') }}">
         @csrf
@@ -43,7 +43,7 @@
     </form>
 </div>
 
-{{-- Succession Positions Table --}}
+{{-- Succession Positions Table
 <h3 style="font-size: 1.3rem; margin-bottom: 15px;"><i class="fas fa-list"></i> Succession Positions</h3>
 <table style="width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 40px;">
     <thead style="background: #f1f3f5;">
@@ -87,3 +87,4 @@
         @endforelse
     </tbody>
 </table>
+ --}}

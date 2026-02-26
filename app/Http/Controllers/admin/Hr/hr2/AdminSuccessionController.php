@@ -8,6 +8,7 @@ use App\Models\admin\Hr\hr2\SuccessionPosition;
 use App\Models\admin\Hr\hr2\SuccessorCandidate;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentSpecialization;
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\Employee; 
 use Illuminate\Support\Facades\Auth;
 
@@ -31,11 +32,13 @@ class AdminSuccessionController extends Controller
             ->with('specializations')
             ->get();
 
-        $positions = SuccessionPosition::withCount('candidates')
+        $positions = DepartmentPositionTitle::with('department')
+            ->where('is_active', 1)
             ->orderBy('position_title')
             ->get();
 
         $candidates = SuccessorCandidate::with(['position', 'employee'])
+            ->where('is_active', 1)
             ->get()
             ->sortBy(function($candidate) {
                 $order = ['Ready Now' => 1, '1-2 Years' => 2, '3+ Years' => 3, 'Emergency' => 4];
@@ -47,9 +50,7 @@ class AdminSuccessionController extends Controller
         return view('admin.hr2.succession', compact('positions', 'candidates', 'employees', 'departments'));
     }
 
-    /**
-     * Return specializations based on department code
-     */
+
     public function getSpecializations($dept_code)
     {
         $specializations = DepartmentSpecialization::where('dept_code', $dept_code)
@@ -59,39 +60,18 @@ class AdminSuccessionController extends Controller
         return response()->json($specializations);
     }
 
-    /**
-     * Store a new Succession Position
-     */
-    public function storePosition(Request $request)
-{
-    $this->checkAccess();
+    public function getPositions(Request $request, $dept_code)
+    {
+        $specialization = $request->query('specialization');
 
-    $validated = $request->validate([
-        'position_title' => 'required|string|max:255',
-        'criticality'    => 'required|in:low,medium,high',
-        'department_id'  => 'required|exists:departments_hr2,department_id',
-        'specialization' => 'nullable|string|max:255',
-    ]);
+        $positions = DepartmentPositionTitle::where('department_id', $dept_code)
+            ->where('is_active', 1)
+            ->when($specialization, fn($q) => $q->where('specialization_name', $specialization))
+            ->get(['id', 'position_title']);
 
-    
-    $department = Department::where('department_id', $validated['department_id'])->first();
-
-    if (!$department) {
-        return redirect()->back()->with('error', 'Selected department not found.');
+        return response()->json($positions);
     }
 
-    SuccessionPosition::create([
-        'position_id'      => $department->department_id,  // store the dept code as position_id if needed
-        'position_title'   => $validated['position_title'],
-        'department_id'    => $department->department_id,
-        'department_name'  => $department->name,          // store department name
-        'specialization'   => $validated['specialization'] ?? null,
-        'criticality'      => $validated['criticality'],
-        'is_active'        => 1,
-    ]);
-
-    return redirect()->back()->with('success', 'Succession position added successfully.');
-}
     /**
      * Store a new Candidate for a Position
      */
@@ -100,7 +80,7 @@ class AdminSuccessionController extends Controller
         $this->checkAccess();
 
         $validated = $request->validate([
-            'position_id'      => 'required|exists:succession_positions_hr2,id',
+            'position_id'      => 'required|exists:department_position_titles_hr2,id',
             'employee_id'      => 'required|exists:employees,id',
             'readiness'        => 'required|in:Ready Now,1-2 Years,3+ Years,Emergency',
             'perf_score'       => 'required|numeric|min:1|max:10',
@@ -110,9 +90,13 @@ class AdminSuccessionController extends Controller
             'development_plan' => 'nullable|string|max:500',
         ]);
 
+        $position = DepartmentPositionTitle::findOrFail($validated['position_id']);
+
         SuccessorCandidate::create([
-            'position_id'       => $validated['position_id'],
+            'position_id'       => $position->id,
             'employee_id'       => $validated['employee_id'],
+            'department_id'     => $position->department_id,
+            'specialization'    => $position->specialization_name,
             'readiness'         => $validated['readiness'],
             'performance_score' => $validated['perf_score'],
             'potential_score'   => $validated['pot_score'],
@@ -132,7 +116,7 @@ class AdminSuccessionController extends Controller
     {
         $this->checkAccess();
 
-        $position = SuccessionPosition::findOrFail($id);
+        $position = DepartmentPositionTitle::findOrFail($id);
         $position->is_active = 0;
         $position->save();
 
