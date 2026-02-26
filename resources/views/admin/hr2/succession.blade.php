@@ -137,21 +137,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 specSelect.innerHTML = '<option value="">-- Select Specialization --</option>';
-                if (data.length === 0) {
-                    specSelect.innerHTML = '<option value="">No specializations available</option>';
-                } else {
-                    data.forEach(item => {
-                        const opt = document.createElement('option');
-                        opt.value = item.specialization_name;
-                        opt.textContent = item.specialization_name;
-                        specSelect.appendChild(opt);
-                    });
-                }
-            })
-            .catch(err => console.error(err));
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.specialization_name;
+                    opt.textContent = item.specialization_name;
+                    specSelect.appendChild(opt);
+                });
+            });
     });
 
-    // Specialization -> Target Position
+    // Specialization -> Positions + Rank Level
     specSelect.addEventListener('change', function() {
         const deptCode = deptSelect.value;
         const specialization = this.value;
@@ -166,18 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 positionSelect.innerHTML = '<option value="">-- Select Target Position --</option>';
-                if (data.length === 0) {
-                    positionSelect.innerHTML = '<option value="">No positions available</option>';
-                } else {
-                    data.forEach(item => {
-                        const opt = document.createElement('option');
-                        opt.value = item.id;
-                        opt.textContent = item.position_title;
-                        positionSelect.appendChild(opt);
-                    });
-                }
-            })
-            .catch(err => console.error(err));
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = `${item.position_title} (Rank: ${item.rank_level})`;
+                    positionSelect.appendChild(opt);
+                });
+            });
     });
 });
 </script>

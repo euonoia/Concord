@@ -15,11 +15,11 @@ Route::get('/dashboard', function () {
 
 // --- HR2 Department AJAX Endpoints ---
 Route::prefix('hr2')->group(function () {
-    // Get Specializations by Department
+    // Specializations by Department
     Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
         ->name('departments.specializations');
 
-    // Get Positions by Department + Optional Specialization
+    // Positions by Department + Specialization
     Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])
         ->name('departments.positions');
 });
