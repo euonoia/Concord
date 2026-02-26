@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\core1\User as Core1User;
 
 class Core1RoleMiddleware
 {
@@ -24,7 +23,7 @@ class Core1RoleMiddleware
         }
 
         // Check if user has one of the required roles
-        if (!in_array($user->role, $roles)) {
+        if (!in_array($user->role_slug, $roles)) {
             abort(403, 'Unauthorized access.');
         }
 
