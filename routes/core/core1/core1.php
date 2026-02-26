@@ -1,23 +1,23 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\core1\core1Controller;
-use App\Http\Controllers\core1\Admin\AdminDashboardController;
-use App\Http\Controllers\core1\Doctor\DoctorDashboardController;
-use App\Http\Controllers\core1\Nurse\NurseDashboardController;
-use App\Http\Controllers\core1\Patient\PatientDashboardController;
-use App\Http\Controllers\core1\Receptionist\ReceptionistDashboardController;
-use App\Http\Controllers\core1\Billing\BillingDashboardController;
-use App\Http\Controllers\core1\PatientManagementController;
-use App\Http\Controllers\core1\AppointmentController;
-use App\Http\Controllers\core1\InpatientController;
-use App\Http\Controllers\core1\OutpatientController;
-use App\Http\Controllers\core1\MedicalRecordController;
-use App\Http\Controllers\core1\BillingController;
-use App\Http\Controllers\core1\DischargeController;
-use App\Http\Controllers\core1\StaffManagementController;
-use App\Http\Controllers\core1\ReportsController;
-use App\Http\Controllers\core1\SettingsController;
+use App\Http\Controllers\user\Core\core1\core1Controller;
+use App\Http\Controllers\user\Core\core1\Admin\AdminDashboardController;
+use App\Http\Controllers\user\Core\core1\Doctor\DoctorDashboardController;
+use App\Http\Controllers\user\Core\core1\Nurse\NurseDashboardController;
+use App\Http\Controllers\user\Core\core1\Patient\PatientDashboardController;
+use App\Http\Controllers\user\Core\core1\Receptionist\ReceptionistDashboardController;
+use App\Http\Controllers\user\Core\core1\Billing\BillingDashboardController;
+use App\Http\Controllers\user\Core\core1\PatientManagementController;
+use App\Http\Controllers\user\Core\core1\AppointmentController;
+use App\Http\Controllers\user\Core\core1\InpatientController;
+use App\Http\Controllers\user\Core\core1\OutpatientController;
+use App\Http\Controllers\user\Core\core1\MedicalRecordController;
+use App\Http\Controllers\user\Core\core1\BillingController;
+use App\Http\Controllers\user\Core\core1\DischargeController;
+use App\Http\Controllers\user\Core\core1\StaffManagementController;
+use App\Http\Controllers\user\Core\core1\ReportsController;
+use App\Http\Controllers\user\Core\core1\SettingsController;
 
 Route::prefix('core1')->name('core1.')->group(function () {
     // Main index
@@ -53,8 +53,8 @@ Route::middleware([])->group(function () {
         Route::get('/dashboard', [ReceptionistDashboardController::class, 'index'])->name('core1.receptionist.dashboard');
         Route::get('/overview', [ReceptionistDashboardController::class, 'overview'])->name('core1.receptionist.overview');
         // Online Appointment Actions
-        Route::post('/online-appointments/{appointment}/approve', [\App\Http\Controllers\core1\Receptionist\OnlineAppointmentController::class, 'approve'])->name('core1.receptionist.online-appointments.approve');
-        Route::post('/online-appointments/{appointment}/reject', [\App\Http\Controllers\core1\Receptionist\OnlineAppointmentController::class, 'reject'])->name('core1.receptionist.online-appointments.reject');
+        Route::post('/online-appointments/{appointment}/approve', [\App\Http\Controllers\user\Core\core1\Receptionist\OnlineAppointmentController::class, 'approve'])->name('core1.receptionist.online-appointments.approve');
+        Route::post('/online-appointments/{appointment}/reject', [\App\Http\Controllers\user\Core\core1\Receptionist\OnlineAppointmentController::class, 'reject'])->name('core1.receptionist.online-appointments.reject');
         Route::get('/online-appointments/pending', [ReceptionistDashboardController::class, 'pendingBookingsJson'])->name('core1.receptionist.online-appointments.pending');
     });
     
@@ -100,7 +100,7 @@ Route::middleware([])->group(function () {
     });
 
     Route::post('/patients/{patient}/move', 
-        [\App\Http\Controllers\core1\PatientManagementController::class, 'move']
+        [\App\Http\Controllers\user\Core\core1\PatientManagementController::class, 'move']
     )->name('core1.patients.move');
     Route::patch('/inpatient/{patient}/deactivate', [InpatientController::class, 'deactivate'])->name('core1.inpatients.deactivate');
     Route::patch('/patients/{patient}/status', 

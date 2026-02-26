@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\core1\Billing;
+namespace App\Http\Controllers\user\Core\core1\Billing;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

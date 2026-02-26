@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\core1\Receptionist;
+namespace App\Http\Controllers\user\Core\core1\Receptionist;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
