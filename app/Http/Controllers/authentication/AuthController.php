@@ -18,7 +18,7 @@ class AuthController extends Controller
             'username'  => 'required|string|max:50|unique:users', 
             'email'     => 'required|email|unique:users,email',
             'password'  => 'required|min:8|confirmed',
-            'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_employee,patient,patient_guardian',
+            'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,patient,patient_guardian,admin,doctor,nurse,head_nurse,receptionist,billing',
             // Profile fields for the Employee table
             'first_name' => 'required_if:user_type,staff|string|max:255',
             'last_name'  => 'required_if:user_type,staff|string|max:255',
@@ -26,7 +26,7 @@ class AuthController extends Controller
 
         // Determine user type
         $userType = match (true) {
-            str_contains($validated['role_slug'], 'employee') || str_contains($validated['role_slug'], 'admin') => 'staff',
+            str_contains($validated['role_slug'], 'employee') || str_contains($validated['role_slug'], 'admin') || in_array($validated['role_slug'], ['doctor', 'nurse', 'head_nurse', 'receptionist', 'billing']) => 'staff',
             str_contains($validated['role_slug'], 'patient')  => 'patient',
             default                                           => 'patient',
         };
@@ -108,6 +108,12 @@ class AuthController extends Controller
             'finance_admin', 'finance_employee'     => redirect()->route('finance.dashboard'),
             'core_admin', 'core_employee'           => redirect()->route('core.dashboard'),
             'patient', 'patient_guardian'           => redirect()->route('patients.dashboard'),
+            // Core1 Granular Roles
+            'admin'                                 => redirect()->route('core1.admin.dashboard'),
+            'doctor'                                => redirect()->route('core1.doctor.dashboard'),
+            'nurse', 'head_nurse'                   => redirect()->route('core1.nurse.dashboard'),
+            'receptionist'                          => redirect()->route('core1.receptionist.dashboard'),
+            'billing'                               => redirect()->route('core1.billing.dashboard'),
             default                                 => redirect('/'),
         };
     }
