@@ -1,0 +1,227 @@
+/* ---------- Succession Roadmap Component ---------- */
+
+.succession-roadmap {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: var(--text-dark);
+}
+
+.succession-roadmap .header-box {
+    margin-bottom: var(--space-xl);
+    border-bottom: 2px solid var(--neutral-100);
+    padding-bottom: var(--space-md);
+}
+
+.succession-roadmap .header-box h2 {
+    color: var(--primary-base);
+    margin-bottom: var(--space-xs);
+    /* h2 style from theme is automatically applied by tag, 
+       but we ensure spacing here */
+}
+
+.succession-roadmap .header-box p {
+    color: var(--text-light);
+    font-size: 16px;
+}
+
+/* List and Card Layout */
+.succession-roadmap .succession-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.succession-roadmap .nomination-card {
+    border-radius: var(--radius-lg);
+    background: #ffffff;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--neutral-200);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.succession-roadmap .nomination-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.succession-roadmap .accent-bar {
+    height: 4px;
+    background: var(--accent-base); /* Using Accent (Care / Calm) */
+}
+
+.succession-roadmap .card-body {
+    padding: var(--space-lg);
+}
+
+/* Header Content */
+.succession-roadmap .card-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.succession-roadmap .label-text {
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--accent-dark);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.succession-roadmap .position-title {
+    margin: var(--space-xs) 0;
+    color: var(--primary-base);
+    font-weight: 600;
+    font-size: 28px; /* Matches h3 theme */
+}
+
+.succession-roadmap .current-status {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 15px;
+}
+
+.succession-roadmap .current-status strong {
+    color: var(--neutral-800);
+}
+
+/* Readiness Badge */
+.succession-roadmap .readiness-badge {
+    background: var(--primary-light);
+    border: 1px solid var(--neutral-200);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.succession-roadmap .badge-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--primary-dark);
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+.succession-roadmap .badge-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-base);
+}
+
+.succession-roadmap .transition-date {
+    margin-top: var(--space-sm);
+    font-size: 12px;
+    color: var(--text-light);
+    font-style: italic;
+    text-align: right;
+}
+
+/* Metrics Grid */
+.succession-roadmap .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--neutral-100);
+}
+
+.succession-roadmap .metric-item {
+    background: var(--bg);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid var(--neutral-100);
+}
+
+.succession-roadmap .metric-label {
+    color: var(--neutral-500);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: var(--space-xs);
+}
+
+.succession-roadmap .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+}
+
+/* Progress Bars */
+.succession-roadmap .progress-container {
+    width: 100%;
+    background: var(--neutral-200);
+    height: 6px;
+    margin-top: var(--space-sm);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.succession-roadmap .progress-bar.performance { background: var(--success); }
+.succession-roadmap .progress-bar.potential { background: var(--info); }
+
+/* Risk Semantics */
+.succession-roadmap .risk-high   { color: var(--danger); }
+.succession-roadmap .risk-medium { color: var(--warning); }
+.succession-roadmap .risk-low    { color: var(--success); }
+
+.succession-roadmap .stability-text {
+    font-size: 11px;
+    color: var(--neutral-400);
+    margin-top: var(--space-xs);
+}
+
+/* Development Plan Section */
+.succession-roadmap .development-plan {
+    margin-top: var(--space-lg);
+    background: var(--accent-light);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--accent-base);
+}
+
+.succession-roadmap .plan-label {
+    color: var(--accent-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    display: block;
+}
+
+.succession-roadmap .plan-text {
+    margin: var(--space-sm) 0 0;
+    font-size: 15px;
+    color: var(--neutral-700);
+    line-height: 1.6;
+    font-style: italic;
+}
+
+/* Empty State */
+.succession-roadmap .empty-state {
+    padding: var(--space-3xl);
+    text-align: center;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--neutral-300);
+}
+
+.succession-roadmap .empty-state i {
+    font-size: 48px;
+    margin-bottom: var(--space-md);
+    color: var(--neutral-300);
+}
+
+.succession-roadmap .empty-state h3 {
+    color: var(--neutral-600);
+}
+
+.succession-roadmap .empty-state p {
+    color: var(--text-light);
+    max-width: 400px;
+    margin: 0 auto;
+}

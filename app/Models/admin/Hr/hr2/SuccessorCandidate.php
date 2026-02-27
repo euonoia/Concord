@@ -4,7 +4,8 @@ namespace App\Models\admin\Hr\hr2;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\admin\Hr\hr2\SuccessionPosition;
+// Import the correct Position model used in your Controller
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle; 
 use App\Models\Employee;
 
 class SuccessorCandidate extends Model
@@ -16,25 +17,34 @@ class SuccessorCandidate extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'employee_id',
         'position_id',        
-        'target_position_id',
+        'employee_id',
+        'department_id',
+        'specialization',
         'readiness',
         'performance_score',
         'potential_score',
         'retention_risk',
-        'development_plan',
         'effective_at',
+        'development_plan',
         'is_active',
     ];
 
+    /**
+     * The Target Position being planned for.
+     */
     public function position()
     {
-        return $this->belongsTo(SuccessionPosition::class, 'position_id', 'id');
+        // Changed to DepartmentPositionTitle to match your Controller logic
+        return $this->belongsTo(DepartmentPositionTitle::class, 'position_id', 'id');
     }
 
+    /**
+     * The Employee selected as a potential successor.
+     */
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id', 'id');
+        // We link via 'employee_id' string because that is your foreign key
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }

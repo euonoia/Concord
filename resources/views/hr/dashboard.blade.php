@@ -48,7 +48,7 @@
                         <span style="color: #374151; font-size: 0.9rem; font-weight: 500;">DEPARTMENT</span>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
-                            <span style="color: #1e293b; font-weight: 600;">{{ $employee->department ?? 'General Operations' }}</span>
+                            <span style="color: #1e293b; font-weight: 600;">{{ $employee->department_id ?? 'General Operations' }}</span>
                         </div>
                     </div>
 
