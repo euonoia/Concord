@@ -2,44 +2,86 @@
 
 @section('title', 'Succession Planning')
 
+{{-- Link to the new component CSS --}}
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/components/succession.css') }}">
+@endpush
+
 @section('content')
-<div class="container">
-    <div class="header-box" style="margin-bottom: 20px;">
+<div class="container p-4 succession-roadmap">
+    <div class="header-box">
         <h2>Succession Roadmap</h2>
         <p>Positions where you have been identified as a potential successor.</p>
     </div>
 
-    <div class="succession-list" style="display: flex; flex-direction: column; gap: 15px;">
+    <div class="succession-list">
         @forelse($nominations as $nomination)
-            <div class="card" style=" ; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <span style="text-transform: uppercase; font-size: 0.75rem; color: #e67e22; font-weight: bold;">
-                            Nominated for Position:
-                        </span>
-                        <h3 style="margin: 5px 0;">{{ $nomination->position_title }}</h3>
-                        <p style="margin: 0; color: #666;">
-                            Criticality Level: <strong>{{ $nomination->criticality }}</strong>
+            <div class="nomination-card">
+                {{-- Top Blue Accent Bar --}}
+                <div class="accent-bar"></div>
+                
+                <div class="card-body">
+                    <div class="card-main-header">
+                        <div class="role-info">
+                            <span class="label-text">Target Position</span>
+                            <h3 class="position-title">{{ $nomination->target_position_title }}</h3>
+                            <p class="current-status">
+                                Currently serving as: <strong>{{ $nomination->current_position_title }}</strong>
+                            </p>
+                        </div>
+                        
+                        <div class="readiness-box">
+                            <div class="readiness-badge">
+                                <span class="badge-label">Readiness Status</span>
+                                <span class="badge-value">{{ $nomination->readiness }}</span>
+                            </div>
+                            <p class="transition-date">
+                                Estimated Transition: {{ \Carbon\Carbon::parse($nomination->effective_at)->format('M Y') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Metrics Grid --}}
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <small class="metric-label">Performance</small>
+                            <div class="metric-value">{{ number_format($nomination->performance_score, 1) }}/10</div>
+                            <div class="progress-container">
+                                <div class="progress-bar performance" style="width: {{ $nomination->performance_score * 10 }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <small class="metric-label">Potential</small>
+                            <div class="metric-value">{{ number_format($nomination->potential_score, 1) }}/10</div>
+                            <div class="progress-container">
+                                <div class="progress-bar potential" style="width: {{ $nomination->potential_score * 10 }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-item">
+                            <small class="metric-label">Retention Risk</small>
+                            <div class="metric-value risk-{{ strtolower($nomination->retention_risk) }}">
+                                {{ $nomination->retention_risk }}
+                            </div>
+                            <p class="stability-text">Stability Check</p>
+                        </div>
+                    </div>
+
+                    {{-- Development Plan Box --}}
+                    <div class="development-plan">
+                        <small class="plan-label">Succession Development Focus:</small>
+                        <p class="plan-text">
+                            "{{ $nomination->development_plan ?? 'Your training path for this role is currently being drafted by HR.' }}"
                         </p>
                     </div>
-                    <div style="text-align: right;">
-                        <span class="badge" style="background: #ebf5fb; color: #2e86c1; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem;">
-                            Readiness: {{ $nomination->readiness_level ?? 'Under Review' }}
-                        </span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
-                    <small style="color: #777;">Development Plan:</small>
-                    <p style="margin: 5px 0 0; font-size: 0.9rem;">
-                        {{ $nomination->development_plan ?? 'Your training path for this role is currently being drafted by HR.' }}
-                    </p>
                 </div>
             </div>
         @empty
-            <div class="card" style="padding: 30px; text-align: center; color: #888;">
-                <i class="fa fa-info-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                <p>You are not currently listed as a successor for any critical positions.</p>
+            <div class="empty-state">
+                <i class="fa fa-info-circle"></i>
+                <h3>No Active Nominations</h3>
+                <p>You are not currently listed as a successor for any critical positions. Continue to excel in your current role to be identified for future opportunities.</p>
             </div>
         @endforelse
     </div>
