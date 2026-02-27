@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminSuccessionController extends Controller
 {
-    /**
-     * Check if the user has HR Admin access
-     */
     private function checkAccess()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
@@ -23,42 +20,25 @@ class AdminSuccessionController extends Controller
         }
     }
 
-    /**
-     * Display Succession Planning page
-     */
     public function index()
     {
         $this->checkAccess();
 
-        // Only get active departments with their specializations
-        $departments = Department::where('is_active', 1)
-            ->with('specializations')
-            ->get();
+        $departments = Department::where('is_active', 1)->with('specializations')->get();
 
-        // Only get active positions
-        $positions = DepartmentPositionTitle::with('department')
-            ->where('is_active', 1)
+        $positions = DepartmentPositionTitle::where('is_active', 1)
+            ->with('department')
             ->orderBy('position_title')
             ->get();
 
-        // Only get active candidates
         $candidates = SuccessorCandidate::with(['position', 'employee'])
             ->where('is_active', 1)
             ->get()
-            ->sortBy(fn($c) => [
-                'Ready Now' => 1,
-                '1-2 Years' => 2,
-                '3+ Years' => 3,
-                'Emergency' => 4
-            ][$c->readiness] ?? 5);
+            ->sortBy(fn($c) => ['Ready Now'=>1,'1-2 Years'=>2,'3+ Years'=>3,'Emergency'=>4][$c->readiness] ?? 5);
 
-        // Do NOT send all employees to the view — employees will be loaded dynamically by department
-        return view('admin.hr2.succession', compact('positions', 'candidates', 'departments'));
+        return view('admin.hr2.succession', compact('departments','positions','candidates'));
     }
 
-    /**
-     * Get Specializations by Department
-     */
     public function getSpecializations($dept_code)
     {
         $specializations = DepartmentSpecialization::where('dept_code', $dept_code)
@@ -68,9 +48,6 @@ class AdminSuccessionController extends Controller
         return response()->json($specializations);
     }
 
-    /**
-     * Get Positions by Department + Specialization
-     */
     public function getPositions(Request $request, $dept_code)
     {
         $specialization = $request->query('specialization');
@@ -78,85 +55,74 @@ class AdminSuccessionController extends Controller
         $positions = DepartmentPositionTitle::where('department_id', $dept_code)
             ->where('is_active', 1)
             ->when($specialization, fn($q) => $q->where('specialization_name', $specialization))
-            ->get(['id', 'position_title', 'rank_level']);
+            ->get(['id','position_title','rank_level']);
 
         return response()->json($positions);
     }
 
-    /**
-     * Get Employees by Department
-     */
-    public function getEmployeesByDepartment($dept_id)
+    public function getEmployeesByDeptAndSpec(Request $request, $dept_id)
     {
+        $specialization = $request->query('specialization');
+
+        if (!$specialization) return response()->json([]);
+
         $employees = Employee::where('department_id', $dept_id)
+            ->where('specialization', $specialization)
             ->orderBy('first_name')
-            ->get(['employee_id', 'first_name', 'last_name']);
+            ->get(['employee_id','first_name','last_name']);
 
         return response()->json($employees);
     }
 
-    /**
-     * Store a Successor Candidate
-     */
     public function storeCandidate(Request $request)
     {
         $this->checkAccess();
 
         $validated = $request->validate([
-            'position_id' => 'required|exists:department_position_titles_hr2,id',
-            'employee_id' => 'required|exists:employees,employee_id',
-            'readiness' => 'required|in:Ready Now,1-2 Years,3+ Years,Emergency',
-            'perf_score' => 'required|numeric|min:1|max:10',
-            'pot_score' => 'required|numeric|min:1|max:10',
-            'retention_risk' => 'required|in:High,Medium,Low',
-            'effective_at' => 'required|date',
-            'development_plan' => 'nullable|string|max:500',
+            'position_id'=>'required|exists:department_position_titles_hr2,id',
+            'employee_id'=>'required|exists:employees,employee_id',
+            'readiness'=>'required|in:Ready Now,1-2 Years,3+ Years,Emergency',
+            'perf_score'=>'required|numeric|min:1|max:10',
+            'pot_score'=>'required|numeric|min:1|max:10',
+            'retention_risk'=>'required|in:High,Medium,Low',
+            'effective_at'=>'required|date',
+            'development_plan'=>'nullable|string|max:500',
         ]);
 
         $position = DepartmentPositionTitle::findOrFail($validated['position_id']);
 
         SuccessorCandidate::create([
-            'position_id' => $position->id,
-            'employee_id' => $validated['employee_id'],
-            'department_id' => $position->department_id,
-            'specialization' => $position->specialization_name,
-            'readiness' => $validated['readiness'],
-            'performance_score' => $validated['perf_score'],
-            'potential_score' => $validated['pot_score'],
-            'retention_risk' => $validated['retention_risk'],
-            'effective_at' => $validated['effective_at'],
-            'development_plan' => $validated['development_plan'] ?? null,
-            'is_active' => 1,
+            'position_id'=>$position->id,
+            'employee_id'=>$validated['employee_id'],
+            'department_id'=>$position->department_id,
+            'specialization'=>$position->specialization_name,
+            'readiness'=>$validated['readiness'],
+            'performance_score'=>$validated['perf_score'],
+            'potential_score'=>$validated['pot_score'],
+            'retention_risk'=>$validated['retention_risk'],
+            'effective_at'=>$validated['effective_at'],
+            'development_plan'=>$validated['development_plan'] ?? null,
+            'is_active'=>1,
         ]);
 
-        return redirect()->back()->with('success', 'Candidate added successfully.');
+        return redirect()->back()->with('success','Candidate added successfully.');
     }
 
-    /**
-     * Archive a Position
-     */
     public function destroyPosition($id)
     {
         $this->checkAccess();
-
         $position = DepartmentPositionTitle::findOrFail($id);
         $position->is_active = 0;
         $position->save();
-
-        return redirect()->back()->with('success', 'Position archived successfully.');
+        return redirect()->back()->with('success','Position archived successfully.');
     }
 
-    /**
-     * Remove a Candidate
-     */
     public function destroyCandidate($id)
     {
         $this->checkAccess();
-
         $candidate = SuccessorCandidate::findOrFail($id);
         $candidate->is_active = 0;
         $candidate->save();
-
-        return redirect()->back()->with('success', 'Candidate removed successfully.');
+        return redirect()->back()->with('success','Candidate removed successfully.');
     }
 }
