@@ -161,45 +161,6 @@ CREATE TABLE IF NOT EXISTS `waiting_lists_core1` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 COMMIT;
 
 
@@ -209,7 +170,7 @@ MODIFY status ENUM('pending','scheduled','confirmed','completed','cancelled','de
 NOT NULL DEFAULT 'pending';
 
 ALTER TABLE `patients_core1`
-ADD COLUMN IF NOT EXISTS `care_type` enum('inpatient','outpatient') DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS `care_type` enum('inpatient','outpatient') DEFAULT NULL AFTER `status`,
 ADD COLUMN IF NOT EXISTS `admission_date` date NULL,
 ADD COLUMN IF NOT EXISTS `doctor_id` bigint(20) NULL,
 ADD COLUMN IF NOT EXISTS `reason` text NULL;
@@ -220,7 +181,7 @@ ADD COLUMN IF NOT EXISTS `policy_number` varchar(255) DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS `emergency_contact_relation` varchar(255) DEFAULT NULL;
 
 ALTER TABLE patients_core1
-ADD COLUMN IF NOT EXISTS assigned_nurse_id BIGINT NULL;
+ADD COLUMN IF NOT EXISTS assigned_nurse_id BIGINT NULL AFTER care_type;
 
 
 
@@ -250,11 +211,11 @@ MODIFY record_type VARCHAR(50);
 
 ALTER TABLE `appointments`
 MODIFY status ENUM('pending','approved','rejected','cancelled') NOT NULL DEFAULT 'pending',
-ADD COLUMN IF NOT EXISTS `cancellation_reason` text DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS `cancelled_at` timestamp NULL DEFAULT NULL;
+ADD COLUMN IF NOT EXISTS `cancellation_reason` text DEFAULT NULL AFTER `rejection_reason`,
+ADD COLUMN IF NOT EXISTS `cancelled_at` timestamp NULL DEFAULT NULL AFTER `cancellation_reason`;
 
 
 ALTER TABLE `patients_core1`
-ADD COLUMN IF NOT EXISTS `insurance_provider` varchar(255) DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS `policy_number` varchar(255) DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS `emergency_contact_relation` varchar(255) DEFAULT NULL;
+ADD COLUMN IF NOT EXISTS `insurance_provider` varchar(255) DEFAULT NULL AFTER `medical_history`,
+ADD COLUMN IF NOT EXISTS `policy_number` varchar(255) DEFAULT NULL AFTER `insurance_provider`,
+ADD COLUMN IF NOT EXISTS `emergency_contact_relation` varchar(255) DEFAULT NULL AFTER `emergency_contact_phone`;
