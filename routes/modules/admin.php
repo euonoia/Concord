@@ -31,17 +31,17 @@ Route::resource('competencies', CompetencyController::class);
 Route::resource('learning', AdminLearningController::class);
 Route::resource('training', AdminTrainingController::class);
 
+
 // --- Succession Planning Routes ---
 Route::prefix('succession')->group(function () {
     Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
 
-    // Positions
-    Route::post('/position', [AdminSuccessionController::class, 'storePosition'])->name('succession.position.store');
-    Route::delete('/position/{id}', [AdminSuccessionController::class, 'destroyPosition'])->name('succession.position.destroy');
-
     // Candidates
     Route::post('/candidate', [AdminSuccessionController::class, 'storeCandidate'])->name('succession.candidate.store');
     Route::delete('/candidate/{id}', [AdminSuccessionController::class, 'destroyCandidate'])->name('succession.candidate.destroy');
+    
+    //promote candidate
+    Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
 });
 
 // --- ESS Module Routes ---
