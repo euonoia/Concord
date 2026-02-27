@@ -38,7 +38,7 @@
                 <div>
                     <label style="font-weight: 600;">Specialization:</label>
                     <select id="spec_select" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b8daff; margin-top: 5px;">
-                        <option value="">-- Choose Department First --</option>
+                        <option value="">-- Select Department First --</option>
                     </select>
                 </div>
 
@@ -51,15 +51,12 @@
                 </div>
             </div>
 
-            {{-- Employee & Readiness --}}
+           {{-- Employee & Readiness --}}
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
                 <div>
                     <label style="font-weight: 600;">Select Employee:</label>
-                    <select name="employee_id" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b8daff; margin-top: 5px;" required>
-                        <option value="">-- Select Employee --</option>
-                        @foreach($employees as $e)
-                            <option value="{{ $e->id }}">{{ $e->first_name }} {{ $e->last_name }}</option>
-                        @endforeach
+                    <select name="employee_id" id="employee_select" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #b8daff; margin-top: 5px;" required>
+                        <option value="">-- Select Department First --</option>
                     </select>
                 </div>
 
@@ -111,8 +108,6 @@
             </button>
         </form>
     </div>
-
-   
 </div>
 
 {{-- JS for Dynamic Dropdowns --}}
@@ -121,18 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const deptSelect = document.getElementById('dept_select');
     const specSelect = document.getElementById('spec_select');
     const positionSelect = document.getElementById('position_select');
+    const employeeSelect = document.getElementById('employee_select');
 
     // Department -> Specialization
     deptSelect.addEventListener('change', function() {
         const deptCode = this.value;
-        specSelect.innerHTML = '<option>Loading...</option>';
-        positionSelect.innerHTML = '<option>-- Select Specialization First --</option>';
 
-        if (!deptCode) {
-            specSelect.innerHTML = '<option value="">-- Choose Department First --</option>';
-            return;
-        }
+        // Reset Specialization & Position
+        specSelect.innerHTML = '<option value="">-- Select Department First --</option>';
+        positionSelect.innerHTML = '<option value="">-- Select Specialization First --</option>';
 
+        // Reset Employees
+        employeeSelect.innerHTML = '<option value="">-- Select Department First --</option>';
+
+        if (!deptCode) return;
+
+        // Load Specializations
         fetch(`/admin/hr2/departments/${deptCode}/specializations`)
             .then(res => res.json())
             .then(data => {
@@ -144,14 +143,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     specSelect.appendChild(opt);
                 });
             });
+
+        // Load Employees
+        fetch(`/admin/hr2/departments/${deptCode}/employees`)
+            .then(res => res.json())
+            .then(data => {
+                employeeSelect.innerHTML = '<option value="">-- Select Employee --</option>';
+                data.forEach(emp => {
+                    const opt = document.createElement('option');
+                    opt.value = emp.employee_id;
+                    opt.textContent = `${emp.first_name} ${emp.last_name}`;
+                    employeeSelect.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                employeeSelect.innerHTML = '<option value="">-- Failed to load employees --</option>';
+            });
     });
 
-    // Specialization -> Positions + Rank Level
+    // Specialization -> Positions
     specSelect.addEventListener('change', function() {
         const deptCode = deptSelect.value;
         const specialization = this.value;
-        positionSelect.innerHTML = '<option>Loading...</option>';
 
+        positionSelect.innerHTML = '<option>Loading...</option>';
         if (!specialization) {
             positionSelect.innerHTML = '<option value="">-- Select Specialization First --</option>';
             return;

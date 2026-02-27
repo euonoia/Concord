@@ -22,6 +22,9 @@ Route::prefix('hr2')->group(function () {
     // Positions by Department + Specialization
     Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])
         ->name('departments.positions');
+    // Employees by Department
+    Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDepartment'])
+        ->name('departments.employees');
 });
 
 // --- HR2 Admin Resource Routes ---

@@ -11,20 +11,20 @@
 
     <div class="succession-list" style="display: flex; flex-direction: column; gap: 15px;">
         @forelse($nominations as $nomination)
-            <div class="card" style=" ; padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div class="card" style="padding: 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <span style="text-transform: uppercase; font-size: 0.75rem; color: #e67e22; font-weight: bold;">
-                            Nominated for Position:
+                            Target Position:
                         </span>
-                        <h3 style="margin: 5px 0;">{{ $nomination->position_title }}</h3>
+                        <h3 style="margin: 5px 0;">{{ $nomination->target_position_title }}</h3>
                         <p style="margin: 0; color: #666;">
-                            Criticality Level: <strong>{{ $nomination->criticality }}</strong>
+                            Current Position: <strong>{{ $nomination->current_position_title }}</strong>
                         </p>
                     </div>
                     <div style="text-align: right;">
                         <span class="badge" style="background: #ebf5fb; color: #2e86c1; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem;">
-                            Readiness: {{ $nomination->readiness_level ?? 'Under Review' }}
+                            Readiness: {{ $nomination->readiness ?? 'Under Review' }}
                         </span>
                     </div>
                 </div>

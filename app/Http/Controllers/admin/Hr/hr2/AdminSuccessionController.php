@@ -4,7 +4,6 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\admin\Hr\hr2\SuccessionPosition;
 use App\Models\admin\Hr\hr2\SuccessorCandidate;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentSpecialization;
@@ -14,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminSuccessionController extends Controller
 {
+    /**
+     * Check if the user has HR Admin access
+     */
     private function checkAccess()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
@@ -21,31 +23,42 @@ class AdminSuccessionController extends Controller
         }
     }
 
-    // Display Succession Page
+    /**
+     * Display Succession Planning page
+     */
     public function index()
     {
         $this->checkAccess();
 
+        // Only get active departments with their specializations
         $departments = Department::where('is_active', 1)
             ->with('specializations')
             ->get();
 
+        // Only get active positions
         $positions = DepartmentPositionTitle::with('department')
             ->where('is_active', 1)
             ->orderBy('position_title')
             ->get();
 
+        // Only get active candidates
         $candidates = SuccessorCandidate::with(['position', 'employee'])
             ->where('is_active', 1)
             ->get()
-            ->sortBy(fn($c) => ['Ready Now'=>1,'1-2 Years'=>2,'3+ Years'=>3,'Emergency'=>4][$c->readiness] ?? 5);
+            ->sortBy(fn($c) => [
+                'Ready Now' => 1,
+                '1-2 Years' => 2,
+                '3+ Years' => 3,
+                'Emergency' => 4
+            ][$c->readiness] ?? 5);
 
-        $employees = Employee::orderBy('first_name')->get();
-
-        return view('admin.hr2.succession', compact('positions', 'candidates', 'employees', 'departments'));
+        // Do NOT send all employees to the view — employees will be loaded dynamically by department
+        return view('admin.hr2.succession', compact('positions', 'candidates', 'departments'));
     }
 
-    // Get Specializations by Department
+    /**
+     * Get Specializations by Department
+     */
     public function getSpecializations($dept_code)
     {
         $specializations = DepartmentSpecialization::where('dept_code', $dept_code)
@@ -55,7 +68,9 @@ class AdminSuccessionController extends Controller
         return response()->json($specializations);
     }
 
-    // Get Positions by Department + Specialization
+    /**
+     * Get Positions by Department + Specialization
+     */
     public function getPositions(Request $request, $dept_code)
     {
         $specialization = $request->query('specialization');
@@ -68,14 +83,28 @@ class AdminSuccessionController extends Controller
         return response()->json($positions);
     }
 
-    // Store Candidate
+    /**
+     * Get Employees by Department
+     */
+    public function getEmployeesByDepartment($dept_id)
+    {
+        $employees = Employee::where('department_id', $dept_id)
+            ->orderBy('first_name')
+            ->get(['employee_id', 'first_name', 'last_name']);
+
+        return response()->json($employees);
+    }
+
+    /**
+     * Store a Successor Candidate
+     */
     public function storeCandidate(Request $request)
     {
         $this->checkAccess();
 
         $validated = $request->validate([
             'position_id' => 'required|exists:department_position_titles_hr2,id',
-            'employee_id' => 'required|exists:employees,id',
+            'employee_id' => 'required|exists:employees,employee_id',
             'readiness' => 'required|in:Ready Now,1-2 Years,3+ Years,Emergency',
             'perf_score' => 'required|numeric|min:1|max:10',
             'pot_score' => 'required|numeric|min:1|max:10',
@@ -103,7 +132,9 @@ class AdminSuccessionController extends Controller
         return redirect()->back()->with('success', 'Candidate added successfully.');
     }
 
-    // Archive Position
+    /**
+     * Archive a Position
+     */
     public function destroyPosition($id)
     {
         $this->checkAccess();
@@ -115,7 +146,9 @@ class AdminSuccessionController extends Controller
         return redirect()->back()->with('success', 'Position archived successfully.');
     }
 
-    // Remove Candidate
+    /**
+     * Remove a Candidate
+     */
     public function destroyCandidate($id)
     {
         $this->checkAccess();
