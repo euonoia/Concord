@@ -25,3 +25,4 @@ Thumbs.db
 app/certs
 composer.lock
 package-lock.json
+.agents

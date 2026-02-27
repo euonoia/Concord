@@ -4,9 +4,11 @@ use App\Http\Middleware\RedirectIfGuest;
 use Illuminate\Support\Facades\Route;
 
 // --- Public Routes ---
-Route::get('/', function () {
-    return view('onboarding');
-});
+require base_path('routes/landing/landing.php');
+
+// Route::get('/', function () {
+//     return view('onboarding');
+// });
 Route::get('/careers/residency-fellowship', function () {
     return view('hr.hr1.residency_fellowship');
 })->name('careers.residency');
