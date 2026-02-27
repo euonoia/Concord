@@ -62,18 +62,14 @@ class AdminSuccessionController extends Controller
 
     public function getEmployeesByDeptAndSpec(Request $request, $dept_id)
     {
-        $specialization = $request->query('specialization');
-
-        if (!$specialization) return response()->json([]);
-
+        // We fetch all department employees to allow cross-specialization succession
         $employees = Employee::where('department_id', $dept_id)
-            ->where('specialization', $specialization)
             ->orderBy('first_name')
-            ->get(['employee_id','first_name','last_name']);
+            ->get(['employee_id', 'first_name', 'last_name', 'specialization']);
 
         return response()->json($employees);
     }
-
+    
     public function storeCandidate(Request $request)
     {
         $this->checkAccess();
@@ -106,15 +102,6 @@ class AdminSuccessionController extends Controller
         ]);
 
         return redirect()->back()->with('success','Candidate added successfully.');
-    }
-
-    public function destroyPosition($id)
-    {
-        $this->checkAccess();
-        $position = DepartmentPositionTitle::findOrFail($id);
-        $position->is_active = 0;
-        $position->save();
-        return redirect()->back()->with('success','Position archived successfully.');
     }
 
     public function destroyCandidate($id)
