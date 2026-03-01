@@ -8,12 +8,13 @@ use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
 use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
 use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 
+
 // --- Admin Dashboard ---
 Route::get('/dashboard', function () {
     return view('admin.dashboard');
 })->name('admin.dashboard');
 
-// --- HR2 Department AJAX Endpoints ---
+// --- HR2 Department ---
 Route::prefix('hr2')->group(function () {
     // Specializations by Department
     Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
@@ -25,14 +26,9 @@ Route::prefix('hr2')->group(function () {
     // Employees by Department and specialization
     Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
 });
-
-// --- HR2 Admin Resource Routes ---
 Route::resource('competencies', CompetencyController::class);
 Route::resource('learning', AdminLearningController::class);
 Route::resource('training', AdminTrainingController::class);
-
-
-// --- Succession Planning Routes ---
 Route::prefix('succession')->group(function () {
     Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
 
@@ -43,9 +39,10 @@ Route::prefix('succession')->group(function () {
     //promote candidate
     Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
 });
-
-// --- ESS Module Routes ---
 Route::prefix('ess')->group(function () {
     Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
     Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
 });
+// --- END OF HR2 Department ---
+
+// --- START OF HR3 Department ---

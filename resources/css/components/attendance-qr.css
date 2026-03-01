@@ -1,0 +1,31 @@
+.hr3-qr-wrapper {
+    background-color: #ffffff;
+    padding: 4rem;
+    border-radius: 3.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e2e8f0;
+    max-width: 1200px;
+    width: 95%;
+}
+
+.hr3-qr-content-left {
+    text-align: left;
+}
+
+.hr3-qr-section-right {
+    text-align: center;
+}
+
+.hr3-qr-frame {
+    padding: 1.5rem;
+    border: 6px solid #2563eb;
+    border-radius: 2.5rem;
+    display: inline-block;
+    background-color: #ffffff;
+}
+
+.hr3-qr-image {
+    width: 380px; 
+    height: 380px;
+    object-fit: contain;
+}

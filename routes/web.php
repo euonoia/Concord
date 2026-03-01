@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\authentication\AuthController;
+use App\Http\Controllers\admin\Hr\hr3\AttendanceController;
 use App\Http\Middleware\RedirectIfGuest;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,21 @@ require base_path('routes/landing/landing.php');
 Route::get('/careers/residency-fellowship', function () {
     return view('hr.hr1.residency_fellowship');
 })->name('careers.residency');
+// -- Attendance Station (Public, but URL is protected by Laravel's "signed" middleware) ---
+
+Route::get('/attendance/station', [AttendanceController::class, 'showStation'])
+     ->name('hr3.attendance.station');
+
+Route::middleware(['auth'])->group(function () {
+    
+    // The link inside the QR code (must be logged in to execute)
+    Route::get('/hr/hr3/attendance/verify/{location}', [AttendanceController::class, 'verifyScan'])
+         ->name('hr3.attendance.verify')
+         ->middleware('signed'); 
+
+    // Your other existing HR routes...
+    Route::prefix('hr')->group(base_path('routes/modules/hr.php'));
+});
 
 Route::prefix('portal')->group(function () {
     Route::get('/', function () { return view('authentication.login'); })->name('portal.home');
