@@ -8,12 +8,15 @@ use Illuminate\Support\Str;
 
 class AdminAttendanceController extends Controller
 {
-    public function showStation()
-    {
-        $token = Str::uuid()->toString();
 
-        Cache::put("attendance_token_$token", true, now()->addSeconds(30));
+              public function showStation()
+        {
+            $token = Str::uuid()->toString();
+            Cache::put("attendance_token_$token", true, now()->addSeconds(30));
 
-        return view('admin.hr3.attendance_station', compact('token'));
-    }
+            // Update the QR to point to the new auto-verify route
+            $qrValue = route('attendance.auto_verify', ['token' => $token]);
+
+            return view('admin.hr3.attendance_station', compact('token', 'qrValue'));
+        }
 }

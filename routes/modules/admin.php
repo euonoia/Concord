@@ -45,4 +45,3 @@ Route::prefix('ess')->group(function () {
 });
 // --- END OF HR2 Department ---
 
-// --- START OF HR3 Department ---

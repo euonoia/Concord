@@ -25,14 +25,10 @@ Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('us
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---
-Route::prefix('hr3')->group(function () {
-    Route::get('/attendance/scan', [UserAttendanceController::class, 'scanView'])
-        ->name('user.attendance.scan');
-
-    Route::post('/attendance/verify', [UserAttendanceController::class, 'verify'])
-        ->name('attendance.verify');
-
-    Route::get('/attendance/success', [UserAttendanceController::class, 'success'])
-        ->name('user.attendance.success');
-});
+Route::get('/attendance/scan', [UserAttendanceController::class, 'scanView'])
+    ->name('user.attendance.scan');
+Route::match(['get', 'post'], '/attendance/verify', [UserAttendanceController::class, 'verify'])
+    ->name('attendance.verify');
+Route::get('/attendance/success', [UserAttendanceController::class, 'success'])
+    ->name('user.attendance.success');
 // --- END OF HR3 Department ---

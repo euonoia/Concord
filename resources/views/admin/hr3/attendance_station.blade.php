@@ -42,9 +42,8 @@
         <div class="hr3-qr-section-right flex-shrink-0 flex flex-col items-center">
             <div class="hr3-qr-frame-outer p-6 bg-white rounded-[3rem] shadow-2xl border border-slate-100">
                 <div class="hr3-qr-image w-80 h-80 flex items-center justify-center">
-                  {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($token) !!}
-                </div>
-            </div>
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($qrValue) !!}                </div>
+                  </div>
 
             <div class="mt-10 text-center">
                 <div class="flex items-center justify-center gap-3 mb-3">

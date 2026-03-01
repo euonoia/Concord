@@ -45,44 +45,52 @@ export default function initAttendanceScanner() {
         }
     });
 
-    async function handleScan(token) {
-        feedback?.classList.remove("hidden");
-        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700";
-        feedback.innerText = "Verifying Attendance...";
+async function handleScan(decodedText) {
+    feedback?.classList.remove("hidden");
+    feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700 text-center";
+    feedback.innerText = "Verifying Attendance...";
 
-        if (!token) {
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
-            feedback.innerText = "Invalid QR code";
-            reset();
-            return;
-        }
+    let tokenToSend = decodedText.trim();
 
-        try {
-            const response = await fetch("/hr/hr3/attendance/verify", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                body: JSON.stringify({ token }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) throw new Error(data.message || "Failed to record attendance");
-
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
-            feedback.innerText = "Attendance Recorded Successfully!";
-
-            setTimeout(() => window.location.href = "/hr/dashboard", 2000);
-
-        } catch (err) {
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
-            feedback.innerText = err.message;
-            reset();
-        }
+    if (tokenToSend.includes('/')) {
+        const parts = tokenToSend.split('/');
+        tokenToSend = parts[parts.length - 1]; 
     }
+
+    try {
+        const response = await fetch("/attendance/verify", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            body: JSON.stringify({ 
+                token: tokenToSend,
+                station: 1 
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Failed to record attendance");
+        }
+
+        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700 text-center";
+        feedback.innerText = "Attendance Recorded Successfully!";
+
+        setTimeout(() => window.location.href = "/hr/dashboard", 1500);
+
+    } catch (err) {
+        console.error("Verification Error:", err);
+        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700 text-center";
+        feedback.innerText = err.message;
+        
+        setTimeout(() => reset(), 3000);
+    }
+}
+
 
     function reset() {
         startBtn.disabled = false;
