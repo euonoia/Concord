@@ -19,12 +19,14 @@ RUN rm -f tailwind.config.js postcss.config.js postcss.config.cjs
 
 # STAGE 2: PHP & Apache
 FROM php:8.4-apache
+
 WORKDIR /var/www/html
 
-# Install dependencies for MySQL/TiDB
+# --------------------------
+# Install PHP system dependencies
+# --------------------------
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libonig-dev libxml2-dev \
-    libmariadb-dev \
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libmariadb-dev \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,9 +39,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy code and the built assets from asset-builder
 COPY . .
-COPY --from=asset-builder /app/public/build ./public/build
 
+# --------------------------
 # Install PHP dependencies
+# --------------------------
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # Set permissions
