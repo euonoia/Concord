@@ -11,7 +11,7 @@ RUN npm run build
 FROM php:8.4-apache
 WORKDIR /var/www/html
 
-# Install dependencies for MySQL/TiDB
+# Install system dependencies for PHP + MySQL/TiDB
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev \
     libmariadb-dev \
@@ -27,14 +27,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . .
 COPY --from=asset-builder /app/public/build ./public/build
 
-# Install PHP dependencies
+# Install PHP dependencies fresh
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # CRITICAL: Ensure permissions are set BEFORE we try to run artisan commands
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# TiDB SSL often needs a writable /tmp or storage path
+# TiDB SSL often needs a writable storage path
 RUN mkdir -p storage/app/certs && chown -R www-data:www-data storage/app/certs
 
 RUN rm -f public/hot
