@@ -1,7 +1,26 @@
-# PHP + Apache for Render Free (skip Node build)
+# --------------------------
+# Stage 1: Build Vite assets
+# --------------------------
+FROM node:20-alpine AS vite-build
+
+WORKDIR /app
+
+# Copy package files first (better caching)
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Copy the rest of the project
+COPY . .
+
+# Build Vite assets
+RUN npm run build
+
+
+# --------------------------
+# Stage 2: PHP + Apache
+# --------------------------
 FROM php:8.4-apache
 
-# Set working directory
 WORKDIR /var/www/html
 
 # --------------------------
@@ -24,15 +43,14 @@ RUN a2enmod rewrite headers \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # --------------------------
-# Copy application code
+# Copy Laravel application
 # --------------------------
 COPY . .
 
 # --------------------------
-# Ensure prebuilt Vite assets exist
+# Copy built Vite assets from Node stage
 # --------------------------
-# public/build already exists in your repo; no need to copy from 'build/'
-RUN mkdir -p public/build
+COPY --from=vite-build /app/public/build public/build
 
 # --------------------------
 # Install PHP dependencies
@@ -40,23 +58,22 @@ RUN mkdir -p public/build
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # --------------------------
-# Set proper permissions for Laravel
+# Set proper permissions
 # --------------------------
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
-    && mkdir -p storage/app/certs && chown -R www-data:www-data storage/app/certs
+    && chmod -R 775 storage bootstrap/cache
 
 # --------------------------
-# Remove Laravel hot reload file if exists
+# Remove Laravel hot reload file
 # --------------------------
 RUN rm -f public/hot || true
 
 # --------------------------
-# Expose HTTP port
+# Expose port
 # --------------------------
 EXPOSE 80
 
 # --------------------------
-# Run artisan commands + start Apache
+# Run Laravel + Apache
 # --------------------------
 CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground"
