@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\authentication\AuthController;
-use App\Http\Controllers\admin\Hr\hr3\AttendanceController;
+use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Middleware\RedirectIfGuest;
 use Illuminate\Support\Facades\Route;
 
@@ -13,22 +13,25 @@ require base_path('routes/landing/landing.php');
 Route::get('/careers/residency-fellowship', function () {
     return view('hr.hr1.residency_fellowship');
 })->name('careers.residency');
-// -- Attendance Station (Public, but URL is protected by Laravel's "signed" middleware) ---
 
-Route::get('/attendance/station', [AttendanceController::class, 'showStation'])
+// --- Attendance Station (Public QR display) ---
+// No auth required for viewing the station; QR tokens are dynamic
+Route::get('/attendance/station', [AdminAttendanceController::class, 'showStation'])
      ->name('hr3.attendance.station');
 
+// --- Employee QR Verification ---
+// Must be logged in to verify attendance
 Route::middleware(['auth'])->group(function () {
-    
-    // The link inside the QR code (must be logged in to execute)
-    Route::get('/hr/hr3/attendance/verify/{location}', [AttendanceController::class, 'verifyScan'])
-         ->name('hr3.attendance.verify')
-         ->middleware('signed'); 
 
-    // Your other existing HR routes...
+    // The mobile scanner posts the QR token to this endpoint
+    Route::post('/hr/hr3/attendance/verify', [AdminAttendanceController::class, 'verifyScan'])
+         ->name('hr3.attendance.verify');
+
+    // Other existing HR routes
     Route::prefix('hr')->group(base_path('routes/modules/hr.php'));
 });
 
+// --- Portal Routes ---
 Route::prefix('portal')->group(function () {
     Route::get('/', function () { return view('authentication.login'); })->name('portal.home');
     Route::get('/login', function () { return view('authentication.login'); })->name('portal.login');

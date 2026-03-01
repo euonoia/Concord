@@ -4,7 +4,7 @@ namespace App\Http\Controllers\user\Hr\hr3;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\admin\Hr\hr3\AttendanceLog; // Your existing model
+use App\Models\admin\Hr\hr3\AttendanceLog; 
 use Illuminate\Support\Facades\Auth;
 
 class UserAttendanceController extends Controller
