@@ -141,50 +141,61 @@ export default function initAttendanceScanner() {
         }
     });
 
-    async function handleScan(decodedText) {
-        feedback?.classList.remove('hidden');
-        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700 animate-pulse";
-        feedback.innerText = "Verifying Attendance...";
+   async function handleScan(decodedText) {
+    feedback?.classList.remove('hidden');
+    feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700 animate-pulse";
+    feedback.innerText = "Verifying Attendance...";
 
-        let payload;
-        try {
-            payload = JSON.parse(decodedText); 
-        } catch (e) {
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
-            feedback.innerText = "Invalid QR code format";
-            resetScanner();
-            return;
+    let payload;
+
+   
+    try {
+        payload = JSON.parse(decodedText);
+        if (!payload.token || !payload.station) {
+            throw new Error("QR code missing required fields");
         }
-
-        try {
-            const response = await fetch("/hr/hr3/attendance/verify", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    token: payload.token,
-                    station: payload.station
-                })
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || "Invalid QR Code");
-
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
-            feedback.innerText = "Success! Attendance Recorded.";
-            if (navigator.vibrate) navigator.vibrate(200);
-
-            setTimeout(() => window.location.href = "/hr/dashboard", 2000);
-
-        } catch (err) {
-            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
-            feedback.innerText = err.message;
-            resetScanner();
-        }
+    } catch (e) {
+        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
+        feedback.innerText = "Invalid QR code format";
+        resetScanner();
+        return;
     }
+
+   
+    try {
+        const response = await fetch("/hr/hr3/attendance/verify", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                token: payload.token,
+                station: payload.station
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to verify attendance");
+        }
+
+       
+        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
+        feedback.innerText = " Attendance Recorded Successfully!";
+        if (navigator.vibrate) navigator.vibrate(200);
+
+        setTimeout(() => window.location.href = "/hr/dashboard", 2000);
+
+    } catch (err) {
+        
+        feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
+        feedback.innerText = err.message;
+        resetScanner();
+    }
+}
 
     function resetScanner() {
         startBtn.disabled = false;
