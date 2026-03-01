@@ -1,9 +1,11 @@
 @extends('layouts.dashboard.app')
 
 @section('content')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <div class="dashboard-wrapper" style="padding: 2.5rem 1.5rem; max-width: 1300px; margin: 0 auto; font-family: 'Inter', sans-serif; background-color: #f8fafc; min-height: 100vh;">
     
-    <div class="header-section" style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div class="header-section" style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem;">
         <div>
             <h1 style="color: #1a202c; font-size: 1.875rem; font-weight: 700; margin: 0; letter-spacing: -0.025em;">
                 Welcome back, {{ $employee->first_name }}!
@@ -12,8 +14,19 @@
                 Here’s what’s happening with your development profile today.
             </p>
         </div>
-        <div class="date-chip" style="background: #ffffff; padding: 0.5rem 1rem; border-radius: 99px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-            <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> {{ date('F j, Y') }}
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="{{ route('user.attendance.scan') }}" 
+               title="Scan Attendance"
+               style="display: flex; align-items: center; justify-content: center; background: #2563eb; color: white; width: 48px; height: 48px; border-radius: 12px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);"
+               onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.transform='translateY(-2px)'" 
+               onmouseout="this.style.backgroundColor='#2563eb'; this.style.transform='translateY(0)'">
+                <i class="fas fa-qrcode" style="font-size: 1.25rem;"></i>
+            </a>
+
+            <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center;">
+                <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> {{ date('F j, Y') }}
+            </div>
         </div>
     </div>
 
@@ -22,8 +35,8 @@
         <div class="dashboard_card" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden;">
             <div style="background: #f1f5f9; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: #475569; color: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-id-card"></i>
+                    <div style="color: #475569; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-id-card" style="font-size: 1.1rem;"></i>
                     </div>
                     <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Personnel Profile</h3>
                 </div>
@@ -65,8 +78,8 @@
         <div class="dashboard_card" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
-                    <div style="background: #fff7ed; color: #ea580c; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-rocket"></i>
+                    <div style="color: #ea580c; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-rocket" style="font-size: 1.1rem;"></i>
                     </div>
                     <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Quick Actions</h3>
                 </div>
@@ -81,7 +94,7 @@
 
                     <a href="{{ route('user.learning.index') }}" style="transition: all 0.2s; background-color: #374151; color: white; padding: 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
                         <span style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa- project-diagram"></i> My Learning Path
+                            <i class="fas fa-project-diagram"></i> My Learning Path
                         </span>
                         <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.7;"></i>
                     </a>

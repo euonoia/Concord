@@ -18,7 +18,7 @@
                 Concord <span class="text-blue-600">Attendance</span> 
             </h1>
             <p class="text-xl text-slate-500 mt-4 font-medium">
-                Welcome to the Main Ward Entrance. Please scan the qr code to log your attendance.
+             Please scan the qr code to log your attendance.
             </p>
         </div>
 
