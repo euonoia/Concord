@@ -30,28 +30,27 @@ export default function initAttendanceScanner() {
                 cameraId,
                 { fps: 15, qrbox: 250 },
                 async (decodedText) => {
+                    // Stop scanning immediately after a successful read
                     await html5QrCode.stop();
                     scanLine?.classList.add("hidden");
-                    handleScan(decodedText);
+
+                    // Send token directly for verification
+                    handleScan(decodedText.trim());
                 }
             );
         } catch (err) {
-            console.error(err);
+            console.error("Camera start failed:", err);
             alert("Camera failed to start. Make sure you are on HTTPS and allowed camera permissions.");
             reset();
         }
     });
 
-    async function handleScan(decodedText) {
+    async function handleScan(token) {
         feedback?.classList.remove("hidden");
         feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700";
         feedback.innerText = "Verifying Attendance...";
 
-        let payload;
-        try {
-            payload = JSON.parse(decodedText);
-            if (!payload.token) throw new Error("QR code missing token");
-        } catch {
+        if (!token) {
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
             feedback.innerText = "Invalid QR code";
             reset();
@@ -66,7 +65,7 @@ export default function initAttendanceScanner() {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
-                body: JSON.stringify({ token: payload.token }),
+                body: JSON.stringify({ token }),
             });
 
             const data = await response.json();
@@ -76,7 +75,7 @@ export default function initAttendanceScanner() {
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
             feedback.innerText = "Attendance Recorded Successfully!";
 
-            setTimeout(() => { window.location.href = "/hr/dashboard"; }, 2000);
+            setTimeout(() => window.location.href = "/hr/dashboard", 2000);
 
         } catch (err) {
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";

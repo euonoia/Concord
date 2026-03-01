@@ -1,16 +1,4 @@
 @extends('admin.layouts.kiosk')
-@php
-    use Illuminate\Support\Str;
-
-  
-    $token = Str::uuid()->toString();
-
-    
-    Cache::put("attendance_token_$token", true, now()->addSeconds(30));
-
-    // Fixed station ID for this kiosk
-    $stationId = 1;
-@endphp
 
 @section('content')
 <div class="hr3-kiosk-container flex items-center justify-center min-h-screen bg-slate-50 px-6">
@@ -54,8 +42,7 @@
         <div class="hr3-qr-section-right flex-shrink-0 flex flex-col items-center">
             <div class="hr3-qr-frame-outer p-6 bg-white rounded-[3rem] shadow-2xl border border-slate-100">
                 <div class="hr3-qr-image w-80 h-80 flex items-center justify-center">
-                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)
-                        ->generate(json_encode(['station' => $stationId, 'token' => $token])) !!}
+                  {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($token) !!}
                 </div>
             </div>
 
