@@ -33,8 +33,25 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <style>
-/* same styles as before... */
+.hr3-scanner-container {
+    background: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
+    min-height: 80vh;
+}
+.hr3-card { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); }
+.hr3-scan-line {
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #60a5fa, #ffffff, #60a5fa, transparent);
+    box-shadow: 0 0 20px rgba(59,130,246,0.8);
+    filter: blur(1px);
+}
+@keyframes hr3-scan-anim { 0%{top:0%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;} }
+.animate-hr3-scan { animation: hr3-scan-anim 2.5s ease-in-out infinite; }
+.hr3-feedback { transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275); border:1px solid rgba(0,0,0,0.05); backdrop-filter: blur(4px); }
+.hr3-reader-view video { object-fit: cover !important; filter: contrast(1.1) brightness(1.1); }
+.hr3-icon-wrapper i { animation: hr3-icon-pulse 3s infinite; }
+@keyframes hr3-icon-pulse { 0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.1);opacity:0.8;} }
 </style>
+
 @endsection
 
 @push('scripts')
