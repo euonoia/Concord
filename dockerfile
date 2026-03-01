@@ -1,24 +1,4 @@
-# --------------------------
-# Stage 1: Build Vite assets
-# --------------------------
-FROM node:20-alpine AS vite-build
-
-WORKDIR /app
-
-# Copy package files first (better caching)
-COPY package.json package-lock.json* ./
-RUN npm install
-
-# Copy the rest of the project
-COPY . .
-
-# Build Vite assets
-RUN npm run build
-
-
-# --------------------------
-# Stage 2: PHP + Apache
-# --------------------------
+# PHP + Apache (assets already committed)
 FROM php:8.4-apache
 
 WORKDIR /var/www/html
@@ -32,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # --------------------------
-# Apache setup
+# Apache configuration
 # --------------------------
 RUN a2enmod rewrite headers \
     && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
@@ -43,14 +23,9 @@ RUN a2enmod rewrite headers \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # --------------------------
-# Copy Laravel application
+# Copy application (includes public/build)
 # --------------------------
 COPY . .
-
-# --------------------------
-# Copy built Vite assets from Node stage
-# --------------------------
-COPY --from=vite-build /app/public/build public/build
 
 # --------------------------
 # Install PHP dependencies
@@ -58,22 +33,23 @@ COPY --from=vite-build /app/public/build public/build
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
 # --------------------------
-# Set proper permissions
+# Ensure required directories exist
 # --------------------------
-RUN chown -R www-data:www-data /var/www/html \
+RUN mkdir -p storage/app/certs \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # --------------------------
-# Remove Laravel hot reload file
+# Remove Vite hot reload file (if exists)
 # --------------------------
 RUN rm -f public/hot || true
 
 # --------------------------
-# Expose port
+# Expose HTTP port
 # --------------------------
 EXPOSE 80
 
 # --------------------------
-# Run Laravel + Apache
+# Start Apache only (safer for Render)
 # --------------------------
-CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground"
+CMD apache2-foreground
