@@ -40,7 +40,10 @@
         <div class="hr3-qr-section-right flex-shrink-0 flex flex-col items-center">
             <div class="hr3-qr-frame-outer p-6 bg-white rounded-[3rem] shadow-2xl border border-slate-100">
                 <div class="hr3-qr-frame overflow-hidden rounded-[2rem] bg-slate-900 p-4">
-                    <img src="{{ $qrCodeUrl }}" alt="Scan QR" class="hr3-qr-image w-80 h-80 object-contain">
+                    {{-- Render QR Code directly --}}
+                    <div class="hr3-qr-image w-80 h-80 flex items-center justify-center">
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($token) !!}
+                    </div>
                 </div>
             </div>
 
@@ -51,7 +54,7 @@
                 </div>
                 <p class="text-slate-400 text-xs font-bold uppercase mb-1">Refreshing in</p>
                 <h2 class="text-7xl font-black text-blue-600 tracking-tighter tabular-nums">
-                    <span id="timer">60</span><span class="text-4xl text-slate-300 ml-1">s</span>
+                    <span id="timer">30</span><span class="text-4xl text-slate-300 ml-1">s</span>
                 </h2>
             </div>
         </div>
@@ -60,56 +63,24 @@
 </div>
 
 <style>
-    /* Ensure the kiosk body is clean */
     body { background-color: #f8fafc; overflow: hidden; }
-
-    /* Layout Specifics */
-    .hr3-kiosk-container {
-        padding: 4rem;
-    }
-
-    /* QR Frame Styling */
-    .hr3-qr-frame-outer {
-        transition: transform 0.3s ease;
-    }
-    
-    .hr3-qr-image {
-        filter: contrast(1.1);
-        mix-blend-mode: lighten; /* Makes QR look integrated if background is dark */
-    }
-
-    /* Live Pulse Animation */
+    .hr3-kiosk-container { padding: 4rem; }
+    .hr3-qr-frame-outer { transition: transform 0.3s ease; }
     .hr3-status-pulse {
-        width: 10px;
-        height: 10px;
-        background-color: #22c55e;
-        border-radius: 50%;
-        display: inline-block;
-        box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+        width: 10px; height: 10px; background-color: #22c55e;
+        border-radius: 50%; display: inline-block;
+        box-shadow: 0 0 0 rgba(34,197,94,0.4);
         animation: hr3-pulse 2s infinite;
     }
-
     @keyframes hr3-pulse {
-        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+        100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
     }
-
-    /* Tabular numbers prevent jitter when clock/timer changes */
-    .tabular-nums {
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* Custom Responsive tweak */
-    @media (max-width: 1024px) {
-        .hr3-qr-wrapper {
-            flex-direction: column;
-            text-align: center;
-            gap: 3rem;
-        }
-        .hr3-qr-content-left {
-            min-width: unset;
-        }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    @media (max-width:1024px) {
+        .hr3-qr-wrapper { flex-direction: column; text-align: center; gap:3rem; }
+        .hr3-qr-content-left { min-width: unset; }
         .hr3-qr-content-left .flex { justify-content: center; }
     }
 </style>
@@ -117,40 +88,26 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Timer Logic
-        let timeLeft = 60;
-        const timerEl = document.getElementById('timer');
-        
-        const countdown = setInterval(() => {
-            timeLeft--;
-            if(timerEl) timerEl.innerText = timeLeft;
-            
-            if(timeLeft <= 10) {
-                timerEl.style.color = '#ef4444'; 
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    let timeLeft = 30;
+    const timerEl = document.getElementById('timer');
+    
+    const countdown = setInterval(() => {
+        timeLeft--;
+        if(timerEl) timerEl.innerText = timeLeft;
+        if(timeLeft <= 10) timerEl.style.color = '#ef4444';
+        if(timeLeft <= 0) { clearInterval(countdown); window.location.reload(); }
+    }, 1000);
 
-            if(timeLeft <= 0) {
-                clearInterval(countdown);
-                window.location.reload();
-            }
-        }, 1000);
-
-        // 2. Live Clock Logic
-        const clockEl = document.getElementById('live-clock');
-        function updateClock() {
-            const now = new Date();
-            if(clockEl) {
-                clockEl.innerText = now.toLocaleTimeString('en-US', { 
-                    hour12: true, 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                });
-            }
+    const clockEl = document.getElementById('live-clock');
+    function updateClock() {
+        const now = new Date();
+        if(clockEl) {
+            clockEl.innerText = now.toLocaleTimeString('en-US', { hour12:true, hour:'2-digit', minute:'2-digit', second:'2-digit' });
         }
-        setInterval(updateClock, 1000);
-        updateClock();
-    });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+});
 </script>
 @endpush
