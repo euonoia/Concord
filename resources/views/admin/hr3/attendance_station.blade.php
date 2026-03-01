@@ -4,6 +4,7 @@
 <div class="hr3-kiosk-container flex items-center justify-center min-h-screen bg-slate-50 px-6">
     <div class="hr3-qr-wrapper flex flex-row items-center justify-between gap-20 max-w-6xl w-full">
         
+        {{-- Left content --}}
         <div class="hr3-qr-content-left flex-1">
             <div class="mb-10">
                 <div class="flex items-center gap-4 mb-8">
@@ -37,13 +38,13 @@
             </div>
         </div>
 
+        {{-- Right QR --}}
         <div class="hr3-qr-section-right flex-shrink-0 flex flex-col items-center">
             <div class="hr3-qr-frame-outer p-6 bg-white rounded-[3rem] shadow-2xl border border-slate-100">
                 <div class="hr3-qr-frame overflow-hidden rounded-[2rem] bg-slate-900 p-4">
-                    {{-- Render QR Code directly --}}
                     <div class="hr3-qr-image w-80 h-80 flex items-center justify-center">
-                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($token) !!}
-                    </div>
+                        {{-- Encode token + station as JSON for scanner --}}
+{!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(320)->generate($qrPayload) !!}                    </div>
                 </div>
             </div>
 
@@ -84,21 +85,10 @@
         .hr3-qr-content-left .flex { justify-content: center; }
     }
 </style>
-@endsection
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let timeLeft = 30;
-    const timerEl = document.getElementById('timer');
-    
-    const countdown = setInterval(() => {
-        timeLeft--;
-        if(timerEl) timerEl.innerText = timeLeft;
-        if(timeLeft <= 10) timerEl.style.color = '#ef4444';
-        if(timeLeft <= 0) { clearInterval(countdown); window.location.reload(); }
-    }, 1000);
-
+    // Live clock
     const clockEl = document.getElementById('live-clock');
     function updateClock() {
         const now = new Date();
@@ -108,6 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Auto-refresh timer
+    let timeLeft = 30;
+    const timerEl = document.getElementById('timer');
+    const countdown = setInterval(() => {
+        timeLeft--;
+        if(timerEl) timerEl.innerText = timeLeft;
+        if(timeLeft <= 10) timerEl.style.color = '#ef4444';
+        if(timeLeft <= 0) { clearInterval(countdown); window.location.reload(); }
+    }, 1000);
 });
 </script>
-@endpush
+@endsection

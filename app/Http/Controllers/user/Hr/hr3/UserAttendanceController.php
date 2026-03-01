@@ -4,47 +4,93 @@ namespace App\Http\Controllers\user\Hr\hr3;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\admin\Hr\hr3\AttendanceLog; 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use App\Models\admin\Hr\hr3\AttendanceLog;
+use App\Models\Employee;
 
 class UserAttendanceController extends Controller
+
 {
-    // Points to views/hr/hr3/attendance_scan.blade.php
-    public function scanView() 
+    /**
+     * Show the scanner page
+     */
+    public function scanView()
     {
-        return view('hr.hr3.attendance_scan');
+        return view('hr.hr3.attendance_scan'); 
+        // Frontend handles QR scanning and POST token
     }
 
-    // This handles the data sent by the phone camera
-    public function verify(Request $request, $station) 
+    /**
+     * Handle QR verification and log attendance
+     */
+    public function verify(Request $request)
     {
+        
+         if (!Auth::check()) { 
+            return redirect()->route('portal.login'); 
+        }
+    
+        $request->validate([
+            'token'   => 'required|string',
+            'station' => 'required|integer',
+        ]);
+
         $user = Auth::user();
 
-        // 1. Prevent "Double Scans" within 2 minutes
-        $recent = AttendanceLog::where('employee_id', $user->id)
-            ->where('created_at', '>=', now()->subMinutes(2))
-            ->first();
+        // Find employee record
+        $employee = Employee::where('user_id', $user->id)->first();
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee record not found.'
+            ], 404);
+        }
+
+        $token = $request->input('token');
+
+      
+        $validToken = Cache::pull("attendance_token_$token");
+        if (!$validToken) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired QR code.'
+            ], 422);
+        }
+
+      
+        $recent = AttendanceLog::where('employee_id', $employee->id)
+            ->where('clock_in', '>=', now()->subMinutes(2))
+            ->exists();
 
         if ($recent) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Attendance already logged recently.'
             ], 422);
         }
 
-        // 2. Save to your 'attendance_logs_hr3' table in TiDB
+      
         try {
             AttendanceLog::create([
-                'employee_id'          => $user->id,
-                'hospital_location_id' => $station,
-                'clock_in'             => now(),
-                'device_fingerprint'   => $request->userAgent(),
-                'status'               => 'on-time'
+                'employee_id'        => $employee->id,
+                'department_id'      => $employee->department_id, 
+                'qr_token'           => $token,
+                'clock_in'           => now(),
+                'device_fingerprint' => md5($request->userAgent() ?? ''),
+                'status'             => 'on-time',
             ]);
 
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance recorded successfully.'
+            ]);
+
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Server Error'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
