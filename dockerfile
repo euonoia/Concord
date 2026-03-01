@@ -5,11 +5,11 @@ WORKDIR /app
 # Copy package.json and lock file if exists
 COPY package*.json ./
 
-# Install npm dependencies cleanly
+# Clean npm install (legacy-peer-deps to avoid conflicts)
 RUN npm install --legacy-peer-deps
 
-# Install build tools for native modules
-RUN apt-get update && apt-get install -y python3 g++ make
+# Install build tools required for native Node modules
+RUN apt-get update && apt-get install -y python3 g++ make build-essential
 
 # Copy the rest of the source code
 COPY . .
@@ -31,25 +31,25 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache modules and set DocumentRoot
+# Enable Apache modules and update DocumentRoot
 RUN a2enmod rewrite headers
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy all code and built assets from Stage 1
+# Copy application code and built assets from Stage 1
 COPY . .
 COPY --from=asset-builder /app/public/build ./public/build
 
-# Install PHP dependencies fresh
+# Install PHP dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set permissions for Laravel
+# Set permissions for Laravel storage/bootstrap
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# TiDB SSL needs writable storage path
+# TiDB SSL often requires writable storage path
 RUN mkdir -p storage/app/certs && chown -R www-data:www-data storage/app/certs
 
 # Remove Laravel hot reload file if exists
@@ -58,5 +58,5 @@ RUN rm -f public/hot
 # Expose HTTP port
 EXPOSE 80
 
-# Run artisan commands and start Apache
+# Run Laravel artisan commands and start Apache
 CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground"
