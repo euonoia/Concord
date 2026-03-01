@@ -1,4 +1,3 @@
-
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function initAttendanceScanner() {
@@ -11,6 +10,7 @@ export default function initAttendanceScanner() {
     let html5QrCode = null;
     let activeCameraId = null;
 
+    // Grab CSRF token from meta tag
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfMeta ? csrfMeta.content : '';
 
@@ -22,28 +22,34 @@ export default function initAttendanceScanner() {
         html5QrCode = new Html5Qrcode("reader");
 
         try {
+            // Detect cameras
             const cameras = await Html5Qrcode.getCameras();
             if (!cameras || cameras.length === 0) throw new Error("No camera devices found.");
 
+            // Prefer back/rear camera if available
             const backCamera = cameras.find(cam =>
                 cam.label.toLowerCase().includes('back') ||
                 cam.label.toLowerCase().includes('rear')
             );
             activeCameraId = backCamera ? backCamera.id : cameras[0].id;
 
+            // Start scanning
             await html5QrCode.start(
                 activeCameraId,
                 { fps: 15, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
                 async (decodedText) => {
+                    // Stop scanning after one QR read
                     await html5QrCode.stop();
                     scanLine?.classList.add('hidden');
+
+                    // Handle the scanned URL (must be a signed Laravel route)
                     handleScan(decodedText);
                 }
             );
         } catch (err) {
             console.error(err);
             alert(
-                "Camera failed to start.\n\n• HTTPS required\n• Allow camera permissions\n• Close other apps using the camera"
+                "Camera failed to start.\n\n• Make sure you are using HTTPS\n• Allow camera permissions\n• Close other apps using the camera"
             );
             resetScanner();
         }
@@ -55,6 +61,7 @@ export default function initAttendanceScanner() {
         feedback.innerText = "Verifying Station Security...";
 
         try {
+            // Post directly to the signed route encoded in the QR
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -65,9 +72,10 @@ export default function initAttendanceScanner() {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || "Invalid QR Code");
+                throw new Error(data.message || "Invalid or expired QR Code");
             }
 
+            // Success feedback
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
             feedback.innerText = "Success! Attendance Recorded.";
 
@@ -75,6 +83,7 @@ export default function initAttendanceScanner() {
             setTimeout(() => window.location.href = "/hr/dashboard", 2000);
 
         } catch (err) {
+            // Error feedback
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
             feedback.innerText = err.message;
             resetScanner();
