@@ -2,11 +2,14 @@
 FROM node:20 AS asset-builder
 WORKDIR /app
 
-# Copy package.json (and lock file if exists) first
+# Copy package.json and lock file if exists
 COPY package*.json ./
 
-# Install npm dependencies fresh
+# Install npm dependencies cleanly
 RUN npm install --legacy-peer-deps
+
+# Install build tools for native modules
+RUN apt-get update && apt-get install -y python3 g++ make
 
 # Copy the rest of the source code
 COPY . .
@@ -14,7 +17,7 @@ COPY . .
 # Build assets (configs must exist during build)
 RUN npm run build
 
-# Optional: remove Tailwind/PostCSS config files after build
+# Optional: remove Tailwind/PostCSS configs after build
 RUN rm -f tailwind.config.js postcss.config.js postcss.config.cjs
 
 # STAGE 2: PHP & Apache
@@ -35,18 +38,18 @@ RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy all code and the built assets from Stage 1
+# Copy all code and built assets from Stage 1
 COPY . .
 COPY --from=asset-builder /app/public/build ./public/build
 
 # Install PHP dependencies fresh
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set permissions for Laravel storage and bootstrap
+# Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# TiDB SSL often needs a writable storage path
+# TiDB SSL needs writable storage path
 RUN mkdir -p storage/app/certs && chown -R www-data:www-data storage/app/certs
 
 # Remove Laravel hot reload file if exists
@@ -55,5 +58,5 @@ RUN rm -f public/hot
 # Expose HTTP port
 EXPOSE 80
 
-# Run Laravel artisan commands and start Apache
+# Run artisan commands and start Apache
 CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground"
