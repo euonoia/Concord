@@ -2,19 +2,19 @@
 FROM node:20 AS asset-builder
 WORKDIR /app
 
-# Copy package.json and package-lock.json first for deterministic installs
+# Copy package.json (and lock file if exists) first
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps
+# Install npm dependencies fresh
+RUN npm install --legacy-peer-deps
 
-# Copy the rest of the code
+# Copy the rest of the source code
 COPY . .
 
 # Build assets (configs must exist during build)
 RUN npm run build
 
-# Optional: remove config files after build
+# Optional: remove Tailwind/PostCSS config files after build
 RUN rm -f tailwind.config.js postcss.config.js postcss.config.cjs
 
 # STAGE 2: PHP & Apache
@@ -28,21 +28,21 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache modules and update DocumentRoot
+# Enable Apache modules and set DocumentRoot
 RUN a2enmod rewrite headers
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy code and the built assets from asset-builder
+# Copy all code and the built assets from Stage 1
 COPY . .
 COPY --from=asset-builder /app/public/build ./public/build
 
 # Install PHP dependencies fresh
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Set permissions
+# Set permissions for Laravel storage and bootstrap
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
@@ -55,5 +55,5 @@ RUN rm -f public/hot
 # Expose HTTP port
 EXPOSE 80
 
-# Start container with artisan commands
+# Run Laravel artisan commands and start Apache
 CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan optimize && apache2-foreground"
