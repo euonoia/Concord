@@ -22,10 +22,17 @@ RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # --------------------------
-# Copy all application code including prebuilt assets
-# Ensure public/build/manifest.json exists
+# Copy application code
 # --------------------------
 COPY . .
+
+# --------------------------
+# Ensure prebuilt Vite assets exist in public/build
+# --------------------------
+# This step assumes you committed local build files into public/build
+# If your assets are in a different folder, adjust the path below
+RUN mkdir -p public/build \
+    && cp -R build/* public/build/ || echo "No build folder found, ensure prebuilt assets exist"
 
 # --------------------------
 # Install PHP dependencies
