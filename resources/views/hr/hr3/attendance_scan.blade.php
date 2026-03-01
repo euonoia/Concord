@@ -134,7 +134,9 @@ export default function initAttendanceScanner() {
             );
         } catch (err) {
             console.error(err);
-            alert("Camera failed to start.\n\n• HTTPS required\n• Allow camera permissions\n• Close other apps using the camera");
+            alert(
+                "Camera failed to start.\n\n• Make sure you are using HTTPS\n• Allow camera permissions\n• Close other apps using the camera"
+            );
             resetScanner();
         }
     });
@@ -144,33 +146,33 @@ export default function initAttendanceScanner() {
         feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-blue-50 text-blue-700 animate-pulse";
         feedback.innerText = "Verifying Attendance...";
 
+        let payload;
         try {
-            // Extract station and token from scanned QR (assume QR encodes JSON or query string)
-            // Example QR: {"station": 1, "token": "uuid-string"}
-            let payload;
-            try {
-                payload = JSON.parse(decodedText);
-            } catch (e) {
-                throw new Error("Invalid QR code format");
-            }
+            payload = JSON.parse(decodedText); 
+        } catch (e) {
+            feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-red-50 text-red-700";
+            feedback.innerText = "Invalid QR code format";
+            resetScanner();
+            return;
+        }
 
+        try {
             const response = await fetch("/hr/hr3/attendance/verify", {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    station: payload.station,
-                    token: payload.token
+                    token: payload.token,
+                    station: payload.station
                 })
             });
 
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || "Invalid QR Code");
 
-            // Success feedback
             feedback.className = "p-4 rounded-2xl mb-6 text-sm font-bold bg-emerald-50 text-emerald-700";
             feedback.innerText = "Success! Attendance Recorded.";
             if (navigator.vibrate) navigator.vibrate(200);
@@ -191,7 +193,7 @@ export default function initAttendanceScanner() {
     }
 }
 
-// Initialize scanner
+// Initialize scanner on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     initAttendanceScanner();
 });
