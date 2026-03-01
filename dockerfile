@@ -1,5 +1,7 @@
 # PHP + Apache for Render Free (skip Node build)
 FROM php:8.4-apache
+
+# Set working directory
 WORKDIR /var/www/html
 
 # --------------------------
@@ -13,8 +15,8 @@ RUN apt-get update && apt-get install -y \
 # --------------------------
 # Apache setup
 # --------------------------
-RUN a2enmod rewrite headers
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN a2enmod rewrite headers \
+    && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # --------------------------
 # Install Composer
@@ -27,12 +29,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # --------------------------
-# Ensure prebuilt Vite assets exist in public/build
+# Ensure prebuilt Vite assets exist
 # --------------------------
-# This step assumes you committed local build files into public/build
-# If your assets are in a different folder, adjust the path below
-RUN mkdir -p public/build \
-    && cp -R build/* public/build/ || echo "No build folder found, ensure prebuilt assets exist"
+# public/build already exists in your repo; no need to copy from 'build/'
+RUN mkdir -p public/build
 
 # --------------------------
 # Install PHP dependencies
@@ -49,7 +49,7 @@ RUN chown -R www-data:www-data /var/www/html \
 # --------------------------
 # Remove Laravel hot reload file if exists
 # --------------------------
-RUN rm -f public/hot
+RUN rm -f public/hot || true
 
 # --------------------------
 # Expose HTTP port
