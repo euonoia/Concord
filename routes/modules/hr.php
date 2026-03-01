@@ -7,9 +7,12 @@ use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
 use App\Http\Controllers\user\Hr\hr2\UserEssController;
 
+
+
 //Dashboard 
 Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
 
+// --- START OF HR2 Department ---
 // --- Hr2 employee ---
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
 Route::get('/learning', [UserLearningController::class, 'index'])->name('user.learning.index');
@@ -22,3 +25,5 @@ Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('
 // ESS (Employee Self-Service) Routes
 Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
 Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');
+// --- END OF HR2 Department ---
+
