@@ -25,19 +25,14 @@ Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('us
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---
-Route::prefix('attendance')->group(function () {
-    // 1. The Mobile Scanner View
-    Route::get('/scan', [UserAttendanceController::class, 'scanView'])
+Route::prefix('hr3')->group(function () {
+    Route::get('/attendance/scan', [UserAttendanceController::class, 'scanView'])
         ->name('user.attendance.scan');
 
-    // 2. The Verification Handshake (The URL encoded in the QR)
-    // Protected by 'signed' middleware to ensure the 60s window and logged-in user only
-    Route::post('/verify/{station}', [UserAttendanceController::class, 'verify'])
-        ->name('attendance.verify')
-        ->middleware(['auth', 'signed']);
-        
-    // 3. Success Feedback Page
-    Route::get('/success', [UserAttendanceController::class, 'success'])
+    Route::post('/attendance/verify', [UserAttendanceController::class, 'verify'])
+        ->name('attendance.verify');
+
+    Route::get('/attendance/success', [UserAttendanceController::class, 'success'])
         ->name('user.attendance.success');
 });
 // --- END OF HR3 Department ---
