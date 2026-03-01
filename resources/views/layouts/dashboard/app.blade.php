@@ -11,9 +11,11 @@
 
 <!-- Mobile Topbar -->
 <div class="dashboard-topbar topbar">
-   <button class="menu-toggle">
-        <div class="title">HR</div>
-    </div>
+    <button class="menu-toggle">
+        ☰
+    </button>
+    <div class="title">HR</div>
+</div>
 
 <!-- Sidebar -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
