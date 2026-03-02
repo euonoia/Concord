@@ -21,12 +21,13 @@ Route::prefix('hr2')->group(function () {
     // Specializations by Department
     Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
         ->name('departments.specializations');
-
     // Positions by Department + Specialization
     Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])
         ->name('departments.positions');
     // Employees by Department and specialization
     Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
+
+   
 });
 Route::resource('competencies', CompetencyController::class);
 Route::resource('learning', AdminLearningController::class);
@@ -41,9 +42,10 @@ Route::prefix('succession')->group(function () {
     //promote candidate
     Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
 });
-Route::prefix('ess')->group(function () {
+
+ Route::prefix('ess')->group(function () {
     Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
-    Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
+    Route::post('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
 });
 // --- END OF HR2 Department ---
 

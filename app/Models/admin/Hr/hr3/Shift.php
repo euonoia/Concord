@@ -10,6 +10,7 @@ class Shift extends Model
     use HasFactory;
 
     protected $table = 'shifts_hr3';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'employee_id',
@@ -17,7 +18,11 @@ class Shift extends Model
         'day_of_week',
         'start_time',
         'end_time',
-        'is_active',
+        'is_active'
+    ];
+
+    protected $casts = [
+    'is_active' => 'boolean',
     ];
 
     public function employee()
