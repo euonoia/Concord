@@ -8,6 +8,7 @@ use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
 use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
 use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 
+use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
 
 // --- Admin Dashboard ---
 Route::get('/dashboard', function () {
@@ -45,3 +46,7 @@ Route::prefix('ess')->group(function () {
 });
 // --- END OF HR2 Department ---
 
+// --- HR3 Department ---
+Route::prefix('hr3')->group(function () {
+    Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+});

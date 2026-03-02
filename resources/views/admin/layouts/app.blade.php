@@ -56,6 +56,11 @@
             <i class="bi bi-pencil-square"></i>
             <span>ESS</span>
         </a>
+        
+        <a href="{{ route('timesheet.index') }}" class="{{ request()->routeIs('timesheet.*') ? 'active' : '' }}">
+            <i class="bi bi-clock-history"></i>
+            <span>Timesheet</span>
+        </a>
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf

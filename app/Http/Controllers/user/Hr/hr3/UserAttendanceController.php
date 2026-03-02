@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\admin\Hr\hr3\AttendanceLog;
 use App\Models\Employee;
-use Carbon\Carbon; // Ensure Carbon is imported for time math
+use Carbon\Carbon; 
 
 class UserAttendanceController extends Controller
 {
@@ -56,7 +56,7 @@ class UserAttendanceController extends Controller
 
         try {
             if ($existingLog) {
-                // --- 8 HOUR SHIFT VALIDATION ---
+                
                 $startTime = Carbon::parse($existingLog->clock_in);
                 $now = now();
                 
@@ -82,6 +82,8 @@ class UserAttendanceController extends Controller
             AttendanceLog::create([
                 'employee_id'        => $employee->employee_id, 
                 'department_id'      => $employee->department_id, 
+                'specialization'     => $employee->specialization,
+                'position'           => $employee->position,
                 'qr_token'           => $tokenValue,
                 'clock_in'           => now(), 
                 'device_fingerprint' => md5($request->userAgent() ?? ''),
@@ -106,7 +108,7 @@ class UserAttendanceController extends Controller
         if ($request->isMethod('post')) {
             return $success 
                 ? redirect()->route('user.attendance.success')->with('status', $message)
-                : redirect()->back()->with('error', $message); // This triggers the Toast
+                : redirect()->back()->with('error', $message); 
         }
 
     
