@@ -17,6 +17,7 @@ class AttendanceLog extends Model
         'department_id',
         'qr_token',
         'clock_in',
+        'clock_out',
         'device_fingerprint',
         'status',
     ];
@@ -24,6 +25,7 @@ class AttendanceLog extends Model
     // Cast clock_in to datetime
     protected $casts = [
         'clock_in' => 'datetime',
+        'clock_out' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
