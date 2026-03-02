@@ -16,10 +16,14 @@ class EssRequest extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'ess_id',
         'employee_id',
+        'shift_id',
         'type',
         'details',
         'status',
+        'leave_date',
+        'end_date',
     ];
 
     public function employee()
