@@ -16,7 +16,7 @@ class AttendanceLog extends Model
         'employee_id',
         'department_id',
         'specialization',
-        'position_id',
+        'position_title',
         'qr_token',
         'clock_in',
         'clock_out',
