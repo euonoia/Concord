@@ -17,7 +17,6 @@ body.dashboard {
     margin: 0;
     display: flex;
     color: var(--text-dark);
-    height: 100vh;
 }
 
 /* Scope global behavior */

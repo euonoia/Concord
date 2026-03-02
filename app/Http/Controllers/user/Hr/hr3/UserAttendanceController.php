@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\admin\Hr\hr3\AttendanceLog;
 use App\Models\Employee;
+use Carbon\Carbon; // Ensure Carbon is imported for time math
 
 class UserAttendanceController extends Controller
 {
@@ -32,15 +33,12 @@ class UserAttendanceController extends Controller
             return $this->handleResponse($request, false, 'Employee record not found.', 404);
         }
 
-        // 1. Look for an active session (Removing whereDate for better reliability)
         $existingLog = AttendanceLog::where('employee_id', $employee->employee_id)
             ->whereNull('clock_out')
             ->latest('clock_in')
             ->first();
 
-        // 2. Token Logic
         if (!$existingLog) {
-            // CLOCK IN: Token is MANDATORY
             $rawToken = $request->input('token');
             $tokenValue = str_contains($rawToken ?? '', '/') ? collect(explode('/', $rawToken))->last() : $rawToken;
 
@@ -53,22 +51,34 @@ class UserAttendanceController extends Controller
                 return $this->handleResponse($request, false, 'QR code has expired or is invalid.', 422);
             }
         } else {
-            // CLOCK OUT: Session already exists, bypass token check
             $tokenValue = $existingLog->qr_token; 
         }
 
         try {
             if ($existingLog) {
-                // Anti-spam check using Carbon to ensure date types match
-                if ($existingLog->clock_in >= now()->subMinutes(2)) {
-                    return $this->handleResponse($request, false, 'Attendance already logged recently.', 422);
-                }
+                // --- 8 HOUR SHIFT VALIDATION ---
+                $startTime = Carbon::parse($existingLog->clock_in);
+                $now = now();
+                
+                // Calculate the difference in minutes
+                $diffInMinutes = $startTime->diffInMinutes($now);
+                $requiredMinutes = 8 * 60; // 480 minutes
 
-                $existingLog->update(['clock_out' => now()]);
+                if ($diffInMinutes < $requiredMinutes) {
+                    $remainingMinutes = $requiredMinutes - $diffInMinutes;
+                    $hours = floor($remainingMinutes / 60);
+                    $mins = $remainingMinutes % 60;
+                    
+                    $timeStr = ($hours > 0) ? "$hours hours and $mins minutes" : "$mins minutes";
+                    
+                    return $this->handleResponse($request, false, "Shift incomplete. You can clock out in $timeStr.", 422);
+                }
+                // -------------------------------
+
+                $existingLog->update(['clock_out' => $now]);
                 return $this->handleResponse($request, true, 'Clock-out recorded successfully!');
             }
 
-            // Record the Clock In
             AttendanceLog::create([
                 'employee_id'        => $employee->employee_id, 
                 'department_id'      => $employee->department_id, 
@@ -87,9 +97,19 @@ class UserAttendanceController extends Controller
 
     private function handleResponse(Request $request, bool $success, string $message, int $status = 200)
     {
-        if ($request->expectsJson() || $request->isMethod('post')) {
+
+        if ($request->expectsJson()) {
             return response()->json(['success' => $success, 'message' => $message], $status);
         }
+
+    
+        if ($request->isMethod('post')) {
+            return $success 
+                ? redirect()->route('user.attendance.success')->with('status', $message)
+                : redirect()->back()->with('error', $message); // This triggers the Toast
+        }
+
+    
         return $success 
             ? redirect()->route('user.attendance.success')->with('status', $message)
             : redirect()->route('user.attendance.scan')->with('error', $message);
