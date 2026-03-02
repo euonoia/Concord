@@ -66,11 +66,8 @@ class UserAttendanceController extends Controller
             if ($existingLog) {
                 $now = now();
                 
-                // FIXED LOGIC: Instead of checking for 8 hours of duration,
-                // we check if the current time is at or past the scheduled end_time.
                 $scheduledEnd = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->end_time);
 
-                // Handle Night Shift cross-over (ends the next day)
                 $scheduledStart = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->start_time);
                 if ($scheduledEnd->lt($scheduledStart) && $now->gt($scheduledStart)) {
                     $scheduledEnd->addDay();
@@ -90,16 +87,18 @@ class UserAttendanceController extends Controller
             
             $status = $now->gt($scheduledStart->addMinutes(15)) ? 'late' : 'on-time';
 
-            AttendanceLog::create([
-                'employee_id'        => $employee->employee_id, 
-                'department_id'      => $employee->department_id, 
-                'specialization'     => $employee->specialization,
-                'position'           => $employee->position,
-                'qr_token'           => $tokenValue,
-                'clock_in'           => $now, 
-                'device_fingerprint' => md5($request->userAgent() ?? ''),
-                'status'             => $status, 
-            ]);
+           $employee->load('position'); 
+
+                AttendanceLog::create([
+                    'employee_id'        => $employee->employee_id, 
+                    'department_id'      => $employee->department_id, 
+                    'specialization'     => $employee->position->specialization_name ?? $employee->specialization,
+                    'position_title'     => $employee->position->position_title ?? 'Unassigned', // <--- This pulls the actual name
+                    'qr_token'           => $tokenValue,
+                    'clock_in'           => $now, 
+                    'device_fingerprint' => md5($request->userAgent() ?? ''),
+                    'status'             => $status, 
+                ]);
 
             return $this->handleResponse($request, true, "Clock-in successful! You are marked as $status.");
 
