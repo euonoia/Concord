@@ -8,6 +8,8 @@ use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
 use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
 use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 
+use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
+use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
 
 // --- Admin Dashboard ---
 Route::get('/dashboard', function () {
@@ -45,3 +47,12 @@ Route::prefix('ess')->group(function () {
 });
 // --- END OF HR2 Department ---
 
+// --- HR3 Department ---
+Route::prefix('hr3')->group(function () {
+    Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+
+    Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
+    Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+    Route::delete('/shifts/{id}', [AdminShiftController::class, 'destroy'])->name('shifts.destroy');
+    Route::get('/get-employees/{dept_id}', [AdminShiftController::class, 'getEmployeesByDept']);
+});
