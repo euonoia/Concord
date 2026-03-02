@@ -31,25 +31,13 @@ class AttendanceLog extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Employee relationship
-     */
     public function employee()
     {
         return $this->belongsTo(\App\Models\Employee::class, 'employee_id', 'employee_id');
     }
-
-    /**
-     * Department relationship
-     */
     public function department()
     {
         return $this->belongsTo(\App\Models\admin\Hr\hr2\Department::class, 'department_id', 'department_id');
     }
 
-    public function position()
-        {
-            // Adjust the class path to where your Position model is located
-            return $this->belongsTo(\App\Models\admin\Hr\hr2\Position::class, 'position_id', 'id');
-        }
 }

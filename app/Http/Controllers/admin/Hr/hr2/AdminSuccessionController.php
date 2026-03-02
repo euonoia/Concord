@@ -41,7 +41,7 @@ class AdminSuccessionController extends Controller
         return view('admin.hr2.succession', compact('departments','positions','candidates'));
     }
 
-    /** * NEW: Promote Candidate Logic
+    /** * 
      * Grants the target position to the successor and updates their employee file.
      */
     public function promoteCandidate($id)
