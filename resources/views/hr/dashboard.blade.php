@@ -2,6 +2,18 @@
 
 @section('content')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@php
+    $user = Auth::user();
+    $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+    
+    $isClockedIn = false;
+    
+    if ($employeeRecord) {
+        $isClockedIn = \App\Models\admin\Hr\hr3\AttendanceLog::where('employee_id', $employeeRecord->employee_id)
+            ->whereNull('clock_out')
+            ->exists();
+    }
+@endphp
 
 <div class="dashboard-wrapper" style="padding: 2.5rem 1.5rem; max-width: 1300px; margin: 0 auto; font-family: 'Inter', sans-serif; background-color: #f8fafc; min-height: 100vh;">
     
@@ -15,14 +27,29 @@
             </p>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="{{ route('user.attendance.scan') }}" 
-               title="Scan Attendance"
-               style="display: flex; align-items: center; justify-content: center; background: #2563eb; color: white; width: 48px; height: 48px; border-radius: 12px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);"
-               onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.transform='translateY(-2px)'" 
-               onmouseout="this.style.backgroundColor='#2563eb'; this.style.transform='translateY(0)'">
-                <i class="fas fa-qrcode" style="font-size: 1.25rem;"></i>
-            </a>
+       <div style="display: flex; align-items: center; gap: 1rem;">
+            @if($isClockedIn)
+                {{-- CLOCK OUT FORM: Submits directly to the controller --}}
+                <form action="{{ route('attendance.verify') }}" method="POST" style="margin: 0;">
+                    @csrf
+                    <button type="submit" 
+                    title="Clock Out Now"
+                    style="display: flex; align-items: center; justify-content: center; background: #dc2626; color: white; width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(220,38,38,0.2);"
+                    onmouseover="this.style.backgroundColor='#b91c1c'; this.style.transform='translateY(-2px)'" 
+                    onmouseout="this.style.backgroundColor='#dc2626'; this.style.transform='translateY(0)'">
+                        <i class="fas fa-sign-out-alt" style="font-size: 1.25rem;"></i>
+                    </button>
+                </form>
+            @else
+            
+                <a href="{{ route('user.attendance.scan') }}" 
+                title="Scan to Clock In"
+                style="display: flex; align-items: center; justify-content: center; background: #2563eb; color: white; width: 48px; height: 48px; border-radius: 12px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);"
+                onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.transform='translateY(-2px)'" 
+                onmouseout="this.style.backgroundColor='#2563eb'; this.style.transform='translateY(0)'">
+                    <i class="fas fa-qrcode" style="font-size: 1.25rem;"></i>
+                </a>
+            @endif
 
             <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center;">
                 <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> {{ date('F j, Y') }}
