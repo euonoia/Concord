@@ -2,6 +2,18 @@
 
 @section('content')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@php
+    $user = Auth::user();
+    $employeeRecord = \App\Models\Employee::where('user_id', $user->id)->first();
+    
+    $isClockedIn = false;
+    
+    if ($employeeRecord) {
+        $isClockedIn = \App\Models\admin\Hr\hr3\AttendanceLog::where('employee_id', $employeeRecord->employee_id)
+            ->whereNull('clock_out')
+            ->exists();
+    }
+@endphp
 
 {{-- 1. TOAST NOTIFICATION SECTION --}}
 @if(session('error'))
