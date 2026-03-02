@@ -71,7 +71,7 @@
                 Welcome back, {{ $employee->first_name }}!
             </h1>
             <p style="color: #64748b; font-size: 1rem; margin-top: 0.5rem;">
-                Here’s what’s happening with your development profile today.
+                Overview of your attendance and schedule for today.
             </p>
          </div>
 
@@ -99,8 +99,19 @@
                     </a>
                 @endif
 
-                <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center;">
-                    <i class="far fa-calendar-alt" style="margin-right: 8px;"></i> {{ date('F j, Y') }}
+
+                <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="far fa-calendar-alt" style="margin-right: 8px; color: #2563eb;"></i> 
+                        {{ date('F j, Y') }}
+                    </div>
+
+                    <div style="width: 1px; height: 20px; background: #e2e8f0;"></div>
+
+                    <div style="display: flex; align-items: center; color: #1e293b; min-width: 85px;">
+                        <i class="far fa-clock" style="margin-right: 8px; color: #2563eb;"></i>
+                        <span id="live-clock">--:--:--</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,38 +164,73 @@
                 </div>
             </div>
             </div>
-            <div>
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;">
-                    <div style="color: #ea580c; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-rocket" style="font-size: 1.1rem;"></i>
-                    </div>
-                    <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Quick Actions</h3>
+      <div class="quick-actions-container">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+                <div style="color: #ea580c; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-calendar-alt" style="font-size: 1.1rem;"></i>
                 </div>
-
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <a href="{{ route('user.training.index') }}" style="transition: all 0.2s; background-color: #2B5F6B; color: white; padding: 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-graduation-cap"></i> Browse Available Trainings
-                        </span>
-                        <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.7;"></i>
-                    </a>
-
-                    <a href="{{ route('user.learning.index') }}" style="transition: all 0.2s; background-color: #374151; color: white; padding: 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                        <span style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-project-diagram"></i> My Learning Path
-                        </span>
-                        <i class="fas fa-chevron-right" style="font-size: 0.8rem; opacity: 0.7;"></i>
-                    </a>
-                     <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
-                            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">
-                                <i class="fas fa-headset" style="margin-right: 5px;"></i> 
-                                Issues with your data? <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600;">Contact IT Support</a>
-                            </p>
-                    </div>
-                </div>
+                <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 600;">Weekly Shift</h3>
             </div>
-        </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                @forelse($allShifts as $shift)
+                    @php
+                        $isToday = $shift->day_of_week == now()->format('l');
+                    @endphp
+                    
+                    <div style="background: {{ $isToday ? 'linear-gradient(135deg, #2B5F6B 0%, #1e424a 100%)' : '#ffffff' }}; 
+                                color: {{ $isToday ? 'white' : '#1e293b' }}; 
+                                padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; 
+                                display: flex; align-items: center; justify-content: space-between;
+                                box-shadow: {{ $isToday ? '0 4px 12px rgba(43, 95, 107, 0.2)' : 'none' }};">
+                        
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="background: {{ $isToday ? 'rgba(255,255,255,0.15)' : '#f1f5f9' }}; 
+                                        width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                @if($shift->shift_name == 'Morning Shift')
+                                    <i class="fas fa-sun" style="color: {{ $isToday ? '#fbbf24' : '#f59e0b' }};"></i>
+                                @else
+                                    <i class="fas fa-moon" style="color: {{ $isToday ? '#e0e7ff' : '#6366f1' }};"></i>
+                                @endif
+                            </div>
+                            
+                            <div>
+                                <div style="font-size: 0.85rem; font-weight: 700;">
+                                    {{ $shift->day_of_week }} 
+                                    @if($isToday) <span style="font-size: 0.65rem; background: #4ade80; color: #064e3b; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">TODAY</span> @endif
+                                </div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">
+                                    {{ $shift->shift_name }} • {{ \Carbon\Carbon::parse($shift->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('h:i A') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                        <p style="margin: 0; color: #64748b; font-size: 0.85rem;">No shifts assigned yet.</p>
+                    </div>
+                @endforelse
+            </div>
+                 </div>
+                     </div>
+                        </div>
 
     </div>
 </div>
+<script>
+    function updateDashboardClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true 
+        });
+        document.getElementById('live-clock').textContent = timeString;
+    }
+
+    // Run immediately and then every second
+    updateDashboardClock();
+    setInterval(updateDashboardClock, 1000);
+</script>
 @endsection

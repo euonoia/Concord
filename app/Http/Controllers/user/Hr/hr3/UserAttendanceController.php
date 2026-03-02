@@ -126,6 +126,6 @@ class UserAttendanceController extends Controller
 
     public function success()
     {
-        return view('hr.hr3.attendance_success');
+    return redirect()->route('hr.dashboard')->with('success', 'Attendance logged successfully!');    
     }
 }
