@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Models\admin\Hr\hr3\Shift; 
 use App\Models\admin\Hr\hr3\AttendanceLog;
-use App\Models\admin\Hr\hr3\Shift; // Import the Shift model
 use App\Models\Employee;
 use Carbon\Carbon; 
 
@@ -31,14 +31,12 @@ class UserAttendanceController extends Controller
             return $this->handleResponse($request, false, 'Employee record not found.', 404);
         }
 
-        // 1. SHIFT CHECK: Does the user have a shift today?
-        $today = now()->format('l'); // e.g., "Monday"
+        $today = now()->format('l'); 
         $assignedShift = Shift::where('employee_id', $employee->employee_id)
             ->where('day_of_week', $today)
             ->where('is_active', 1)
             ->first();
 
-        // If no shift is found for today, they cannot clock in
         if (!$assignedShift) {
             return $this->handleResponse($request, false, "Access Denied: You have no assigned shift for today ($today).", 403);
         }
@@ -48,7 +46,6 @@ class UserAttendanceController extends Controller
             ->latest('clock_in')
             ->first();
 
-        // Clock-In Validation
         if (!$existingLog) {
             $rawToken = $request->input('token');
             $tokenValue = str_contains($rawToken ?? '', '/') ? collect(explode('/', $rawToken))->last() : $rawToken;
@@ -67,32 +64,30 @@ class UserAttendanceController extends Controller
 
         try {
             if ($existingLog) {
-            
-                $startTime = Carbon::parse($existingLog->clock_in);
                 $now = now();
                 
-            
-                $diffInMinutes = $startTime->diffInMinutes($now);
-                $requiredMinutes = 8 * 60; 
+                // FIXED LOGIC: Instead of checking for 8 hours of duration,
+                // we check if the current time is at or past the scheduled end_time.
+                $scheduledEnd = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->end_time);
 
-                if ($diffInMinutes < $requiredMinutes) {
-                    $remainingMinutes = $requiredMinutes - $diffInMinutes;
-                    $hours = floor($remainingMinutes / 60);
-                    $mins = $remainingMinutes % 60;
-                    $timeStr = ($hours > 0) ? "$hours hours and $mins minutes" : "$mins minutes";
-                    
-                    return $this->handleResponse($request, false, "Shift incomplete. Minimum 8 hours required. You can clock out in $timeStr.", 422);
+                // Handle Night Shift cross-over (ends the next day)
+                $scheduledStart = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->start_time);
+                if ($scheduledEnd->lt($scheduledStart) && $now->gt($scheduledStart)) {
+                    $scheduledEnd->addDay();
+                }
+
+                if ($now->lt($scheduledEnd)) {
+                    $remaining = $now->diffForHumans($scheduledEnd, true);
+                    return $this->handleResponse($request, false, "Shift incomplete. Your scheduled shift ends at " . $scheduledEnd->format('H:i') . " (in $remaining).", 422);
                 }
 
                 $existingLog->update(['clock_out' => $now]);
                 return $this->handleResponse($request, true, 'Clock-out recorded successfully!');
             }
 
-            // CLOCK IN LOGIC
             $now = now();
             $scheduledStart = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->start_time);
             
-            // Determine status: Late if current time is more than 15 minutes past scheduled start
             $status = $now->gt($scheduledStart->addMinutes(15)) ? 'late' : 'on-time';
 
             AttendanceLog::create([
@@ -115,19 +110,16 @@ class UserAttendanceController extends Controller
 
     private function handleResponse(Request $request, bool $success, string $message, int $status = 200)
     {
-
         if ($request->expectsJson()) {
             return response()->json(['success' => $success, 'message' => $message], $status);
         }
 
-    
         if ($request->isMethod('post')) {
             return $success 
                 ? redirect()->route('user.attendance.success')->with('status', $message)
                 : redirect()->back()->with('error', $message); 
         }
 
-    
         return $success 
             ? redirect()->route('user.attendance.success')->with('status', $message)
             : redirect()->route('user.attendance.scan')->with('error', $message);
