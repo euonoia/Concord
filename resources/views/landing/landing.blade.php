@@ -207,7 +207,8 @@
                             <i class="bi bi-check-lg text-4xl text-green-600"></i>
                         </div>
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">Appointment Confirmed!</h3>
-                        <p class="text-gray-500 mb-8">Thank you for booking with us. We have sent a confirmation email to your inbox.</p>
+                        <p class="text-gray-700 font-medium mb-4">{{ session('success') }}</p>
+                        <p class="text-gray-500 mb-8">We have sent a confirmation email to your inbox.</p>
                         <button @click="open = false" class="w-full rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
                             Close
                         </button>

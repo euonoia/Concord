@@ -95,12 +95,9 @@ class AppointmentController extends Controller
             // Find Doctor ID based on name.
             $doctorId = null;
             if (!empty($validated['doctor_name'])) {
-                $doctorRecord = DB::table('users_core1')
-                                  ->where('role', 'doctor')
-                                  ->where('name', $validated['doctor_name'])
-                                  ->first();
+                $doctorRecord = \App\Models\Employee::where(DB::raw("CONCAT(first_name, ' ', last_name)"), $validated['doctor_name'])->first();
                 if ($doctorRecord) {
-                    $doctorId = $doctorRecord->id;
+                    $doctorId = $doctorRecord->user_id;
                 }
             }
 

@@ -31,25 +31,21 @@ class DoctorController extends Controller
             // followup, prescription_refill, diagnostic - show all doctors
         ];
 
-        // Query users_core1 directly using DB facade since User model inside Concord
-        // might not be completely mapped or we just query the table to be safe
-        $query = DB::table('users_core1')
-            ->where('role', 'doctor')
-            ->where('status', 'active')
-            ->select('id', 'name', 'specialization');
+        // Query Employee instead of the legacy users_core1
+        $query = \App\Models\Employee::whereNotNull('specialization');
 
         // Apply specialization filter if mapping exists
         if (isset($specializationMap[$serviceType])) {
             $query->whereIn('specialization', $specializationMap[$serviceType]);
         }
 
-        $doctors = $query->orderBy('name', 'asc')->get();
+        $doctors = $query->orderBy('first_name', 'asc')->get();
 
         return response()->json([
             'doctors' => $doctors->map(function ($doctor) {
                 return [
-                    'id' => $doctor->id,
-                    'name' => $doctor->name,
+                    'id' => $doctor->user_id,
+                    'name' => $doctor->first_name . ' ' . $doctor->last_name,
                     'specialization' => $doctor->specialization,
                 ];
             })
