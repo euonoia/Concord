@@ -20,97 +20,28 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
-</head>
-<body x-data="{ 
-    open: {{ $errors->has('name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
-    submitted: false, 
-    showDoctor: {{ old('service_type') ? 'true' : 'false' }},
-    doctors: [],
-    loadingDoctors: false,
-    selectedDoctor: '{{ old('doctor_name') }}',
-    selectedSpecialization: '{{ old('specialization') }}',
-    showDetails: {{ session('tracked_appointment') ? 'true' : 'false' }},
-    showCancelConfirm: false,
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     
-    // AJAX Tracking State
-    trackingReference: '',
-    trackedAppointment: @json(session('tracked_appointment')),
-    trackingLoading: false,
-    trackingError: '',
-    cancelLoading: false,
-    cancelError: '',
-    cancelSuccess: '{{ session('cancel_success') }}',
-
-    async trackAppointment() {
-        if (!this.trackingReference) return;
-        this.trackingLoading = true;
-        this.trackingError = '';
-        this.cancelSuccess = '';
-        
-        try {
-            const response = await fetch('{{ route('appointments.lookup') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ appointment_reference: this.trackingReference })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.trackedAppointment = data.appointment;
-                this.showDetails = true;
-                this.showCancelConfirm = false;
-            } else {
-                this.trackingError = data.message || 'No appointment found.';
-            }
-        } catch (error) {
-            this.trackingError = 'An error occurred. Please try again.';
-        } finally {
-            this.trackingLoading = false;
-        }
-    },
-
-    async cancelAppointment() {
-        if (!this.trackedAppointment) return;
-        this.cancelLoading = true;
-        this.cancelError = '';
-        this.cancelSuccess = '';
-
-        const reason = document.getElementById('ajax_cancellation_reason')?.value || '';
-        
-        try {
-            const response = await fetch(`/appointments/track/${this.trackedAppointment.appointment_no}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ cancellation_reason: reason })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.trackedAppointment.status = data.appointment.status;
-                this.trackedAppointment.cancellation_reason = data.appointment.cancellation_reason;
-                this.cancelSuccess = data.message;
-                this.showCancelConfirm = false;
-            } else {
-                this.cancelError = data.message || 'Could not cancel appointment.';
-            }
-        } catch (error) {
-            this.cancelError = 'An error occurred. Please try again.';
-        } finally {
-            this.cancelLoading = false;
-        }
-    }
-}" @keydown.escape="open = false; showDetails = false; showCancelConfirm = false" class="relative">
+    <!-- Pass required Blade variables to JavaScript -->
+    <script>
+        window.hasErrors = {{ $errors->has('name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') ? 'true' : 'false' }};
+        window.hasSuccess = {{ session('success') ? 'true' : 'false' }};
+        window.hasOldServiceType = {{ old('service_type') ? 'true' : 'false' }};
+        window.oldDoctorName = '{{ old('doctor_name') }}';
+        window.oldSpecialization = '{{ old('specialization') }}';
+        window.hasTrackedAppointment = {{ session('tracked_appointment') ? 'true' : 'false' }};
+        window.trackedAppointmentData = @json(session('tracked_appointment'));
+        window.cancelSuccessMsg = '{{ session('cancel_success') }}';
+        window.csrfToken = '{{ csrf_token() }}';
+        window.lookupRoute = '{{ route('appointments.lookup') }}';
+        window.cancelRoute = '{{ route('appointments.cancel', ':id') }}';
+        window.doctorsRoute = '{{ route('api.doctors.by.service') }}';
+    </script>
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body x-data="landingForm()" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
+    :class="{ 'overflow-hidden': open }">
 <!-- Header -->
 <header>
     <div class="container">
@@ -221,18 +152,7 @@
                         </div>
 
                         <form action="{{ route('appointments.store') }}" method="POST" class="space-y-6" id="booking-form"
-                            @submit.prevent="
-                                submitted = true;
-                                grecaptcha.ready(function() {
-                                    grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'confirm_booking'}).then(function(token) {
-                                        document.getElementById('g-recaptcha-response').value = token;
-                                        document.getElementById('booking-form').submit();
-                                    }).catch(function() {
-                                        submitted = false;
-                                        alert('reCAPTCHA failed to load. Please refresh and try again.');
-                                    });
-                                });
-                            ">
+                            @submit="submitted = true">
                             @csrf
                             
                             <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
@@ -426,10 +346,7 @@
                                     @error('medical_history_summary') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
-                                <!-- Section 4: Policies -->
-                                <div class="col-span-2 mt-4">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">4. Administrative</h4>
-                                </div>
+                            
 
                                 <div class="col-span-2">
                                     <div class="flex items-start">
@@ -437,6 +354,7 @@
                                             <input id="terms" name="terms" type="checkbox" 
                                                 class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
                                                 style="border: 2px solid #1e293b !important; appearance: checkbox !important; -webkit-appearance: checkbox !important; opacity: 1 !important; visibility: visible !important;"
+                                                x-model="agreedToTerms"
                                                 required>
                                         </div>
                                         <div class="ml-3 text-sm">
@@ -448,9 +366,14 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                            <div x-show="agreedToTerms" x-transition>
+                                <div class="mt-8 flex justify-center">
+                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                </div>
+                                @error('g-recaptcha-response') <p class="mt-2 text-xs text-red-500 text-center">{{ $message }}</p> @enderror
+                            </div>
 
-                            <div class="mt-8">
+                            <div class="mt-4">
                                 <button type="submit" class="w-full rounded-lg bg-[#1a3a5a] px-5 py-3 text-center text-sm font-semibold text-white shadow-md hover:bg-[#142d45] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitted">
                                     <span x-show="!submitted">Confirm My Booking</span>
                                     <span x-show="submitted" style="display: none;" class="flex items-center justify-center">
@@ -461,7 +384,6 @@
                                         Processing...
                                     </span>
                                 </button>
-                                @error('g-recaptcha-response') <p class="mt-2 text-xs text-red-500 text-center">{{ $message }}</p> @enderror
                             </div>
                         </form>
                     </div>
@@ -750,25 +672,7 @@
     </div>
 </footer>
 
-<!-- Sub NavLink Highlight JS -->
-<script>
-    const sections = document.querySelectorAll("section[id]");
-    const subLinks = document.querySelectorAll(".sub-link");
-
-    window.addEventListener("scroll", () => {
-        let scrollPos = window.scrollY + 150;
-        sections.forEach(section => {
-            if(scrollPos >= section.offsetTop && scrollPos < section.offsetTop + section.offsetHeight){
-                subLinks.forEach(link => {
-                    link.classList.remove("active");
-                    if(link.getAttribute("href") === "#" + section.id){
-                        link.classList.add("active")
-                    }
-                });
-            }
-        });
-    });
-</script>
+</footer>
 
 </body>
 </html>

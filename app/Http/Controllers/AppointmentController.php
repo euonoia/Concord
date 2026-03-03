@@ -124,7 +124,12 @@ class AppointmentController extends Controller
             DB::commit();
             Log::info('Creating new online appointment:', $appointment->toArray());
 
-            return back()->with('success', 'Appointment booked successfully! Your reference number is: ' . $appointmentIdStr);
+            \Illuminate\Support\Facades\Mail::raw($appointmentIdStr, function ($message) use ($validated) {
+                $message->to($validated['email'])
+                        ->subject('Your Appointment Reference Number');
+            });
+
+            return back()->with('success', 'Appointment booked successfully! Your reference number is in your email: ' . $appointmentIdStr);
 
         } catch (\Exception $e) {
             DB::rollBack();
