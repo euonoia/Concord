@@ -1,0 +1,58 @@
+{
+  "_html5-qrcode-scanner-CK0YHsee.js": {
+    "file": "assets/html5-qrcode-scanner-CK0YHsee.js",
+    "name": "html5-qrcode-scanner"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-DzbOYJGh.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/css/hospitaal.jpg": {
+    "file": "assets/hospitaal-BDxFPRi8.jpg",
+    "src": "resources/css/hospitaal.jpg"
+  },
+  "resources/css/people.jpeg": {
+    "file": "assets/people-DYMmANjv.jpeg",
+    "src": "resources/css/people.jpeg"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BoDmOAdz.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/components/layout/sidebar.js",
+      "resources/js/components/qr/scanner.js",
+      "resources/js/pages/hr/hr3/station-scanner.js"
+    ]
+  },
+  "resources/js/components/layout/sidebar.js": {
+    "file": "assets/sidebar-bDGU8M4u.js",
+    "name": "sidebar",
+    "src": "resources/js/components/layout/sidebar.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/components/qr/scanner.js": {
+    "file": "assets/scanner-DXl_jQa8.js",
+    "name": "scanner",
+    "src": "resources/js/components/qr/scanner.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_html5-qrcode-scanner-CK0YHsee.js"
+    ]
+  },
+  "resources/js/pages/hr/hr3/station-scanner.js": {
+    "file": "assets/station-scanner-DlISsbU9.js",
+    "name": "station-scanner",
+    "src": "resources/js/pages/hr/hr3/station-scanner.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_html5-qrcode-scanner-CK0YHsee.js"
+    ]
+  }
+}

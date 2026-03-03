@@ -8,31 +8,30 @@ use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
 use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
 use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 
+use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
+use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
+
 // --- Admin Dashboard ---
 Route::get('/dashboard', function () {
     return view('admin.dashboard');
 })->name('admin.dashboard');
 
-// --- HR2 Department AJAX Endpoints ---
+// --- HR2 Department ---
 Route::prefix('hr2')->group(function () {
     // Specializations by Department
     Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
         ->name('departments.specializations');
-
     // Positions by Department + Specialization
     Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])
         ->name('departments.positions');
     // Employees by Department and specialization
     Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
-});
 
-// --- HR2 Admin Resource Routes ---
+   
+});
 Route::resource('competencies', CompetencyController::class);
 Route::resource('learning', AdminLearningController::class);
 Route::resource('training', AdminTrainingController::class);
-
-
-// --- Succession Planning Routes ---
 Route::prefix('succession')->group(function () {
     Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
 
@@ -44,8 +43,18 @@ Route::prefix('succession')->group(function () {
     Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
 });
 
-// --- ESS Module Routes ---
-Route::prefix('ess')->group(function () {
+ Route::prefix('ess')->group(function () {
     Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
-    Route::patch('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
+    Route::post('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
+});
+// --- END OF HR2 Department ---
+
+// --- HR3 Department ---
+Route::prefix('hr3')->group(function () {
+    Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+
+    Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
+    Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+    Route::delete('/shifts/{id}', [AdminShiftController::class, 'destroy'])->name('shifts.destroy');
+    Route::get('/get-employees/{dept_id}', [AdminShiftController::class, 'getEmployeesByDept']);
 });
