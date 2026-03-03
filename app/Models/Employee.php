@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\User;
 
 class Employee extends Model
@@ -32,4 +33,8 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+    public function position()
+{
+    return $this->belongsTo(DepartmentPositionTitle::class, 'position_id', 'id');
+}
 }

@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR2 Module</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="dashboard">
+<body class="dashboard" data-page="@yield('page')">
 
 <!-- Mobile Topbar -->
 <div class="dashboard-topbar topbar">
-    <button class="menu-toggle"
-        onclick="document.querySelector('.dashboard .sidebar').classList.toggle('show')">
+    <button class="menu-toggle">
         ☰
     </button>
     <div class="title">HR</div>
@@ -83,33 +83,5 @@
 </div>
 
 </body>
-
-
-<script>
-const sidebar = document.getElementById('sidebar');
-
-// default collapsed on desktop
-if (window.innerWidth > 768) {
-    sidebar.classList.add('collapsed');
-}
-
-// hover expand (desktop)
-sidebar.addEventListener('mouseenter', () => {
-    if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
-});
-
-sidebar.addEventListener('mouseleave', () => {
-    if (window.innerWidth > 768) sidebar.classList.add('collapsed');
-});
-
-// close sidebar on mobile click outside
-document.addEventListener('click', (e) => {
-    const toggle = document.querySelector('.menu-toggle');
-    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-        sidebar.classList.remove('show');
-    }
-});
-</script>
-
 </body>
 </html>

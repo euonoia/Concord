@@ -21,8 +21,8 @@
 <!-- Sidebar -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
     <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="HR2 Logo">
-        <div class="logo-text">HR2</div>
+        <img src="{{ asset('images/logo.png') }}" alt="HR Logo">
+        <div class="logo-text">HRMS</div>
     </div>
 
     <nav>
@@ -31,42 +31,52 @@
             <span>Dashboard</span>
         </a>
 
-       <a href="{{ route('competencies.index') }}" class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
+        {{-- --- HR2 SECTION --- --}}
+        <a href="{{ route('competencies.index') }}" class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
             <i class="bi bi-lightbulb"></i>
             <span>Competencies</span>
         </a>
 
-        <a href="{{ route('learning.index') }}">
+        <a href="{{ route('learning.index') }}" class="{{ request()->routeIs('learning.*') ? 'active' : '' }}">
             <i class="bi bi-book"></i>
             <span>Learning</span>
         </a>
 
-        <a href="{{ route('training.index') }}">
+        <a href="{{ route('training.index') }}" class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>
             <span>Training</span>
         </a>
         
-        <a href="{{ route('succession.index') }}"
-            class="{{ request()->routeIs('hr2.succession') ? 'active' : '' }}">
-                <i class="bi bi-tree"></i>
-                <span>Succession</span>
+        <a href="{{ route('succession.index') }}" class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
+            <i class="bi bi-tree"></i>
+            <span>Succession</span>
         </a>
 
-        <a href="{{ route('ess.index') }}">
+        <a href="{{ route('ess.index') }}" class="{{ request()->routeIs('ess.*') ? 'active' : '' }}">
             <i class="bi bi-pencil-square"></i>
             <span>ESS</span>
         </a>
+        
+        <a href="{{ route('shifts.index') }}" class="{{ request()->routeIs('shifts.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-range"></i>
+            <span>Shifts</span>
+        </a>
+
+        <a href="{{ route('timesheet.index') }}" class="{{ request()->routeIs('timesheet.*') ? 'active' : '' }}">
+            <i class="bi bi-clock-history"></i>
+            <span>Timesheet</span>
+        </a>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>
 
-        <a href="#"
-        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
             <i class="bi bi-box-arrow-right"></i>
             <span>Logout</span>
         </a>
-
     </nav>
 </div>
 

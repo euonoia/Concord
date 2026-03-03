@@ -1,0 +1,88 @@
+/* --- KIOSK SYSTEM LAYOUT --- */
+.hr3-kiosk-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f1f5f9 !important; 
+    overflow: hidden !important;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Hide all Admin Dashboard clutter */
+.hr3-kiosk-body .dashboard-sidebar,
+.hr3-kiosk-body .sidebar, 
+.hr3-kiosk-body .dashboard-topbar,
+.hr3-kiosk-body .topbar,
+.hr3-kiosk-body .menu-toggle {
+    display: none !important;
+}
+
+.hr3-kiosk-center-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    z-index: 50;
+}
+
+/* --- QR COMPONENT (SPLIT VIEW) --- */
+.hr3-qr-wrapper {
+    background-color: #ffffff;
+    padding: 4rem;
+    border-radius: 3.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e2e8f0;
+    display: flex; 
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+    max-width: 1200px;
+    width: 95%;
+}
+
+.hr3-qr-content-left {
+    flex: 1;
+    text-align: left;
+}
+
+.hr3-qr-section-right {
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.hr3-qr-frame {
+    padding: 1.5rem;
+    border: 6px solid #2563eb;
+    border-radius: 2.5rem;
+    display: inline-block;
+    background-color: #ffffff;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.hr3-qr-image {
+    width: 380px;
+    height: 380px;
+    object-fit: contain;
+}
+
+.hr3-status-pulse {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
