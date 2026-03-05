@@ -18,144 +18,25 @@
             }
         }
     </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body x-data="{ 
-    open: {{ $errors->has('name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
-    submitted: false, 
+<body x-data="appointmentForm({ 
+    open: {{ $errors->has('first_name') || $errors->has('last_name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
     showDoctor: {{ old('service_type') ? 'true' : 'false' }},
-    doctors: [],
-    loadingDoctors: false,
-    selectedDoctor: '{{ old('doctor_name') }}',
-    selectedSpecialization: '{{ old('specialization') }}',
+    selectedDoctor: @json(old('doctor_name')),
+    selectedSpecialization: @json(old('specialization')),
     showDetails: {{ session('tracked_appointment') ? 'true' : 'false' }},
-    showCancelConfirm: false,
-    agreedToTerms: false,
-    
-    // AJAX Tracking State
-    trackingReference: '',
     trackedAppointment: @json(session('tracked_appointment')),
-    trackingLoading: false,
-    trackingError: '',
-    cancelLoading: false,
-    cancelError: '',
-    cancelSuccess: '{{ session('cancel_success') }}',
-
-    async trackAppointment() {
-        if (!this.trackingReference) return;
-        this.trackingLoading = true;
-        this.trackingError = '';
-        this.cancelSuccess = '';
-        
-        try {
-            const response = await fetch('{{ route('appointments.lookup') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ appointment_reference: this.trackingReference })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                this.trackedAppointment = data;
-                this.showDetails = true;
-            } else {
-                this.trackingError = data.error || 'Appointment not found.';
-                this.trackedAppointment = null;
-            }
-        } catch (error) {
-            this.trackingError = 'An error occurred while tracking. Please try again.';
-        } finally {
-            this.trackingLoading = false;
-        }
-    },
-
-    async cancelAppointment() {
-        if (!this.trackedAppointment) return;
-        
-        this.cancelLoading = true;
-        this.cancelError = '';
-
-        try {
-            const response = await fetch('{{ route('appointments.cancel', ':id') }}'.replace(':id', this.trackedAppointment.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                this.trackedAppointment.status = 'cancelled';
-                this.cancelSuccess = 'Appointment cancelled successfully.';
-                this.showCancelConfirm = false;
-            } else {
-                this.cancelError = data.error || 'Failed to cancel appointment.';
-            }
-        } catch (error) {
-            this.cancelError = 'An error occurred while cancelling. Please try again.';
-        } finally {
-            this.cancelLoading = false;
-        }
-    },
-
-    closeModal() {
-        this.open = false;
-        this.submitted = false;
-    },
-
-    fetchDoctors() {
-        const serviceType = document.getElementById('service_type').value;
-        this.doctors = [];
-        
-        if (!serviceType) {
-            this.showDoctor = false;
-            return;
-        }
-
-        this.loadingDoctors = true;
-        this.showDoctor = true;
-
-        fetch(`{{ route('api.doctors.byServiceType') }}?service_type=${serviceType}`)
-            .then(response => response.json())
-            .then(data => {
-                this.doctors = data.doctors || [];
-                if(this.selectedDoctor) {
-                    const doctorExists = this.doctors.find(d => d.name === this.selectedDoctor);
-                    if (!doctorExists) {
-                        this.selectedDoctor = '';
-                        this.selectedSpecialization = '';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching doctors:', error);
-            })
-            .finally(() => {
-                this.loadingDoctors = false;
-            });
-    },
-
-    updateSpecialization() {
-        const selectedDoc = this.doctors.find(d => d.name === this.selectedDoctor);
-        if (selectedDoc) {
-            this.selectedSpecialization = selectedDoc.specialization;
-        } else {
-            this.selectedSpecialization = '';
-        }
-    }
-}" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
+    cancelSuccess: @json(session('cancel_success')) ?? '',
+    lookupUrl: '{{ route('appointments.lookup') }}',
+    cancelUrlFormat: '{{ route('appointments.cancel', ':id') }}',
+    doctorsUrl: '{{ route('api.doctors.byServiceType') }}',
+    csrfToken: '{{ csrf_token() }}'
+})" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
     :class="{ 'overflow-hidden': open }">
 <!-- Header -->
 <header>
@@ -276,11 +157,25 @@
                                     <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Patient Information</h4>
                                 </div>
 
-                                <!-- Name -->
-                                <div class="relative col-span-2">
-                                    <input type="text" name="name" id="name" value="{{ old('name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Full Name" required>
-                                    <label for="name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Full Name</label>
-                                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                <!-- First Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="first_name" id="first_name" value="{{ old('first_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
+                                    <label for="first_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">First Name</label>
+                                    @error('first_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Middle Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="middle_name" id="middle_name" value="{{ old('middle_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name (Optional)">
+                                    <label for="middle_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Middle Name (Optional)</label>
+                                    @error('middle_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Last Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
+                                    <label for="last_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Last Name</label>
+                                    @error('last_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Date of Birth -->
@@ -346,21 +241,9 @@
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <select name="service_type" id="service_type" 
                                         @change="
-                                            showDoctor = $event.target.value !== '';
                                             selectedDoctor = '';
                                             selectedSpecialization = '';
-                                            loadingDoctors = true;
-                                            fetch('/api/doctors/by-service-type?service_type=' + $event.target.value)
-                                                .then(res => res.json())
-                                                .then(data => {
-                                                    doctors = data.doctors || [];
-                                                    loadingDoctors = false;
-                                                })
-                                                .catch(err => {
-                                                    console.error('Error fetching doctors:', err);
-                                                    doctors = [];
-                                                    loadingDoctors = false;
-                                                });
+                                            fetchDoctors($event.target.value);
                                         " 
                                         class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
                                         <option value="" disabled {{ old('service_type') ? '' : 'selected' }} class="text-gray-500">Select Service Type</option>
@@ -381,10 +264,7 @@
                                     <select name="doctor_name" id="doctor_name" 
                                         :disabled="!showDoctor || loadingDoctors"
                                         x-model="selectedDoctor"
-                                        @change="
-                                            const selectedOption = $event.target.selectedOptions[0];
-                                            selectedSpecialization = selectedOption ? selectedOption.dataset.specialization : '';
-                                        "
+                                        @change="updateSpecialization($event)"
                                         class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent disabled:opacity-50 disabled:cursor-not-allowed">
                                         <template x-if="loadingDoctors">
                                             <option value="" selected>Loading doctors...</option>
@@ -568,7 +448,7 @@
                                 <div class="appointment-detail-icon"><i class="bi bi-geo-alt-fill"></i></div>
                                 <div>
                                     <span class="appointment-detail-label">Address</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.address_street + ', ' + trackedAppointment.address_city + ' ' + trackedAppointment.address_zip"></span>
+                                    <span class="appointment-detail-value" x-text="trackedAppointment.address || 'N/A'"></span>
                                 </div>
                             </div>
                             <div class="appointment-detail-item">
@@ -788,26 +668,6 @@
 </footer>
 
 </footer>
-
-<!-- Sub NavLink Highlight JS -->
-<script>
-    const sections = document.querySelectorAll("section[id]");
-    const subLinks = document.querySelectorAll(".sub-link");
-
-    window.addEventListener("scroll", () => {
-        let scrollPos = window.scrollY + 150;
-        sections.forEach(section => {
-            if(scrollPos >= section.offsetTop && scrollPos < section.offsetTop + section.offsetHeight){
-                subLinks.forEach(link => {
-                    link.classList.remove("active");
-                    if(link.getAttribute("href") === "#" + section.id){
-                        link.classList.add("active")
-                    }
-                });
-            }
-        });
-    });
-</script>
 
 </body>
 </html>

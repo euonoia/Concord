@@ -16,7 +16,9 @@ class AppointmentController extends Controller
         Log::info('AppointmentController::store called', $request->all());
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'date_of_birth' => 'required|date|before:today',
@@ -74,7 +76,9 @@ class AppointmentController extends Controller
 
                 $patient = Patient::create([
                     'patient_id' => $patientIdStr,
-                    'name' => $validated['name'],
+                    'first_name' => $validated['first_name'],
+                    'middle_name' => $validated['middle_name'] ?? null,
+                    'last_name' => $validated['last_name'],
                     'email' => $validated['email'],
                     'phone' => $validated['phone'],
                     'date_of_birth' => $validated['date_of_birth'],
@@ -129,7 +133,7 @@ class AppointmentController extends Controller
                         ->subject('Your Appointment Reference Number');
             });
 
-            return back()->with('success', 'Appointment booked successfully! Your reference number is in your email: ' . $appointmentIdStr);
+            return back()->with('success', 'Appointment booked successfully! Your reference number is in your email.');
 
         } catch (\Exception $e) {
             DB::rollBack();

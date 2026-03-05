@@ -13,7 +13,9 @@ class Patient extends Model
 
     protected $fillable = [
         'patient_id',
-        'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'date_of_birth',
         'gender',
         'phone',
@@ -42,6 +44,14 @@ class Patient extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    /**
+     * Accessor for full name.
+     */
+    public function getNameAttribute()
+    {
+        return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
     }
 
     protected static function boot()

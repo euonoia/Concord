@@ -1,140 +1,144 @@
-window.landingForm = () => ({
-    open: window.hasErrors || window.hasSuccess,
-    submitted: false,
-    showDoctor: window.hasOldServiceType,
-    doctors: [],
-    loadingDoctors: false,
-    selectedDoctor: window.oldDoctorName || '',
-    selectedSpecialization: window.oldSpecialization || '',
-    showDetails: window.hasTrackedAppointment,
-    showCancelConfirm: false,
-    agreedToTerms: false,
+document.addEventListener('alpine:init', () => {
+    Alpine.data('appointmentForm', (config) => ({
+        open: config.open ?? false,
+        submitted: false,
+        showDoctor: config.showDoctor ?? false,
+        doctors: [],
+        loadingDoctors: false,
+        selectedDoctor: config.selectedDoctor ?? '',
+        selectedSpecialization: config.selectedSpecialization ?? '',
+        showDetails: config.showDetails ?? false,
+        showCancelConfirm: false,
+        agreedToTerms: false,
 
-    // AJAX Tracking State
-    trackingReference: '',
-    trackedAppointment: window.trackedAppointmentData,
-    trackingLoading: false,
-    trackingError: '',
-    cancelLoading: false,
-    cancelError: '',
-    cancelSuccess: window.cancelSuccessMsg || '',
+        // AJAX Tracking State
+        trackingReference: '',
+        trackedAppointment: config.trackedAppointment ?? null,
+        trackingLoading: false,
+        trackingError: '',
+        cancelLoading: false,
+        cancelError: '',
+        cancelSuccess: config.cancelSuccess ?? '',
 
-    async trackAppointment() {
-        if (!this.trackingReference) return;
-        this.trackingLoading = true;
-        this.trackingError = '';
-        this.cancelSuccess = '';
+        // Endpoints & Tokens passed from Blade
+        lookupUrl: config.lookupUrl ?? '',
+        cancelUrlFormat: config.cancelUrlFormat ?? '',
+        doctorsUrl: config.doctorsUrl ?? '',
+        csrfToken: config.csrfToken ?? '',
 
-        try {
-            const response = await fetch(window.lookupRoute, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken
-                },
-                body: JSON.stringify({ appointment_reference: this.trackingReference })
-            });
+        async trackAppointment() {
+            if (!this.trackingReference) return;
+            this.trackingLoading = true;
+            this.trackingError = '';
+            this.cancelSuccess = '';
 
-            const data = await response.json();
+            try {
+                const response = await fetch(this.lookupUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken
+                    },
+                    body: JSON.stringify({ appointment_reference: this.trackingReference })
+                });
 
-            if (response.ok) {
-                this.trackedAppointment = data;
-                this.showDetails = true;
-            } else {
-                this.trackingError = data.error || 'Appointment not found.';
-                this.trackedAppointment = null;
-            }
-        } catch (error) {
-            this.trackingError = 'An error occurred while tracking. Please try again.';
-        } finally {
-            this.trackingLoading = false;
-        }
-    },
+                const data = await response.json();
 
-    async cancelAppointment() {
-        if (!this.trackedAppointment) return;
-
-        this.cancelLoading = true;
-        this.cancelError = '';
-
-        try {
-            const response = await fetch(window.cancelRoute.replace(':id', this.trackedAppointment.id), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': window.csrfToken
+                if (response.ok) {
+                    this.trackedAppointment = data.appointment;
+                    this.showDetails = true;
+                } else {
+                    this.trackingError = data.message || data.error || 'Appointment not found.';
+                    this.trackedAppointment = null;
                 }
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                this.trackedAppointment.status = 'cancelled';
-                this.cancelSuccess = 'Appointment cancelled successfully.';
-                this.showCancelConfirm = false;
-            } else {
-                this.cancelError = data.error || 'Failed to cancel appointment.';
+            } catch (error) {
+                this.trackingError = 'An error occurred while tracking. Please try again.';
+            } finally {
+                this.trackingLoading = false;
             }
-        } catch (error) {
-            this.cancelError = 'An error occurred while cancelling. Please try again.';
-        } finally {
-            this.cancelLoading = false;
-        }
-    },
+        },
 
-    closeModal() {
-        this.open = false;
-        this.submitted = false;
-        this.agreedToTerms = false;
-    },
+        async cancelAppointment() {
+            if (!this.trackedAppointment) return;
 
-    fetchDoctors() {
-        const serviceType = document.getElementById('service_type').value;
-        this.doctors = [];
+            this.cancelLoading = true;
+            this.cancelError = '';
 
-        if (!serviceType) {
-            this.showDoctor = false;
-            return;
-        }
-
-        this.loadingDoctors = true;
-        this.showDoctor = true;
-
-        fetch(`${window.doctorsRoute}?service_type=${serviceType}`)
-            .then(response => response.json())
-            .then(data => {
-                // The API returns { doctors: [...] }
-                this.doctors = data.doctors || [];
-                if (this.selectedDoctor) {
-                    const doctorExists = this.doctors.find(d => d.name === this.selectedDoctor);
-                    if (!doctorExists) {
-                        this.selectedDoctor = '';
-                        this.selectedSpecialization = '';
+            try {
+                const url = this.cancelUrlFormat.replace(':id', this.trackedAppointment.id);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrfToken
                     }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.trackedAppointment.status = 'cancelled';
+                    this.cancelSuccess = 'Appointment cancelled successfully.';
+                    this.showCancelConfirm = false;
+                } else {
+                    this.cancelError = data.error || 'Failed to cancel appointment.';
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching doctors:', error);
-            })
-            .finally(() => {
-                this.loadingDoctors = false;
-            });
-    },
+            } catch (error) {
+                this.cancelError = 'An error occurred while cancelling. Please try again.';
+            } finally {
+                this.cancelLoading = false;
+            }
+        },
 
-    updateSpecialization() {
-        const selectedDoc = this.doctors.find(d => d.name === this.selectedDoctor);
-        if (selectedDoc) {
-            this.selectedSpecialization = selectedDoc.specialization;
-        } else {
-            this.selectedSpecialization = '';
+        closeModal() {
+            this.open = false;
+            this.submitted = false;
+            this.agreedToTerms = false;
+        },
+
+        fetchDoctors(serviceType) {
+            this.doctors = [];
+
+            if (!serviceType) {
+                this.showDoctor = false;
+                return;
+            }
+
+            this.loadingDoctors = true;
+            this.showDoctor = true;
+
+            fetch(`${this.doctorsUrl}?service_type=${serviceType}`)
+                .then(response => response.json())
+                .then(data => {
+                    this.doctors = data.doctors || [];
+                    if (this.selectedDoctor) {
+                        const doctorExists = this.doctors.find(d => d.name === this.selectedDoctor);
+                        if (!doctorExists) {
+                            this.selectedDoctor = '';
+                            this.selectedSpecialization = '';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching doctors:', error);
+                    this.doctors = [];
+                })
+                .finally(() => {
+                    this.loadingDoctors = false;
+                });
+        },
+
+        updateSpecialization(event) {
+            const selectedOption = event.target.selectedOptions[0];
+            if (selectedOption) {
+                this.selectedSpecialization = selectedOption.dataset.specialization;
+            } else {
+                this.selectedSpecialization = '';
+            }
         }
-    }
-});
-
-document.addEventListener("alpine:init", () => {
-    Alpine.data("landingForm", window.landingForm);
+    }));
 });
 
 document.addEventListener("DOMContentLoaded", () => {
