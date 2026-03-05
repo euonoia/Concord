@@ -74,7 +74,7 @@ class AppointmentController extends Controller
                 // Generate a unique patient_id
                 $patientIdStr = 'P-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
 
-                $patient = Patient::create([
+                Patient::create([
                     'patient_id' => $patientIdStr,
                     'first_name' => $validated['first_name'],
                     'middle_name' => $validated['middle_name'] ?? null,
@@ -89,6 +89,9 @@ class AppointmentController extends Controller
                     'medical_history' => $validated['medical_history_summary'],
                     'status' => 'active',
                 ]);
+                
+                // TiDB model override prevents immediate returning of ID.
+                $patient = Patient::where('patient_id', $patientIdStr)->first();
             } else {
                 $patient->update([
                     'insurance_provider' => $validated['insurance_provider'] ?? $patient->insurance_provider,
