@@ -1,4 +1,4 @@
-﻿@extends('layouts.core1.layouts.app')
+﻿@extends('core.core1.layouts.app')
 
 @section('title', 'Patient Details')
 
@@ -9,7 +9,7 @@
     <div class="core1-flex-between core1-header">
         <div>
             <h2 class="core1-title">Patient Details</h2>
-            <p class="core1-subtitle">View patient information</p>
+            <p class="core1-subtitle">View patient information @if($patient->mrn) &bull; <span class="font-mono" style="color:#1a3a5a;">{{ $patient->mrn }}</span> @endif</p>
         </div>
         <div class="core1-flex-gap-2">
             <a href="{{ route('core1.patients.edit', $patient) }}" class="core1-btn core1-btn-primary">
@@ -35,7 +35,21 @@
         <div class="core1-info-grid">
             <div class="core1-info-item">
                 <h3>Patient ID</h3>
-                <p>{{ $patient->patient_id }}</p>
+                <p>{{ $patient->patient_id ?? 'Not assigned' }}</p>
+            </div>
+            <div class="core1-info-item">
+                <h3>MRN</h3>
+                @if($patient->mrn)
+                    <p class="font-mono font-bold" style="color:#1a3a5a;">{{ $patient->mrn }}</p>
+                @else
+                    <p class="text-gray-400 text-sm italic">Not yet assigned</p>
+                @endif
+            </div>
+            <div class="core1-info-item">
+                <h3>Registration Status</h3>
+                <span class="core1-badge {{ ($patient->registration_status ?? '') === 'REGISTERED' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
+                    {{ str_replace('_', ' ', $patient->registration_status ?? 'REGISTERED') }}
+                </span>
             </div>
             <div class="core1-info-item">
                 <h3>Name</h3>

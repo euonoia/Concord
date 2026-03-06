@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\core1;
+namespace App\Models\user\Core\core1;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +21,9 @@ class Appointment extends Model
     'status',
     'notes',
     'reason',
+    'approved_by',
+    'approved_at',
+    'rejection_reason',
     'triage_note',
     'vital_signs'
 ];

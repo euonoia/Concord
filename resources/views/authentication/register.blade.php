@@ -29,9 +29,9 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Account Role & Department</label>
-                <select id="role_slug" name="role_slug" 
+                <select id="role_category" 
                         class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
-                    <option value="" disabled selected>Select your role</option>
+                    <option value="" disabled selected>Select your area</option>
                     <optgroup label="Patient Portal">
                         <option value="patient" {{ old('role_slug') == 'patient' ? 'selected' : '' }}>Patient</option>
                         <option value="patient_guardian" {{ old('role_slug') == 'patient_guardian' ? 'selected' : '' }}>Patient Guardian</option>
@@ -41,8 +41,23 @@
                         <option value="hr_employee" {{ old('role_slug') == 'hr_employee' ? 'selected' : '' }}>Human Resources</option>
                         <option value="logistics_employee" {{ old('role_slug') == 'logistics_employee' ? 'selected' : '' }}>Logistics & Supply Chain</option>
                         <option value="finance_employee" {{ old('role_slug') == 'finance_employee' ? 'selected' : '' }}>Finance & Billing</option>
-                        <option value="core_employee" {{ old('role_slug') == 'core_employee' ? 'selected' : '' }}>Core Medical Operations</option>
+                        <option value="core_employee" {{ in_array(old('role_slug'), ['doctor', 'nurse', 'head_nurse', 'receptionist', 'billing', 'admin']) ? 'selected' : (old('role_slug') == 'core_employee' ? 'selected' : '') }}>Core Medical Operations</option>
                     </optgroup>
+                </select>
+                <input type="hidden" name="role_slug" id="role_slug" value="{{ old('role_slug') }}">
+            </div>
+
+            <!-- Core Sub Roles -->
+            <div id="core_sub_role_fields" class="hidden">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Specific Medical Role</label>
+                <select id="sub_role_select" 
+                        class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="receptionist" {{ old('role_slug') == 'receptionist' ? 'selected' : '' }}>Receptionist</option>
+                    <option value="head_nurse" {{ old('role_slug') == 'head_nurse' ? 'selected' : '' }}>Head Nurse</option>
+                    <option value="nurse" {{ old('role_slug') == 'nurse' ? 'selected' : '' }}>Nurse</option>
+                    <option value="doctor" {{ old('role_slug') == 'doctor' ? 'selected' : '' }}>Doctor</option>
+                    <option value="billing" {{ old('role_slug') == 'billing' ? 'selected' : '' }}>Billing Officer</option>
+                    <option value="admin" {{ old('role_slug') == 'admin' ? 'selected' : '' }}>Admin</option>
                 </select>
             </div>
 
@@ -100,20 +115,34 @@
     </div>
 
     <script>
-        const roleSelect = document.getElementById('role_slug');
+        const roleCategory = document.getElementById('role_category');
+        const roleSlugHidden = document.getElementById('role_slug');
+        const subRoleSelect = document.getElementById('sub_role_select');
         const staffFields = document.getElementById('staff_fields');
+        const coreSubRoleFields = document.getElementById('core_sub_role_fields');
 
         function toggleFields() {
-            const val = roleSelect.value;
-            // Show names if role contains 'employee' or 'admin'
-            if (val.includes('employee') || val.includes('admin')) {
+            const category = roleCategory.value;
+            
+            // Show names if role category contains 'employee' or 'admin'
+            if (category.includes('employee') || category.includes('admin')) {
                 staffFields.classList.remove('hidden');
             } else {
                 staffFields.classList.add('hidden');
             }
+
+            // Show/Hide Core Medical Sub-Roles
+            if (category === 'core_employee') {
+                coreSubRoleFields.classList.remove('hidden');
+                roleSlugHidden.value = subRoleSelect.value;
+            } else {
+                coreSubRoleFields.classList.add('hidden');
+                roleSlugHidden.value = category;
+            }
         }
 
-        roleSelect.addEventListener('change', toggleFields);
+        roleCategory.addEventListener('change', toggleFields);
+        subRoleSelect.addEventListener('change', toggleFields);
         window.addEventListener('DOMContentLoaded', toggleFields); 
     </script>
 </body>

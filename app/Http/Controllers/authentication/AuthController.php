@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -20,8 +21,8 @@ class AuthController extends Controller
             'password'  => 'required|min:8|confirmed',
             'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,patient,patient_guardian,admin,doctor,nurse,head_nurse,receptionist,billing',
             // Profile fields for the Employee table
-            'first_name' => 'required_if:user_type,staff|string|max:255',
-            'last_name'  => 'required_if:user_type,staff|string|max:255',
+            'first_name' => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
+            'last_name'  => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
         ]);
 
         // Determine user type
@@ -80,23 +81,113 @@ class AuthController extends Controller
             'deleted_at' => null,
         ];
 
-        if (Auth::attempt($credentials, $request->has('remember'))) {
-            $request->session()->regenerate();
+        if (Auth::validate($credentials)) {
+            $user = User::where($loginType, $request->login)->first();
+            
+            if (!$user || !$user->is_active) {
+                return back()->withErrors(['login' => 'Account is inactive.'])->withInput();
+            }
 
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
+            // Store user info in session for 2FA
+            $request->session()->put('2fa_user_id', $user->id);
+            $request->session()->put('2fa_remember', $request->has('remember'));
 
-            $user->update([
-                'last_login_at' => now(),
-                'last_login_ip' => $request->ip(),
-            ]);
+            // Send OTP
+            $this->sendOtpForUser($user);
 
-            return $this->redirectByUserRole($user);
+            return redirect()->route('portal.2fa');
         }
 
         return back()->withErrors([
-            'login' => 'The provided credentials do not match our records or account is inactive.',
+            'login' => 'The provided credentials do not match our records.',
         ])->withInput($request->only('login'));
+    }
+
+    /**
+     * Show the 2FA verification form.
+     */
+    public function show2fa(Request $request)
+    {
+        if (!$request->session()->has('2fa_user_id')) {
+            return redirect()->route('portal.login');
+        }
+
+        return view('authentication.2fa');
+    }
+
+    /**
+     * Verify the 2FA code and log in the user.
+     */
+    public function verify2fa(Request $request)
+    {
+        $request->validate([
+            'otp_code' => 'required|string|size:6',
+        ]);
+
+        $userId = $request->session()->get('2fa_user_id');
+        $user = User::findOrFail($userId);
+
+        $otp = \App\Models\OTP::where('identifier', $user->email)
+            ->where('is_used', false)
+            ->latest()
+            ->first();
+
+        if (!$otp || $otp->otp_code !== $request->otp_code || $otp->isExpired() || $otp->attempts >= 5) {
+            if ($otp) $otp->increment('attempts');
+            return back()->withErrors(['otp_code' => 'Invalid or expired verification code.']);
+        }
+
+        // Success: Mark OTP as used
+        $otp->update(['is_used' => true]);
+
+        // Log the user in
+        Auth::login($user, $request->session()->get('2fa_remember'));
+
+        // Cleanup session
+        $request->session()->forget(['2fa_user_id', '2fa_remember']);
+        $request->session()->regenerate();
+
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ]);
+
+        return $this->redirectByUserRole($user);
+    }
+
+    /**
+     * Resend the 2FA code.
+     */
+    public function resend2fa(Request $request)
+    {
+        if (!$request->session()->has('2fa_user_id')) {
+            return redirect()->route('portal.login');
+        }
+
+        $user = User::findOrFail($request->session()->get('2fa_user_id'));
+        $this->sendOtpForUser($user);
+
+        return back()->with('status', 'A new verification code has been sent to your email.');
+    }
+
+    /**
+     * Helper to send OTP to user.
+     */
+    protected function sendOtpForUser($user)
+    {
+        // Invalidate previous OTPs
+        \App\Models\OTP::where('identifier', $user->email)->where('is_used', false)->update(['is_used' => true]);
+
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        \App\Models\OTP::create([
+            'identifier' => $user->email,
+            'otp_code' => $otpCode,
+            'expires_at' => now()->addMinutes(5),
+            'is_used' => false,
+        ]);
+
+        Mail::to($user->email)->send(new \App\Mail\OTPMail($otpCode));
     }
 
     protected function redirectByUserRole($user)

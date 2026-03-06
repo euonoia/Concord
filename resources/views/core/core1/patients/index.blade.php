@@ -1,4 +1,4 @@
-﻿@extends('layouts.core1.layouts.app')
+﻿@extends('core.core1.layouts.app')
 
 @section('title', 'Patient Management')
 
@@ -27,13 +27,20 @@
         </div>
 
         {{-- Only show Register Patient button for Admin and Receptionist --}}
-        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'receptionist')
+        @if(auth()->user()->role_slug === 'admin' || auth()->user()->role_slug === 'receptionist')
+        <div class="d-flex gap-2">
         <button type="button" onclick="openRegisterModal()" class="core1-btn core1-btn-primary">
             <i class="fas fa-plus"></i>
             <span class="ml-2">Register Patient</span>
         </button>
-    @endif
-</div>
+        <button type="button" onclick="document.getElementById('mergeModal').style.display='block'"
+                class="core1-btn core1-btn-outline">
+            <i class="fas fa-code-branch"></i>
+            <span class="ml-2">Merge Records</span>
+        </button>
+        </div>
+        @endif
+    </div>
 
 
     <div class="core1-stats-grid">
@@ -118,6 +125,7 @@
                         <th>Assigned Doctor</th>
                     @endif
                     <th>Last Visit</th>
+                    <th>Reg. Status</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -133,6 +141,11 @@
                                 <div>
                                     <div class="text-sm font-medium text-dark">{{ $patient->name }}</div>
                                     <div class="text-xs text-gray font-mono">{{ $patient->patient_id }}</div>
+                                    @if($patient->mrn)
+                                        <div class="text-xs font-mono font-bold mt-1" style="color:#1a3a5a;">
+                                            <i class="fas fa-id-card text-xxs"></i> {{ $patient->mrn }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -226,6 +239,13 @@
                         </td>
 
                         <td>
+                            @php $rs = $patient->registration_status ?? 'REGISTERED'; @endphp
+                            <span class="core1-badge {{ $rs === 'REGISTERED' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
+                                <i class="fas {{ $rs === 'REGISTERED' ? 'fa-check-circle' : ($rs === 'MERGED' ? 'fa-code-branch' : 'fa-clock') }} text-xxs"></i>
+                                <span class="ml-2">{{ str_replace('_', ' ', $rs) }}</span>
+                            </span>
+                        </td>
+                        <td>
                             @php
                                 $isPriority = auth()->user()->role === 'nurse' && $patient->assigned_nurse_id === auth()->user()->id;
                             @endphp
@@ -266,6 +286,14 @@
                                        class="core1-icon-action text-orange"
                                        title="Edit Patient">
                                         <i class="fas fa-edit"></i>
+                                    </a>
+                                @endif
+
+                                {{-- Complete Registration (PRE_REGISTERED only) --}}
+                                @if(($patient->registration_status ?? '') === 'PRE_REGISTERED' && auth()->user()->role_slug === 'receptionist')
+                                    <a href="{{ route('core1.patients.complete-registration', $patient) }}"
+                                       class="core1-icon-action" style="color:#059669;" title="Complete Registration">
+                                        <i class="fas fa-user-check"></i>
                                     </a>
                                 @endif
 
@@ -376,11 +404,20 @@
                             <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Patient Information</h4>
                         </div>
                         
-                        <!-- Name -->
+                        {{-- Name split into first/middle/last --}}
+                        <div class="relative col-span-2 sm:col-span-1">
+                            <input type="text" name="first_name" id="modal_first_name" value="{{ old('first_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
+                            <label for="modal_first_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">First Name *</label>
+                            @error('first_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="relative col-span-2 sm:col-span-1">
+                            <input type="text" name="middle_name" id="modal_middle_name" value="{{ old('middle_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name">
+                            <label for="modal_middle_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Middle Name</label>
+                        </div>
                         <div class="relative col-span-2">
-                            <input type="text" name="name" id="name" value="{{ old('name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Full Name" required>
-                            <label for="name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Full Name *</label>
-                            @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                            <input type="text" name="last_name" id="modal_last_name" value="{{ old('last_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
+                            <label for="modal_last_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Last Name *</label>
+                            @error('last_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
 
                         <!-- DOB -->
@@ -528,6 +565,97 @@
 
 @endsection
 
+{{-- Duplicate Warning Modal --}}
+<div id="duplicateModal" class="fixed inset-0 z-[1050] overflow-y-auto" style="display:none;" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" style="z-index:-1;"></div>
+    <div class="flex min-h-screen w-full items-center justify-center p-4">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl sm:w-full sm:max-w-lg">
+            <div class="px-6 pt-6 pb-4 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background-color:#fef3c7;">
+                        <i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Possible Duplicate Patient Found</h3>
+                        <p class="text-sm text-gray-500">Review the matches below before proceeding.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 max-h-64 overflow-y-auto">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Existing Records</p>
+                <div id="duplicateList"></div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex flex-col sm:flex-row gap-2 justify-end border-t border-gray-200">
+                <button type="button" onclick="closeDuplicateModal(); openRegisterModal();" class="core1-btn core1-btn-outline text-sm">
+                    <i class="fas fa-plus"></i><span class="pl-10">Create New Patient Anyway</span>
+                </button>
+                <button type="button" onclick="closeDuplicateModal();" class="core1-btn core1-btn-primary text-sm" style="background-color:#1a3a5a;color:white;">
+                    <i class="fas fa-arrow-left"></i><span class="pl-10">Go Back & Review</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Merge Patients Modal --}}
+<div id="mergeModal" class="fixed inset-0 z-[1060] overflow-y-auto" style="display:none;" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" style="z-index:-1;"></div>
+    <div class="flex min-h-screen w-full items-center justify-center p-4">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl sm:w-full sm:max-w-md">
+            <div class="px-6 pt-6 pb-4 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background-color:#ede9fe;">
+                        <i class="fas fa-code-branch" style="color:#7c3aed;"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Merge Patient Records</h3>
+                        <p class="text-sm text-gray-500">The pre-registered record will be absorbed into the primary record.</p>
+                    </div>
+                </div>
+            </div>
+            <form action="{{ route('core1.patients.merge') }}" method="POST">
+                @csrf
+                <div class="px-6 py-5 space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Primary Patient (REGISTERED)</label>
+                        <select name="primary_patient_id" class="core1-input w-full mt-1" required>
+                            <option value="">— Select Primary Patient —</option>
+                            @foreach($patients as $p)
+                                @if(($p->registration_status ?? '') === 'REGISTERED')
+                                    <option value="{{ $p->id }}">{{ $p->name }} &bull; {{ $p->mrn ?? $p->patient_id }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Secondary Patient (PRE REGISTERED — will be merged)</label>
+                        <select name="secondary_patient_id" class="core1-input w-full mt-1" required>
+                            <option value="">— Select Pre-Registered Patient —</option>
+                            @foreach($patients as $p)
+                                @if(($p->registration_status ?? '') === 'PRE_REGISTERED')
+                                    <option value="{{ $p->id }}">{{ $p->name }} &bull; {{ $p->phone }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rounded-lg p-3" style="background-color:#fef3c7;border:1px solid #fde68a;">
+                        <p class="text-xs" style="color:#92400e;">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            All appointments from the secondary patient will be transferred to the primary patient. This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-2 justify-end border-t border-gray-200">
+                    <button type="button" onclick="document.getElementById('mergeModal').style.display='none'" class="core1-btn core1-btn-outline text-sm">Cancel</button>
+                    <button type="submit" class="core1-btn text-sm" style="background-color:#7c3aed;color:white;" onclick="return confirm('Are you sure? This will merge the records permanently.')">
+                        <i class="fas fa-code-branch"></i><span class="pl-10">Confirm Merge</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
@@ -544,8 +672,35 @@
     function closeRegisterModal() {
         document.getElementById('registerModal').style.display = 'none';
     }
+
+    function openDuplicateModal(duplicates) {
+        const list = document.getElementById('duplicateList');
+        list.innerHTML = '';
+        duplicates.forEach(p => {
+            const isPreReg = p.registration_status === 'PRE_REGISTERED';
+            list.innerHTML += `
+            <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="font-weight:600;font-size:14px;">${p.name}</div>
+                    <div style="font-size:12px;color:#6b7280;">${p.phone} &bull; ${p.email ?? ''}</div>
+                    <span style="font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500;background:${isPreReg?'#fef3c7':'#d1fae5'};color:${isPreReg?'#92400e':'#065f46'};">
+                        ${p.registration_status}
+                    </span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-left:12px;">
+                    <a href="/core/patients/${p.id}" class="core1-btn core1-btn-outline" style="font-size:12px;padding:4px 10px;">View</a>
+                    ${isPreReg ? `<a href="/core/patients/${p.id}/complete-registration" class="core1-btn" style="font-size:12px;padding:4px 10px;background:#059669;color:white;">Complete Reg.</a>` : ''}
+                </div>
+            </div>`;
+        });
+        document.getElementById('duplicateModal').style.display = 'block';
+    }
+
+    function closeDuplicateModal() {
+        document.getElementById('duplicateModal').style.display = 'none';
+    }
     
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('registerModal');
         if (modal) {
@@ -557,9 +712,43 @@
         }
 
         // Auto-open modal if there are validation errors related to patient registration
-        @if($errors->has('name') || $errors->has('date_of_birth') || $errors->has('gender') || $errors->has('phone') || $errors->has('email'))
+        @if($errors->has('first_name') || $errors->has('last_name') || $errors->has('date_of_birth') || $errors->has('gender') || $errors->has('phone') || $errors->has('email'))
             openRegisterModal();
         @endif
+
+        // Duplicate detection interceptor on register form submit
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                const firstName = registerForm.querySelector('[name="first_name"]')?.value ?? '';
+                const lastName = registerForm.querySelector('[name="last_name"]')?.value ?? '';
+                const dob = registerForm.querySelector('[name="date_of_birth"]')?.value ?? '';
+                const email = registerForm.querySelector('[name="email"]')?.value ?? '';
+                
+                if (!firstName || !lastName || !dob || !email) return;
+                
+                e.preventDefault();
+                const query = new URLSearchParams({
+                    first_name: firstName,
+                    last_name: lastName,
+                    date_of_birth: dob,
+                    email: email
+                });
+                
+                fetch(`{{ route('core1.patients.check-duplicates') }}?${query.toString()}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.duplicates?.length > 0) {
+                            closeRegisterModal();
+                            openDuplicateModal(data.duplicates);
+                        } else {
+                            registerForm.submit();
+                        }
+                    })
+                    .catch(() => registerForm.submit());
+            });
+        }
     });
 </script>
 @endpush
+

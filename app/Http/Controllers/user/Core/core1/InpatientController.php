@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\Patient;
-use App\Models\core1\User;
+use App\Models\user\Core\core1\Patient;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,8 +13,8 @@ class InpatientController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $isDoctor = $user->role === 'doctor';
-        $isNurse = $user->role === 'nurse';
+        $isDoctor = $user->role_slug === 'doctor';
+        $isNurse = $user->role_slug === 'nurse';
 
         // Query inpatients
         $inpatients = Patient::query()
@@ -49,8 +49,8 @@ class InpatientController extends Controller
 
         // Nurses for dropdown
         $nurses = [];
-        if ($user->isAdmin() || $user->role === 'head_nurse') {
-            $nurses = User::where('role', 'nurse')->get();
+        if ($user->role_slug === 'admin' || $user->role_slug === 'head_nurse') {
+            $nurses = User::where('role_slug', 'nurse')->get();
         }
 
         return view('core.core1.inpatient.index', compact('inpatients', 'stats', 'beds', 'nurses'));

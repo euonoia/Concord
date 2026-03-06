@@ -4,7 +4,7 @@ namespace App\Http\Requests\core1\Appointments;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\core1\Appointment;
+use App\Models\user\Core\core1\Appointment;
 
 class StoreAppointmentRequest extends FormRequest
 {

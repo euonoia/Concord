@@ -1,4 +1,4 @@
-﻿@extends('layouts.core1.layouts.app')
+﻿@extends('core.core1.layouts.app')
 
 @push('styles')
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
@@ -139,6 +139,22 @@
                                         <form action="{{ route('core1.appointments.decline', $appointment) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="core1-btn core1-btn-outline">Decline</button>
+                                        </form>
+                                    @elseif(auth()->user()->role === 'receptionist' && $appointment->status === 'pending')
+                                        <form action="{{ route('core1.receptionist.online-appointments.approve', $appointment->id) }}" method="POST" class="d-flex m-0 bg-transparent" onsubmit="return confirm('Approve this appointment?');">
+                                            @csrf
+                                            <button type="submit" class="btn-icon-action text-green-500" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('core1.receptionist.online-appointments.reject', $appointment->id) }}" method="POST" class="d-flex m-0 bg-transparent" onsubmit="return confirm('Reject this appointment?');">
+                                            @csrf
+                                            <!-- sending a default rejection reason to bypass the modal for now in the calendar view, or just redirect to dashboard modal if needed -->
+                                            <input type="hidden" name="rejection_reason" value="Rejected by receptionist from calendar view">
+                                            <button type="submit" class="btn-icon-action text-red-500" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
                                         </form>
                                     @else
                                         <a href="{{ route('core1.appointments.show', $appointment) }}" class="btn-icon-action text-blue-500" title="View">
