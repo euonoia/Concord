@@ -14,6 +14,7 @@ class Patient extends Model
     // <--- Replace this $fillable with the updated version
     protected $fillable = [
         'patient_id',
+        'mrn',
         'first_name',
         'middle_name',
         'last_name',
@@ -36,7 +37,11 @@ class Patient extends Model
         'reason',
         'insurance_provider',
         'policy_number',
-        'emergency_contact_relation'
+        'emergency_contact_relation',
+        'registration_status',
+        'created_by',
+        'updated_by',
+        'merged_into_id',
     ];
 
     protected $casts = [
@@ -82,5 +87,33 @@ class Patient extends Model
     public function doctor()
     {
         return $this->belongsTo(\App\Models\User::class, 'doctor_id'); // doctor relation
+    }
+
+    public static function generateMRN(): string
+    {
+        $year = now()->year;
+        $lastNumber = static::where('mrn', 'like', "MRN-{$year}-%")
+            ->selectRaw("MAX(CAST(SUBSTRING(mrn, 10, 6) AS UNSIGNED)) as max_num")
+            ->value('max_num');
+
+        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
+
+        return 'MRN-' . $year . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    public static function detectDuplicates(array $data): \Illuminate\Database\Eloquent\Collection
+    {
+        return static::where(function ($q) use ($data) {
+            $q->where('phone', $data['phone'] ?? '')
+              ->orWhere('email', $data['email'] ?? '')
+              ->orWhere(function ($q2) use ($data) {
+                  $q2->where('first_name', 'like', $data['first_name'] ?? '')
+                     ->where('last_name', 'like', $data['last_name'] ?? '')
+                     ->whereNotNull('date_of_birth')
+                     ->where('date_of_birth', $data['date_of_birth'] ?? null);
+              });
+        })
+        ->whereNotIn('registration_status', ['MERGED'])
+        ->get();
     }
 }

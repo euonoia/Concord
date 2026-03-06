@@ -4,8 +4,12 @@ namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
 use App\Models\user\Core\core1\Patient;
+use App\Models\user\Core\core1\AuditLog;
 use App\Models\User;
+use App\Http\Requests\core1\Patients\StorePatientRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PatientManagementController extends Controller
 {
@@ -18,19 +22,21 @@ class PatientManagementController extends Controller
         $isDoctor = $user->role_slug === 'doctor';
         $isNurse = $user->role_slug === 'nurse';
 
-       $query = Patient::query();
+        $query = Patient::query();
 
-if ($isDoctor) {
-    $query->whereHas('appointments', function ($q) use ($user) {
-        $q->where('doctor_id', $user->id)
-          ->whereIn('status', ['scheduled','accepted','waiting','in_consultation','consulted']);
-    });
-}
+        if ($isDoctor) {
+            $query->whereHas('appointments', function ($q) use ($user) {
+                $q->where('doctor_id', $user->id)
+                  ->whereIn('status', ['scheduled', 'accepted', 'waiting', 'in_consultation', 'consulted']);
+            });
+        }
 
         if ($searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', "%{$searchTerm}%")
+                $q->where('first_name', 'like', "%{$searchTerm}%")
+                  ->orWhere('last_name', 'like', "%{$searchTerm}%")
                   ->orWhere('patient_id', 'like', "%{$searchTerm}%")
+                  ->orWhere('mrn', 'like', "%{$searchTerm}%")
                   ->orWhere('email', 'like', "%{$searchTerm}%");
             });
         }
@@ -40,52 +46,139 @@ if ($isDoctor) {
         }
 
         $patients = $query->latest()->paginate(15);
-        // Nurses for assignment (Head Nurse/Admin only)
+
         $nurses = [];
         if (auth()->user()->isAdmin() || auth()->user()->isHeadNurse()) {
             $nurses = User::where('role', 'nurse')->get();
         }
-        // Stats
+
         if ($isDoctor) {
-            // Get IDs of patients who have relevant appointments with this doctor
             $patientIds = Patient::whereHas('appointments', function ($q) use ($user) {
                 $q->where('doctor_id', $user->id)
-                  ->whereIn('status', ['scheduled','accepted','waiting','in_consultation','consulted']);
+                  ->whereIn('status', ['scheduled', 'accepted', 'waiting', 'in_consultation', 'consulted']);
             })->pluck('id');
         } elseif ($isNurse && !$user->isHeadNurse()) {
-            // Nurse sees ALL patients in stats, even if not assigned
             $patientIds = Patient::pluck('id');
         } else {
-            // Admin/Head Nurse sees all patients
             $patientIds = Patient::pluck('id');
         }
-        
+
         $stats = [
-            'total' => $patientIds->count(),
-            'active' => Patient::whereIn('id', $patientIds)->where('status', 'active')->count(),
-            'new_today' => Patient::whereIn('id', $patientIds)->whereDate('created_at', today())->count(),
+            'total'          => $patientIds->count(),
+            'active'         => Patient::whereIn('id', $patientIds)->where('status', 'active')->count(),
+            'new_today'      => Patient::whereIn('id', $patientIds)->whereDate('created_at', today())->count(),
             'new_this_month' => Patient::whereIn('id', $patientIds)
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count(),
         ];
-        
+
         return view('core.core1.patients.index', compact(
-            'patients',
-            'searchTerm',
-            'statusFilter',
-            'stats',
-            'nurses'
+            'patients', 'searchTerm', 'statusFilter', 'stats', 'nurses'
         ));
     }
 
-    public function move(Request $request, Patient $patient)
+    public function create()
+    {
+        return view('core.core1.patients.create');
+    }
+
+    public function store(StorePatientRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $validated['gender'] = strtolower($validated['gender']);
+
+        // Duplicate detection
+        $duplicates = Patient::detectDuplicates($validated);
+        if ($duplicates->isNotEmpty()) {
+            $preReg = $duplicates->firstWhere('registration_status', 'PRE_REGISTERED');
+            if ($preReg) {
+                return redirect()->route('core1.patients.complete-registration', $preReg)
+                    ->with('info', 'A pre-registered patient with matching details was found. Please complete their registration.');
+            }
+            return redirect()->back()
+                ->withInput()
+                ->with('warning', 'A patient with matching phone or email already exists. Please review before creating a new record.');
+        }
+
+        // Generate HMS patient_id
+        $year = date('Y');
+        $lastNumber = Patient::where('patient_id', 'like', "HMS-{$year}-%")
+            ->selectRaw("MAX(CAST(SUBSTRING(patient_id, 10, 5) AS UNSIGNED)) as max_num")
+            ->value('max_num');
+        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
+
+        $validated['patient_id']          = 'HMS-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        $validated['mrn']                  = Patient::generateMRN();
+        $validated['registration_status']  = 'REGISTERED';
+        $validated['status']               = 'active';
+        $validated['last_visit']           = now();
+        $validated['created_by']           = auth()->id();
+
+        $patient = Patient::create($validated);
+
+        $this->logAudit('patient_created', Patient::class, $patient->id, [], $patient->toArray());
+        $this->logAudit('mrn_generated', Patient::class, $patient->id, [], ['mrn' => $patient->mrn]);
+
+        return redirect()->route('core1.patients.index')->with('success', 'Patient registered successfully.');
+    }
+
+    public function show(Patient $patient)
+    {
+        $this->logAudit('patient_viewed', Patient::class, $patient->id);
+        return view('core.core1.patients.show', compact('patient'));
+    }
+
+    public function edit(Patient $patient)
+    {
+        return view('core.core1.patients.edit', compact('patient'));
+    }
+
+    public function update(Request $request, Patient $patient): RedirectResponse
+    {
+        $validated = $request->validate([
+            'first_name'                 => 'required|string|max:255',
+            'middle_name'                => 'nullable|string|max:255',
+            'last_name'                  => 'required|string|max:255',
+            'date_of_birth'              => 'required|date',
+            'gender'                     => 'required|in:male,female,other,Male,Female,Other',
+            'phone'                      => 'required|string',
+            'email'                      => 'required|email|unique:patients_core1,email,' . $patient->id,
+            'address'                    => 'nullable|string',
+            'emergency_contact_name'     => 'nullable|string|max:255',
+            'emergency_contact_phone'    => 'nullable|string|max:255',
+            'blood_type'                 => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
+            'allergies'                  => 'nullable|string',
+            'medical_history'            => 'nullable|string',
+            'insurance_provider'         => 'nullable|string|max:255',
+            'policy_number'              => 'nullable|string|max:255',
+            'emergency_contact_relation' => 'nullable|string|max:255',
+        ]);
+
+        $validated['gender']     = strtolower($validated['gender']);
+        $validated['updated_by'] = auth()->id();
+
+        $old = $patient->toArray();
+        $patient->update($validated);
+
+        $this->logAudit('patient_updated', Patient::class, $patient->id, $old, $patient->fresh()->toArray());
+
+        return redirect()->route('core1.patients.index')->with('success', 'Patient updated successfully.');
+    }
+
+    public function destroy(Patient $patient): RedirectResponse
+    {
+        $patient->delete();
+        return redirect()->route('core1.patients.index')->with('success', 'Patient deleted successfully.');
+    }
+
+    public function move(Request $request, Patient $patient): RedirectResponse
     {
         $data = $request->validate([
-            'care_type' => 'required|in:inpatient,outpatient',
+            'care_type'      => 'required|in:inpatient,outpatient',
             'admission_date' => 'required|date',
-            'doctor_id' => 'required|exists:users_core1,id',
-            'reason' => 'nullable|string',
+            'doctor_id'      => 'required|exists:users_core1,id',
+            'reason'         => 'nullable|string',
         ]);
 
         $patient->update($data);
@@ -95,114 +188,176 @@ if ($isDoctor) {
             : redirect()->route('core1.outpatient.index')->with('success', 'Patient moved to outpatient care.');
     }
 
-    public function updateStatus(Request $request, Patient $patient)
+    public function updateStatus(Request $request, Patient $patient): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:scheduled,waiting,in consultation,consulted'
+            'status' => 'required|in:scheduled,waiting,in consultation,consulted',
         ]);
 
-        $patient->update([
-            'status' => $request->status
-        ]);
+        $patient->update(['status' => $request->status]);
 
         return back()->with('success', 'Status updated.');
     }
 
-    public function create()
-    {
-        return view('core.core1.patients.create');
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:male,female,other,Male,Female,Other',
-            'phone' => 'required|string',
-            'email' => 'required|email|unique:patients_core1,email',
-            'address' => 'nullable|string',
-            'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:255',
-            'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
-            'allergies' => 'nullable|string',
-            'medical_history' => 'nullable|string',
-            'insurance_provider' => 'nullable|string|max:255',
-            'policy_number' => 'nullable|string|max:255',
-            'emergency_contact_relation' => 'nullable|string|max:255',
-        ]);
-
-        $validated['gender'] = strtolower($validated['gender']);
-
-        $year = date('Y');
-
-        $lastNumber = Patient::where('patient_id', 'like', "HMS-{$year}-%")
-            ->selectRaw("MAX(CAST(SUBSTRING(patient_id, 10, 5) AS UNSIGNED)) as max_num")
-            ->value('max_num');
-
-        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
-
-        $validated['patient_id'] = 'HMS-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-        $validated['status'] = 'active';
-        $validated['last_visit'] = now();
-
-        Patient::create($validated);
-
-        return redirect()->route('core1.patients.index')->with('success', 'Patient registered successfully.');
-    }
-
-    public function show(Patient $patient)
-    {
-        return view('core.core1.patients.show', compact('patient'));
-    }
-
-    public function edit(Patient $patient)
-    {
-        return view('core.core1.patients.edit', compact('patient'));
-    }
-
-    public function update(Request $request, Patient $patient)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:male,female,other,Male,Female,Other',
-            'phone' => 'required|string',
-            'email' => 'required|email|unique:patients_core1,email,' . $patient->id,
-            'address' => 'nullable|string',
-            'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:255',
-            'blood_type' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
-            'allergies' => 'nullable|string',
-            'medical_history' => 'nullable|string',
-            'insurance_provider' => 'nullable|string|max:255',
-            'policy_number' => 'nullable|string|max:255',
-            'emergency_contact_relation' => 'nullable|string|max:255',
-        ]);
-
-        $validated['gender'] = strtolower($validated['gender']);
-
-        $patient->update($validated);
-
-        return redirect()->route('core1.patients.index')->with('success', 'Patient updated successfully.');
-    }
-
-    public function destroy(Patient $patient)
-    {
-        $patient->delete();
-        return redirect()->route('core1.patients.index')->with('success', 'Patient deleted successfully.');
-    }
-
-    public function assignNurse(Request $request, Patient $patient)
+    public function assignNurse(Request $request, Patient $patient): RedirectResponse
     {
         $validated = $request->validate([
             'nurse_id' => 'required|exists:users_core1,id',
         ]);
 
-        $patient->update([
-            'assigned_nurse_id' => $validated['nurse_id']
-        ]);
+        $patient->update(['assigned_nurse_id' => $validated['nurse_id']]);
 
         return back()->with('success', 'Nurse assigned to patient successfully.');
+    }
+
+    // ─────────────────────────────────────────────
+    // Phase 5: Duplicate Detection Endpoint
+    // ─────────────────────────────────────────────
+
+    public function checkDuplicates(Request $request)
+    {
+        $duplicates = Patient::detectDuplicates([
+            'phone'      => $request->get('phone', ''),
+            'email'      => $request->get('email', ''),
+            'first_name' => $request->get('first_name', ''),
+            'last_name'  => $request->get('last_name', ''),
+            'date_of_birth' => $request->get('date_of_birth'),
+        ]);
+
+        return response()->json([
+            'duplicates' => $duplicates->map(fn($p) => [
+                'id'                  => $p->id,
+                'name'                => $p->name,
+                'phone'               => $p->phone,
+                'email'               => $p->email,
+                'registration_status' => $p->registration_status ?? 'REGISTERED',
+                'mrn'                 => $p->mrn,
+            ]),
+        ]);
+    }
+
+    // ─────────────────────────────────────────────
+    // Phase 6: Complete Registration
+    // ─────────────────────────────────────────────
+
+    public function showCompleteRegistration(Patient $patient)
+    {
+        if (($patient->registration_status ?? '') !== 'PRE_REGISTERED') {
+            return redirect()->route('core1.patients.show', $patient)
+                ->with('info', 'This patient is already registered.');
+        }
+
+        return view('core.core1.patients.complete-registration', compact('patient'));
+    }
+
+    public function completeRegistration(Request $request, Patient $patient): RedirectResponse
+    {
+        if (($patient->registration_status ?? '') !== 'PRE_REGISTERED') {
+            return redirect()->route('core1.patients.show', $patient)
+                ->with('info', 'This patient is already registered.');
+        }
+
+        $validated = $request->validate([
+            'first_name'                 => 'required|string|max:255',
+            'middle_name'                => 'nullable|string|max:255',
+            'last_name'                  => 'required|string|max:255',
+            'date_of_birth'              => 'required|date',
+            'gender'                     => 'required|in:male,female,other',
+            'address'                    => 'nullable|string',
+            'emergency_contact_name'     => 'nullable|string|max:255',
+            'emergency_contact_phone'    => 'nullable|string|max:255',
+            'emergency_contact_relation' => 'nullable|string|max:255',
+            'blood_type'                 => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
+            'allergies'                  => 'nullable|string',
+            'medical_history'            => 'nullable|string',
+            'insurance_provider'         => 'nullable|string|max:255',
+            'policy_number'              => 'nullable|string|max:255',
+        ]);
+
+        $validated['gender'] = strtolower($validated['gender']);
+
+        // Generate HMS patient_id if not already set
+        if (!$patient->patient_id) {
+            $year       = date('Y');
+            $lastNumber = Patient::where('patient_id', 'like', "HMS-{$year}-%")
+                ->selectRaw("MAX(CAST(SUBSTRING(patient_id, 10, 5) AS UNSIGNED)) as max_num")
+                ->value('max_num');
+            $validated['patient_id'] = 'HMS-' . $year . '-' . str_pad(($lastNumber ? $lastNumber + 1 : 1), 5, '0', STR_PAD_LEFT);
+        }
+
+        $validated['mrn']                 = Patient::generateMRN();
+        $validated['registration_status'] = 'REGISTERED';
+        $validated['status']              = 'active';
+        $validated['last_visit']          = now();
+        $validated['updated_by']          = auth()->id();
+
+        $old = $patient->toArray();
+
+        DB::transaction(function () use ($patient, $validated, $old) {
+            $patient->update($validated);
+            $this->logAudit('patient_registered', Patient::class, $patient->id, $old, $patient->fresh()->toArray());
+            $this->logAudit('mrn_generated', Patient::class, $patient->id, [], ['mrn' => $patient->mrn]);
+        });
+
+        return redirect()->route('core1.patients.show', $patient)
+            ->with('success', 'Patient registration completed. MRN: ' . $patient->fresh()->mrn);
+    }
+
+    // ─────────────────────────────────────────────
+    // Phase 6: Merge Patients
+    // ─────────────────────────────────────────────
+
+    public function mergePatients(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'primary_patient_id'   => 'required|exists:patients_core1,id',
+            'secondary_patient_id' => 'required|exists:patients_core1,id|different:primary_patient_id',
+        ]);
+
+        $primary   = Patient::findOrFail($request->primary_patient_id);
+        $secondary = Patient::findOrFail($request->secondary_patient_id);
+
+        DB::transaction(function () use ($primary, $secondary) {
+            // Transfer appointments to primary
+            DB::table('appointments_core1')
+                ->where('patient_id', $secondary->id)
+                ->update(['patient_id' => $primary->id]);
+
+            $old = $secondary->toArray();
+
+            // Mark secondary as merged
+            $secondary->update([
+                'registration_status' => 'MERGED',
+                'merged_into_id'      => $primary->id,
+                'updated_by'          => auth()->id(),
+            ]);
+
+            $this->logAudit('patient_merged', Patient::class, $secondary->id, $old, [
+                'merged_into_id' => $primary->id,
+                'primary_mrn'    => $primary->mrn,
+            ]);
+        });
+
+        return redirect()->route('core1.patients.show', $primary)
+            ->with('success', 'Patient records merged successfully.');
+    }
+
+    // ─────────────────────────────────────────────
+    // Audit Logging Helper
+    // ─────────────────────────────────────────────
+
+    private function logAudit(string $action, string $modelType, int $modelId, array $oldValues = [], array $newValues = []): void
+    {
+        AuditLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => $action,
+            'model_type' => $modelType,
+            'model_id'   => $modelId,
+            'old_values' => $oldValues ?: null,
+            'new_values' => $newValues ?: null,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
     }
 }
