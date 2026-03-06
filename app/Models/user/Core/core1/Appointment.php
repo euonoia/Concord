@@ -38,6 +38,6 @@ class Appointment extends Model
 
     public function doctor()
     {
-        return $this->belongsTo(\App\Models\core1\User::class, 'doctor_id');
+        return $this->belongsTo(\App\Models\User::class, 'doctor_id');
     }
 }

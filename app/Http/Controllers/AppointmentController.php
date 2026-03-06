@@ -16,7 +16,9 @@ class AppointmentController extends Controller
         Log::info('AppointmentController::store called', $request->all());
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'date_of_birth' => 'required|date|before:today',
@@ -72,9 +74,11 @@ class AppointmentController extends Controller
                 // Generate a unique patient_id
                 $patientIdStr = 'P-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
 
-                $patient = Patient::create([
+                Patient::create([
                     'patient_id' => $patientIdStr,
-                    'name' => $validated['name'],
+                    'first_name' => $validated['first_name'],
+                    'middle_name' => $validated['middle_name'] ?? null,
+                    'last_name' => $validated['last_name'],
                     'email' => $validated['email'],
                     'phone' => $validated['phone'],
                     'date_of_birth' => $validated['date_of_birth'],
@@ -85,6 +89,9 @@ class AppointmentController extends Controller
                     'medical_history' => $validated['medical_history_summary'],
                     'status' => 'active',
                 ]);
+                
+                // TiDB model override prevents immediate returning of ID.
+                $patient = Patient::where('patient_id', $patientIdStr)->first();
             } else {
                 $patient->update([
                     'insurance_provider' => $validated['insurance_provider'] ?? $patient->insurance_provider,
@@ -95,12 +102,9 @@ class AppointmentController extends Controller
             // Find Doctor ID based on name.
             $doctorId = null;
             if (!empty($validated['doctor_name'])) {
-                $doctorRecord = DB::table('users_core1')
-                                  ->where('role', 'doctor')
-                                  ->where('name', $validated['doctor_name'])
-                                  ->first();
+                $doctorRecord = \App\Models\Employee::where(DB::raw("CONCAT(first_name, ' ', last_name)"), $validated['doctor_name'])->first();
                 if ($doctorRecord) {
-                    $doctorId = $doctorRecord->id;
+                    $doctorId = $doctorRecord->user_id;
                 }
             }
 
@@ -127,7 +131,12 @@ class AppointmentController extends Controller
             DB::commit();
             Log::info('Creating new online appointment:', $appointment->toArray());
 
-            return back()->with('success', 'Appointment booked successfully! Your reference number is: ' . $appointmentIdStr);
+            \Illuminate\Support\Facades\Mail::raw($appointmentIdStr, function ($message) use ($validated) {
+                $message->to($validated['email'])
+                        ->subject('Your Appointment Reference Number');
+            });
+
+            return back()->with('success', 'Appointment booked successfully! Your reference number is in your email.');
 
         } catch (\Exception $e) {
             DB::rollBack();

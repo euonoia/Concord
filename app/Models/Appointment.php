@@ -40,4 +40,16 @@ class Appointment extends Model
     {
         return $this->belongsTo(User::class, 'doctor_id');
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $maxId = self::max('id') ?? 0;
+                $model->id = $maxId + 1;
+            }
+        });
+    }
 }
