@@ -20,8 +20,8 @@ class AuthController extends Controller
             'password'  => 'required|min:8|confirmed',
             'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,patient,patient_guardian,admin,doctor,nurse,head_nurse,receptionist,billing',
             // Profile fields for the Employee table
-            'first_name' => 'required_if:user_type,staff|string|max:255',
-            'last_name'  => 'required_if:user_type,staff|string|max:255',
+            'first_name' => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
+            'last_name'  => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
         ]);
 
         // Determine user type
