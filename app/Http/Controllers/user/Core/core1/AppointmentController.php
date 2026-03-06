@@ -53,7 +53,7 @@ class AppointmentController extends Controller
         ->get();
 
     return view(
-        'core1.appointments.index',
+        'core.core1.appointments.index',
         compact('appointments', 'view', 'currentDate')
     );
 }
