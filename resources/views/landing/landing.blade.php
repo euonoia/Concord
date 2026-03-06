@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concord Hospital</title>
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?fam ily=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     
         <!-- Theme + Landing Styles -->
@@ -18,99 +18,26 @@
             }
         }
     </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
-<body x-data="{ 
-    open: {{ $errors->has('name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
-    submitted: false, 
+<body x-data="appointmentForm({ 
+    open: {{ $errors->has('first_name') || $errors->has('last_name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
     showDoctor: {{ old('service_type') ? 'true' : 'false' }},
-    doctors: [],
-    loadingDoctors: false,
-    selectedDoctor: '{{ old('doctor_name') }}',
-    selectedSpecialization: '{{ old('specialization') }}',
+    selectedDoctor: @json(old('doctor_name')),
+    selectedSpecialization: @json(old('specialization')),
     showDetails: {{ session('tracked_appointment') ? 'true' : 'false' }},
-    showCancelConfirm: false,
-    
-    // AJAX Tracking State
-    trackingReference: '',
     trackedAppointment: @json(session('tracked_appointment')),
-    trackingLoading: false,
-    trackingError: '',
-    cancelLoading: false,
-    cancelError: '',
-    cancelSuccess: '{{ session('cancel_success') }}',
-
-    async trackAppointment() {
-        if (!this.trackingReference) return;
-        this.trackingLoading = true;
-        this.trackingError = '';
-        this.cancelSuccess = '';
-        
-        try {
-            const response = await fetch('{{ route('appointments.lookup') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ appointment_reference: this.trackingReference })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.trackedAppointment = data.appointment;
-                this.showDetails = true;
-                this.showCancelConfirm = false;
-            } else {
-                this.trackingError = data.message || 'No appointment found.';
-            }
-        } catch (error) {
-            this.trackingError = 'An error occurred. Please try again.';
-        } finally {
-            this.trackingLoading = false;
-        }
-    },
-
-    async cancelAppointment() {
-        if (!this.trackedAppointment) return;
-        this.cancelLoading = true;
-        this.cancelError = '';
-        this.cancelSuccess = '';
-
-        const reason = document.getElementById('ajax_cancellation_reason')?.value || '';
-        
-        try {
-            const response = await fetch(`/appointments/track/${this.trackedAppointment.appointment_no}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ cancellation_reason: reason })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.trackedAppointment.status = data.appointment.status;
-                this.trackedAppointment.cancellation_reason = data.appointment.cancellation_reason;
-                this.cancelSuccess = data.message;
-                this.showCancelConfirm = false;
-            } else {
-                this.cancelError = data.message || 'Could not cancel appointment.';
-            }
-        } catch (error) {
-            this.cancelError = 'An error occurred. Please try again.';
-        } finally {
-            this.cancelLoading = false;
-        }
-    }
-}" @keydown.escape="open = false; showDetails = false; showCancelConfirm = false" class="relative">
+    cancelSuccess: @json(session('cancel_success')) ?? '',
+    lookupUrl: '{{ route('appointments.lookup') }}',
+    cancelUrlFormat: '{{ route('appointments.cancel', ':id') }}',
+    doctorsUrl: '{{ route('api.doctors.byServiceType') }}',
+    csrfToken: '{{ csrf_token() }}'
+})" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
+    :class="{ 'overflow-hidden': open }">
 <!-- Header -->
 <header>
     <div class="container">
@@ -207,7 +134,8 @@
                             <i class="bi bi-check-lg text-4xl text-green-600"></i>
                         </div>
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">Appointment Confirmed!</h3>
-                        <p class="text-gray-500 mb-8">Thank you for booking with us. We have sent a confirmation email to your inbox.</p>
+                        <p class="text-gray-700 font-medium mb-4">{{ session('success') }}</p>
+                        <p class="text-gray-500 mb-8">We have sent a confirmation email to your inbox.</p>
                         <button @click="open = false" class="w-full rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
                             Close
                         </button>
@@ -220,18 +148,7 @@
                         </div>
 
                         <form action="{{ route('appointments.store') }}" method="POST" class="space-y-6" id="booking-form"
-                            @submit.prevent="
-                                submitted = true;
-                                grecaptcha.ready(function() {
-                                    grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'confirm_booking'}).then(function(token) {
-                                        document.getElementById('g-recaptcha-response').value = token;
-                                        document.getElementById('booking-form').submit();
-                                    }).catch(function() {
-                                        submitted = false;
-                                        alert('reCAPTCHA failed to load. Please refresh and try again.');
-                                    });
-                                });
-                            ">
+                            @submit="submitted = true">
                             @csrf
                             
                             <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
@@ -240,17 +157,31 @@
                                     <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Patient Information</h4>
                                 </div>
 
-                                <!-- Name -->
-                                <div class="relative col-span-2">
-                                    <input type="text" name="name" id="name" value="{{ old('name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Full Name" required>
-                                    <label for="name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Full Name</label>
-                                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                <!-- First Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="first_name" id="first_name" value="{{ old('first_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
+                                    <label for="first_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">First Name</label>
+                                    @error('first_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Middle Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="middle_name" id="middle_name" value="{{ old('middle_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name (Optional)">
+                                    <label for="middle_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Middle Name (Optional)</label>
+                                    @error('middle_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Last Name -->
+                                <div class="relative col-span-2 sm:col-span-1">
+                                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
+                                    <label for="last_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Last Name</label>
+                                    @error('last_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Date of Birth -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date of Birth" required>
-                                    <label for="date_of_birth" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Date of Birth</label>
+                                    <label for="date_of_birth" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Date of Birth</label>
                                     @error('date_of_birth') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
@@ -262,42 +193,42 @@
                                         <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
                                         <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                                     </select>
-                                    <label for="gender" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Gender</label>
+                                    <label for="gender" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Gender</label>
                                     @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Email -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="email" name="email" id="email" value="{{ old('email') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Email Address" required>
-                                    <label for="email" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Email Address</label>
+                                    <label for="email" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Email Address</label>
                                     @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Phone -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Phone Number" required>
-                                    <label for="phone" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Phone Number</label>
+                                    <label for="phone" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Phone Number</label>
                                     @error('phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Address Street -->
                                 <div class="relative col-span-2">
                                     <input type="text" name="address_street" id="address_street" value="{{ old('address_street') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Street Address" required>
-                                    <label for="address_street" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Street Address</label>
+                                    <label for="address_street" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Street Address</label>
                                     @error('address_street') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Address City -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="text" name="address_city" id="address_city" value="{{ old('address_city') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="City" required>
-                                    <label for="address_city" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">City</label>
+                                    <label for="address_city" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">City</label>
                                     @error('address_city') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Address Zip -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="text" name="address_zip" id="address_zip" value="{{ old('address_zip') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Zip Code" required>
-                                    <label for="address_zip" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Zip Code</label>
+                                    <label for="address_zip" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Zip Code</label>
                                     @error('address_zip') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
@@ -310,21 +241,9 @@
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <select name="service_type" id="service_type" 
                                         @change="
-                                            showDoctor = $event.target.value !== '';
                                             selectedDoctor = '';
                                             selectedSpecialization = '';
-                                            loadingDoctors = true;
-                                            fetch('/api/doctors/by-service-type?service_type=' + $event.target.value)
-                                                .then(res => res.json())
-                                                .then(data => {
-                                                    doctors = data.doctors || [];
-                                                    loadingDoctors = false;
-                                                })
-                                                .catch(err => {
-                                                    console.error('Error fetching doctors:', err);
-                                                    doctors = [];
-                                                    loadingDoctors = false;
-                                                });
+                                            fetchDoctors($event.target.value);
                                         " 
                                         class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
                                         <option value="" disabled {{ old('service_type') ? '' : 'selected' }} class="text-gray-500">Select Service Type</option>
@@ -336,7 +255,7 @@
                                         <option value="diagnostic" {{ old('service_type') == 'diagnostic' ? 'selected' : '' }}>Lab / Test</option>
                                         <option value="mental_health" {{ old('service_type') == 'mental_health' ? 'selected' : '' }}>Talk Therapy / Mental Health</option>
                                     </select>
-                                    <label for="service_type" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Service Type</label>
+                                    <label for="service_type" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Service Type</label>
                                     @error('service_type') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
@@ -345,10 +264,7 @@
                                     <select name="doctor_name" id="doctor_name" 
                                         :disabled="!showDoctor || loadingDoctors"
                                         x-model="selectedDoctor"
-                                        @change="
-                                            const selectedOption = $event.target.selectedOptions[0];
-                                            selectedSpecialization = selectedOption ? selectedOption.dataset.specialization : '';
-                                        "
+                                        @change="updateSpecialization($event)"
                                         class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent disabled:opacity-50 disabled:cursor-not-allowed">
                                         <template x-if="loadingDoctors">
                                             <option value="" selected>Loading doctors...</option>
@@ -365,7 +281,7 @@
                                     </select>
                                     <!-- Hidden field for specialization -->
                                     <input type="hidden" name="specialization" :value="selectedSpecialization">
-                                    <label for="doctor_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">
+                                    <label for="doctor_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">
                                         <span x-show="!loadingDoctors">Select Doctor</span>
                                         <span x-show="loadingDoctors" class="flex items-center gap-1">
                                             <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -381,21 +297,21 @@
                                 <!-- Date -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="date" name="appointment_date" id="appointment_date" value="{{ old('appointment_date') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date" required>
-                                    <label for="appointment_date" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Appointment Date</label>
+                                    <label for="appointment_date" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Appointment Date</label>
                                     @error('appointment_date') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Time -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="time" name="appointment_time" id="appointment_time" value="{{ old('appointment_time') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Time" required>
-                                    <label for="appointment_time" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Preferred Time</label>
+                                    <label for="appointment_time" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Preferred Time</label>
                                     @error('appointment_time') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Reason for Visit -->
                                 <div class="relative col-span-2">
                                     <textarea name="reason_for_visit" id="reason_for_visit" rows="3" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Reason for Visit/Symptoms" required>{{ old('reason_for_visit') }}</textarea>
-                                    <label for="reason_for_visit" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Reason for Visit/Symptoms</label>
+                                    <label for="reason_for_visit" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Reason for Visit/Symptoms</label>
                                     @error('reason_for_visit') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
@@ -407,28 +323,25 @@
                                 <!-- Insurance Provider -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="text" name="insurance_provider" id="insurance_provider" value="{{ old('insurance_provider') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Insurance Provider">
-                                    <label for="insurance_provider" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Insurance Provider</label>
+                                    <label for="insurance_provider" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Insurance Provider</label>
                                     @error('insurance_provider') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Policy Number -->
                                 <div class="relative col-span-2 sm:col-span-1">
                                     <input type="text" name="policy_number" id="policy_number" value="{{ old('policy_number') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Policy/Member Number">
-                                    <label for="policy_number" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Policy/Member Number</label>
+                                    <label for="policy_number" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Policy/Member Number</label>
                                     @error('policy_number') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Medical History Summary -->
                                 <div class="relative col-span-2">
                                     <textarea name="medical_history_summary" id="medical_history_summary" rows="3" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Medical History Summary (Allergies, Medications, etc.)">{{ old('medical_history_summary') }}</textarea>
-                                    <label for="medical_history_summary" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Medical History Summary</label>
+                                    <label for="medical_history_summary" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Medical History Summary</label>
                                     @error('medical_history_summary') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
-                                <!-- Section 4: Policies -->
-                                <div class="col-span-2 mt-4">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">4. Administrative</h4>
-                                </div>
+                            
 
                                 <div class="col-span-2">
                                     <div class="flex items-start">
@@ -436,6 +349,7 @@
                                             <input id="terms" name="terms" type="checkbox" 
                                                 class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
                                                 style="border: 2px solid #1e293b !important; appearance: checkbox !important; -webkit-appearance: checkbox !important; opacity: 1 !important; visibility: visible !important;"
+                                                x-model="agreedToTerms"
                                                 required>
                                         </div>
                                         <div class="ml-3 text-sm">
@@ -447,9 +361,14 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                            <div x-show="agreedToTerms" x-transition>
+                                <div class="mt-8 flex justify-center">
+                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                </div>
+                                @error('g-recaptcha-response') <p class="mt-2 text-xs text-red-500 text-center">{{ $message }}</p> @enderror
+                            </div>
 
-                            <div class="mt-8">
+                            <div class="mt-4">
                                 <button type="submit" class="w-full rounded-lg bg-[#1a3a5a] px-5 py-3 text-center text-sm font-semibold text-white shadow-md hover:bg-[#142d45] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitted">
                                     <span x-show="!submitted">Confirm My Booking</span>
                                     <span x-show="submitted" style="display: none;" class="flex items-center justify-center">
@@ -460,7 +379,6 @@
                                         Processing...
                                     </span>
                                 </button>
-                                @error('g-recaptcha-response') <p class="mt-2 text-xs text-red-500 text-center">{{ $message }}</p> @enderror
                             </div>
                         </form>
                     </div>
@@ -530,7 +448,7 @@
                                 <div class="appointment-detail-icon"><i class="bi bi-geo-alt-fill"></i></div>
                                 <div>
                                     <span class="appointment-detail-label">Address</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.address_street + ', ' + trackedAppointment.address_city + ' ' + trackedAppointment.address_zip"></span>
+                                    <span class="appointment-detail-value" x-text="trackedAppointment.address || 'N/A'"></span>
                                 </div>
                             </div>
                             <div class="appointment-detail-item">
@@ -749,25 +667,7 @@
     </div>
 </footer>
 
-<!-- Sub NavLink Highlight JS -->
-<script>
-    const sections = document.querySelectorAll("section[id]");
-    const subLinks = document.querySelectorAll(".sub-link");
-
-    window.addEventListener("scroll", () => {
-        let scrollPos = window.scrollY + 150;
-        sections.forEach(section => {
-            if(scrollPos >= section.offsetTop && scrollPos < section.offsetTop + section.offsetHeight){
-                subLinks.forEach(link => {
-                    link.classList.remove("active");
-                    if(link.getAttribute("href") === "#" + section.id){
-                        link.classList.add("active")
-                    }
-                });
-            }
-        });
-    });
-</script>
+</footer>
 
 </body>
 </html>
