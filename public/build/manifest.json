@@ -1,10 +1,6 @@
 {
-  "_html5-qrcode-scanner-CK0YHsee.js": {
-    "file": "assets/html5-qrcode-scanner-CK0YHsee.js",
-    "name": "html5-qrcode-scanner"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-DzbOYJGh.css",
+    "file": "assets/app-BR4XKDc3.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -21,13 +17,12 @@
     "src": "resources/css/people.jpeg"
   },
   "resources/js/app.js": {
-    "file": "assets/app-BoDmOAdz.js",
+    "file": "assets/app-C0uQZ6jJ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/components/layout/sidebar.js",
-      "resources/js/components/qr/scanner.js",
       "resources/js/pages/hr/hr3/station-scanner.js"
     ]
   },
@@ -37,22 +32,10 @@
     "src": "resources/js/components/layout/sidebar.js",
     "isDynamicEntry": true
   },
-  "resources/js/components/qr/scanner.js": {
-    "file": "assets/scanner-DXl_jQa8.js",
-    "name": "scanner",
-    "src": "resources/js/components/qr/scanner.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_html5-qrcode-scanner-CK0YHsee.js"
-    ]
-  },
   "resources/js/pages/hr/hr3/station-scanner.js": {
-    "file": "assets/station-scanner-DlISsbU9.js",
+    "file": "assets/station-scanner-VjZRBT4w.js",
     "name": "station-scanner",
     "src": "resources/js/pages/hr/hr3/station-scanner.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_html5-qrcode-scanner-CK0YHsee.js"
-    ]
+    "isDynamicEntry": true
   }
 }
