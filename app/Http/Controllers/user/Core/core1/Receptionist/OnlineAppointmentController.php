@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\user\Core\core1\Receptionist;
 
 use App\Http\Controllers\Controller;
-use App\Models\Appointment;
+use App\Models\user\Core\core1\Appointment;
 use App\Mail\AppointmentApprovedMail;
 use App\Mail\AppointmentRejectedMail;
 use Illuminate\Http\Request;
@@ -20,14 +20,14 @@ class OnlineAppointmentController extends Controller
 
         DB::transaction(function () use ($appointment) {
             $appointment->update([
-                'status' => 'approved',
+                'status' => 'scheduled',
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
 
             // Send email
-            if ($appointment->email) {
-                Mail::to($appointment->email)->send(new AppointmentApprovedMail($appointment));
+            if ($appointment->patient && $appointment->patient->email) {
+                Mail::to($appointment->patient->email)->send(new AppointmentApprovedMail($appointment));
             }
         });
 
@@ -46,13 +46,13 @@ class OnlineAppointmentController extends Controller
 
         DB::transaction(function () use ($request, $appointment) {
             $appointment->update([
-                'status' => 'rejected',
+                'status' => 'declined',
                 'rejection_reason' => $request->rejection_reason,
             ]);
 
             // Send email
-            if ($appointment->email) {
-                Mail::to($appointment->email)->send(new AppointmentRejectedMail($appointment));
+            if ($appointment->patient && $appointment->patient->email) {
+                Mail::to($appointment->patient->email)->send(new AppointmentRejectedMail($appointment));
             }
         });
 

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Appointment;
-use App\Models\Patient;
+use App\Models\user\Core\core1\Appointment;
+use App\Models\user\Core\core1\Patient;
 use App\Rules\ReCaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

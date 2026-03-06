@@ -320,8 +320,8 @@
                 let html = '';
                 data.bookings.forEach(function(booking) {
                     const approveUrl = approveBaseUrl.replace(':id', booking.id);
-                    const serviceType = booking.service_type.replace(/_/g, ' ');
-                    const serviceTypeDisplay = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+                    const serviceType = booking.service_type ? booking.service_type.replace(/_/g, ' ') : 'N/A';
+                    const serviceTypeDisplay = serviceType !== 'N/A' ? (serviceType.charAt(0).toUpperCase() + serviceType.slice(1)) : 'N/A';
 
                     html += '<tr>';
                     html += '<td><div class="font-bold text-blue">' + escapeHtml(booking.appointment_no) + '</div></td>';
