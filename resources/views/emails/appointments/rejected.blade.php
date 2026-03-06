@@ -1,12 +1,12 @@
 <x-mail::message>
 # Appointment Update
 
-Dear {{ $appointment->name }},
+Dear {{ $appointment->patient->name }},
 
 We regret to inform you that we are unable to confirm your appointment request at this time.
 
 **Appointment Details:**
-- **Reference No:** {{ $appointment->appointment_no }}
+- **Reference No:** {{ $appointment->appointment_id }}
 - **Date:** {{ \Carbon\Carbon::parse($appointment->appointment_date)->format('F j, Y') }}
 - **Time:** {{ \Carbon\Carbon::parse($appointment->appointment_time)->format('h:i A') }}
 
