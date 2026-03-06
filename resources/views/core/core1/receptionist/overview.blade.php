@@ -251,8 +251,8 @@
                         <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($booking->appointment_time)->format('h:i A') }}</div>
                     </td>
                     <td>
-                        <div class="flex gap-2">
-                            <form action="{{ route('core1.receptionist.online-appointments.approve', $booking->id) }}" method="POST" onsubmit="return confirm('Approve this appointment?');">
+                        <div class="flex items-center gap-2">
+                            <form action="{{ route('core1.receptionist.online-appointments.approve', $booking->id) }}" method="POST" class="m-0" onsubmit="return confirm('Approve this appointment?');">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-success text-white">Approve</button>
                             </form>
@@ -334,8 +334,8 @@
                     html += '</td>';
                     html += '<td><div>' + formatDate(booking.appointment_date) + '</div>';
                     html += '<div class="text-xs text-gray-500">' + formatTime(booking.appointment_time) + '</div></td>';
-                    html += '<td><div class="flex gap-2">';
-                    html += '<form action="' + approveUrl + '" method="POST" onsubmit="return confirm(\'Approve this appointment?\');">';
+                    html += '<td><div class="flex items-center gap-2">';
+                    html += '<form action="' + approveUrl + '" method="POST" class="m-0" onsubmit="return confirm(\'Approve this appointment?\');">';
                     html += '<input type="hidden" name="_token" value="' + csrfToken + '">';
                     html += '<button type="submit" class="btn btn-sm btn-success text-white">Approve</button></form>';
                     html += '<button type="button" class="btn btn-sm btn-danger text-white" onclick="openRejectModal(\'' + booking.id + '\', \'' + escapeHtml(booking.appointment_no) + '\')">Reject</button>';
