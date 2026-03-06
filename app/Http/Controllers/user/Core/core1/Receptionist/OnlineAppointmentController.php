@@ -46,7 +46,7 @@ class OnlineAppointmentController extends Controller
 
         DB::transaction(function () use ($request, $appointment) {
             $appointment->update([
-                'status' => 'declined',
+                'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason,
             ]);
 
