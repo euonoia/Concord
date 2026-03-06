@@ -720,11 +720,22 @@
         const registerForm = document.getElementById('registerForm');
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
-                const phone = registerForm.querySelector('[name="phone"]')?.value ?? '';
+                const firstName = registerForm.querySelector('[name="first_name"]')?.value ?? '';
+                const lastName = registerForm.querySelector('[name="last_name"]')?.value ?? '';
+                const dob = registerForm.querySelector('[name="date_of_birth"]')?.value ?? '';
                 const email = registerForm.querySelector('[name="email"]')?.value ?? '';
-                if (!phone && !email) return;
+                
+                if (!firstName || !lastName || !dob || !email) return;
+                
                 e.preventDefault();
-                fetch(`{{ route('core1.patients.check-duplicates') }}?phone=${encodeURIComponent(phone)}&email=${encodeURIComponent(email)}`)
+                const query = new URLSearchParams({
+                    first_name: firstName,
+                    last_name: lastName,
+                    date_of_birth: dob,
+                    email: email
+                });
+                
+                fetch(`{{ route('core1.patients.check-duplicates') }}?${query.toString()}`)
                     .then(r => r.json())
                     .then(data => {
                         if (data.duplicates?.length > 0) {

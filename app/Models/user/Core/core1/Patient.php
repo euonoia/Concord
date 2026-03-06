@@ -103,17 +103,12 @@ class Patient extends Model
 
     public static function detectDuplicates(array $data): \Illuminate\Database\Eloquent\Collection
     {
-        return static::where(function ($q) use ($data) {
-            $q->where('phone', $data['phone'] ?? '')
-              ->orWhere('email', $data['email'] ?? '')
-              ->orWhere(function ($q2) use ($data) {
-                  $q2->where('first_name', 'like', $data['first_name'] ?? '')
-                     ->where('last_name', 'like', $data['last_name'] ?? '')
-                     ->whereNotNull('date_of_birth')
-                     ->where('date_of_birth', $data['date_of_birth'] ?? null);
-              });
-        })
-        ->whereNotIn('registration_status', ['MERGED'])
-        ->get();
+        return static::where('first_name', 'like', $data['first_name'] ?? '')
+            ->where('last_name', 'like', $data['last_name'] ?? '')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', $data['date_of_birth'] ?? null)
+            ->where('email', $data['email'] ?? '')
+            ->whereNotIn('registration_status', ['MERGED'])
+            ->get();
     }
 }

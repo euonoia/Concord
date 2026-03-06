@@ -12,10 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             \Illuminate\Support\Facades\Route::bind('patient', function ($value) {
                 if (is_numeric($value)) {
-                    $patient = \App\Models\core1\Patient::find($value);
+                    $patient = \App\Models\user\Core\core1\Patient::find($value);
                     if ($patient) return $patient;
                 }
-                return \App\Models\core1\Patient::where('patient_id', $value)->firstOrFail();
+                return \App\Models\user\Core\core1\Patient::where('patient_id', $value)->firstOrFail();
             });
         }
     )
