@@ -21,6 +21,7 @@
     });
 @endphp
 
+<!-- DEBUG: User Role: {{ $user->role_slug ?? 'NONE' }} | Nav items count: {{ count($filteredNavItems) }} -->
 <div class="sidebar" id="sidebar">
     <div class="logo">
         <img src="{{ asset('images/Concord (1).png') }}" alt="Concord Logo" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
@@ -39,7 +40,7 @@
             </a>
         @endforeach
 
-       <form id="logout-form" method="POST" action="{{ route('logout') }}" class="d-none">
+       <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" class="d-none">
             @csrf
         </form>
 
