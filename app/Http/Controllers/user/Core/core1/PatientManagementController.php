@@ -22,7 +22,7 @@ class PatientManagementController extends Controller
         $isDoctor = $user->role_slug === 'doctor';
         $isNurse = $user->role_slug === 'nurse';
 
-        $query = Patient::query();
+        $query = Patient::where('registration_status', '!=', 'PRE_REGISTERED');
 
         if ($isDoctor) {
             $query->whereHas('appointments', function ($q) use ($user) {
@@ -53,14 +53,15 @@ class PatientManagementController extends Controller
         }
 
         if ($isDoctor) {
-            $patientIds = Patient::whereHas('appointments', function ($q) use ($user) {
-                $q->where('doctor_id', $user->id)
-                  ->whereIn('status', ['scheduled', 'accepted', 'waiting', 'in_consultation', 'consulted']);
-            })->pluck('id');
+            $patientIds = Patient::where('registration_status', '!=', 'PRE_REGISTERED')
+                ->whereHas('appointments', function ($q) use ($user) {
+                    $q->where('doctor_id', $user->id)
+                      ->whereIn('status', ['scheduled', 'accepted', 'waiting', 'in_consultation', 'consulted']);
+                })->pluck('id');
         } elseif ($isNurse && !$user->isHeadNurse()) {
-            $patientIds = Patient::pluck('id');
+            $patientIds = Patient::where('registration_status', '!=', 'PRE_REGISTERED')->pluck('id');
         } else {
-            $patientIds = Patient::pluck('id');
+            $patientIds = Patient::where('registration_status', '!=', 'PRE_REGISTERED')->pluck('id');
         }
 
         $stats = [

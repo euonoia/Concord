@@ -65,13 +65,13 @@ class AppointmentController extends Controller
         DB::beginTransaction();
 
         try {
-            // Find or create patient
-            $patient = Patient::where('email', $validated['email'])
-                ->orWhere('phone', $validated['phone'])
-                ->first();
+            // Find or create patient using unified duplicate logic
+            $duplicates = Patient::detectDuplicates($validated);
+            $patient = $duplicates->first();
 
             if (!$patient) {
-                // Generate a unique patient_id
+                // Generate a unique patient_id for tracking (HMS-XXXX or P-XXXX format as per project)
+                // We'll keep the existing P- prefix for online bookings as it distinguishes them.
                 $patientIdStr = 'P-' . date('Y') . '-' . strtoupper(substr(uniqid(), -4));
 
                 Patient::create([
@@ -88,9 +88,9 @@ class AppointmentController extends Controller
                     'policy_number' => $validated['policy_number'],
                     'medical_history' => $validated['medical_history_summary'],
                     'status' => 'active',
+                    'registration_status' => 'PRE_REGISTERED',
                 ]);
                 
-                // TiDB model override prevents immediate returning of ID.
                 $patient = Patient::where('patient_id', $patientIdStr)->first();
             } else {
                 $patient->update([

@@ -14,8 +14,8 @@ class ReceptionistDashboardController extends Controller
         // Statistics
         $stats = [
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
-            'today_registrations' => Patient::whereDate('created_at', today())->count(),
-            'total_patients' => Patient::count(),
+            'today_registrations' => Patient::where('registration_status', 'REGISTERED')->whereDate('created_at', today())->count(),
+            'total_patients' => Patient::where('registration_status', 'REGISTERED')->count(),
             'pending_appointments' => Appointment::where('status', 'scheduled')
                 ->where('appointment_date', '>=', today())
                 ->count(),
@@ -28,8 +28,9 @@ class ReceptionistDashboardController extends Controller
             ->take(10)
             ->get();
         
-        // Recent patient registrations
-        $recentRegistrations = Patient::latest()
+        // Recent patient registrations (only fully registered)
+        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
+            ->latest()
             ->take(10)
             ->get();
         
@@ -58,8 +59,8 @@ class ReceptionistDashboardController extends Controller
     {
         $stats = [
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
-            'today_registrations' => Patient::whereDate('created_at', today())->count(),
-            'total_patients' => Patient::count(),
+            'today_registrations' => Patient::where('registration_status', 'REGISTERED')->whereDate('created_at', today())->count(),
+            'total_patients' => Patient::where('registration_status', 'REGISTERED')->count(),
             'pending_appointments' => Appointment::where('status', 'scheduled')
                 ->where('appointment_date', '>=', today())
                 ->count(),
@@ -71,7 +72,8 @@ class ReceptionistDashboardController extends Controller
             ->take(10)
             ->get();
         
-        $recentRegistrations = Patient::latest()
+        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
+            ->latest()
             ->take(10)
             ->get();
         
