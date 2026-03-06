@@ -237,13 +237,19 @@
                         <div class="font-bold text-blue">{{ $booking->appointment_no }}</div>
                     </td>
                     <td>
-                        <div class="font-bold text-blue">{{ $booking->name }}</div>
-                        <div class="text-xs text-gray-500">{{ $booking->email }}</div>
+                        <div class="font-bold text-blue">{{ $booking->patient->name ?? 'N/A' }}</div>
+                        <div class="text-xs text-gray-500">{{ $booking->patient->email ?? 'N/A' }}</div>
                     </td>
                     <td>
-                        <div class="font-bold">{{ ucfirst(str_replace('_', ' ', $booking->service_type)) }}</div>
-                        @if($booking->doctor_name)
-                        <div class="text-xs text-gray-500 mt-1">Dr: {{ $booking->doctor_name }}</div>
+                        <div class="font-bold">{{ ucfirst(str_replace('_', ' ', $booking->service_type ?? $booking->type)) }}</div>
+                        @php
+                            $docName = $booking->doctor_name; // Fallback if manually set
+                            if (!$docName && $booking->doctor && $booking->doctor->employee) {
+                                $docName = $booking->doctor->employee->name;
+                            }
+                        @endphp
+                        @if($docName)
+                        <div class="text-xs text-gray-500 mt-1">Dr: {{ $docName }}</div>
                         @endif
                     </td>
                     <td>

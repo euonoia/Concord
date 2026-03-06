@@ -37,4 +37,9 @@ class Employee extends Model
 {
     return $this->belongsTo(DepartmentPositionTitle::class, 'position_id', 'id');
 }
+
+    public function getNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }

@@ -43,7 +43,8 @@ class ReceptionistDashboardController extends Controller
             ->get();
 
         // Pending Online Bookings
-        $onlineBookings = Appointment::where('status', 'pending')
+        $onlineBookings = Appointment::with(['patient', 'doctor.employee'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -83,7 +84,8 @@ class ReceptionistDashboardController extends Controller
             ->get();
 
         // Pending Online Bookings
-        $onlineBookings = Appointment::where('status', 'pending')
+        $onlineBookings = Appointment::with(['patient', 'doctor.employee'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -95,7 +97,7 @@ class ReceptionistDashboardController extends Controller
 
     public function pendingBookingsJson(): \Illuminate\Http\JsonResponse
     {
-        $bookings = \App\Models\user\Core\core1\Appointment::with(['patient', 'doctor'])
+        $bookings = \App\Models\user\Core\core1\Appointment::with(['patient', 'doctor.employee'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -106,7 +108,7 @@ class ReceptionistDashboardController extends Controller
                     'name' => $appointment->patient ? $appointment->patient->name : 'N/A',
                     'email' => $appointment->patient ? $appointment->patient->email : 'N/A',
                     'service_type' => $appointment->type ?? 'N/A',
-                    'doctor_name' => $appointment->doctor ? $appointment->doctor->name : null,
+                    'doctor_name' => ($appointment->doctor && $appointment->doctor->employee) ? $appointment->doctor->employee->name : null,
                     'appointment_date' => $appointment->appointment_date,
                     'appointment_time' => $appointment->appointment_time,
                 ];

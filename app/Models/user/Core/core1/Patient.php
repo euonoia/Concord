@@ -69,6 +69,16 @@ class Patient extends Model
         return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
+    public function getNameAttribute()
+    {
+        $name = $this->first_name;
+        if ($this->middle_name) {
+            $name .= ' ' . $this->middle_name;
+        }
+        $name .= ' ' . $this->last_name;
+        return $name;
+    }
+
     public function doctor()
     {
         return $this->belongsTo(\App\Models\User::class, 'doctor_id'); // doctor relation
