@@ -42,7 +42,6 @@ Route::prefix('succession')->group(function () {
     //promote candidate
     Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
 });
-
  Route::prefix('ess')->group(function () {
     Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
     Route::post('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
