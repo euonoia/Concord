@@ -14,7 +14,9 @@ class Patient extends Model
     // <--- Replace this $fillable with the updated version
     protected $fillable = [
         'patient_id',
-        'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'date_of_birth',
         'gender',
         'phone',
