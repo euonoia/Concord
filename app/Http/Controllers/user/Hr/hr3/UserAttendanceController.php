@@ -52,6 +52,7 @@ class UserAttendanceController extends Controller
 
         // --- Handle token ---
         if (!$existingLog) {
+
             $rawToken = $request->input('token');
             $tokenValue = str_contains($rawToken ?? '', '/') 
                 ? collect(explode('/', $rawToken))->last() 
@@ -64,8 +65,9 @@ class UserAttendanceController extends Controller
             $validToken = Cache::pull("attendance_token_$tokenValue");
 
             if (!$validToken) {
-                return $this->handleResponse($request, false, 'QR code has expired or is invalid.', 422);
+                return $this->handleResponse($request, false, 'QR code expired.', 422);
             }
+
         } else {
             $tokenValue = $existingLog->qr_token;
         }
@@ -86,9 +88,32 @@ class UserAttendanceController extends Controller
                     $scheduledEnd->addDay();
                 }
 
-                if ($now->lt($scheduledEnd)) {
-                    $remaining = $now->diffForHumans($scheduledEnd, true);
-                    return $this->handleResponse($request, false, "Shift incomplete. Your scheduled shift ends at " . $scheduledEnd->format('H:i') . " (in $remaining).", 422);
+                /* =========================
+                   CALCULATIONS
+                ==========================*/
+
+                $clockIn = Carbon::parse($existingLog->clock_in);
+
+                $workedHours = $clockIn->diffInMinutes($now) / 60;
+
+                $scheduledHours = $scheduledStart->diffInMinutes($scheduledEnd) / 60;
+
+                $overtimeHours = max(0, $workedHours - $scheduledHours);
+
+                /* Night Differential */
+                $nightStart = Carbon::parse($clockIn->format('Y-m-d').' 22:00:00');
+                $nightEnd   = Carbon::parse($clockIn->format('Y-m-d').' 06:00:00')->addDay();
+
+                $nightDiffHours = 0;
+
+                if ($now > $nightStart || $clockIn < $nightEnd) {
+
+                    $start = max($clockIn->timestamp, $nightStart->timestamp);
+                    $end   = min($now->timestamp, $nightEnd->timestamp);
+
+                    if ($end > $start) {
+                        $nightDiffHours = ($end - $start) / 3600;
+                    }
                 }
 
                 // --- Calculations ---
@@ -166,7 +191,7 @@ class UserAttendanceController extends Controller
             return $this->handleResponse($request, true, "Clock-in successful! You are marked as $status.");
 
         } catch (\Exception $e) {
-            return $this->handleResponse($request, false, 'Server Error: ' . $e->getMessage(), 500);
+            return $this->handleResponse($request, false, 'Server Error: '.$e->getMessage(), 500);
         }
     }
 
