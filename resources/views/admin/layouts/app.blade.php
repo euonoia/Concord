@@ -67,6 +67,11 @@
             <span>Timesheet</span>
         </a>
 
+        <a href="{{ route('hr4.core') }}" class="{{ request()->routeIs('hr4.core') ? 'active' : '' }}">
+        <i class="bi bi-diagram-3"></i>
+        <span>CoreHuman</span>
+        </a>
+
         <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">

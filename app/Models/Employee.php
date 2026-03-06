@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\User;
 
@@ -26,20 +27,38 @@ class Employee extends Model
         'is_on_duty',
     ];
 
-    /**
-     * Get the user account associated with the employee.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    // Portal account
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    public function position()
-{
-    return $this->belongsTo(DepartmentPositionTitle::class, 'position_id', 'id');
-}
 
-    public function getNameAttribute()
+    // Department relationship
+    public function department()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
+
+    // Position relationship
+    public function position()
+    {
+        return $this->belongsTo(DepartmentPositionTitle::class, 'position_id', 'id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
     }
 }

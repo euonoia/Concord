@@ -11,6 +11,9 @@ use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
 use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
 
+use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
+
+
 // --- Admin Dashboard ---
 Route::get('/dashboard', function () {
     return view('admin.dashboard');
@@ -56,4 +59,15 @@ Route::prefix('hr3')->group(function () {
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
     Route::delete('/shifts/{id}', [AdminShiftController::class, 'destroy'])->name('shifts.destroy');
     Route::get('/get-employees/{dept_id}', [AdminShiftController::class, 'getEmployeesByDept']);
+});
+
+// --- END OF HR3 Department ---
+
+// --- HR4 Department ---
+
+Route::prefix('hr4')->group(function () {
+
+    Route::get('/core-human-capital', [AdminCoreHumanCapitalController::class, 'index'])
+        ->name('hr4.core');
+
 });
