@@ -9,24 +9,34 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminCoreHumanCapitalController extends Controller
 {
-
-    private function checkAccess()
+    /**
+     * Ensure user is HR admin
+     */
+    private function authorizeHrAdmin()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
             abort(403, 'Unauthorized access to HR4 Core Human Capital.');
         }
     }
 
-        public function index()
-        {
-            $employees = Employee::with(['position','position.department'])->get();
-            $departments = \App\Models\admin\Hr\hr2\Department::all();
-            $positions = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::with('department')->get();
+    /**
+     * Display employees with departments and positions
+     */
+    public function index()
+    {
+        // Check role
+        $this->authorizeHrAdmin();
 
-            return view('admin.hr4.core_human_capital', compact(
-                'employees',
-                'departments',
-                'positions'
-            ));
-        }
+        // Load data
+        $employees = Employee::with(['position', 'position.department'])->get();
+        $departments = \App\Models\admin\Hr\hr2\Department::all();
+        $positions = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::with('department')->get();
+
+        // Return view (compact fully closed)
+        return view('admin.hr4.core_human_capital', compact(
+            'employees',
+            'departments',
+            'positions'
+        ));
+    }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
 use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
 
 use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
+use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
 
 
 // --- Admin Dashboard ---
@@ -67,7 +68,15 @@ Route::prefix('hr3')->group(function () {
 
 Route::prefix('hr4')->group(function () {
 
+    // Core Human Capital
     Route::get('/core-human-capital', [AdminCoreHumanCapitalController::class, 'index'])
         ->name('hr4.core');
+
+    // Direct Compensation
+    Route::get('/direct-compensation', [AdminDirectCompensationController::class, 'index'])
+        ->name('hr4.direct_compensation.index');
+
+    Route::post('/direct-compensation/generate', [AdminDirectCompensationController::class, 'generate'])
+        ->name('hr4.direct_compensation.generate');
 
 });

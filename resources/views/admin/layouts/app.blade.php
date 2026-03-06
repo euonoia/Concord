@@ -72,6 +72,11 @@
         <span>CoreHuman</span>
         </a>
 
+        <a href="{{ route('hr4.direct_compensation.index') }}" class="{{ request()->routeIs('hr4.direct_compensation.*') ? 'active' : '' }}">
+            <i class="bi bi-cash-stack"></i>
+            <span>Direct Compensation</span>
+        </a>
+
         <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
