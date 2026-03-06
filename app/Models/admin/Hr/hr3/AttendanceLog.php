@@ -12,22 +12,16 @@ class AttendanceLog extends Model
     protected $table = 'attendance_logs_hr3';
 
     // Fillable fields for mass assignment
-        protected $fillable = [
+    protected $fillable = [
         'employee_id',
         'department_id',
         'specialization',
         'position_title',
-        'shift_name',        
         'qr_token',
         'clock_in',
         'clock_out',
+        'device_fingerprint',
         'status',
-        'worked_hours',     
-        'overtime_hours',    
-        'night_diff_hours',  
-        'shift_allowance',    
-        'overtime_pay',       
-        'night_diff_pay',     
     ];
 
     protected $casts = [
@@ -45,11 +39,5 @@ class AttendanceLog extends Model
     {
         return $this->belongsTo(\App\Models\admin\Hr\hr2\Department::class, 'department_id', 'department_id');
     }
-        public function shift()
-    {
-        return $this->hasOne(\App\Models\admin\Hr\hr3\Shift::class, 'employee_id', 'employee_id')
-            ->whereDate('start_time', $this->clock_in ? $this->clock_in->format('Y-m-d') : now()->format('Y-m-d'))
-            ->whereIn('shift_name', ['Morning Shift', 'Afternoon Shift', 'Night Shift'])
-            ->where('is_active', true);
-    }
+
 }
