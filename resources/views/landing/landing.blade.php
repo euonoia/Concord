@@ -25,7 +25,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body x-data="appointmentForm({ 
-    open: {{ $errors->has('first_name') || $errors->has('last_name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
+    open: {{ $errors->any() || session()->has('success') ? 'true' : 'false' }}, 
     showDoctor: {{ old('service_type') ? 'true' : 'false' }},
     selectedDoctor: @json(old('doctor_name')),
     selectedSpecialization: @json(old('specialization')),
@@ -146,6 +146,16 @@
                             <h3 class="text-2xl font-bold leading-6 text-gray-900" id="modal-title">Book an Appointment</h3>
                             <p class="mt-2 text-sm text-gray-500">Please fill out the form below to schedule your visit.</p>
                         </div>
+
+                        @if($errors->any())
+                            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                                <ul class="list-disc pl-5">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <form action="{{ route('appointments.store') }}" method="POST" class="space-y-6" id="booking-form"
                             @submit="submitted = true">
