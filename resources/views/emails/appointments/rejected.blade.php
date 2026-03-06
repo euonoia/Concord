@@ -15,7 +15,7 @@ We regret to inform you that we are unable to confirm your appointment request a
 
 Please feel free to book another slot or contact us for assistance.
 
-<x-mail::button :url="route('landing.landingPage.index')">
+<x-mail::button :url="route('landing.index')">
 Book Again
 </x-mail::button>
 
