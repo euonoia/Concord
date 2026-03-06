@@ -21,7 +21,7 @@ class OnlineAppointmentController extends Controller
         DB::transaction(function () use ($appointment) {
             $appointment->update([
                 'status' => 'approved',
-                'approved_by' => auth('core1')->id(),
+                'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
 

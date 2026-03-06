@@ -21,6 +21,9 @@ class Appointment extends Model
     'status',
     'notes',
     'reason',
+    'approved_by',
+    'approved_at',
+    'rejection_reason',
     'triage_note',
     'vital_signs'
 ];
