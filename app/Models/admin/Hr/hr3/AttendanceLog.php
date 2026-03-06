@@ -17,6 +17,10 @@ class AttendanceLog extends Model
         'department_id',
         'specialization',
         'position_title',
+        'shift_name',
+        'worked_hours',
+        'overtime_hours',
+        'night_diff_hours',
         'qr_token',
         'clock_in',
         'clock_out',
@@ -39,5 +43,11 @@ class AttendanceLog extends Model
     {
         return $this->belongsTo(\App\Models\admin\Hr\hr2\Department::class, 'department_id', 'department_id');
     }
-
+        public function shift()
+    {
+        return $this->hasOne(\App\Models\admin\Hr\hr3\Shift::class, 'employee_id', 'employee_id')
+            ->whereDate('start_time', $this->clock_in ? $this->clock_in->format('Y-m-d') : now()->format('Y-m-d'))
+            ->whereIn('shift_name', ['Morning Shift', 'Afternoon Shift', 'Night Shift'])
+            ->where('is_active', true);
+    }
 }

@@ -35,7 +35,7 @@
                     <select name="shift_name" class="form-control" required>
                         <option value="Morning Shift">Morning (08:00 - 17:00)</option>
                         <option value="Afternoon Shift">Afternoon (14:00 - 22:00)</option>
-                        <option value="Night Shift">Night (22:00 - 06:00)</option>
+                        <option value="Night Shift">Night (22:00 - 08:00)</option>
                     </select>
                 </div>
             </div>
