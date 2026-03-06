@@ -4,7 +4,7 @@ namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\core1\Appointment;
+use App\Models\user\Core\core1\Appointment;
 
 class DischargeController extends Controller
 {
@@ -16,7 +16,7 @@ class DischargeController extends Controller
             ->where('status', 'completed');
 
         // Doctor sees only their patients
-        if ($user->role === 'doctor') {
+        if ($user->role_slug === 'doctor') {
             $query->where('doctor_id', $user->id);
         }
 

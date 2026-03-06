@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\Appointment;
-use App\Models\core1\Patient;
-use App\Models\core1\User;
-use App\Models\core1\WaitingList;
+use App\Models\user\Core\core1\Appointment;
+use App\Models\user\Core\core1\Patient;
+use App\Models\User;
+use App\Models\user\Core\core1\WaitingList;
 use App\Http\Requests\core1\Appointments\StoreAppointmentRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -23,7 +23,7 @@ class AppointmentController extends Controller
     $query = Appointment::with(['patient', 'doctor']);
 
     // Doctor sees ONLY own appointments
-    if (auth()->user()->role === 'doctor') {
+    if (auth()->user()->role_slug === 'doctor') {
         $query->where('doctor_id', auth()->id());
     }
 
@@ -70,7 +70,7 @@ public function create()
             ->exists();
     });
 
-    $doctors = User::where('role', 'doctor')->get();
+    $doctors = User::where('role_slug', 'doctor')->get();
 
     return view('core.core1.appointments.create', compact('patients', 'doctors'));
 }
@@ -96,7 +96,7 @@ public function create()
 {
     $appointment->load(['patient', 'doctor']);
     $patients = Patient::all();
-    $doctors = User::where('role', 'doctor')->get();
+    $doctors = User::where('role_slug', 'doctor')->get();
     return view('core.core1.appointments.show', compact('appointment','patients','doctors'));
 }
 

@@ -4,8 +4,9 @@ namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\core1\Appointment;
-use App\Models\core1\MedicalRecord;
+use App\Models\user\Core\core1\Appointment;
+use App\Models\user\Core\core1\MedicalRecord;
+use App\Models\user\Core\core1\Patient;
 use Carbon\Carbon;
 
 class OutpatientController extends Controller
@@ -25,7 +26,7 @@ class OutpatientController extends Controller
             });
 
         // Doctor sees only her patients
-        if ($user->role === 'doctor') {
+        if ($user->role_slug === 'doctor') {
             $query->where('doctor_id', $user->id);
         }
 
@@ -122,7 +123,7 @@ class OutpatientController extends Controller
             'avg_consultation_time' => '12 min',
         ];
 
-   $prescriptions = \App\Models\core1\MedicalRecord::where('record_type','prescription')
+   $prescriptions = MedicalRecord::where('record_type','prescription')
     ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
         $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
         $q->whereIn('patient_id', $patientIds);
@@ -137,7 +138,7 @@ class OutpatientController extends Controller
 |--------------------------------------------------------------------------
 */
 
-$labOrders = \App\Models\core1\MedicalRecord::where('record_type', 'lab_order')
+$labOrders = MedicalRecord::where('record_type', 'lab_order')
     ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
         $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
         $q->whereIn('patient_id', $patientIds);
@@ -146,7 +147,7 @@ $labOrders = \App\Models\core1\MedicalRecord::where('record_type', 'lab_order')
 
 $diagnosticOrders = $labOrders->map(function($order){
 
-    $patient = \App\Models\core1\Patient::find($order->patient_id);
+    $patient = Patient::find($order->patient_id);
     $data = json_decode($order->prescription, true);
 
     return [
@@ -164,7 +165,7 @@ $diagnosticOrders = $labOrders->map(function($order){
 | Follow-Up Data
 |--------------------------------------------------------------------------
 */
-$followUps = \App\Models\core1\MedicalRecord::where('record_type', 'follow_up')
+$followUps = MedicalRecord::where('record_type', 'follow_up')
     ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
         // Only follow-ups for patients of this doctor
         $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
@@ -173,7 +174,7 @@ $followUps = \App\Models\core1\MedicalRecord::where('record_type', 'follow_up')
 
     ->get()
     ->map(function($record){
-        $patient = \App\Models\core1\Patient::find($record->patient_id);
+        $patient = Patient::find($record->patient_id);
         $data = json_decode($record->prescription, true);
 
         return [
@@ -186,7 +187,7 @@ $followUps = \App\Models\core1\MedicalRecord::where('record_type', 'follow_up')
     });
 
 
-       $patients = \App\Models\core1\Patient::where('care_type','outpatient')
+       $patients = Patient::where('care_type','outpatient')
     ->when($user->role === 'doctor', function($q) use ($user, $appointmentsRaw) {
         // Only patients that have appointments for this doctor
         $patientIdsWithAppointments = $appointmentsRaw->pluck('patient_id')->unique();
@@ -396,7 +397,7 @@ public function storeLabOrder(Request $request)
         'clinical_note' => 'required|string',
     ]);
 
-    \App\Models\core1\MedicalRecord::create([
+    MedicalRecord::create([
         'patient_id' => $request->patient_id,
         'doctor_id' => $user->id,
         'record_type' => 'lab_order',
@@ -430,7 +431,7 @@ public function storeFollowUp(Request $request)
     ]);
 
     // Check if patient has a consulted appointment
-    $appointment = \App\Models\core1\Appointment::where('patient_id', $request->patient_id)
+    $appointment = Appointment::where('patient_id', $request->patient_id)
         ->where('status', 'consulted')
         ->first();
 
@@ -439,7 +440,7 @@ public function storeFollowUp(Request $request)
     }
 
     // Create the follow-up record
-    \App\Models\core1\MedicalRecord::create([
+    MedicalRecord::create([
         'patient_id' => $request->patient_id,
         'doctor_id' => $user->id,
         'record_type' => 'follow_up',
@@ -471,7 +472,7 @@ public function updateFollowUp(Request $request, $id)
         'next_visit' => 'required|date|after:today',
     ]);
 
-    $record = \App\Models\core1\MedicalRecord::findOrFail($id);
+    $record = MedicalRecord::findOrFail($id);
 
     // Update next visit date and set status to scheduled
     $record->update([

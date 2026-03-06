@@ -1,12 +1,9 @@
 <?php
 
-namespace App\Models\core1;
+namespace App\Models\user\Core\core1;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\core1\Appointment;
-use App\Models\core1\MedicalRecord;
-use App\Models\core1\Bill;
 
 class Patient extends Model
 {
@@ -62,7 +59,7 @@ class Patient extends Model
 
     public function assignedNurse()
     {
-        return $this->belongsTo(User::class, 'assigned_nurse_id');
+        return $this->belongsTo(\App\Models\User::class, 'assigned_nurse_id');
     }
 
     public function getAgeAttribute()
@@ -72,6 +69,6 @@ class Patient extends Model
 
     public function doctor()
     {
-        return $this->belongsTo(User::class, 'doctor_id'); // doctor relation
+        return $this->belongsTo(\App\Models\User::class, 'doctor_id'); // doctor relation
     }
 }

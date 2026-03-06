@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\User;
+use App\Models\User;
+use App\Models\Employee;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
 class StaffManagementController extends Controller
@@ -26,21 +29,43 @@ class StaffManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users_core1,email',
+            'email' => 'required|email|unique:users,email',
             'role' => 'required|in:doctor,nurse,head_nurse,receptionist,billing',
             'department' => 'nullable|string',
             'specialization' => 'nullable|string',
             'phone' => 'nullable|string',
         ]);
 
-        $validated['password'] = bcrypt('password');
-        $validated['status'] = 'active';
-        $prefix = $validated['role'] === 'head_nurse' ? 'HNR' : strtoupper(substr($validated['role'], 0, 3));
-        $validated['employee_id'] = $prefix . str_pad(User::where('role', $validated['role'])->count() + 1, 3, '0', STR_PAD_LEFT);
+        // Mapping name to first_name/last_name for Employee table
+        $nameParts = explode(' ', $validated['name'], 2);
+        $firstName = $nameParts[0];
+        $lastName = $nameParts[1] ?? '.';
 
-        User::create($validated);
+        DB::transaction(function () use ($validated, $firstName, $lastName) {
+            // 1. Create the Global User
+            $user = User::create([
+                'username'  => $validated['email'], // Use email as username for consistency
+                'email'     => $validated['email'],
+                'password'  => Hash::make('password'),
+                'user_type' => 'staff',
+                'role_slug' => $validated['role'], // Aligned roles
+                'is_active' => true,
+            ]);
 
-        return redirect()->route('core1.staff.index')->with('success', 'Staff member added successfully.');
+            // 2. Create the Employee Profile
+            Employee::create([
+                'user_id'     => $user->id,
+                'employee_id' => strtoupper(substr($validated['role'], 0, 3)) . str_pad($user->id, 3, '0', STR_PAD_LEFT),
+                'first_name'  => $firstName,
+                'last_name'   => $lastName,
+                'phone'       => $validated['phone'],
+                'specialization' => $validated['specialization'],
+                'hire_date'   => now(),
+                'is_on_duty'  => true,
+            ]);
+        });
+
+        return redirect()->route('core1.staff.index')->with('success', 'Staff member added successfully and synced with global employee records.');
     }
 }
 

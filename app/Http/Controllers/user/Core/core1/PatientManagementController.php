@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\Patient;
-use App\Models\core1\User;
+use App\Models\user\Core\core1\Patient;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PatientManagementController extends Controller
@@ -15,8 +15,8 @@ class PatientManagementController extends Controller
         $statusFilter = $request->get('status', '');
 
         $user = auth()->user();
-        $isDoctor = $user->role === 'doctor';
-        $isNurse = $user->role === 'nurse';
+        $isDoctor = $user->role_slug === 'doctor';
+        $isNurse = $user->role_slug === 'nurse';
 
        $query = Patient::query();
 

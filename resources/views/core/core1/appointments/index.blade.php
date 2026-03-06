@@ -1,4 +1,4 @@
-﻿@extends('layouts.core1.layouts.app')
+﻿@extends('core.core1.layouts.app')
 
 @push('styles')
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
