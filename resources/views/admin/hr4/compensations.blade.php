@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container px-4 py-6">
-    <h2 class="text-2xl font-semibold mb-4">Direct Compensation - {{ date('F Y', strtotime($month . '-01')) }}</h2>
+    <h2 class="text-2xl font-semibold mb-4">Direct & Indirect Compensation- {{ date('F Y', strtotime($month . '-01')) }}</h2>
 
     {{-- Generate Compensation Form --}}
     <form method="POST" action="{{ route('hr4.direct_compensation.generate') }}" class="mb-6 flex items-center gap-2">
