@@ -12,20 +12,22 @@ class AttendanceLog extends Model
     protected $table = 'attendance_logs_hr3';
 
     // Fillable fields for mass assignment
-    protected $fillable = [
+        protected $fillable = [
         'employee_id',
         'department_id',
         'specialization',
         'position_title',
-        'shift_name',
-        'worked_hours',
-        'overtime_hours',
-        'night_diff_hours',
+        'shift_name',        
         'qr_token',
         'clock_in',
         'clock_out',
-        'device_fingerprint',
         'status',
+        'worked_hours',     
+        'overtime_hours',    
+        'night_diff_hours',  
+        'shift_allowance',    
+        'overtime_pay',       
+        'night_diff_pay',     
     ];
 
     protected $casts = [
