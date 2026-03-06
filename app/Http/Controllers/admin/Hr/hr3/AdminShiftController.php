@@ -44,7 +44,7 @@ class AdminShiftController extends Controller
         $hours = match($request->shift_name) {
             'Morning Shift'   => ['start' => '08:00:00', 'end' => '17:00:00'],
             'Afternoon Shift' => ['start' => '14:00:00', 'end' => '22:00:00'],
-            'Night Shift'     => ['start' => '22:00:00', 'end' => '06:00:00'],
+            'Night Shift'     => ['start' => '22:00:00', 'end' => '08:00:00'],
         };
 
         foreach ($request->days as $day) {

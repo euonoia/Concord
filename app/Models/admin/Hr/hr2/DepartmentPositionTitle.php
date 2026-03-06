@@ -12,6 +12,8 @@ class DepartmentPositionTitle extends Model
         'specialization_name',
         'position_title',
         'rank_level',
+        'employee_type',
+        'base_salary',
         'is_active'
     ];
 
