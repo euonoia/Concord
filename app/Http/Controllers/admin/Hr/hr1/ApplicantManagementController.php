@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ApplicantManagementController extends Controller
 {
@@ -24,7 +25,7 @@ class ApplicantManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorizeHr1Admin(); // <-- Authorization
+        $this->authorizeHr1Admin(); // Authorization
 
         $department = $request->input('department');
         $position = $request->input('position');
@@ -77,7 +78,7 @@ class ApplicantManagementController extends Controller
      */
     public function show($id)
     {
-        $this->authorizeHr1Admin(); // <-- Authorization
+        $this->authorizeHr1Admin(); // Authorization
 
         $applicant = DB::table('applicants_hr1')
             ->leftJoin('departments_hr2', 'applicants_hr1.department_id', '=', 'departments_hr2.department_id')
@@ -93,5 +94,26 @@ class ApplicantManagementController extends Controller
         if (!$applicant) abort(404);
 
         return view('admin.hr1.applicants.show', compact('applicant'));
+    }
+
+    /**
+     * Download applicant's resume (decompress on the fly)
+     */
+    public function downloadResume($id)
+    {
+        $this->authorizeHr1Admin();
+
+        $applicant = DB::table('applicants_hr1')->where('id', $id)->first();
+
+        if (!$applicant || !$applicant->resume_path) {
+            abort(404, 'Resume not found.');
+        }
+
+        $compressed = Storage::disk('public')->get($applicant->resume_path);
+        $pdfContent = gzdecode($compressed);
+
+        return response($pdfContent, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="resume.pdf"');
     }
 }
