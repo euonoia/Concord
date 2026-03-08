@@ -44,9 +44,10 @@
 
             Route::get('/applicants', [ApplicantManagementController::class, 'index'])->name('hr1.applicants.index');
             Route::get('/applicants/{id}', [ApplicantManagementController::class, 'show'])->name('hr1.applicants.show');
-              
             Route::get('applicants/{id}/resume', [ApplicantManagementController::class, 'downloadResume'])
-          ->name('hr1.applicants.download');
+             ->name('hr1.applicants.download');
+            Route::post('applicants/{id}/status', [ApplicantManagementController::class, 'updateStatus'])->name('hr1.applicants.updateStatus');
+
         });
 
 
