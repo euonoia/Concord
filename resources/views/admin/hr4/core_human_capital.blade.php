@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('admin.hr4.layouts.app')
 
 @section('title','Core Human Capital')
 

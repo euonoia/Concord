@@ -29,21 +29,30 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Account Role & Department</label>
-                <select id="role_slug" name="role_slug" 
-                        class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" required>
-                    <option value="" disabled selected>Select your role</option>
-                    <optgroup label="Patient Portal">
-                        <option value="patient" {{ old('role_slug') == 'patient' ? 'selected' : '' }}>Patient</option>
-                        <option value="patient_guardian" {{ old('role_slug') == 'patient_guardian' ? 'selected' : '' }}>Patient Guardian</option>
-                    </optgroup>
-                    <optgroup label="Staff Departments">
-                        <option value="hr_admin" {{ old('role_slug') == 'hr_admin' ? 'selected' : '' }}>HR Administrator</option>
-                        <option value="hr_employee" {{ old('role_slug') == 'hr_employee' ? 'selected' : '' }}>Human Resources</option>
-                        <option value="logistics_employee" {{ old('role_slug') == 'logistics_employee' ? 'selected' : '' }}>Logistics & Supply Chain</option>
-                        <option value="finance_employee" {{ old('role_slug') == 'finance_employee' ? 'selected' : '' }}>Finance & Billing</option>
-                        <option value="core_employee" {{ old('role_slug') == 'core_employee' ? 'selected' : '' }}>Core Medical Operations</option>
-                    </optgroup>
-                </select>
+               <select id="role_slug" name="role_slug" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" required>
+    <option value="" disabled selected>Select your role</option>
+    
+    <optgroup label="HR Administration">
+        <option value="admin_hr1">HR 1 (Admin 1)</option>
+        <option value="admin_hr2">HR 2 (Admin 2)</option>
+        <option value="admin_hr3">HR 3(Admin 3)</option>
+        <option value="admin_hr4">HR 4(Admin 4)</option>
+    </optgroup>
+
+    <optgroup label="Logistics Administration">
+        <option value="admin_logistics1">Logistics 1</option>
+        <option value="admin_logistics2">Logistics 2</option>
+    </optgroup>
+
+    <optgroup label="Core Medical Admin">
+        <option value="admin_core1">Core 1</option>
+        <option value="admin_core2">Core 2</option>
+    </optgroup>
+
+    <optgroup label="Patient Portal">
+        <option value="patient">Patient</option>
+    </optgroup>
+</select>
             </div>
 
             <div id="staff_fields" class="grid grid-cols-2 gap-4 hidden">

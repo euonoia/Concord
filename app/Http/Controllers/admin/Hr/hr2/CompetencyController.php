@@ -14,7 +14,7 @@ class CompetencyController extends Controller
      */
     private function authorizeHrAdmin()
     {
-        if (Auth::user()->role_slug !== 'hr_admin') {
+        if (Auth::user()->role_slug !== 'admin_hr2') {
             abort(403, 'Unauthorized action. This area is restricted to HR Administrators.');
         }
     }

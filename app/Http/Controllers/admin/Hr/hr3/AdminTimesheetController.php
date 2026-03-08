@@ -10,7 +10,7 @@ class AdminTimesheetController extends Controller
 {
     private function authorizeHrAdmin()
     {
-        if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr3') {
             abort(403, 'Unauthorized action.');
         }
     }
