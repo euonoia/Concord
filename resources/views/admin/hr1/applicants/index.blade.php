@@ -7,7 +7,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <select name="department" class="form-control">
                         <option value="">-- All Departments --</option>
                         @foreach($departments as $d)
@@ -17,17 +17,17 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <select name="position" class="form-control">
-                        <option value="">-- All Positions --</option>
-                        @foreach($positions as $p)
-                            <option value="{{ $p->id }}" {{ ($filters['position'] ?? '') == $p->id ? 'selected' : '' }}>
-                                {{ $p->position_title }}
+                <div class="col-md-4">
+                    <select name="specialization" class="form-control">
+                        <option value="">-- All Specializations --</option>
+                        @foreach($specializations as $s)
+                            <option value="{{ $s->specialization_name }}" {{ ($filters['specialization'] ?? '') == $s->specialization_name ? 'selected' : '' }}>
+                                {{ $s->specialization_name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <select name="status" class="form-control">
                         <option value="">-- All Statuses --</option>
                         @foreach(['pending','under_review','interview','accepted','rejected','onboarded'] as $status)
@@ -37,7 +37,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-12 d-flex justify-content-end">
                     <button class="btn btn-primary w-100">Filter</button>
                 </div>
             </form>
@@ -54,7 +54,7 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Department</th>
-                        <th>Position</th>
+                        <th>Specialization</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -67,7 +67,7 @@
                             <td>{{ $a->email }}</td>
                             <td>{{ $a->phone }}</td>
                             <td>{{ $a->department_name }}</td>
-                            <td>{{ $a->position_title }}</td>
+                            <td>{{ $a->specialization }}</td>
                             <td>{{ ucfirst(str_replace('_',' ',$a->application_status)) }}</td>
                             <td>
                                 <a href="{{ route('hr1.applicants.show', $a->id) }}" class="btn btn-sm btn-info">View</a>

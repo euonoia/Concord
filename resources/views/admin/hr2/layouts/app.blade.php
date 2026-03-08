@@ -32,6 +32,12 @@
         </a>
 
         {{-- --- HR2 SECTION --- --}}
+
+        <a href="{{ route('succession.index') }}" class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
+            <i class="bi bi-tree"></i>
+            <span>Succession</span>
+        </a>
+
         <a href="{{ route('competencies.index') }}" class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
             <i class="bi bi-lightbulb"></i>
             <span>Competencies</span>
@@ -45,11 +51,6 @@
         <a href="{{ route('training.index') }}" class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>
             <span>Training</span>
-        </a>
-        
-        <a href="{{ route('succession.index') }}" class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
-            <i class="bi bi-tree"></i>
-            <span>Succession</span>
         </a>
 
         <a href="{{ route('ess.index') }}" class="{{ request()->routeIs('ess.*') ? 'active' : '' }}">

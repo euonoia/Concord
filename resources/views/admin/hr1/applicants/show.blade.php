@@ -15,7 +15,7 @@
                 <tr><th>Email</th><td>{{ $applicant->email }}</td></tr>
                 <tr><th>Phone</th><td>{{ $applicant->phone }}</td></tr>
                 <tr><th>Department</th><td>{{ $applicant->department_name }}</td></tr>
-                <tr><th>Position</th><td>{{ $applicant->position_title }}</td></tr>
+                <tr><th>Specialization</th><td>{{ $applicant->specialization ?? 'N/A' }}</td></tr>
                 <tr><th>Status</th><td>{{ ucfirst(str_replace('_',' ',$applicant->application_status)) }}</td></tr>
                 <tr><th>Applied At</th><td>{{ $applicant->applied_at }}</td></tr>
             </table>
