@@ -8,61 +8,55 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class AuthController extends Controller
 {
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'username'  => 'required|string|max:50|unique:users', 
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|min:8|confirmed',
-            'role_slug' => 'required|string|in:hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,patient,patient_guardian,admin,doctor,nurse,head_nurse,receptionist,billing',
-            // Profile fields for the Employee table
-            'first_name' => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
-            'last_name'  => 'required_if:role_slug,hr_admin,hr_employee,logistics_employee,finance_employee,core_admin,core_employee,admin,doctor,nurse,head_nurse,receptionist,billing|string|max:255',
+{
+    $validated = $request->validate([
+        'username'  => 'required|string|max:50|unique:users', 
+        'email'     => 'required|email|unique:users,email',
+        'password'  => 'required|min:8|confirmed',
+        // Updated to include your admin_hr, admin_logistics, and admin_core roles
+        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse',
+        'first_name' => 'required|string|max:255',
+        'last_name'  => 'required|string|max:255',
+    ]);
+
+    // Simplified logic: If it's not a patient, it's staff
+    $userType = str_contains($validated['role_slug'], 'patient') ? 'patient' : 'staff';
+
+    $user = DB::transaction(function () use ($validated, $userType, $request) {
+        
+        $user = User::create([
+            'username'  => $validated['username'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            'user_type' => $userType,
+            'role_slug' => $validated['role_slug'],
+            'is_active' => 1,
+            // UUID is usually handled by a boot method in the Model, 
+            // but you can also use: 'uuid' => (string) \Illuminate\Support\Str::uuid(),
         ]);
 
-        // Determine user type
-        $userType = match (true) {
-            str_contains($validated['role_slug'], 'employee') || str_contains($validated['role_slug'], 'admin') || in_array($validated['role_slug'], ['doctor', 'nurse', 'head_nurse', 'receptionist', 'billing']) => 'staff',
-            str_contains($validated['role_slug'], 'patient')  => 'patient',
-            default                                           => 'patient',
-        };
-
-        // Use a Transaction to ensure data integrity
-        $user = DB::transaction(function () use ($validated, $userType, $request) {
-            
-            // 1. Create the User (Auth record)
-            $user = User::create([
-                'username'  => $validated['username'],
-                'email'     => $validated['email'],
-                'password'  => Hash::make($validated['password']),
-                'user_type' => $userType,
-                'role_slug' => $validated['role_slug'],
-                'is_active' => true,
+        if ($userType === 'staff') {
+            Employee::create([
+                'user_id'     => $user->id,         
+                'employee_id' => $user->username,   
+                'first_name'  => $request->first_name,
+                'last_name'   => $request->last_name,
+                'hire_date'   => now(),
+                'is_on_duty'  => true,
             ]);
+        }
 
-            // 2. Create the Employee Profile if the user is staff
-            if ($userType === 'staff') {
-                Employee::create([
-                    'user_id'     => $user->id,         
-                    'employee_id' => $user->username,   
-                    'first_name'  => $request->first_name,
-                    'last_name'   => $request->last_name,
-                    'hire_date'   => now(),
-                    'is_on_duty'  => true,
-                ]);
-            }
+        return $user;
+    });
 
-            return $user;
-        });
-
-        Auth::login($user);
-        return $this->redirectByUserRole($user);
-    }
+    Auth::login($user);
+    return $this->redirectByUserRole($user);
+}
 
     public function login(Request $request)
     {
@@ -81,134 +75,59 @@ class AuthController extends Controller
             'deleted_at' => null,
         ];
 
-        if (Auth::validate($credentials)) {
-            $user = User::where($loginType, $request->login)->first();
-            
-            if (!$user || !$user->is_active) {
-                return back()->withErrors(['login' => 'Account is inactive.'])->withInput();
-            }
+        if (Auth::attempt($credentials, $request->has('remember'))) {
+            $request->session()->regenerate();
 
-            // Store user info in session for 2FA
-            $request->session()->put('2fa_user_id', $user->id);
-            $request->session()->put('2fa_remember', $request->has('remember'));
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
 
-            // Send OTP
-            $this->sendOtpForUser($user);
+            $user->update([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+            ]);
 
-            return redirect()->route('portal.2fa');
+            return $this->redirectByUserRole($user);
         }
 
         return back()->withErrors([
-            'login' => 'The provided credentials do not match our records.',
+            'login' => 'The provided credentials do not match our records or account is inactive.',
         ])->withInput($request->only('login'));
     }
 
-    /**
-     * Show the 2FA verification form.
-     */
-    public function show2fa(Request $request)
-    {
-        if (!$request->session()->has('2fa_user_id')) {
-            return redirect()->route('portal.login');
-        }
+  protected function redirectByUserRole($user)
+{
+    $role = $user->role_slug;
 
-        return view('authentication.2fa');
-    }
+    return match (true) {
+        // --- HR MODULAR DASHBOARDS ---
+        $role === 'admin_hr1' => redirect()->route('admin.hr1.dashboard'),
+        $role === 'admin_hr2' => redirect()->route('admin.hr2.dashboard'),
+        $role === 'admin_hr3' => redirect()->route('admin.hr3.dashboard'),
+        $role === 'admin_hr4' => redirect()->route('admin.hr4.dashboard'),
 
-    /**
-     * Verify the 2FA code and log in the user.
-     */
-    public function verify2fa(Request $request)
-    {
-        $request->validate([
-            'otp_code' => 'required|string|size:6',
-        ]);
+        // --- LOGISTICS MODULAR DASHBOARDS ---
+        $role === 'admin_logistics1' => redirect()->route('admin.logistics1.dashboard'),
+        $role === 'admin_logistics2' => redirect()->route('admin.logistics2.dashboard'),
 
-        $userId = $request->session()->get('2fa_user_id');
-        $user = User::findOrFail($userId);
+        // --- CORE MODULAR DASHBOARDS ---
+        $role === 'admin_core1' => redirect()->route('admin.core1.dashboard'),
+        $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
 
-        $otp = \App\Models\OTP::where('identifier', $user->email)
-            ->where('is_used', false)
-            ->latest()
-            ->first();
+        // --- FINANCIALS ---
+        $role === 'finance' => redirect()->route('admin.financials.dashboard'),
 
-        if (!$otp || $otp->otp_code !== $request->otp_code || $otp->isExpired() || $otp->attempts >= 5) {
-            if ($otp) $otp->increment('attempts');
-            return back()->withErrors(['otp_code' => 'Invalid or expired verification code.']);
-        }
+        // --- FALLBACKS FOR GENERAL STAFF ---
+        $role === 'doctor'       => redirect()->route('core1.doctor.dashboard'),
+        $role === 'nurse'        => redirect()->route('core1.nurse.dashboard'),
+        $role === 'receptionist' => redirect()->route('core1.receptionist.dashboard'),
+        $role === 'employee'     => redirect()->route('hr.dashboard'), 
+        
+        // --- PATIENTS ---
+       $role === 'patient' => redirect()->route('patients.dashboard'),
 
-        // Success: Mark OTP as used
-        $otp->update(['is_used' => true]);
-
-        // Log the user in
-        Auth::login($user, $request->session()->get('2fa_remember'));
-
-        // Cleanup session
-        $request->session()->forget(['2fa_user_id', '2fa_remember']);
-        $request->session()->regenerate();
-
-        $user->update([
-            'last_login_at' => now(),
-            'last_login_ip' => $request->ip(),
-        ]);
-
-        return $this->redirectByUserRole($user);
-    }
-
-    /**
-     * Resend the 2FA code.
-     */
-    public function resend2fa(Request $request)
-    {
-        if (!$request->session()->has('2fa_user_id')) {
-            return redirect()->route('portal.login');
-        }
-
-        $user = User::findOrFail($request->session()->get('2fa_user_id'));
-        $this->sendOtpForUser($user);
-
-        return back()->with('status', 'A new verification code has been sent to your email.');
-    }
-
-    /**
-     * Helper to send OTP to user.
-     */
-    protected function sendOtpForUser($user)
-    {
-        // Invalidate previous OTPs
-        \App\Models\OTP::where('identifier', $user->email)->where('is_used', false)->update(['is_used' => true]);
-
-        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        \App\Models\OTP::create([
-            'identifier' => $user->email,
-            'otp_code' => $otpCode,
-            'expires_at' => now()->addMinutes(5),
-            'is_used' => false,
-        ]);
-
-        Mail::to($user->email)->send(new \App\Mail\OTPMail($otpCode));
-    }
-
-    protected function redirectByUserRole($user)
-    {
-        return match ($user->role_slug) {
-            'hr_admin', 'sys_super_admin'           => redirect()->route('admin.dashboard'),
-            'hr_employee'                           => redirect()->route('hr.dashboard'),
-            'logistics_admin', 'logistics_employee' => redirect()->route('logistics.dashboard'),
-            'finance_admin', 'finance_employee'     => redirect()->route('finance.dashboard'),
-            'core_admin', 'core_employee'           => redirect()->route('core.dashboard'),
-            'patient', 'patient_guardian'           => redirect()->route('patients.dashboard'),
-            // Core1 Granular Roles
-            'admin'                                 => redirect()->route('core1.admin.dashboard'),
-            'doctor'                                => redirect()->route('core1.doctor.dashboard'),
-            'nurse', 'head_nurse'                   => redirect()->route('core1.nurse.dashboard'),
-            'receptionist'                          => redirect()->route('core1.receptionist.dashboard'),
-            'billing'                               => redirect()->route('core1.billing.dashboard'),
-            default                                 => redirect('/'),
-        };
-    }
-
+        default => redirect('/'),
+    };
+}
     public function destroy(Request $request)
     {
         Auth::logout();

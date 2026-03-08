@@ -16,7 +16,7 @@ class AdminSuccessionController extends Controller
 {
     private function checkAccess()
     {
-        if (!Auth::check() || Auth::user()->role_slug !== 'hr_admin') {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
             abort(403, 'Unauthorized access to HR2 Succession Planning.');
         }
     }

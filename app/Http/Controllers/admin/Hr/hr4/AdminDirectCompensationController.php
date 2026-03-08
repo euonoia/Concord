@@ -8,16 +8,27 @@ use App\Models\admin\Hr\hr4\DirectCompensation;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\admin\Hr\hr3\Shift;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AdminDirectCompensationController extends Controller
 {
+    /**
+     * Ensure user is HR4 admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized access to HR4 Direct Compensation.');
+        }
+    }
+
     /**
      * Show all direct compensations for a given month
      */
     public function index(Request $request)
     {
-        // Default to current year-month if not specified
+        $this->authorizeHrAdmin(); // <-- Role check
+
         $month = $request->query('month', date('Y-m'));
 
         $compensations = DirectCompensation::with('employee')
@@ -33,21 +44,18 @@ class AdminDirectCompensationController extends Controller
      */
     public function generate(Request $request)
     {
+        $this->authorizeHrAdmin(); 
+
         $month = $request->input('month', date('Y-m'));
         $employees = Employee::all();
 
         foreach ($employees as $emp) {
             $position = DepartmentPositionTitle::find($emp->position_id);
 
-            // Base salary from department-position table
             $base_salary = $position->base_salary ?? 0;
-
-            // Use Shift model methods for allowance and overtime
             $shift_allowance = Shift::calculateMonthlyShiftAllowance($emp->employee_id, $month);
+            $bonus = 0;
 
-            $bonus = 0; // can extend later for bonuses
-
-            // Insert or update compensation
             DirectCompensation::updateOrCreate(
                 ['employee_id' => $emp->employee_id, 'month' => $month],
                 [
