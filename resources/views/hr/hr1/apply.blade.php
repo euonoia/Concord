@@ -65,17 +65,6 @@
             </div>
 
             <div class="col-md-6">
-                <label>Position</label>
-                <select name="position_id" class="form-control">
-                    @foreach($positions as $p)
-                        <option value="{{ $p->id }}" {{ old('position_id') == $p->id ? 'selected' : '' }}>
-                            {{ $p->position_title }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-6">
                 <label>Specialization</label>
                 <select name="specialization" class="form-control">
                     <option value="">-- Select Specialization --</option>

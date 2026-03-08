@@ -18,26 +18,32 @@ class ApplicantController extends Controller
     {
         $dept = $request->query('dept', null);
 
+        // Get all active departments
         $departments = DB::table('departments_hr2')
             ->where('is_active', 1)
             ->get();
 
-        $positions = collect();
         $specializations = collect();
 
         if ($dept) {
-            $positions = DB::table('department_position_titles_hr2')
-                ->where('department_id', $dept)
-                ->where('is_active', 1)
-                ->get();
+            // Exclude specific specializations
+            $excludedSpecializations = [
+                'General Internal Medicine',
+                'General Pediatrics',
+                'General Psychiatry',
+                'General Neurology',
+                'General Pathology',
+                'General Radiology',
+            ];
 
             $specializations = DB::table('department_specializations_hr2')
                 ->where('dept_code', $dept)
                 ->where('is_active', 1)
+                ->whereNotIn('specialization_name', $excludedSpecializations)
                 ->get();
         }
 
-        return view('hr.hr1.apply', compact('departments', 'positions', 'specializations', 'dept'));
+        return view('hr.hr1.apply', compact('departments', 'specializations', 'dept'));
     }
 
     /**
@@ -52,7 +58,6 @@ class ApplicantController extends Controller
             'email'          => 'required|email|max:255',
             'phone'          => 'required|string|max:20',
             'department_id'  => 'required',
-            'position_id'    => 'required',
             'specialization' => 'nullable|string|max:255',
             'resume'         => 'required|mimes:pdf|max:5120',
         ]);
@@ -62,6 +67,7 @@ class ApplicantController extends Controller
         if ($request->hasFile('resume')) {
             $file = $request->file('resume');
 
+            // Compress resume before storing
             $contents = file_get_contents($file->getRealPath());
             $compressed = gzencode($contents, 9);
             $filename = 'resumes/' . Str::uuid() . '.pdf.gz';
@@ -78,7 +84,6 @@ class ApplicantController extends Controller
                 'email'              => $request->email,
                 'phone'              => $request->phone,
                 'department_id'      => $request->department_id,
-                'position_id'        => $request->position_id,
                 'specialization'     => $request->specialization,
                 'post_grad_status'   => 'residency',
                 'resume_path'        => $resumePath,
@@ -88,7 +93,6 @@ class ApplicantController extends Controller
                 'updated_at'         => now(),
             ]);
 
-            // Log for debugging
             Log::info('Applicant submitted: ' . $request->email);
 
             return redirect()

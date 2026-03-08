@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ApplicantManagementController extends Controller
 {
@@ -19,32 +18,39 @@ class ApplicantManagementController extends Controller
         }
     }
 
-    // List applicants with optional filtering by department/position/status
+    // List applicants with optional filtering by department/specialization/status
     public function index(Request $request)
     {
         $this->authorizeHr1Admin();
 
-        $filters = $request->only(['department', 'position', 'status']);
+        $filters = $request->only(['department', 'specialization', 'status']);
 
         $departments = DB::table('departments_hr2')->where('is_active', 1)->orderBy('name')->get();
-        $positions = DB::table('department_position_titles_hr2')->where('is_active', 1)->orderBy('position_title')->get();
+
+        // Fetch specializations for the selected department (if any)
+        $specializations = collect();
+        if (!empty($filters['department'])) {
+            $specializations = DB::table('department_specializations_hr2')
+                ->where('dept_code', $filters['department'])
+                ->where('is_active', 1)
+                ->orderBy('specialization_name')
+                ->get();
+        }
 
         $query = DB::table('applicants_hr1')
             ->leftJoin('departments_hr2', 'applicants_hr1.department_id', '=', 'departments_hr2.department_id')
-            ->leftJoin('department_position_titles_hr2', 'applicants_hr1.position_id', '=', 'department_position_titles_hr2.id')
             ->select(
                 'applicants_hr1.*',
-                'departments_hr2.name as department_name',
-                'department_position_titles_hr2.position_title'
+                'departments_hr2.name as department_name'
             );
 
         if (!empty($filters['department'])) $query->where('applicants_hr1.department_id', $filters['department']);
-        if (!empty($filters['position'])) $query->where('applicants_hr1.position_id', $filters['position']);
+        if (!empty($filters['specialization'])) $query->where('applicants_hr1.specialization', $filters['specialization']);
         if (!empty($filters['status'])) $query->where('applicants_hr1.application_status', $filters['status']);
 
         $applicants = $query->orderByDesc('applicants_hr1.id')->paginate(10);
 
-        return view('admin.hr1.applicants.index', compact('applicants', 'departments', 'positions', 'filters'));
+        return view('admin.hr1.applicants.index', compact('applicants', 'departments', 'specializations', 'filters'));
     }
 
     // Show individual applicant details
@@ -54,11 +60,9 @@ class ApplicantManagementController extends Controller
 
         $applicant = DB::table('applicants_hr1')
             ->leftJoin('departments_hr2', 'applicants_hr1.department_id', '=', 'departments_hr2.department_id')
-            ->leftJoin('department_position_titles_hr2', 'applicants_hr1.position_id', '=', 'department_position_titles_hr2.id')
             ->select(
                 'applicants_hr1.*',
-                'departments_hr2.name as department_name',
-                'department_position_titles_hr2.position_title'
+                'departments_hr2.name as department_name'
             )
             ->where('applicants_hr1.id', $id)
             ->first();
@@ -107,19 +111,18 @@ class ApplicantManagementController extends Controller
 
             if (!$existingHire && $applicant) {
                 DB::table('new_hires_hr1')->insert([
-                    'applicant_id'   => $id,
-                    'first_name'     => $applicant->first_name,
-                    'last_name'      => $applicant->last_name,
-                    'email'          => $applicant->email,
-                    'phone'          => $applicant->phone,
-                    'department_id'  => $applicant->department_id,
-                    'position_id'    => $applicant->position_id,
-                    'specialization' => $applicant->specialization,
+                    'applicant_id'     => $id,
+                    'first_name'       => $applicant->first_name,
+                    'last_name'        => $applicant->last_name,
+                    'email'            => $applicant->email,
+                    'phone'            => $applicant->phone,
+                    'department_id'    => $applicant->department_id,
+                    'specialization'   => $applicant->specialization,
                     'post_grad_status' => $applicant->post_grad_status,
-                    'status'         => 'onboarding',
-                    'resume_path'    => $applicant->resume_path,
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'status'           => 'onboarding',
+                    'resume_path'      => $applicant->resume_path,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
                 ]);
             }
         }

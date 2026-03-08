@@ -12,7 +12,9 @@ use Illuminate\Support\Str;
 
 class NewHireController extends Controller
 {
-
+    /**
+     * Ensure only HR/admin can access
+     */
     private function authorizeHr1Admin()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr1') {
@@ -27,33 +29,34 @@ class NewHireController extends Controller
     {
         $this->authorizeHr1Admin();
 
-        $filters = $request->only(['department', 'position', 'status']);
+        $filters = $request->only(['department', 'specialization', 'status']);
 
         $departments = DB::table('departments_hr2')
             ->where('is_active', 1)
             ->orderBy('name')
             ->get();
 
-        $positions = DB::table('department_position_titles_hr2')
-            ->where('is_active', 1)
-            ->orderBy('position_title')
+        // Get all distinct specializations from new hires for filter dropdown
+        $specializations = DB::table('new_hires_hr1')
+            ->select('specialization as specialization_name')
+            ->distinct()
+            ->whereNotNull('specialization')
+            ->orderBy('specialization')
             ->get();
 
         $query = DB::table('new_hires_hr1')
             ->leftJoin('departments_hr2', 'new_hires_hr1.department_id', '=', 'departments_hr2.department_id')
-            ->leftJoin('department_position_titles_hr2', 'new_hires_hr1.position_id', '=', 'department_position_titles_hr2.id')
             ->select(
                 'new_hires_hr1.*',
-                'departments_hr2.name as department_name',
-                'department_position_titles_hr2.position_title'
+                'departments_hr2.name as department_name'
             );
 
         if (!empty($filters['department'])) {
             $query->where('new_hires_hr1.department_id', $filters['department']);
         }
 
-        if (!empty($filters['position'])) {
-            $query->where('new_hires_hr1.position_id', $filters['position']);
+        if (!empty($filters['specialization'])) {
+            $query->where('new_hires_hr1.specialization', $filters['specialization']);
         }
 
         if (!empty($filters['status'])) {
@@ -65,7 +68,7 @@ class NewHireController extends Controller
         return view('admin.hr1.new_hires.index', compact(
             'newHires',
             'departments',
-            'positions',
+            'specializations',
             'filters'
         ));
     }
@@ -79,11 +82,9 @@ class NewHireController extends Controller
 
         $newHire = DB::table('new_hires_hr1')
             ->leftJoin('departments_hr2', 'new_hires_hr1.department_id', '=', 'departments_hr2.department_id')
-            ->leftJoin('department_position_titles_hr2', 'new_hires_hr1.position_id', '=', 'department_position_titles_hr2.id')
             ->select(
                 'new_hires_hr1.*',
-                'departments_hr2.name as department_name',
-                'department_position_titles_hr2.position_title'
+                'departments_hr2.name as department_name'
             )
             ->where('new_hires_hr1.id', $id)
             ->first();
@@ -131,7 +132,7 @@ class NewHireController extends Controller
         DB::beginTransaction();
 
         try {
-
+            // Update status
             DB::table('new_hires_hr1')
                 ->where('id', $id)
                 ->update([
@@ -141,33 +142,20 @@ class NewHireController extends Controller
 
             $message = "New hire status updated.";
 
+            // Create employee account if status becomes active
             if ($request->status === 'active') {
+                $newHire = DB::table('new_hires_hr1')->where('id', $id)->first();
+                if (!$newHire) throw new \Exception("New hire not found.");
 
-                $newHire = DB::table('new_hires_hr1')
-                    ->where('id', $id)
-                    ->first();
-
-                if (!$newHire) {
-                    throw new \Exception("New hire not found.");
-                }
-
-                $existingUser = DB::table('users')
-                    ->where('email', $newHire->email)
-                    ->first();
+                $existingUser = DB::table('users')->where('email', $newHire->email)->first();
 
                 if (!$existingUser) {
-
-                    /*
-                    Generate Department Based Employee ID
-                    */
-
+                    // Generate department-based Employee ID
                     $department = DB::table('departments_hr2')
                         ->where('department_id', $newHire->department_id)
                         ->first();
 
-                    if (!$department) {
-                        throw new \Exception("Department not found.");
-                    }
+                    if (!$department) throw new \Exception("Department not found.");
 
                     $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $department->name), 0, 3));
 
@@ -176,19 +164,10 @@ class NewHireController extends Controller
                         ->orderByDesc('employee_id')
                         ->first();
 
-                    if ($lastEmployee) {
-                        $lastNumber = (int) substr($lastEmployee->employee_id, -4);
-                        $nextNumber = $lastNumber + 1;
-                    } else {
-                        $nextNumber = 1;
-                    }
-
+                    $nextNumber = $lastEmployee ? ((int) substr($lastEmployee->employee_id, -4) + 1) : 1;
                     $employeeId = $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-                    /*
-                    Create User Account
-                    */
-
+                    // Create user account
                     $userId = DB::table('users')->insertGetId([
                         'uuid' => Str::uuid(),
                         'username' => $employeeId,
@@ -201,10 +180,7 @@ class NewHireController extends Controller
                         'updated_at' => now(),
                     ]);
 
-                    /*
-                    Create Employee Record
-                    */
-
+                    // Create employee record
                     DB::table('employees')->insert([
                         'user_id' => $userId,
                         'employee_id' => $employeeId,
@@ -212,7 +188,6 @@ class NewHireController extends Controller
                         'last_name' => $newHire->last_name,
                         'phone' => $newHire->phone ?? null,
                         'department_id' => $newHire->department_id,
-                        'position_id' => $newHire->position_id,
                         'specialization' => $newHire->specialization ?? null,
                         'post_grad_status' => $newHire->post_grad_status ?? null,
                         'hire_date' => now(),
@@ -222,8 +197,7 @@ class NewHireController extends Controller
                     ]);
 
                     $message = "Employee account created successfully. Username: {$employeeId} | Password: 123456789";
-                }
-                else {
+                } else {
                     $message = "Status updated. Account already exists.";
                 }
             }
@@ -233,9 +207,7 @@ class NewHireController extends Controller
             return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
-
             DB::rollBack();
-
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

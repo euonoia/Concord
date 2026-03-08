@@ -15,7 +15,7 @@
                 <div class="col-md-6"><strong>Department:</strong> {{ $newHire->department_name }}</div>
             </div>
             <div class="row mb-2">
-                <div class="col-md-6"><strong>Position:</strong> {{ $newHire->position_title }}</div>
+                <div class="col-md-6"><strong>Specialization:</strong> {{ $newHire->specialization ?? 'N/A' }}</div>
                 <div class="col-md-6"><strong>Post Grad Status:</strong> {{ ucfirst($newHire->post_grad_status) }}</div>
             </div>
             <div class="row mb-2">

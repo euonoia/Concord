@@ -3,17 +3,15 @@
 @section('content')
 <div class="container py-4">
     <h2 class="mb-4">New Hire Management</h2>
-    @if(session('success'))
-<div class="alert alert-success">
-    {{ session('success') }}
-</div>
-@endif
 
-@if(session('error'))
-<div class="alert alert-danger">
-    {{ session('error') }}
-</div>
-@endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     <!-- FILTER SECTION -->
     <div class="card mb-4">
         <div class="card-body">
@@ -30,12 +28,12 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label>Position</label>
-                    <select name="position" class="form-control">
-                        <option value="">-- All Positions --</option>
-                        @foreach($positions as $p)
-                            <option value="{{ $p->id }}" {{ ($filters['position'] ?? '') == $p->id ? 'selected' : '' }}>
-                                {{ $p->position_title }}
+                    <label>Specialization</label>
+                    <select name="specialization" class="form-control">
+                        <option value="">-- All Specializations --</option>
+                        @foreach($specializations as $s)
+                            <option value="{{ $s->specialization_name }}" {{ ($filters['specialization'] ?? '') == $s->specialization_name ? 'selected' : '' }}>
+                                {{ $s->specialization_name }}
                             </option>
                         @endforeach
                     </select>
@@ -67,7 +65,7 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Department</th>
-                        <th>Position</th>
+                        <th>Specialization</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -80,7 +78,7 @@
                             <td>{{ $n->email }}</td>
                             <td>{{ $n->phone }}</td>
                             <td>{{ $n->department_name }}</td>
-                            <td>{{ $n->position_title }}</td>
+                            <td>{{ $n->specialization ?? 'N/A' }}</td>
                             <td>{{ ucfirst($n->status) }}</td>
                             <td>
                                 <a href="{{ route('hr1.newhires.show', $n->id) }}" class="btn btn-sm btn-info">View</a>
