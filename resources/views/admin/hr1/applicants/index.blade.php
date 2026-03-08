@@ -4,42 +4,48 @@
 <div class="container py-4">
     <h2 class="mb-4">Applicant Management</h2>
 
-    <!-- FILTER SECTION -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
-                <div class="col-md-4">
-                    <label>Department</label>
+                <div class="col-md-3">
                     <select name="department" class="form-control">
                         <option value="">-- All Departments --</option>
                         @foreach($departments as $d)
-                            <option value="{{ $d->department_id }}" {{ ($department ?? '') == $d->department_id ? 'selected' : '' }}>
+                            <option value="{{ $d->department_id }}" {{ ($filters['department'] ?? '') == $d->department_id ? 'selected' : '' }}>
                                 {{ $d->name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label>Position</label>
+                <div class="col-md-3">
                     <select name="position" class="form-control">
                         <option value="">-- All Positions --</option>
                         @foreach($positions as $p)
-                            <option value="{{ $p->id }}" {{ ($position ?? '') == $p->id ? 'selected' : '' }}>
+                            <option value="{{ $p->id }}" {{ ($filters['position'] ?? '') == $p->id ? 'selected' : '' }}>
                                 {{ $p->position_title }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-3">
+                    <select name="status" class="form-control">
+                        <option value="">-- All Statuses --</option>
+                        @foreach(['pending','under_review','interview','accepted','rejected','onboarded'] as $status)
+                            <option value="{{ $status }}" {{ ($filters['status'] ?? '') == $status ? 'selected' : '' }}>
+                                {{ ucfirst(str_replace('_',' ',$status)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
                     <button class="btn btn-primary w-100">Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- APPLICANTS TABLE -->
     <div class="card">
-        <div class="card-body">
+        <div class="card-body table-responsive">
             <table class="table table-bordered table-striped mb-0">
                 <thead>
                     <tr>
@@ -49,8 +55,7 @@
                         <th>Phone</th>
                         <th>Department</th>
                         <th>Position</th>
-                        <th>Specialization</th>
-                        <th>Applied At</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -63,28 +68,19 @@
                             <td>{{ $a->phone }}</td>
                             <td>{{ $a->department_name }}</td>
                             <td>{{ $a->position_title }}</td>
-                            <td>{{ $a->specialization }}</td>
-                            <td>{{ $a->applied_at }}</td>
+                            <td>{{ ucfirst(str_replace('_',' ',$a->application_status)) }}</td>
                             <td>
                                 <a href="{{ route('hr1.applicants.show', $a->id) }}" class="btn btn-sm btn-info">View</a>
-                                @if($a->resume_path)
-                                    <a href="{{ route('hr1.applicants.download', $a->id) }}" class="btn btn-sm btn-success" target="_blank">
-                                        View CV
-                                    </a>
-                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center">No applicants found.</td>
+                            <td colspan="8" class="text-center">No applicants found.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-
-            <div class="mt-3">
-                {{ $applicants->withQueryString()->links() }}
-            </div>
+            <div class="mt-3">{{ $applicants->withQueryString()->links() }}</div>
         </div>
     </div>
 </div>
