@@ -40,17 +40,16 @@
 
         <h4 class="mb-4 border-bottom pb-2 text-primary-base">Medical Residency & General Practice</h4>
         <div class="row g-4 mb-5">
-            @php
-                $tracks = [
-                    ['title' => 'General Physician', 'vacancies' => '15 Vacancies', 'desc' => 'Comprehensive primary care training focusing on diagnostics and preventive medicine.'],
-                    ['title' => 'Pediatrics', 'vacancies' => '8 Vacancies', 'desc' => 'Specialized training in neonatal care and adolescent medicine.'],
-                    ['title' => 'Psychology', 'vacancies' => '5 Vacancies', 'desc' => 'Advanced clinical psychology tracks with focus on behavioral health and therapy.'],
-                    ['title' => 'Neurology', 'vacancies' => '3 Vacancies', 'desc' => 'Deep dive into neuro-diagnostics and complex brain disorder management.'],
-                    ['title' => 'Pathology', 'vacancies' => '4 Vacancies', 'desc' => 'Laboratory-based residency focusing on cellular analysis and forensic pathology.'],
-                    ['title' => 'Radiology', 'vacancies' => '6 Vacancies', 'desc' => 'Training in MRI, CT imaging, and interventional radiology techniques.'],
-                ];
-            @endphp
-
+         @php
+        $tracks = [
+        ['title'=>'General Physician','dept'=>'MED-GEN','vacancies'=>'15 Vacancies','desc'=>'Comprehensive primary care training focusing on diagnostics and preventive medicine.'],
+        ['title'=>'Pediatrics','dept'=>'PED-01','vacancies'=>'8 Vacancies','desc'=>'Specialized training in neonatal care and adolescent medicine.'],
+        ['title'=>'Psychology','dept'=>'PSY-01','vacancies'=>'5 Vacancies','desc'=>'Advanced clinical psychology tracks with focus on behavioral health and therapy.'],
+        ['title'=>'Neurology','dept'=>'NEURO-01','vacancies'=>'3 Vacancies','desc'=>'Deep dive into neuro-diagnostics and complex brain disorder management.'],
+        ['title'=>'Pathology','dept'=>'PATH-01','vacancies'=>'4 Vacancies','desc'=>'Laboratory-based residency focusing on cellular analysis and forensic pathology.'],
+        ['title'=>'Radiology','dept'=>'RAD-01','vacancies'=>'6 Vacancies','desc'=>'Training in MRI, CT imaging, and interventional radiology techniques.'],
+        ];
+        @endphp
             @foreach($tracks as $track)
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
@@ -59,7 +58,10 @@
                         <span class="badge bg-light text-primary border">{{ $track['vacancies'] }}</span>
                     </div>
                     <p class="text-muted small mb-4">{{ $track['desc'] }}</p>
-                    <a href="#" class="mt-auto text-decoration-none fw-bold small">Apply for Track <i class="bi bi-arrow-right"></i></a>
+                    <a href="{{ route('careers.apply',['dept'=>$track['dept']]) }}"
+                    class="mt-auto text-decoration-none fw-bold small">
+                    Apply for Track <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
             </div>
             @endforeach

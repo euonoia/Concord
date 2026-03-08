@@ -26,59 +26,15 @@
     </div>
 
     <nav>
-        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('admin.hr1.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
-
-        {{-- --- HR2 SECTION --- --}}
-        <a href="{{ route('competencies.index') }}" class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
-            <i class="bi bi-lightbulb"></i>
-            <span>Competencies</span>
-        </a>
-
-        <a href="{{ route('learning.index') }}" class="{{ request()->routeIs('learning.*') ? 'active' : '' }}">
-            <i class="bi bi-book"></i>
-            <span>Learning</span>
-        </a>
-
-        <a href="{{ route('training.index') }}" class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
-            <i class="bi bi-mortarboard"></i>
-            <span>Training</span>
-        </a>
         
-        <a href="{{ route('succession.index') }}" class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
-            <i class="bi bi-tree"></i>
-            <span>Succession</span>
+        <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
+            <i class="bi bi-people"></i>
+            <span>Applicant Management</span>
         </a>
-
-        <a href="{{ route('ess.index') }}" class="{{ request()->routeIs('ess.*') ? 'active' : '' }}">
-            <i class="bi bi-pencil-square"></i>
-            <span>ESS</span>
-        </a>
-        
-        <a href="{{ route('shifts.index') }}" class="{{ request()->routeIs('shifts.*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-range"></i>
-            <span>Shifts</span>
-        </a>
-
-        <a href="{{ route('timesheet.index') }}" class="{{ request()->routeIs('timesheet.*') ? 'active' : '' }}">
-            <i class="bi bi-clock-history"></i>
-            <span>Timesheet</span>
-        </a>
-
-        <a href="{{ route('hr4.core') }}" class="{{ request()->routeIs('hr4.core') ? 'active' : '' }}">
-        <i class="bi bi-diagram-3"></i>
-        <span>CoreHuman</span>
-        </a>
-
-        <a href="{{ route('hr4.direct_compensation.index') }}" class="{{ request()->routeIs('hr4.direct_compensation.*') ? 'active' : '' }}">
-            <i class="bi bi-cash-stack"></i>
-            <span>Direct Compensation</span>
-        </a>
-
-        <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
-
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>
