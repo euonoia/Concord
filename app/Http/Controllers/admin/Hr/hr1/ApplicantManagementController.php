@@ -115,6 +115,7 @@ class ApplicantManagementController extends Controller
                     'department_id'  => $applicant->department_id,
                     'position_id'    => $applicant->position_id,
                     'specialization' => $applicant->specialization,
+                    'post_grad_status' => $applicant->post_grad_status,
                     'status'         => 'onboarding',
                     'resume_path'    => $applicant->resume_path,
                     'created_at'     => now(),

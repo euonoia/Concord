@@ -38,15 +38,21 @@
         // Financials (General)
         Route::get('/financials/dashboard', function () { return view('admin.financials.index'); })->name('admin.financials.dashboard');
 
-        // --- HR1 Department ---
-        // Applicant Management
+      // --- HR1 Department ---
         Route::prefix('hr1')->group(function () {
 
+            // Applicant Management
             Route::get('/applicants', [ApplicantManagementController::class, 'index'])->name('hr1.applicants.index');
             Route::get('/applicants/{id}', [ApplicantManagementController::class, 'show'])->name('hr1.applicants.show');
             Route::get('applicants/{id}/resume', [ApplicantManagementController::class, 'downloadResume'])
-             ->name('hr1.applicants.download');
+                ->name('hr1.applicants.download');
             Route::post('applicants/{id}/status', [ApplicantManagementController::class, 'updateStatus'])->name('hr1.applicants.updateStatus');
+
+            // New Hires Management
+            Route::get('/newhires', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'index'])->name('hr1.newhires.index');
+            Route::get('/newhires/{id}', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'show'])->name('hr1.newhires.show');
+            Route::get('/newhires/{id}/resume', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'downloadResume'])->name('hr1.newhires.download');
+            Route::post('/newhires/{id}/status', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
 
         });
 

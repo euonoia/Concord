@@ -120,6 +120,7 @@ class AuthController extends Controller
         $role === 'doctor'       => redirect()->route('core1.doctor.dashboard'),
         $role === 'nurse'        => redirect()->route('core1.nurse.dashboard'),
         $role === 'receptionist' => redirect()->route('core1.receptionist.dashboard'),
+        $role === 'employee'     => redirect()->route('hr.dashboard'), 
         
         // --- PATIENTS ---
        $role === 'patient' => redirect()->route('patients.dashboard'),

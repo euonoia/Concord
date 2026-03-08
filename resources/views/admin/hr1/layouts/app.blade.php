@@ -35,6 +35,10 @@
             <i class="bi bi-people"></i>
             <span>Applicant Management</span>
         </a>
+        <a href="{{ route('hr1.newhires.index') }}" class="{{ request()->routeIs('hr1.newhires.*') ? 'active' : '' }}">
+            <i class="bi bi-person-badge"></i>
+            <span>New Hires</span>
+        </a>
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>
