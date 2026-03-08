@@ -75,11 +75,68 @@ class AuthController extends Controller
             'deleted_at' => null,
         ];
 
-        if (Auth::attempt($credentials, $request->has('remember'))) {
-            $request->session()->regenerate();
+        // Step 1: Validate credentials without logging in
+        if (Auth::validate($credentials)) {
+            $user = User::where($loginType, $request->login)->first();
 
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
+            // Step 2: Store user ID in session for 2FA
+            $request->session()->put('2fa_user_id', $user->id);
+            $request->session()->put('2fa_remember', $request->has('remember'));
+
+            // Step 3: Send OTP
+            $this->sendOtpForUser($user);
+
+            return redirect()->route('portal.2fa');
+        }
+
+        return back()->withErrors([
+            'login' => 'The provided credentials do not match our records or account is inactive.',
+        ])->withInput($request->only('login'));
+    }
+
+    /**
+     * Show the 2FA verification form.
+     */
+    public function show2fa(Request $request)
+    {
+        if (!$request->session()->has('2fa_user_id')) {
+            return redirect()->route('portal.login');
+        }
+
+        return view('authentication.2fa');
+    }
+
+    /**
+     * Verify the 2FA OTP code.
+     */
+    public function verify2fa(Request $request)
+    {
+        $request->validate([
+            'otp_code' => 'required|string|size:6',
+        ]);
+
+        $userId = $request->session()->get('2fa_user_id');
+        if (!$userId) {
+            return redirect()->route('portal.login');
+        }
+
+        $user = User::findOrFail($userId);
+
+        // Verify OTP
+        $otp = \App\Models\OTP::where('identifier', $user->email)
+            ->where('otp_code', $request->otp_code)
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if ($otp) {
+            // Mark OTP as used
+            $otp->update(['is_used' => true]);
+
+            // Final Login
+            Auth::login($user, $request->session()->get('2fa_remember', false));
+            $request->session()->forget(['2fa_user_id', '2fa_remember']);
+            $request->session()->regenerate();
 
             $user->update([
                 'last_login_at' => now(),
@@ -89,12 +146,64 @@ class AuthController extends Controller
             return $this->redirectByUserRole($user);
         }
 
-        return back()->withErrors([
-            'login' => 'The provided credentials do not match our records or account is inactive.',
-        ])->withInput($request->only('login'));
+        // Handle failure
+        $otp = \App\Models\OTP::where('identifier', $user->email)
+            ->where('is_used', false)
+            ->latest()
+            ->first();
+
+        if ($otp) {
+            $otp->increment('attempts');
+            if ($otp->attempts >= 5) {
+                $otp->update(['is_used' => true]);
+                return redirect()->route('portal.login')->withErrors(['otp' => 'Too many failed attempts. Please login again.']);
+            }
+        }
+
+        return back()->withErrors(['otp_code' => 'Invalid or expired verification code.']);
     }
 
-  protected function redirectByUserRole($user)
+    /**
+     * Resend the 2FA OTP.
+     */
+    public function resend2fa(Request $request)
+    {
+        $userId = $request->session()->get('2fa_user_id');
+        if (!$userId) {
+            return redirect()->route('portal.login');
+        }
+
+        $user = User::findOrFail($userId);
+        $this->sendOtpForUser($user);
+
+        return back()->with('status', 'A new verification code has been sent to your email.');
+    }
+
+    /**
+     * Internal helper to generate and send OTP.
+     */
+    protected function sendOtpForUser($user)
+    {
+        // Invalidate old OTPs
+        \App\Models\OTP::where('identifier', $user->email)->where('is_used', false)->update(['is_used' => true]);
+
+        // Generate 6-digit code
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store
+        \App\Models\OTP::create([
+            'identifier' => $user->email,
+            'otp_code'   => $otpCode,
+            'expires_at' => now()->addMinutes(5),
+            'attempts'   => 0,
+            'is_used'    => false,
+        ]);
+
+        // Send Email
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\OTPMail($otpCode));
+    }
+
+    protected function redirectByUserRole($user)
 {
     $role = $user->role_slug;
 
