@@ -4,8 +4,8 @@ namespace App\Http\Controllers\user\Core\core1\Billing;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\core1\Bill;
-use App\Models\core1\Patient;
+use App\Models\user\Core\core1\Bill;
+use App\Models\user\Core\core1\Patient;
 use Illuminate\Support\Facades\DB;
 
 class BillingDashboardController extends Controller

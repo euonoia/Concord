@@ -1,9 +1,9 @@
 ﻿@php
-    $user = auth('core1')->user();
+    $user = auth()->user();
     $currentRoute = request()->route()->getName();
     
     $navItems = [
-        ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-house-door', 'roles' => ['admin', 'doctor', 'nurse', 'head_nurse', 'patient', 'receptionist', 'billing'], 'route' => 'core1.' . ($user->role === 'head_nurse' ? 'nurse' : $user->role) . '.dashboard'],
+        ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-house-door', 'roles' => ['admin', 'doctor', 'nurse', 'head_nurse', 'patient', 'receptionist', 'billing'], 'route' => 'core1.' . ($user->role_slug === 'head_nurse' ? 'nurse' : $user->role_slug) . '.dashboard'],
         ['id' => 'patients', 'label' => 'Patient Management', 'icon' => 'bi-people', 'roles' => ['admin', 'doctor', 'nurse', 'head_nurse', 'receptionist'], 'route' => 'core1.patients.index'],
         ['id' => 'appointments', 'label' => 'Appointments', 'icon' => 'bi-calendar', 'roles' => ['admin', 'doctor', 'patient', 'receptionist'], 'route' => 'core1.appointments.index'],
         ['id' => 'inpatient', 'label' => 'Inpatient Care', 'icon' => 'bi-hospital', 'roles' => ['admin', 'doctor', 'nurse', 'head_nurse'], 'route' => 'core1.inpatient.index'],
@@ -17,7 +17,7 @@
     ];
     
     $filteredNavItems = array_filter($navItems, function($item) use ($user) {
-        return in_array($user->role, $item['roles']);
+        return in_array($user->role_slug, $item['roles']);
     });
 @endphp
 
@@ -39,7 +39,7 @@
             </a>
         @endforeach
 
-       <form id="logout-form" method="POST" action="{{ route('core1.logout') }}" class="d-none">
+       <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" class="d-none">
             @csrf
         </form>
 

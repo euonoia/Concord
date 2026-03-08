@@ -237,13 +237,19 @@
                         <div class="font-bold text-blue">{{ $booking->appointment_no }}</div>
                     </td>
                     <td>
-                        <div class="font-bold text-blue">{{ $booking->name }}</div>
-                        <div class="text-xs text-gray-500">{{ $booking->email }}</div>
+                        <div class="font-bold text-blue">{{ $booking->patient->name ?? 'N/A' }}</div>
+                        <div class="text-xs text-gray-500">{{ $booking->patient->email ?? 'N/A' }}</div>
                     </td>
                     <td>
-                        <div class="font-bold">{{ ucfirst(str_replace('_', ' ', $booking->service_type)) }}</div>
-                        @if($booking->doctor_name)
-                        <div class="text-xs text-gray-500 mt-1">Dr: {{ $booking->doctor_name }}</div>
+                        <div class="font-bold">{{ ucfirst(str_replace('_', ' ', $booking->service_type ?? $booking->type)) }}</div>
+                        @php
+                            $docName = $booking->doctor_name; // Fallback if manually set
+                            if (!$docName && $booking->doctor && $booking->doctor->employee) {
+                                $docName = $booking->doctor->employee->name;
+                            }
+                        @endphp
+                        @if($docName)
+                        <div class="text-xs text-gray-500 mt-1">Dr: {{ $docName }}</div>
                         @endif
                     </td>
                     <td>
@@ -251,8 +257,8 @@
                         <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($booking->appointment_time)->format('h:i A') }}</div>
                     </td>
                     <td>
-                        <div class="flex gap-2">
-                            <form action="{{ route('core1.receptionist.online-appointments.approve', $booking->id) }}" method="POST" onsubmit="return confirm('Approve this appointment?');">
+                        <div class="flex items-center gap-2">
+                            <form action="{{ route('core1.receptionist.online-appointments.approve', $booking->id) }}" method="POST" class="m-0" onsubmit="return confirm('Approve this appointment?');">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-success text-white">Approve</button>
                             </form>
@@ -320,8 +326,8 @@
                 let html = '';
                 data.bookings.forEach(function(booking) {
                     const approveUrl = approveBaseUrl.replace(':id', booking.id);
-                    const serviceType = booking.service_type.replace(/_/g, ' ');
-                    const serviceTypeDisplay = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+                    const serviceType = booking.service_type ? booking.service_type.replace(/_/g, ' ') : 'N/A';
+                    const serviceTypeDisplay = serviceType !== 'N/A' ? (serviceType.charAt(0).toUpperCase() + serviceType.slice(1)) : 'N/A';
 
                     html += '<tr>';
                     html += '<td><div class="font-bold text-blue">' + escapeHtml(booking.appointment_no) + '</div></td>';
@@ -334,8 +340,8 @@
                     html += '</td>';
                     html += '<td><div>' + formatDate(booking.appointment_date) + '</div>';
                     html += '<div class="text-xs text-gray-500">' + formatTime(booking.appointment_time) + '</div></td>';
-                    html += '<td><div class="flex gap-2">';
-                    html += '<form action="' + approveUrl + '" method="POST" onsubmit="return confirm(\'Approve this appointment?\');">';
+                    html += '<td><div class="flex items-center gap-2">';
+                    html += '<form action="' + approveUrl + '" method="POST" class="m-0" onsubmit="return confirm(\'Approve this appointment?\');">';
                     html += '<input type="hidden" name="_token" value="' + csrfToken + '">';
                     html += '<button type="submit" class="btn btn-sm btn-success text-white">Approve</button></form>';
                     html += '<button type="button" class="btn btn-sm btn-danger text-white" onclick="openRejectModal(\'' + booking.id + '\', \'' + escapeHtml(booking.appointment_no) + '\')">Reject</button>';

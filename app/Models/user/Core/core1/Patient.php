@@ -1,12 +1,9 @@
 <?php
 
-namespace App\Models\core1;
+namespace App\Models\user\Core\core1;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\core1\Appointment;
-use App\Models\core1\MedicalRecord;
-use App\Models\core1\Bill;
 
 class Patient extends Model
 {
@@ -17,7 +14,10 @@ class Patient extends Model
     // <--- Replace this $fillable with the updated version
     protected $fillable = [
         'patient_id',
-        'name',
+        'mrn',
+        'first_name',
+        'middle_name',
+        'last_name',
         'date_of_birth',
         'gender',
         'phone',
@@ -37,7 +37,11 @@ class Patient extends Model
         'reason',
         'insurance_provider',
         'policy_number',
-        'emergency_contact_relation'
+        'emergency_contact_relation',
+        'registration_status',
+        'created_by',
+        'updated_by',
+        'merged_into_id',
     ];
 
     protected $casts = [
@@ -62,7 +66,7 @@ class Patient extends Model
 
     public function assignedNurse()
     {
-        return $this->belongsTo(User::class, 'assigned_nurse_id');
+        return $this->belongsTo(\App\Models\User::class, 'assigned_nurse_id');
     }
 
     public function getAgeAttribute()
@@ -70,8 +74,41 @@ class Patient extends Model
         return $this->date_of_birth ? $this->date_of_birth->age : null;
     }
 
+    public function getNameAttribute()
+    {
+        $name = $this->first_name;
+        if ($this->middle_name) {
+            $name .= ' ' . $this->middle_name;
+        }
+        $name .= ' ' . $this->last_name;
+        return $name;
+    }
+
     public function doctor()
     {
-        return $this->belongsTo(User::class, 'doctor_id'); // doctor relation
+        return $this->belongsTo(\App\Models\User::class, 'doctor_id'); // doctor relation
+    }
+
+    public static function generateMRN(): string
+    {
+        $year = now()->year;
+        $lastNumber = static::where('mrn', 'like', "MRN-{$year}-%")
+            ->selectRaw("MAX(CAST(SUBSTRING(mrn, 10, 6) AS UNSIGNED)) as max_num")
+            ->value('max_num');
+
+        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
+
+        return 'MRN-' . $year . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    public static function detectDuplicates(array $data): \Illuminate\Database\Eloquent\Collection
+    {
+        return static::where('first_name', 'like', $data['first_name'] ?? '')
+            ->where('last_name', 'like', $data['last_name'] ?? '')
+            ->whereNotNull('date_of_birth')
+            ->where('date_of_birth', $data['date_of_birth'] ?? null)
+            ->where('email', $data['email'] ?? '')
+            ->whereNotIn('registration_status', ['MERGED'])
+            ->get();
     }
 }

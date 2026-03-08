@@ -41,9 +41,9 @@ return [
             'provider' => 'users',
         ],
         'employee' => [
-        'driver' => 'session',
-        'provider' => 'employees', // Workers
-    ],
+            'driver' => 'session',
+            'provider' => 'employees',
+        ],
     ],
 
     /*
@@ -69,9 +69,9 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
         'employees' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Employee::class,
-    ],
+            'driver' => 'eloquent',
+            'model' => App\Models\Employee::class,
+        ],
     ],
 
     /*

@@ -44,6 +44,44 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class, 'user_id', 'id');
     }
 
+    /**
+     * Role Helper Methods
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role_slug, ['admin', 'sys_super_admin', 'core_admin']);
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->role_slug === 'doctor';
+    }
+
+    public function isHeadNurse(): bool
+    {
+        return $this->role_slug === 'head_nurse';
+    }
+
+    public function isNurse(): bool
+    {
+        return in_array($this->role_slug, ['nurse', 'head_nurse']);
+    }
+
+    public function isPatient(): bool
+    {
+        return in_array($this->role_slug, ['patient', 'patient_guardian']);
+    }
+
+    public function isReceptionist(): bool
+    {
+        return $this->role_slug === 'receptionist';
+    }
+
+    public function isBilling(): bool
+    {
+        return $this->role_slug === 'billing';
+    }
+
     protected static function boot()
     {
         parent::boot();

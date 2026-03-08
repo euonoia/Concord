@@ -25,7 +25,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body x-data="appointmentForm({ 
-    open: {{ $errors->has('first_name') || $errors->has('last_name') || $errors->has('email') || $errors->has('phone') || $errors->has('service_type') || $errors->has('appointment_date') || $errors->has('appointment_time') || $errors->has('g-recaptcha-response') || session('success') ? 'true' : 'false' }}, 
+    open: {{ $errors->any() || session()->has('success') ? 'true' : 'false' }}, 
     showDoctor: {{ old('service_type') ? 'true' : 'false' }},
     selectedDoctor: @json(old('doctor_name')),
     selectedSpecialization: @json(old('specialization')),
@@ -146,6 +146,16 @@
                             <h3 class="text-2xl font-bold leading-6 text-gray-900" id="modal-title">Book an Appointment</h3>
                             <p class="mt-2 text-sm text-gray-500">Please fill out the form below to schedule your visit.</p>
                         </div>
+
+                        @if($errors->any())
+                            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                                <ul class="list-disc pl-5">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <form action="{{ route('appointments.store') }}" method="POST" class="space-y-6" id="booking-form"
                             @submit="submitted = true">
@@ -523,7 +533,7 @@
                         <button @click="showDetails = false; showCancelConfirm = false" class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                             Close
                         </button>
-                        <template x-if="['pending', 'approved'].includes(trackedAppointment.status)">
+                        <template x-if="['pending', 'approved', 'scheduled'].includes(trackedAppointment.status)">
                             <button @click="showCancelConfirm = true" class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors flex items-center gap-1">
                                 <i class="bi bi-x-circle"></i> Cancel Appointment
                             </button>
@@ -546,7 +556,7 @@
                         <p class="text-sm text-gray-600 mb-4">Are you sure you want to cancel appointment <strong x-text="trackedAppointment.appointment_no"></strong>?</p>
                         <div>
                             <label for="ajax_cancellation_reason" class="block text-sm font-medium text-gray-700 mb-1">Reason for cancellation (optional)</label>
-                            <textarea id="ajax_cancellation_reason" rows="3" maxlength="1000" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-600 focus:ring-blue-600" placeholder="Let us know why you're cancelling..."></textarea>
+                            <textarea id="ajax_cancellation_reason" x-model="cancellationReason" rows="3" maxlength="1000" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-600 focus:ring-blue-600" placeholder="Let us know why you're cancelling..."></textarea>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">

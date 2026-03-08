@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\MedicalRecord;
-use App\Models\core1\Patient;
+use App\Models\user\Core\core1\MedicalRecord;
+use App\Models\user\Core\core1\Patient;
 use Illuminate\Http\Request;
 
 class MedicalRecordController extends Controller
@@ -13,7 +13,7 @@ class MedicalRecordController extends Controller
     {
         $user = auth()->user();
 
-     if ($user->role === 'doctor') {
+     if ($user->role_slug === 'doctor') {
     $records = Patient::where('doctor_id', $user->id)
         ->orWhereHas('appointments', function ($q) use ($user) {
             $q->where('doctor_id', $user->id);
@@ -51,7 +51,7 @@ class MedicalRecordController extends Controller
     $user = auth()->user();
 
     // Only allow doctor to see assigned patients or patients with appointments
-    if ($user->role === 'doctor') {
+    if ($user->role_slug === 'doctor') {
         $ownsPatient = $patient->doctor_id === $user->id
             || $patient->appointments()->where('doctor_id', $user->id)->exists();
         if (!$ownsPatient) {
@@ -64,7 +64,7 @@ class MedicalRecordController extends Controller
 
     // If no record, create dummy object
     if (!$record) {
-        $record = new \App\Models\core1\MedicalRecord();
+        $record = new MedicalRecord();
         $record->patient = $patient;
         $record->doctor = $patient->doctor ?? null;
         $record->record_type = null;
