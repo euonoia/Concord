@@ -4,9 +4,10 @@ namespace App\Http\Controllers\user\Core\core1\Nurse;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\core1\Patient;
-use App\Models\core1\Appointment;
-use App\Models\core1\MedicalRecord;
+use App\Models\user\Core\core1\Patient;
+use App\Models\user\Core\core1\Appointment;
+use App\Models\user\Core\core1\MedicalRecord;
+use App\Models\User;
 
 class NurseDashboardController extends Controller
 {
@@ -14,11 +15,11 @@ class NurseDashboardController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->role === 'head_nurse') {
+        if ($user->role_slug === 'head_nurse') {
              $stats = [
                 'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
                 'active_patients' => Patient::where('status', 'active')->count(),
-                'total_nurses' => \App\Models\core1\User::where('role', 'nurse')->count(),
+                'total_nurses' => User::where('role_slug', 'nurse')->count(),
                 'pending_tasks' => Appointment::where('status', 'scheduled')->count(),
             ];
             
@@ -77,11 +78,11 @@ class NurseDashboardController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->role === 'head_nurse') {
+        if ($user->role_slug === 'head_nurse') {
             $stats = [
                 'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
                 'active_patients' => Patient::where('status', 'active')->count(),
-                'total_nurses' => \App\Models\core1\User::where('role', 'nurse')->count(),
+                'total_nurses' => User::where('role_slug', 'nurse')->count(),
                 'pending_tasks' => Appointment::where('status', 'scheduled')->count(),
             ];
             

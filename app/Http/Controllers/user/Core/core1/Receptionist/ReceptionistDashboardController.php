@@ -4,8 +4,8 @@ namespace App\Http\Controllers\user\Core\core1\Receptionist;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\core1\Appointment;
-use App\Models\core1\Patient;
+use App\Models\user\Core\core1\Appointment;
+use App\Models\user\Core\core1\Patient;
 
 class ReceptionistDashboardController extends Controller
 {
@@ -14,8 +14,8 @@ class ReceptionistDashboardController extends Controller
         // Statistics
         $stats = [
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
-            'today_registrations' => Patient::whereDate('created_at', today())->count(),
-            'total_patients' => Patient::count(),
+            'today_registrations' => Patient::where('registration_status', 'REGISTERED')->whereDate('created_at', today())->count(),
+            'total_patients' => Patient::where('registration_status', 'REGISTERED')->count(),
             'pending_appointments' => Appointment::where('status', 'scheduled')
                 ->where('appointment_date', '>=', today())
                 ->count(),
@@ -28,8 +28,9 @@ class ReceptionistDashboardController extends Controller
             ->take(10)
             ->get();
         
-        // Recent patient registrations
-        $recentRegistrations = Patient::latest()
+        // Recent patient registrations (only fully registered)
+        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
+            ->latest()
             ->take(10)
             ->get();
         
@@ -43,7 +44,8 @@ class ReceptionistDashboardController extends Controller
             ->get();
 
         // Pending Online Bookings
-        $onlineBookings = \App\Models\Appointment::where('status', 'pending')
+        $onlineBookings = Appointment::with(['patient', 'doctor.employee'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -57,8 +59,8 @@ class ReceptionistDashboardController extends Controller
     {
         $stats = [
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
-            'today_registrations' => Patient::whereDate('created_at', today())->count(),
-            'total_patients' => Patient::count(),
+            'today_registrations' => Patient::where('registration_status', 'REGISTERED')->whereDate('created_at', today())->count(),
+            'total_patients' => Patient::where('registration_status', 'REGISTERED')->count(),
             'pending_appointments' => Appointment::where('status', 'scheduled')
                 ->where('appointment_date', '>=', today())
                 ->count(),
@@ -70,7 +72,8 @@ class ReceptionistDashboardController extends Controller
             ->take(10)
             ->get();
         
-        $recentRegistrations = Patient::latest()
+        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
+            ->latest()
             ->take(10)
             ->get();
         
@@ -83,7 +86,8 @@ class ReceptionistDashboardController extends Controller
             ->get();
 
         // Pending Online Bookings
-        $onlineBookings = \App\Models\Appointment::where('status', 'pending')
+        $onlineBookings = Appointment::with(['patient', 'doctor.employee'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -95,9 +99,22 @@ class ReceptionistDashboardController extends Controller
 
     public function pendingBookingsJson(): \Illuminate\Http\JsonResponse
     {
-        $bookings = \App\Models\Appointment::where('status', 'pending')
+        $bookings = \App\Models\user\Core\core1\Appointment::with(['patient', 'doctor.employee'])
+            ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'appointment_no' => $appointment->appointment_id ?? 'N/A',
+                    'name' => $appointment->patient ? $appointment->patient->name : 'N/A',
+                    'email' => $appointment->patient ? $appointment->patient->email : 'N/A',
+                    'service_type' => $appointment->type ?? 'N/A',
+                    'doctor_name' => ($appointment->doctor && $appointment->doctor->employee) ? $appointment->doctor->employee->name : null,
+                    'appointment_date' => $appointment->appointment_date,
+                    'appointment_time' => $appointment->appointment_time,
+                ];
+            });
 
         return response()->json([
             'bookings' => $bookings,

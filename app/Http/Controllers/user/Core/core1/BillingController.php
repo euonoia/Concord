@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\core1\Bill;
+use App\Models\user\Core\core1\Bill;
 use Illuminate\Http\Request;
 
 class BillingController extends Controller

@@ -109,20 +109,34 @@
     </div>
 
     <script>
-        const roleSelect = document.getElementById('role_slug');
+        const roleCategory = document.getElementById('role_category');
+        const roleSlugHidden = document.getElementById('role_slug');
+        const subRoleSelect = document.getElementById('sub_role_select');
         const staffFields = document.getElementById('staff_fields');
+        const coreSubRoleFields = document.getElementById('core_sub_role_fields');
 
         function toggleFields() {
-            const val = roleSelect.value;
-            // Show names if role contains 'employee' or 'admin'
-            if (val.includes('employee') || val.includes('admin')) {
+            const category = roleCategory.value;
+            
+            // Show names if role category contains 'employee' or 'admin'
+            if (category.includes('employee') || category.includes('admin')) {
                 staffFields.classList.remove('hidden');
             } else {
                 staffFields.classList.add('hidden');
             }
+
+            // Show/Hide Core Medical Sub-Roles
+            if (category === 'core_employee') {
+                coreSubRoleFields.classList.remove('hidden');
+                roleSlugHidden.value = subRoleSelect.value;
+            } else {
+                coreSubRoleFields.classList.add('hidden');
+                roleSlugHidden.value = category;
+            }
         }
 
-        roleSelect.addEventListener('change', toggleFields);
+        roleCategory.addEventListener('change', toggleFields);
+        subRoleSelect.addEventListener('change', toggleFields);
         window.addEventListener('DOMContentLoaded', toggleFields); 
     </script>
 </body>

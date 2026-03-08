@@ -19,6 +19,7 @@ document.addEventListener('alpine:init', () => {
         cancelLoading: false,
         cancelError: '',
         cancelSuccess: config.cancelSuccess ?? '',
+        cancellationReason: '',
 
         // Endpoints & Tokens passed from Blade
         lookupUrl: config.lookupUrl ?? '',
@@ -66,21 +67,24 @@ document.addEventListener('alpine:init', () => {
             this.cancelError = '';
 
             try {
-                const url = this.cancelUrlFormat.replace(':id', this.trackedAppointment.id);
+                const url = this.cancelUrlFormat.replace(':id', this.trackedAppointment.appointment_no);
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': this.csrfToken
-                    }
+                    },
+                    body: JSON.stringify({ cancellation_reason: this.cancellationReason })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
                     this.trackedAppointment.status = 'cancelled';
+                    this.trackedAppointment.cancellation_reason = this.cancellationReason;
                     this.cancelSuccess = 'Appointment cancelled successfully.';
+                    this.cancellationReason = '';
                     this.showCancelConfirm = false;
                 } else {
                     this.cancelError = data.error || 'Failed to cancel appointment.';

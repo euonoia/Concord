@@ -1,4 +1,4 @@
-﻿@extends('layouts.core1.layouts.app')
+﻿@extends('core.core1.layouts.app')
 
 @section('title', 'Add Staff Member')
 

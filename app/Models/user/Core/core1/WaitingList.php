@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\core1;
+namespace App\Models\user\Core\core1;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +31,6 @@ class WaitingList extends Model
 
     public function doctor()
     {
-        return $this->belongsTo(User::class, 'doctor_id');
+        return $this->belongsTo(\App\Models\User::class, 'doctor_id');
     }
 }

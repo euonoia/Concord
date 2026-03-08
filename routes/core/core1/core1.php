@@ -65,6 +65,12 @@ Route::middleware([])->group(function () {
     
     // Shared Feature Routes
     Route::middleware('role:admin,doctor,nurse,head_nurse,receptionist')->group(function () {
+        // HIS Identity Routes (must be before wildcard {patient} routes)
+        Route::get('/patients/check-duplicates', [PatientManagementController::class, 'checkDuplicates'])->name('core1.patients.check-duplicates');
+        Route::post('/patients/merge', [PatientManagementController::class, 'mergePatients'])->name('core1.patients.merge');
+        Route::get('/patients/{patient}/complete-registration', [PatientManagementController::class, 'showCompleteRegistration'])->name('core1.patients.complete-registration');
+        Route::post('/patients/{patient}/complete-registration', [PatientManagementController::class, 'completeRegistration'])->name('core1.patients.do-complete-registration');
+
         Route::get('/patients', [PatientManagementController::class, 'index'])->name('core1.patients.index');
         Route::get('/patients/create', [PatientManagementController::class, 'create'])->name('core1.patients.create');
         Route::post('/patients', [PatientManagementController::class, 'store'])->name('core1.patients.store');
