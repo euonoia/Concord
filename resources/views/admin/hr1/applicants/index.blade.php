@@ -4,7 +4,7 @@
 <div class="container py-4">
     <h2 class="mb-4">Applicant Management</h2>
 
-    <!-- FILTER SECTION AT THE TOP -->
+    <!-- FILTER SECTION -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3">
@@ -67,6 +67,11 @@
                             <td>{{ $a->applied_at }}</td>
                             <td>
                                 <a href="{{ route('hr1.applicants.show', $a->id) }}" class="btn btn-sm btn-info">View</a>
+                                @if($a->resume_path)
+                                    <a href="{{ route('hr1.applicants.download', $a->id) }}" class="btn btn-sm btn-success" target="_blank">
+                                        View CV
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -77,7 +82,6 @@
                 </tbody>
             </table>
 
-            <!-- PAGINATION -->
             <div class="mt-3">
                 {{ $applicants->withQueryString()->links() }}
             </div>

@@ -41,7 +41,17 @@
                 </tr>
             </table>
 
-            <a href="{{ route('hr1.applicants.index') }}" class="btn btn-secondary">Back to List</a>
+            @if($applicant->resume_path)
+                <div class="mt-3">
+                    <a href="{{ route('hr1.applicants.download', $applicant->id) }}" class="btn btn-primary" target="_blank">
+                        View/Download CV
+                    </a>
+                </div>
+            @endif
+
+            <div class="mt-3">
+                <a href="{{ route('hr1.applicants.index') }}" class="btn btn-secondary">Back to List</a>
+            </div>
         </div>
     </div>
 </div>
