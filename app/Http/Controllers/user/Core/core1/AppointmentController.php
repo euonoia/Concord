@@ -104,7 +104,7 @@ public function create()
     public function update(Request $request, Appointment $appointment)
 {
     // Only doctor can update status
-    if (auth()->user()->role === 'doctor') {
+    if (auth()->user()->role_slug === 'doctor') {
         $validated = $request->validate([
             'status' => 'required|in:pending,scheduled,declined,completed,cancelled,no-show'
         ]);

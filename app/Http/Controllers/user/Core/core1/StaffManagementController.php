@@ -13,7 +13,7 @@ class StaffManagementController extends Controller
 {
     public function index()
     {
-        $staff = User::whereIn('role', ['doctor', 'nurse', 'head_nurse', 'receptionist', 'billing'])
+        $staff = User::whereIn('role_slug', ['doctor', 'nurse', 'head_nurse', 'receptionist', 'billing_officer'])
             ->latest()
             ->paginate(20);
         
@@ -30,7 +30,7 @@ class StaffManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:doctor,nurse,head_nurse,receptionist,billing',
+            'role' => 'required|in:doctor,nurse,head_nurse,receptionist,billing_officer',
             'department' => 'nullable|string',
             'specialization' => 'nullable|string',
             'phone' => 'nullable|string',

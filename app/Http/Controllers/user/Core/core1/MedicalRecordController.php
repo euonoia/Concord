@@ -29,7 +29,8 @@ class MedicalRecordController extends Controller
                   ->orderByDesc('appointment_time');
             },
         ])
-        ->orderBy('name')
+        ->orderBy('last_name')
+        ->orderBy('first_name')
         ->paginate(10);
 } else {
     // Admin, Head Nurse, Nurse → show all patients
@@ -40,7 +41,7 @@ class MedicalRecordController extends Controller
         'appointments' => function ($q) {
             $q->orderByDesc('appointment_date')->orderByDesc('appointment_time');
         }
-    ])->orderBy('name')->paginate(10);
+    ])->orderBy('last_name')->orderBy('first_name')->paginate(10);
 }
 
         return view('core.core1.medical-records.index', compact('records'));

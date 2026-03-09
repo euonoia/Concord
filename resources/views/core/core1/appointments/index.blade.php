@@ -95,14 +95,14 @@
                                 <div class="core1-flex-gap-2">
                                     <i class="fas fa-user text-gray"></i>
                                     <div>
-                                        <div class="text-sm font-medium text-dark">{{ $appointment->patient->name }}</div>
-                                        <div class="text-xs text-gray">{{ $appointment->patient->patient_id }}</div>
+                                        <div class="text-sm font-medium text-dark">{{ $appointment->patient->name ?? 'Unknown Patient' }}</div>
+                                        <div class="text-xs text-gray">{{ $appointment->patient->patient_id ?? 'N/A' }}</div>
                                     </div>
                                 </div>
                             </td>
                             @if(auth()->user()->role !== 'doctor')
                             <td>
-                                <div class="text-sm text-dark">{{ $appointment->doctor->name }}</div>
+                                <div class="text-sm text-dark">{{ $appointment->doctor->name ?? 'No Doctor Assigned' }}</div>
                             </td>
                             @endif
                             <td>
@@ -208,8 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     : 'scheduled';
                 $titleExtra = ' (' . $displayStatus . ')';
                 $title = auth()->user()->role === 'doctor' 
-                    ? $appointment->patient->name . ' - ' . $appointment->type . $titleExtra
-                    : $appointment->patient->name . ' - ' . ($appointment->doctor ? $appointment->doctor->name : 'No Doctor') . $titleExtra;
+                    ? ($appointment->patient->name ?? 'Unknown') . ' - ' . $appointment->type . $titleExtra
+                    : ($appointment->patient->name ?? 'Unknown') . ' - ' . ($appointment->doctor ? $appointment->doctor->name : 'No Doctor') . $titleExtra;
             @endphp
         {
             id: '{{ $appointment->id }}',

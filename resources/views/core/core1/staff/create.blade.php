@@ -8,7 +8,7 @@
 <div class="p-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-8">Add Staff Member</h1>
     <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 max-w-2xl">
-        <form action="{{ route('staff.store') }}" method="POST">
+        <form action="{{ route('core1.staff.store') }}" method="POST">
             @csrf
             <div class="space-y-6">
                 <div>
@@ -30,7 +30,7 @@
                         <option value="head_nurse">Head Nurse</option>
                         <option value="nurse">Nurse</option>
                         <option value="receptionist">Receptionist</option>
-                        <option value="billing">Billing Officer</option>
+                        <option value="billing_officer">Billing Officer</option>
                     </select>
                 </div>
                 <div>
@@ -43,7 +43,7 @@
                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     Add Staff
                 </button>
-                <a href="{{ route('staff.index') }}" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <a href="{{ route('core1.staff.index') }}" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                     Cancel
                 </a>
             </div>

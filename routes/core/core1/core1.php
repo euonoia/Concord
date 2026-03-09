@@ -29,7 +29,7 @@ Route::prefix('core1')->name('core1.')->group(function () {
 
 Route::middleware([])->group(function () {
     // Dashboard Routes by Role
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin,admin_core1')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('core1.admin.dashboard');
         Route::get('/overview', [AdminDashboardController::class, 'overview'])->name('core1.admin.overview');
     });
@@ -58,13 +58,13 @@ Route::middleware([])->group(function () {
         Route::get('/online-appointments/pending', [ReceptionistDashboardController::class, 'pendingBookingsJson'])->name('core1.receptionist.online-appointments.pending');
     });
     
-    Route::prefix('billing')->middleware('role:billing')->group(function () {
+    Route::prefix('billing')->middleware('role:billing_officer')->group(function () {
         Route::get('/dashboard', [BillingDashboardController::class, 'index'])->name('core1.billing.dashboard');
         Route::get('/overview', [BillingDashboardController::class, 'overview'])->name('core1.billing.overview');
     });
     
     // Shared Feature Routes
-    Route::middleware('role:admin,doctor,nurse,head_nurse,receptionist')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,receptionist')->group(function () {
         // HIS Identity Routes (must be before wildcard {patient} routes)
         Route::get('/patients/check-duplicates', [PatientManagementController::class, 'checkDuplicates'])->name('core1.patients.check-duplicates');
         Route::post('/patients/merge', [PatientManagementController::class, 'mergePatients'])->name('core1.patients.merge');
@@ -81,7 +81,7 @@ Route::middleware([])->group(function () {
         Route::post('/patients/{patient}/assign-nurse', [PatientManagementController::class, 'assignNurse'])->name('core1.patients.assign-nurse');
     });
     
-    Route::middleware('role:admin,doctor,patient,receptionist')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,patient,receptionist')->group(function () {
         Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('core1.appointments.check-availability');
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('core1.appointments.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('core1.appointments.create');
@@ -96,11 +96,11 @@ Route::middleware([])->group(function () {
         Route::post('/appointments/{appointment}/decline', [AppointmentController::class, 'decline'])->name('core1.appointments.decline');
     });
 
-    Route::middleware('role:admin,doctor,nurse,head_nurse')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse')->group(function () {
         Route::get('/inpatient', [InpatientController::class, 'index'])->name('core1.inpatient.index');
     });
 
-    Route::middleware('role:admin,doctor')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
     });
@@ -135,23 +135,23 @@ Route::middleware([])->group(function () {
     Route::put('/outpatient/follow-up/{id}/update', [OutpatientController::class, 'updateFollowUp'])
         ->name('core1.outpatient.updateFollowUp');
         
-    Route::middleware('role:admin,doctor,nurse,head_nurse,patient')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,patient')->group(function () {
         Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('core1.medical-records.index');
         Route::get('/medical-records/{patient}', [MedicalRecordController::class, 'show'])->name('core1.medical-records.show');
     });
     
-    Route::middleware('role:admin,billing,patient')->group(function () {
+    Route::middleware('role:admin,admin_core1,billing_officer,patient')->group(function () {
         Route::get('/billing', [BillingController::class, 'index'])->name('core1.billing.index');
         Route::get('/billing/{bill}', [BillingController::class, 'show'])->name('core1.billing.show');
     });
     
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,admin_core1')->group(function () {
         Route::get('/staff', [StaffManagementController::class, 'index'])->name('core1.staff.index');
         Route::get('/staff/create', [StaffManagementController::class, 'create'])->name('core1.staff.create');
         Route::post('/staff', [StaffManagementController::class, 'store'])->name('core1.staff.store');
     });
     
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,admin_core1')->group(function () {
         Route::get('/reports', [ReportsController::class, 'index'])->name('core1.reports.index');
     });
     
