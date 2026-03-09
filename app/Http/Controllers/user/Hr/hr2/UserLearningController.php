@@ -12,63 +12,56 @@ class UserLearningController extends Controller
 {
     public function index()
     {
-        // Ensure user is logged in
         if (!Auth::check()) {
             return redirect()->route('portal.login');
         }
 
-        // Get employee linked to the logged in user
         $employeeRecord = Employee::where('user_id', Auth::id())->first();
 
         if (!$employeeRecord) {
             return redirect()->back()->with('error', 'Employee profile not found.');
         }
 
-        // Correct column names from employees table
         $employeeDept = $employeeRecord->department_id;
         $employeeSpecialization = $employeeRecord->specialization;
 
-        // Get learning modules matching employee department + specialization
+        // Get all modules for this employee's dept + specialization
         $modules = LearningModule::where('dept_code', $employeeDept)
             ->where('specialization_name', $employeeSpecialization)
-            ->with(['enrolls' => function ($query) use ($employeeRecord) {
-                $query->where('employee_id', $employeeRecord->employee_id);
-            }])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('hr.hr2.learning', compact('modules'));
+        // Get all enrolled module_codes for this employee
+        $enrolledModuleCodes = CourseEnroll::where('employee_id', $employeeRecord->employee_id)
+            ->where('status', 'enrolled')
+            ->pluck('module_code')
+            ->toArray();
+
+        return view('hr.hr2.learning', compact('modules', 'employeeRecord', 'enrolledModuleCodes'));
     }
 
-    public function enroll($id)
+    public function enroll($module_code)
     {
-        try {
+        $employeeRecord = Employee::where('user_id', Auth::id())->first();
 
-            $employeeRecord = Employee::where('user_id', Auth::id())->first();
-
-            if (!$employeeRecord) {
-                return redirect()->back()->with('error', 'Employee profile not found.');
-            }
-
-            $module = LearningModule::findOrFail($id);
-
-            CourseEnroll::updateOrCreate(
-                [
-                    'employee_id' => (string) $employeeRecord->employee_id,
-                    'module_id'   => $module->id
-                ],
-                [
-                    'assigned_date' => now(),
-                    'status' => 'in_progress'
-                ]
-            );
-
-            return redirect()
-                ->route('user.learning.index')
-                ->with('success', 'Enrolled in ' . $module->module_name);
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Enrollment Error: ' . $e->getMessage());
+        if (!$employeeRecord) {
+            return redirect()->back()->with('error', 'Employee profile not found.');
         }
+
+        // Only create enrollment if not already enrolled
+        CourseEnroll::updateOrCreate(
+            [
+                'employee_id' => $employeeRecord->employee_id,
+                'module_code' => $module_code
+            ],
+            [
+                'status' => 'enrolled',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        return redirect()->route('user.learning.index')
+                         ->with('success', 'Successfully enrolled!');
     }
 }

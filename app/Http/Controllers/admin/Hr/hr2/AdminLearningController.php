@@ -17,17 +17,46 @@ class AdminLearningController extends Controller
         }
     }
 
-    public function index()
-    {
-        $this->authorizeHrAdmin();
+        public function index()
+        {
+            $this->authorizeHrAdmin();
 
-        $modules = LearningModule::withCount('enrolls')
-            ->orderBy('id','desc')
-            ->get();
+            $modules = LearningModule::withCount('enrolls')
+                ->orderBy('id','desc')
+                ->get();
 
-        return view('admin.hr2.learning', compact('modules'));
-    }
+            $departments = DB::table('departments_hr2')->get();
 
+            return view('admin.hr2.learning', compact('modules','departments'));
+        }
+
+      public function getSpecializations($dept)
+        {
+            $specs = DB::table('department_specializations_hr2')
+                ->where('dept_code', $dept)
+                ->where('is_active', 1)
+                ->pluck('specialization_name');
+
+            return response()->json($specs);
+        }
+        public function generateModuleCode($dept,$spec)
+        {
+            $prefix = strtoupper($dept . '-' . substr($spec,0,3));
+
+            $last = LearningModule::where('module_code','like',$prefix.'%')
+                ->orderBy('module_code','desc')
+                ->first();
+
+            if($last){
+                $num = intval(substr($last->module_code,-3)) + 1;
+            }else{
+                $num = 1;
+            }
+
+            $code = $prefix . '-' . str_pad($num,3,'0',STR_PAD_LEFT);
+
+            return response()->json(['code'=>$code]);
+        }
     public function store(Request $request)
     {
         $this->authorizeHrAdmin();
@@ -46,6 +75,7 @@ class AdminLearningController extends Controller
             'module_code' => $request->module_code,
             'module_name' => $request->module_name,
             'dept_code' => $request->dept_code,
+            'description' => $request->description,
             'specialization_name' => $request->specialization_name,
             'module_type' => $request->module_type,
             'duration_hours' => $request->duration_hours ?? 1,
@@ -53,7 +83,7 @@ class AdminLearningController extends Controller
         ]);
 
         // Auto-assign module to residents in that dept/specialization
-        $residents = DB::table('employees_hr2')
+        $residents = DB::table('employees')
             ->where('dept_code', $request->dept_code)
             ->where('specialization_name', $request->specialization_name)
             ->where('post_grad_status', 'residency')

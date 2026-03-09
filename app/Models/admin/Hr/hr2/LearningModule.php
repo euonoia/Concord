@@ -20,6 +20,7 @@ class LearningModule extends Model
         'module_type',
         'duration_hours',
         'is_mandatory',
+        'description',
     ];
 
     // Relationship to employee enrollments
