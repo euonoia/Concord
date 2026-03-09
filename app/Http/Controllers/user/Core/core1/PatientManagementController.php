@@ -127,6 +127,14 @@ class PatientManagementController extends Controller
     public function show(Patient $patient)
     {
         $this->logAudit('patient_viewed', Patient::class, $patient->id);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'patient' => $patient->load('assignedNurse'),
+                'age' => $patient->age
+            ]);
+        }
+
         return view('core.core1.patients.show', compact('patient'));
     }
 
@@ -142,18 +150,18 @@ class PatientManagementController extends Controller
             'middle_name'                => 'nullable|string|max:255',
             'last_name'                  => 'required|string|max:255',
             'date_of_birth'              => 'required|date',
-            'gender'                     => 'required|in:male,female,other,Male,Female,Other',
+            'gender'                     => 'required|in:male,female,other',
             'phone'                      => 'required|string',
             'email'                      => 'required|email|unique:patients_core1,email,' . $patient->id,
             'address'                    => 'nullable|string',
             'emergency_contact_name'     => 'nullable|string|max:255',
             'emergency_contact_phone'    => 'nullable|string|max:255',
+            'emergency_contact_relation' => 'nullable|string|max:255',
             'blood_type'                 => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
             'allergies'                  => 'nullable|string',
             'medical_history'            => 'nullable|string',
             'insurance_provider'         => 'nullable|string|max:255',
             'policy_number'              => 'nullable|string|max:255',
-            'emergency_contact_relation' => 'nullable|string|max:255',
         ]);
 
         $validated['gender']     = strtolower($validated['gender']);

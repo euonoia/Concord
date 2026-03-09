@@ -755,6 +755,14 @@ tr:hover {
     gap: 16px;
 }
 
+.text-center {
+    text-align: center !important;
+}
+
+.justify-center {
+    justify-content: center !important;
+}
+
 .mb-25 {
     margin-bottom: 25px;
 }
@@ -1120,7 +1128,8 @@ tr:hover {
 }
 
 .core1-icon-action {
-    padding: 8px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--radius-sm);
     color: var(--text-light);
     transition: all 0.2s;
@@ -1131,6 +1140,10 @@ tr:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none !important;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
 }
 
 .core1-icon-action:hover {

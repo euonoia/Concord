@@ -37,13 +37,7 @@ class AdminDashboardController extends Controller
         // Get alerts
         $alerts = $this->getAlerts();
 
-        // Recent patient registrations (only fully registered)
-        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        return view('core.core1.admin.dashboard', compact('stats', 'admissionData', 'revenueData', 'recentActivities', 'alerts', 'recentRegistrations'));
+        return view('core.core1.admin.dashboard', compact('stats', 'admissionData', 'revenueData', 'recentActivities', 'alerts'));
     }
 
     public function overview()
@@ -71,13 +65,7 @@ class AdminDashboardController extends Controller
         // Get alerts
         $alerts = $this->getAlerts();
 
-        // Recent patient registrations (only fully registered)
-        $recentRegistrations = Patient::where('registration_status', 'REGISTERED')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        return view('core.core1.admin.overview', compact('stats', 'admissionData', 'revenueData', 'recentActivities', 'alerts', 'recentRegistrations'));
+        return view('core.core1.admin.overview', compact('stats', 'admissionData', 'revenueData', 'recentActivities', 'alerts'));
     }
 
     private function getAdmissionData()

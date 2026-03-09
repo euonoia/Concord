@@ -133,6 +133,60 @@
                     <label for="address" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Complete Address</label>
                 </div>
 
+                {{-- 3. Emergency Information --}}
+                <div class="col-span-2 mt-4">
+                    <h4 class="text-sm font-bold text-orange-700 uppercase tracking-wider mb-2 border-b pb-1">
+                        3. Emergency Information
+                    </h4>
+                </div>
+
+                <div class="relative col-span-2 sm:col-span-1">
+                    <input type="text" name="emergency_contact_name" id="emergency_contact_name"
+                           value="{{ old('emergency_contact_name') }}"
+                           class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm"
+                           placeholder="Contact Name">
+                    <label for="emergency_contact_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Contact Name</label>
+                </div>
+
+                <div class="relative col-span-2 sm:col-span-1">
+                    <input type="tel" name="emergency_contact_phone" id="emergency_contact_phone"
+                           value="{{ old('emergency_contact_phone') }}"
+                           class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm"
+                           placeholder="Contact Phone">
+                    <label for="emergency_contact_phone" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Contact Phone</label>
+                </div>
+
+                <div class="relative col-span-2 sm:col-span-1">
+                    <input type="text" name="emergency_contact_relation" id="emergency_contact_relation"
+                           value="{{ old('emergency_contact_relation') }}"
+                           class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm"
+                           placeholder="Relationship">
+                    <label for="emergency_contact_relation" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Relationship (e.g. Spouse)</label>
+                </div>
+
+                {{-- 4. Insurance Information --}}
+                <div class="col-span-2 mt-4">
+                    <h4 class="text-sm font-bold text-purple-700 uppercase tracking-wider mb-2 border-b pb-1">
+                        4. Insurance Information
+                    </h4>
+                </div>
+
+                <div class="relative col-span-2 sm:col-span-1">
+                    <input type="text" name="insurance_provider" id="insurance_provider"
+                           value="{{ old('insurance_provider') }}"
+                           class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm"
+                           placeholder="Insurance Provider">
+                    <label for="insurance_provider" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Insurance Provider</label>
+                </div>
+
+                <div class="relative col-span-2 sm:col-span-1">
+                    <input type="text" name="policy_number" id="policy_number"
+                           value="{{ old('policy_number') }}"
+                           class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm"
+                           placeholder="Policy Number">
+                    <label for="policy_number" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600">Policy Number</label>
+                </div>
+
                 {{-- MRN Notice --}}
                 <div class="col-span-2">
                     <div class="rounded-lg p-3 d-flex items-center gap-3" style="background-color:#eff6ff;border:1px solid #bfdbfe;">
