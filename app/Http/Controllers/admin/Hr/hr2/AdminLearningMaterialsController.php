@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminLearningMaterialsController extends Controller
 {
-    /**
-     * Ensure only HR2 Admin can access
-     */
     private function authorizeHrAdmin()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
@@ -22,50 +19,35 @@ class AdminLearningMaterialsController extends Controller
         }
     }
 
-    /**
-     * Materials selector page
-     * Shows Department -> Specialization -> Module dropdowns
-     */
+    // Selector page
     public function selector()
     {
         $this->authorizeHrAdmin();
-
         $departments = Department::all();
-
         return view('admin.hr2.learning.materials-selector', compact('departments'));
     }
 
-    /**
-     * Get modules by department + specialization (AJAX)
-     */
+    // Get modules by department + specialization
     public function getModulesByDeptSpec($deptCode, $spec)
     {
         $this->authorizeHrAdmin();
-
         $modules = LearningModule::where('dept_code', $deptCode)
                     ->where('specialization_name', $spec)
-                    ->get(['id','module_name','module_code']);
-
+                    ->get(['module_name','module_code']);
         return response()->json($modules);
     }
 
-    /**
-     * List all materials for a module (AJAX)
-     */
+    // List all materials for a module (AJAX)
     public function listMaterials($moduleCode)
     {
         $this->authorizeHrAdmin();
-
         $materials = LearningMaterial::where('module_code', $moduleCode)
                         ->orderBy('created_at','desc')
                         ->get(['id','title','url','file_path','type']);
-
         return response()->json($materials);
     }
 
-    /**
-     * Store new learning material
-     */
+    // Store new material
     public function store(Request $request, $moduleCode)
     {
         $this->authorizeHrAdmin();
@@ -79,10 +61,9 @@ class AdminLearningMaterialsController extends Controller
             'type' => 'required|string'
         ]);
 
-        $filePath = null;
-        if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('learning_materials', 'public');
-        }
+        $filePath = $request->hasFile('file') 
+                    ? $request->file('file')->store('learning_materials', 'public') 
+                    : null;
 
         if (!$filePath && !$request->url) {
             return back()->with('error', 'Please upload a file or provide a URL.');
@@ -96,16 +77,14 @@ class AdminLearningMaterialsController extends Controller
             'type' => $request->type,
         ]);
 
-        return back()->with('success', 'Material added successfully.');
+        return back()->with('success', 'Material added successfully.')
+                     ->with('module_code', $moduleCode);
     }
 
-    /**
-     * Delete learning material
-     */
+    // Delete a material
     public function destroy($id)
     {
         $this->authorizeHrAdmin();
-
         $material = LearningMaterial::findOrFail($id);
 
         if ($material->file_path) {
@@ -113,7 +92,6 @@ class AdminLearningMaterialsController extends Controller
         }
 
         $material->delete();
-
         return back()->with('success', 'Material deleted successfully.');
     }
 }

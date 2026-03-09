@@ -3,7 +3,6 @@
 @section('title','Learning Materials')
 
 @section('content')
-
 <div class="learning-materials-admin">
 
     <h2>Learning Materials</h2>
@@ -21,7 +20,6 @@
 
     <!-- Dropdown Selection -->
     <div style="display:flex; gap:20px; margin-bottom:20px;">
-        <!-- Department -->
         <div>
             <label>Department</label>
             <select id="deptSelect">
@@ -31,16 +29,12 @@
                 @endforeach
             </select>
         </div>
-
-        <!-- Specialization -->
         <div>
             <label>Specialization</label>
             <select id="specSelect" disabled>
                 <option value="">Select Specialization</option>
             </select>
         </div>
-
-        <!-- Module -->
         <div>
             <label>Module</label>
             <select id="moduleSelect" disabled>
@@ -52,23 +46,20 @@
     <!-- Material Form -->
     <form id="materialForm" method="POST" action="" enctype="multipart/form-data" style="display:none; margin-bottom:30px;">
         @csrf
-        <input type="hidden" name="module_code" id="moduleCode" value="">
+        <input type="hidden" name="module_code" id="moduleCode">
 
         <div>
             <label>Material Title</label>
             <input type="text" name="title" required>
         </div>
-
         <div>
             <label>URL (Optional)</label>
             <input type="url" name="url" placeholder="https://example.com">
         </div>
-
         <div>
             <label>File (Optional)</label>
             <input type="file" name="file">
         </div>
-
         <div>
             <label>Type</label>
             <select name="type">
@@ -76,12 +67,8 @@
                 <option value="url">URL</option>
             </select>
         </div>
-
         <br>
-
-        <button type="submit" style="padding:8px 16px; background:#2563eb; color:white; border:none; border-radius:6px;">
-            Add Material
-        </button>
+        <button type="submit" style="padding:8px 16px; background:#2563eb; color:white; border:none; border-radius:6px;">Add Material</button>
     </form>
 
     <!-- Existing Materials Table -->
@@ -126,9 +113,7 @@ deptSelect.addEventListener("change", function() {
         .then(res => res.json())
         .then(data => {
             specSelect.innerHTML = '<option value="">Select Specialization</option>';
-            data.forEach(s => {
-                specSelect.innerHTML += `<option value="${s.specialization_name}">${s.specialization_name}</option>`;
-            });
+            data.forEach(s => specSelect.innerHTML += `<option value="${s.specialization_name}">${s.specialization_name}</option>`);
             specSelect.disabled = false;
         });
 });
@@ -147,14 +132,12 @@ specSelect.addEventListener("change", function() {
         .then(res => res.json())
         .then(data => {
             moduleSelect.innerHTML = '<option value="">Select Module</option>';
-            data.forEach(m => {
-                moduleSelect.innerHTML += `<option value="${m.module_code}">${m.module_name} (${m.module_code})</option>`;
-            });
+            data.forEach(m => moduleSelect.innerHTML += `<option value="${m.module_code}">${m.module_name} (${m.module_code})</option>`);
             moduleSelect.disabled = false;
         });
 });
 
-// On Module Select
+// Load Materials on module select
 moduleSelect.addEventListener("change", function() {
     const moduleCode = this.value;
     if(!moduleCode) {
@@ -163,12 +146,10 @@ moduleSelect.addEventListener("change", function() {
         return;
     }
 
-    // Show form
     materialForm.style.display = 'block';
     moduleCodeInput.value = moduleCode;
     materialForm.action = `/admin/hr2/${moduleCode}/materials`;
 
-    // Load existing materials
     fetch(`/admin/hr2/materials/${moduleCode}/list`)
         .then(res => res.json())
         .then(data => {
@@ -178,23 +159,22 @@ moduleSelect.addEventListener("change", function() {
                 materialsTable.innerHTML = '';
                 data.forEach(m => {
                     materialsTable.innerHTML += `
-                    <tr>
-                        <td>${m.title}</td>
-                        <td>${m.url ? `<a href="${m.url}" target="_blank">Open</a>` : ''}</td>
-                        <td>${m.file_path ? `<a href="/storage/${m.file_path}" target="_blank">Download</a>` : ''}</td>
-                        <td>${m.type}</td>
-                        <td>
-                            <form method="POST" action="/admin/hr2/materials/${m.id}" onsubmit="return confirm('Delete this material?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="_method" value="DELETE">
-                                <button type="submit" style="color:red;background:none;border:none;cursor:pointer;">Delete</button>
-                            </form>
-                        </td>
-                    </tr>`;
+                        <tr>
+                            <td>${m.title}</td>
+                            <td>${m.url ? `<a href="${m.url}" target="_blank">Open</a>` : ''}</td>
+                            <td>${m.file_path ? `<a href="/storage/${m.file_path}" target="_blank">Download</a>` : ''}</td>
+                            <td>${m.type}</td>
+                            <td>
+                                <form method="POST" action="/admin/hr2/materials/${m.id}" onsubmit="return confirm('Delete this material?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" style="color:red;background:none;border:none;cursor:pointer;">Delete</button>
+                                </form>
+                            </td>
+                        </tr>`;
                 });
             }
         });
 });
 </script>
-
 @endsection

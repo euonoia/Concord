@@ -79,9 +79,8 @@
             Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])
                 ->name('learning.materials.selector');
 
-            // List / view materials for a module
-            Route::get('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'index'])
-                ->name('learning.materials.index');
+            Route::get('/materials/{moduleCode}/list', [AdminLearningMaterialsController::class, 'listMaterials'])
+                ->name('learning.materials.list');
 
             // Store a material
             Route::post('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'store'])
@@ -94,6 +93,7 @@
             // AJAX: modules by department+spec
             Route::get('/modules/{dept}/{spec}', [AdminLearningMaterialsController::class, 'getModulesByDeptSpec']);
         });
+
         Route::resource('competencies', CompetencyController::class);
         Route::resource('learning', AdminLearningController::class);
         Route::resource('training', AdminTrainingController::class);
