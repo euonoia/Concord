@@ -149,6 +149,15 @@
     </div>
 
     <div class="core1-form-actions">
+        <form action="{{ route('core1.encounters.store') }}" method="POST" class="m-0" style="display:inline-block;">
+            @csrf
+            <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+            <input type="hidden" name="type" value="IPD">
+            <button type="submit" class="core1-btn" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #7dd3fc;">
+                <i class="fas fa-procedures"></i>
+                <span class="pl-20">Recommend Admission (IPD)</span>
+            </button>
+        </form>
         <a href="{{ route('core1.appointments.create', ['patient_id' => $patient->id]) }}" class="core1-btn core1-btn-success">
             <i class="fas fa-calendar-plus"></i>
             <span class="pl-20">Book Appointment</span>

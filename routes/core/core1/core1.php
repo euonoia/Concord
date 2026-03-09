@@ -98,11 +98,19 @@ Route::middleware([])->group(function () {
 
     Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse')->group(function () {
         Route::get('/inpatient', [InpatientController::class, 'index'])->name('core1.inpatient.index');
+        
+        // IPD ADT Routes
+        Route::get('/ipd/dashboard', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'dashboard'])->name('core1.ipd.dashboard');
+        Route::get('/admissions/create', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'create'])->name('core1.admissions.create');
+        Route::post('/admissions', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'store'])->name('core1.admissions.store');
     });
 
     Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
+        
+        // OPD Encounters
+        Route::post('/encounters', [\App\Http\Controllers\core1\EncounterController::class, 'store'])->name('core1.encounters.store');
     });
 
     Route::post('/patients/{patient}/move', 
