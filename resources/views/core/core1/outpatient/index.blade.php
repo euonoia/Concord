@@ -136,30 +136,18 @@
                                             {{ $apt['status'] }}
                                         </span>
                                     </td>
-                          <td class="text-right">
-    @if($apt['status'] === 'Consulted')
-
-        <span class="core1-status-tag core1-tag-stable">DONE</span>
-    @else
-        @if(in_array(auth()->user()->role, ['doctor','admin','nurse']))
-            <form method="POST"
-                  action="{{ route('core1.outpatient.updateStatus', $apt['id']) }}"
-                  class="d-inline">
-                @csrf
-                <select name="status"
-                        onchange="this.form.submit()"
-                        class="core1-btn-sm core1-btn-primary">
-                    <option disabled selected>EDIT</option>
-                    <option value="waiting">Waiting</option>
-                    <option value="in_consultation">In Consultation</option>
-                    <option value="consulted">Consulted</option>
-                </select>
-            </form>
-        @else
-            <button class="core1-btn-sm core1-btn-primary" disabled>EDIT</button>
-        @endif
-    @endif
-</td>
+                            <td class="text-right">
+                                <div class="core1-flex-gap-2 justify-end">
+                                    <button class="core1-btn-sm core1-btn-outline" 
+                                            onclick="openTriageModal({{ $apt['id'] }})">
+                                        <i class="bi bi-heart-pulse"></i> Triage
+                                    </button>
+                                    <button class="core1-btn-sm core1-btn-primary" 
+                                            onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
+                                        <i class="bi bi-chat-left-dots"></i> Consult
+                                    </button>
+                                </div>
+                            </td>
 
                             @endforeach
                         </tbody>
@@ -169,512 +157,291 @@
 
             <!-- Arrival Logs & Triage Tab -->
             <div id="arrival-logs" class="core1-tab-pane">
-                <h3 class="mb-20 text-sm font-bold">Patient Arrival & Triage Summary</h3>
+                <div class="d-flex justify-between items-center mb-20">
+                    <h3 class="core1-title core1-section-title">Patient Arrival & Triage Summary</h3>
+                </div>
                 <div class="core1-table-container shadow-none border">
                     <table class="core1-table">
                         <thead>
                             <tr>
                                 <th>ARRIVAL</th>
                                 <th>PATIENT</th>
-                                <th>TRIAGE NOTE / VITALS</th>
+                                <th>VITALS</th>
                                 <th>STATUS</th>
                                 <th class="text-right">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
-                           @foreach($registrations as $reg)
-<tr>
-    <td>{{ $reg['date'] }}</td>
-
-    <td class="font-bold text-blue">
-        {{ $reg['patient'] }}
-    </td>
-
-    <td>
-        {{ $reg['triage'] }}
-    </td>
-
-    <td>
-        @php
-            if($reg['status'] == 'Emergency'){
-                $statusClass = 'core1-tag-critical';
-            } elseif($reg['status'] == 'Triaged'){
-                $statusClass = 'core1-tag-stable';
-            } else {
-                $statusClass = 'core1-tag-stable';
-            }
-        @endphp
-
-        <span class="core1-status-tag {{ $statusClass }}">
-            {{ $reg['status'] }}
-        </span>
-    </td>
-
-    <td class="text-right">
-
-        @if($reg['canAction'])
-            <button class="core1-btn-sm core1-btn-outline"
-                onclick="document.getElementById('triageModal{{ $reg['id'] }}').style.display='block'">
-                Review Vitals
-            </button>
-        @else
-            <button class="core1-btn-sm core1-btn-outline" disabled>
-                Review Vitals
-            </button>
-        @endif
-
-        <!-- Modal -->
-        @if($reg['canAction'])
-        <div id="triageModal{{ $reg['id'] }}" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-            <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-                <h4>Triage Form</h4>
-
-                <form method="POST"
-                      action="{{ route('core1.outpatient.saveTriage',$reg['id']) }}">
-                    @csrf
-
-                    <div class="mb-10">
-                        <label>Triage Note</label>
-                        <select name="triage_note" class="core1-input w-100">
-                            <option value="Stable">Stable</option>
-                            <option value="Critical">Critical</option>
-                            <option value="Under Observation">Under Observation</option>
-                            <option value="Requires Immediate Care">Requires Immediate Care</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-10">
-                        <label>Blood Pressure</label>
-                        <select name="vital_signs" class="core1-input w-100">
-                            <option value="120/80">120/80</option>
-                            <option value="130/85">130/85</option>
-                            <option value="140/90">140/90</option>
-                            <option value="150/95">150/95</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="core1-btn core1-btn-primary">
-                        Submit
-                    </button>
-
-                    <button type="button"
-                        class="core1-btn core1-btn-outline"
-                        onclick="document.getElementById('triageModal{{ $reg['id'] }}').style.display='none'">
-                        Cancel
-                    </button>
-                </form>
-            </div>
-        </div>
-        @endif
-
-    </td>
-</tr>
-@endforeach
-
+                            @foreach($registrations as $reg)
+                                <tr>
+                                    <td>{{ $reg['date'] }}</td>
+                                    <td class="font-bold text-blue">{{ $reg['patient'] }}</td>
+                                    <td>
+                                        @if($reg['triage'] !== 'No Triage')
+                                            <span class="text-xs text-dark">{{ $reg['triage'] }}</span>
+                                        @else
+                                            <span class="text-xs text-gray italic">Pending Triage</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="core1-status-tag {{ $reg['status'] === 'Triaged' ? 'core1-tag-stable' : 'core1-tag-cleaning' }}">
+                                            {{ $reg['status'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <button class="core1-btn-sm core1-btn-outline" 
+                                                onclick="openTriageModal({{ $reg['id'] }})"
+                                                {{ !$reg['canAction'] ? 'disabled' : '' }}>
+                                            Review Vitals
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
 
-         <!-- Prescription Recording Tab -->
-<div id="prescription-recording" class="core1-tab-pane">
-    <div class="d-flex justify-between items-center mb-20">
-        <h3 class="core1-title core1-section-title">Record Prescriptions</h3>
+            <!-- Prescription Recording Tab -->
+            <div id="prescription-recording" class="core1-tab-pane">
+                <div class="d-flex justify-between items-center mb-20">
+                    <h3 class="core1-title core1-section-title">Record Prescriptions</h3>
+                    <p class="text-xs text-gray">Prescriptions are issued during the consultation process in the Consultation Room.</p>
+                </div>
+                <div class="core1-table-container shadow-none border">
+                    <table class="core1-table">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>PATIENT</th>
+                                <th>MEDICATION</th>
+                                <th>DOSAGE</th>
+                                <th>INSTRUCTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($prescriptions as $rx)
+                                <tr>
+                                    <td>{{ $rx->created_at->format('Y-m-d') }}</td>
+                                    <td class="font-bold text-blue">{{ $rx->encounter->patient->name ?? 'Unknown' }}</td>
+                                    <td class="font-bold">{{ $rx->medication }}</td>
+                                    <td>{{ $rx->dosage }}</td>
+                                    <td class="text-xs text-gray">{{ $rx->instructions }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        @if(in_array(auth()->user()->role, ['doctor','nurse']))
-            <button class="core1-btn core1-btn-primary"
-                onclick="document.getElementById('newPrescriptionModal').style.display='block'">
-                <i class="bi bi-pencil-square"></i> New e-Prescription
-            </button>
-        @endif
-    </div>
+            <!-- Diagnostic Orders Tab -->
+            <div id="diagnostic-orders" class="core1-tab-pane">
+                <div class="d-flex justify-between items-center mb-20">
+                    <h3 class="core1-title core1-section-title">Laboratory & Diagnostic Management</h3>
+                </div>
+                <div class="core1-table-container shadow-none border">
+                    <table class="core1-table">
+                        <thead>
+                            <tr>
+                                <th>ORDERED</th>
+                                <th>PATIENT</th>
+                                <th>TEST</th>
+                                <th>INDICATION</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($diagnosticOrders as $order)
+                                <tr>
+                                    <td>{{ $order->created_at->format('Y-m-d') }}</td>
+                                    <td class="font-bold text-blue">{{ $order->encounter->patient->name ?? 'Unknown' }}</td>
+                                    <td class="font-bold">{{ $order->test_name }}</td>
+                                    <td class="text-xs">{{ $order->clinical_note }}</td>
+                                    <td>
+                                        <span class="core1-status-tag core1-tag-neutral">Ordered</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-    <div class="core1-table-container shadow-none border">
-        <table class="core1-table">
-            <thead>
-                <tr>
-                    <th>PATIENT</th>
-                    <th>MEDICATION</th>
-                    <th>DOSAGE</th>
-                    <th>INSTRUCTIONS</th>
-                    <th class="text-right">ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($prescriptions as $rx)
-                    @php
-    $rxData = json_decode($rx->prescription, true);
-    $patient = \App\Models\core1\Patient::find($rx->patient_id); // fetch dynamically
-@endphp
-<td class="font-bold text-blue">{{ $patient->name ?? 'Unknown' }} ({{ $patient->patient_id ?? '' }})</td>
-
-                        <td>{{ $rxData['medication'] ?? '' }}</td>
-                        <td>{{ $rxData['dosage'] ?? '' }}</td>
-                        <td class="text-xs">{{ $rxData['instructions'] ?? '' }}</td>
-                        <td class="text-right">
-                            @if(in_array(auth()->user()->role, ['doctor','nurse']))
-                                <button class="core1-btn-sm core1-btn-outline"
-                                    onclick="document.getElementById('editPrescriptionModal{{ $rx->id }}').style.display='block'">
-                                    Edit
-                                </button>
-                            @endif
-                        </td>
-                    </tr>
-
-                    <!-- Edit Prescription Modal (Styled like New Prescription) -->
-                    @if(in_array(auth()->user()->role, ['doctor','nurse']))
-                    <div id="editPrescriptionModal{{ $rx->id }}" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-                        <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-                            <h4>Edit Prescription</h4>
-                            <form method="POST" action="{{ route('core1.outpatient.updatePrescription', $rx->id) }}">
-                                @csrf
-                                @method('PUT')
-
-                                <div class="mb-10">
-                                    <label>Patient</label>
-                                    <input type="text" class="core1-input w-100" value="{{ $patient->name ?? 'Unknown' }}" disabled>
-                                </div>
-
-                                <div class="mb-10">
-                                    <label>Medication</label>
-                                    <select name="medication" class="core1-input w-100">
-                                        <option value="Atovastatin 40mg" {{ ($rxData['medication'] ?? '') == 'Atovastatin 40mg' ? 'selected' : '' }}>Atovastatin 40mg</option>
-                                        <option value="Metformin 500mg" {{ ($rxData['medication'] ?? '') == 'Metformin 500mg' ? 'selected' : '' }}>Metformin 500mg</option>
-                                        <option value="Amlodipine 5mg" {{ ($rxData['medication'] ?? '') == 'Amlodipine 5mg' ? 'selected' : '' }}>Amlodipine 5mg</option>
-                                        <option value="Lisinopril 10mg" {{ ($rxData['medication'] ?? '') == 'Lisinopril 10mg' ? 'selected' : '' }}>Lisinopril 10mg</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-10">
-                                    <label>Dosage</label>
-                                    <select name="dosage" class="core1-input w-100">
-                                        <option value="Once daily (Night)" {{ ($rxData['dosage'] ?? '') == 'Once daily (Night)' ? 'selected' : '' }}>Once daily (Night)</option>
-                                        <option value="Twice daily" {{ ($rxData['dosage'] ?? '') == 'Twice daily' ? 'selected' : '' }}>Twice daily</option>
-                                        <option value="Thrice daily" {{ ($rxData['dosage'] ?? '') == 'Thrice daily' ? 'selected' : '' }}>Thrice daily</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-10">
-                                    <label>Instructions</label>
-                                    <input type="text" name="instruction" class="core1-input w-100" value="{{ $rxData['instructions'] ?? '' }}">
-                                </div>
-
-                                <button type="submit" class="core1-btn core1-btn-primary">Save Changes</button>
-                                <button type="button" class="core1-btn core1-btn-outline"
-                                    onclick="document.getElementById('editPrescriptionModal{{ $rx->id }}').style.display='none'">
-                                    Cancel
-                                </button>
-                            </form>
-                        </div>
+            <!-- Follow Up Tab -->
+            <div id="follow-up" class="core1-tab-pane">
+                <div class="core1-flex-center py-50">
+                    <div class="text-center">
+                        <i class="bi bi-calendar2-week text-gray mb-20" style="font-size: 3rem;"></i>
+                        <p class="text-gray italic">Follow-up scheduling is integrated into the Consultation Room flow.</p>
                     </div>
-                    @endif
-
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- New Prescription Modal -->
-    @if(in_array(auth()->user()->role, ['doctor','nurse']))
-    <div id="newPrescriptionModal" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-        <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-            <h4>New Prescription</h4>
-            <form method="POST" action="{{ route('core1.outpatient.storePrescription') }}">
-                @csrf
-
-                <div class="mb-10">
-                    <label>Patient</label>
-                    <select name="patient_id" class="core1-input w-100">
-                        @foreach($patients as $p)
-                            @php
-                                $alreadyHasRx = $prescriptions->where('patient_id', $p->id)->count() > 0;
-                            @endphp
-                            <option value="{{ $p->id }}" {{ $alreadyHasRx ? 'disabled' : '' }}>
-                                {{ $p->name }} ({{ $p->patient_id }}) {{ $alreadyHasRx ? '- Already has Rx' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
                 </div>
-
-                <div class="mb-10">
-                    <label>Medication</label>
-                    <select name="medication" class="core1-input w-100">
-                        <option value="Atovastatin 40mg">Atovastatin 40mg</option>
-                        <option value="Metformin 500mg">Metformin 500mg</option>
-                        <option value="Amlodipine 5mg">Amlodipine 5mg</option>
-                        <option value="Lisinopril 10mg">Lisinopril 10mg</option>
-                    </select>
-                </div>
-
-                <div class="mb-10">
-                    <label>Dosage</label>
-                    <select name="dosage" class="core1-input w-100">
-                        <option value="Once daily (Night)">Once daily (Night)</option>
-                        <option value="Twice daily">Twice daily</option>
-                        <option value="Thrice daily">Thrice daily</option>
-                    </select>
-                </div>
-
-                <div class="mb-10">
-                    <label>Instructions</label>
-                    <input type="text" name="instruction" class="core1-input w-100">
-                </div>
-
-                <button type="submit" class="core1-btn core1-btn-primary">Submit</button>
-                <button type="button" class="core1-btn core1-btn-outline"
-                    onclick="document.getElementById('newPrescriptionModal').style.display='none'">
-                    Cancel
-                </button>
-            </form>
-        </div>
-    </div>
-    @endif
-</div>
-
-
-
-           <!-- Diagnostic Orders Tab -->
-<div id="diagnostic-orders" class="core1-tab-pane">
-    <div class="d-flex justify-between items-center mb-20">
-        <h3 class="core1-title core1-section-title">Laboratory & Diagnostic Management</h3>
-
-       @if(in_array(auth()->user()->role, ['doctor','nurse']))
-            <button class="core1-btn core1-btn-primary"
-                onclick="document.getElementById('labOrderModal').style.display='block'">
-                <i class="bi bi-plus-circle"></i> Create Lab Order
-            </button>
-        @endif
-    </div>
-
-    <div class="core1-table-container shadow-none border">
-        <table class="core1-table">
-            <thead>
-                <tr>
-                    <th>PATIENT</th>
-                    <th>ORDERED TEST</th>
-                    <th>CLINICAL INDICATION</th>
-                    <th>STATUS</th>
-                    <th class="text-right">ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($diagnosticOrders as $order)
-                    <tr>
-                        <td class="font-bold text-blue">{{ $order['patient'] }}</td>
-                        <td>{{ $order['test'] }}</td>
-                        <td>{{ $order['clinical_note'] }}</td>
-                        <td>
-                            <span class="core1-status-tag {{ $order['status'] == 'Ordered' ? 'core1-tag-cleaning' : 'core1-tag-stable' }}">
-                                {{ $order['status'] }}
-                            </span>
-                        </td>
-                        <td class="text-right">
-                            @if($order['status'] == 'Result ready')
-                                <button class="core1-btn-sm core1-btn-primary" disabled>
-                                    Review Result
-                                </button>
-                            @else
-                                <button class="core1-btn-sm core1-btn-outline" disabled>
-                                    Track Order
-                                </button>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    {{-- CREATE LAB ORDER MODAL --}}
-    @if(in_array(auth()->user()->role, ['doctor','admin']))
-    <div id="labOrderModal" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-        <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-            <h4>Create Laboratory Order</h4>
-
-            <form method="POST" action="{{ route('core1.outpatient.storeLabOrder') }}">
-                @csrf
-
-                {{-- Only Outpatients and Disable if Already Has Lab Order --}}
-                <div class="mb-10">
-                    <label>Patient</label>
-                    <select name="patient_id" class="core1-input w-100">
-                        @foreach($patients as $p)
-                            @php
-                              $alreadyOrdered = collect($diagnosticOrders)
-    ->where('patient_id', $p->id)
-    ->count() > 0;
-                            @endphp
-                            <option value="{{ $p->id }}" {{ $alreadyOrdered ? 'disabled' : '' }}>
-                                {{ $p->name }} ({{ $p->patient_id }})
-                                {{ $alreadyOrdered ? '- Already Ordered' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-10">
-                    <label>Ordered Test</label>
-                    <select name="test" class="core1-input w-100">
-                        <option value="Lipid Profile Comprehensive Panel">Lipid Profile Comprehensive Panel</option>
-                        <option value="Electrocardiogram Cardiac Rhythm Monitoring">Electrocardiogram Cardiac Rhythm Monitoring</option>
-                        <option value="Complete Blood Count Hematology Panel">Complete Blood Count Hematology Panel</option>
-                        <option value="Chest Xray Pulmonary Evaluation Study">Chest Xray Pulmonary Evaluation Study</option>
-                        <option value="Fasting Blood Sugar Metabolic Assessment">Fasting Blood Sugar Metabolic Assessment</option>
-                    </select>
-                </div>
-
-                <div class="mb-10">
-                    <label>Clinical Indication</label>
-                    <select name="clinical_note" class="core1-input w-100">
-                        <option value="Suspected Hyperlipidemia Cardiovascular Risk Evaluation">Suspected Hyperlipidemia Cardiovascular Risk Evaluation</option>
-                        <option value="Routine Follow Up Chronic Disease Monitoring">Routine Follow Up Chronic Disease Monitoring</option>
-                        <option value="Chest Pain Rule Out Cardiac Ischemia">Chest Pain Rule Out Cardiac Ischemia</option>
-                        <option value="Uncontrolled Hypertension Further Diagnostic Workup">Uncontrolled Hypertension Further Diagnostic Workup</option>
-                        <option value="Pre Employment Medical Clearance Requirement">Pre Employment Medical Clearance Requirement</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="core1-btn core1-btn-primary">
-                    Submit
-                </button>
-
-                <button type="button"
-                    class="core1-btn core1-btn-outline"
-                    onclick="document.getElementById('labOrderModal').style.display='none'">
-                    Cancel
-                </button>
-            </form>
-        </div>
-    </div>
-    @endif
-</div>
-
-
-          <!-- Follow Up Tab -->
-<div id="follow-up" class="core1-tab-pane">
-    <div class="d-flex justify-between items-center mb-20">
-        <h3 class="core1-title core1-section-title">Planned Follow-up Visits</h3>
-
-        @if(in_array(auth()->user()->role, ['doctor','nurse']))
-            <button class="core1-btn core1-btn-primary"
-                onclick="document.getElementById('newFollowUpModal').style.display='block'">
-                <i class="bi bi-plus-circle"></i> Schedule Follow-Up
-            </button>
-        @endif
-    </div>
-
-    <div class="core1-table-container shadow-none border">
-        <table class="core1-table">
-            <thead>
-                <tr>
-                    <th>TIMEFRAME</th>
-                    <th>PATIENT</th>
-                    <th>STATUS</th>
-                    <th class="text-right">ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($followUps as $fu)
-                    <tr>
-                        <td class="font-bold">{{ $fu['next_visit'] }}</td>
-                        <td class="font-bold text-blue">{{ $fu['patient'] }}</td>
-                        <td>
-    @php
-    $statusClass = $fu['status'] == 'scheduled' ? 'core1-tag-success' : 'core1-tag-stable';
-@endphp
-<span class="core1-status-tag {{ $statusClass }}">
-    {{ ucfirst($fu['status']) }}
-</span>
-
-</td>
-
-                        <td class="text-right">
-    @if(in_array(auth()->user()->role, ['doctor','nurse']))
-        <button class="core1-btn-sm core1-btn-outline"
-            onclick="document.getElementById('editFollowUpModal{{ $fu['id'] }}').style.display='block'">
-            Modify Instructions
-        </button>
-
-        <!-- Modal -->
-        <div id="editFollowUpModal{{ $fu['id'] }}" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-            <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-                <h4>Modify Follow-Up Date</h4>
-                <form method="POST" action="{{ route('core1.outpatient.updateFollowUp', $fu['id']) }}">
-                    @csrf
-                    @method('PUT')
-                    <div class="mb-10">
-                        <label>Next Visit Date</label>
-                        <input type="date" name="next_visit" class="core1-input w-100" value="{{ $fu['next_visit'] }}" required>
-                    </div>
-
-                    <button type="submit" class="core1-btn core1-btn-primary">Save Changes</button>
-                    <button type="button" class="core1-btn core1-btn-outline"
-                        onclick="document.getElementById('editFollowUpModal{{ $fu['id'] }}').style.display='none'">
-                        Cancel
-                    </button>
-                </form>
             </div>
         </div>
-    @endif
-</td>
 
-                        
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- New Follow-Up Modal -->
-    @if(in_array(auth()->user()->role, ['doctor','nurse']))
-    <div id="newFollowUpModal" style="display:none; background:#00000066; position:fixed; top:0; left:0; width:100%; height:100%;">
-        <div style="background:white; padding:20px; width:400px; margin:100px auto; border-radius:8px;">
-            <h4>Schedule Follow-Up</h4>
-            <form method="POST" action="{{ route('core1.outpatient.storeFollowUp') }}">
+    <!-- Generic Triage Modal -->
+    <div id="triageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
+            <div class="core1-header border-bottom mb-20 pb-10">
+                <h3 class="core1-title">Clinical Triage</h3>
+                <p class="core1-subtitle">Record patient vitals and urgency level</p>
+            </div>
+            <form id="triageForm" method="POST">
                 @csrf
-
-                <div class="mb-10">
-                    <label>Patient</label>
-                    <select name="patient_id" class="core1-input w-100">
-           @foreach($patients as $p)
-    @php
-        $consulted = $appointments->where('patient', $p->name)
-            ->where('status', 'Consulted')
-            ->count() > 0;
-
-        $alreadyScheduled = $followUps->where('patient_id', $p->id)
-            ->where(fn($fu) => Str::lower($fu['status']) === 'scheduled')
-            ->count() > 0;
-    @endphp
-    <option value="{{ $p->id }}" {{ !$consulted || $alreadyScheduled ? 'disabled' : '' }}>
-        {{ $p->name }} ({{ $p->patient_id }}) 
-        {{ !$consulted ? '- Must be Consulted' : '' }}
-        {{ $alreadyScheduled ? '- Already Scheduled' : '' }}
-    </option>
-@endforeach
-
-
+                <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label class="font-bold block mb-5">Blood Pressure</label>
+                        <input type="text" name="blood_pressure" class="core1-input w-full" placeholder="e.g. 120/80">
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Heart Rate (bpm)</label>
+                        <input type="number" name="heart_rate" class="core1-input w-full" placeholder="72">
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Temp (°C)</label>
+                        <input type="number" step="0.1" name="temperature" class="core1-input w-full" placeholder="36.5">
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">SpO2 (%)</label>
+                        <input type="number" name="spo2" class="core1-input w-full" placeholder="98">
+                    </div>
+                </div>
+                <div class="mb-15">
+                    <label class="font-bold block mb-5">Acuity Level</label>
+                    <select name="triage_level" class="core1-input w-full">
+                        <option value="5">Level 5 - Non-Urgent</option>
+                        <option value="4">Level 4 - Less Urgent</option>
+                        <option value="3">Level 3 - Urgent</option>
+                        <option value="2">Level 2 - Emergent</option>
+                        <option value="1">Level 1 - Resuscitation</option>
                     </select>
                 </div>
-
-                <div class="mb-10">
-                    <label>Next Visit Date</label>
-                    <input type="date" name="next_visit" class="core1-input w-100" required>
+                <div class="mb-20">
+                    <label class="font-bold block mb-5">Triage Notes</label>
+                    <textarea name="notes" class="core1-input w-full" rows="3" placeholder="General observations..."></textarea>
                 </div>
-
-                <button type="submit" class="core1-btn core1-btn-primary">Schedule</button>
-                <button type="button" class="core1-btn core1-btn-outline"
-                    onclick="document.getElementById('newFollowUpModal').style.display='none'">
-                    Cancel
-                </button>
+                <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('triageModal')">Cancel</button>
+                    <button type="submit" class="core1-btn core1-btn-primary">Save Triage</button>
+                </div>
             </form>
         </div>
     </div>
-    @endif
+
+    <!-- Generic Consultation Modal (SOAP) -->
+    <div id="consultationModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:700px; max-width:90%; max-height: 90vh; overflow-y: auto;">
+            <div class="core1-header border-bottom mb-20 pb-10">
+                <h3 class="core1-title">Consultation Room</h3>
+                <p class="core1-subtitle">Consulting: <span id="consultingPatientName" class="font-bold text-dark"></span></p>
+            </div>
+            <form id="consultationForm" method="POST">
+                @csrf
+                <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label class="font-bold block mb-5">Subjective (Symptoms)</label>
+                        <textarea name="subjective" class="core1-input w-full" rows="3" placeholder="Patient's complaints..."></textarea>
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Objective (Exam)</label>
+                        <textarea name="objective" class="core1-input w-full" rows="3" placeholder="Physical exam findings..."></textarea>
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Assessment (Diagnosis)</label>
+                        <textarea name="assessment" class="core1-input w-full" rows="3" placeholder="Clinical diagnosis..."></textarea>
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Plan (Treatment)</label>
+                        <textarea name="plan" class="core1-input w-full" rows="3" placeholder="Next steps and treatment..."></textarea>
+                    </div>
+                </div>
+                <div class="mt-15 mb-20">
+                    <label class="font-bold block mb-5">Confidential Doctor Notes</label>
+                    <textarea name="doctor_notes" class="core1-input w-full" rows="2" placeholder="Internal remarks..."></textarea>
+                </div>
+                <!-- Orders inside consultation -->
+                <div class="mb-20 pt-15 border-top">
+                    <h4 class="font-bold mb-10 text-sm">Clinical Actions</h4>
+                    <div class="core1-flex-gap-2">
+                        <button type="button" class="core1-btn-sm core1-btn-outline" onclick="openLabModal()">
+                            <i class="bi bi-droplet"></i> Order Lab Test
+                        </button>
+                        <button type="button" class="core1-btn-sm core1-btn-outline" onclick="openPrescriptionModal()">
+                            <i class="bi bi-capsule"></i> Prescribe Medication
+                        </button>
+                    </div>
+                </div>
+
+                <div class="core1-flex-gap-2 justify-between pt-10 border-top">
+                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('consultationModal')">Pause</button>
+                    <div class="core1-flex-gap-2">
+                        <button type="submit" class="core1-btn core1-btn-primary">Save Notes</button>
+                        <button type="button" class="core1-btn core1-btn-success" id="completeBtn">Complete & Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lab Order Modal -->
+    <div id="labModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
+            <h4 class="font-bold mb-15">Order Laboratory Test</h4>
+            <form method="POST" action="{{ route('core1.outpatient.storeLabOrder') }}">
+                @csrf
+                <input type="hidden" name="encounter_id" id="labEncounterId">
+                <div class="mb-10">
+                    <label class="font-bold block mb-5">Test Name</label>
+                    <input type="text" name="test_name" class="core1-input w-full" required placeholder="e.g. Complete Blood Count (CBC)">
+                </div>
+                <div class="mb-15">
+                    <label class="font-bold block mb-5">Clinical Indication</label>
+                    <textarea name="clinical_note" class="core1-input w-full" rows="2" placeholder="Reason for test..."></textarea>
+                </div>
+                <div class="core1-flex-gap-2 justify-end">
+                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('labModal')">Cancel</button>
+                    <button type="submit" class="core1-btn core1-btn-primary">Order Test</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Prescription Modal -->
+    <div id="prescriptionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
+            <h4 class="font-bold mb-15">Issue e-Prescription</h4>
+            <form method="POST" action="{{ route('core1.outpatient.storePrescription') }}">
+                @csrf
+                <input type="hidden" name="encounter_id" id="rxEncounterId">
+                <div class="mb-10">
+                    <label class="font-bold block mb-5">Medication Name</label>
+                    <input type="text" name="medication" class="core1-input w-full" required placeholder="e.g. Amoxicillin 500mg">
+                </div>
+                <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label class="font-bold block mb-5">Dosage</label>
+                        <input type="text" name="dosage" class="core1-input w-full" required placeholder="e.g. 1 capsule TDS">
+                    </div>
+                    <div>
+                        <label class="font-bold block mb-5">Duration</label>
+                        <input type="text" name="duration" class="core1-input w-full" placeholder="e.g. 5 days">
+                    </div>
+                </div>
+                <div class="mb-15">
+                    <label class="font-bold block mb-5">Instructions</label>
+                    <input type="text" name="instructions" class="core1-input w-full" placeholder="e.g. Take after meals">
+                </div>
+                <div class="core1-flex-gap-2 justify-end">
+                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('prescriptionModal')">Cancel</button>
+                    <button type="submit" class="core1-btn core1-btn-primary">Prescribe</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
-
 <script>
+let currentEncounterId = null;
+
 function switchTab(evt, tabId) {
     const tabPanes = document.getElementsByClassName('core1-tab-pane');
     for (let i = 0; i < tabPanes.length; i++) {
@@ -687,5 +454,60 @@ function switchTab(evt, tabId) {
     document.getElementById(tabId).classList.add('active');
     evt.currentTarget.classList.add('active');
 }
+
+function openTriageModal(id) {
+    const form = document.getElementById('triageForm');
+    form.action = `/core1/outpatient/${id}/triage`;
+    document.getElementById('triageModal').style.display = 'flex';
+}
+
+function openConsultationModal(id, name) {
+    currentEncounterId = id;
+    const form = document.getElementById('consultationForm');
+    form.action = `/core1/outpatient/${id}/consultation`;
+    document.getElementById('consultingPatientName').innerText = name;
+    
+    // Complete logic
+    const completeBtn = document.getElementById('completeBtn');
+    completeBtn.onclick = function() {
+        if(confirm('Are you sure you want to close this encounter?')) {
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = `/core1/outpatient/${id}/complete`;
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            tempForm.appendChild(csrf);
+            document.body.appendChild(tempForm);
+            tempForm.submit();
+        }
+    };
+
+    document.getElementById('consultationModal').style.display = 'flex';
+}
+
+function openLabModal() {
+    if (!currentEncounterId) return;
+    document.getElementById('labEncounterId').value = currentEncounterId;
+    document.getElementById('labModal').style.display = 'flex';
+}
+
+function openPrescriptionModal() {
+    if (!currentEncounterId) return;
+    document.getElementById('rxEncounterId').value = currentEncounterId;
+    document.getElementById('prescriptionModal').style.display = 'flex';
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    closeModal('triageModal');
+    closeModal('consultationModal');
+    closeModal('labModal');
+    closeModal('prescriptionModal');
+});
 </script>
 @endsection

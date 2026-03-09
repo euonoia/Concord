@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
-use App\Models\user\Core\core1\Patient;
+use App\Models\core1\Admission;
+use App\Models\core1\Bed;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class InpatientController extends Controller
 {
@@ -16,44 +18,59 @@ class InpatientController extends Controller
         $isDoctor = $user->role_slug === 'doctor';
         $isNurse = $user->role_slug === 'nurse';
 
-        // Query inpatients
-        $inpatients = Patient::query()
-            ->where('care_type', 'inpatient')
-            ->when($isDoctor, fn($q) => $q->where('doctor_id', $user->id))
-            ->when(!$isDoctor && !$isNurse, fn($q) => $q)
-            ->latest()
-            ->get();
+        // Fetch real active admissions following HIS Architect rules
+        $admissionsQuery = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
+            ->where('status', 'Admitted');
 
-        // Stats
-        $stats = [
-            'current_inpatients' => $inpatients->count(),
-            'occupied' => $inpatients->count(),
-            'discharges_today' => Patient::where('care_type', 'inpatient')
-                                        ->when($isNurse, fn($q) => $q->where('assigned_nurse_id', $user->id))
-                                        ->whereDate('last_visit', today())
-                                        ->count(),
-        ];
-
-        // Beds placeholder
-        $beds = [];
-        for ($i = 1; $i <= 10; $i++) {
-            $beds[] = [
-                'id' => 'Bed ' . $i,
-                'type' => 'General',
-                'status' => 'available',
-                'bg' => 'core1-bed-available',
-                'patient' => '',
-                'patient_id' => '',
-            ];
+        if ($isDoctor) {
+            $admissionsQuery->whereHas('encounter', function($q) use ($user) {
+                $q->where('doctor_id', $user->id);
+            });
         }
 
-        // Nurses for dropdown
+        $activeAdmissions = $admissionsQuery->latest()->get();
+
+        // Stats derived from real production data
+        $stats = [
+            'current_inpatients' => $activeAdmissions->count(),
+            'occupied' => Bed::where('status', 'Occupied')->count(),
+            'discharges_today' => Admission::where('status', 'Discharged')
+                ->whereDate('discharge_date', Carbon::today())
+                ->count(),
+        ];
+
+        // Fetch actual Bed map
+        $beds = Bed::with(['room.ward', 'admissions' => function($q) {
+            $q->where('status', 'Admitted')->with('encounter.patient');
+        }])->get();
+
+        // Map to UI format
+        $uiBeds = $beds->map(function($bed) {
+            $activeAdmission = $bed->admissions->first();
+            return [
+                'id' => 'Bed ' . $bed->bed_number,
+                'ward' => $bed->room->ward->name,
+                'room' => $bed->room->room_number,
+                'type' => $bed->room->room_type,
+                'status' => strtolower($bed->status),
+                'bg' => $bed->status === 'Available' ? 'core1-bed-available' : ($bed->status === 'Occupied' ? 'core1-bed-occupied' : 'core1-bed-cleaning'),
+                'patient' => $activeAdmission ? $activeAdmission->encounter->patient->name : '',
+                'patient_id' => $activeAdmission ? $activeAdmission->encounter->patient->mrn : '',
+            ];
+        });
+
+        // Nurses for dropdown (Head Nurse/Admin only)
         $nurses = [];
         if ($user->role_slug === 'admin' || $user->role_slug === 'head_nurse') {
             $nurses = User::where('role_slug', 'nurse')->get();
         }
 
-        return view('core.core1.inpatient.index', compact('inpatients', 'stats', 'beds', 'nurses'));
+        return view('core.core1.inpatient.index', [
+            'inpatients' => $activeAdmissions, // Passed as 'inpatients' for backward compatibility in view loop names
+            'stats' => $stats,
+            'beds' => $uiBeds,
+            'nurses' => $nurses
+        ]);
     }
 
     public function deactivate(Patient $patient)

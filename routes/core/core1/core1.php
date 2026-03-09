@@ -18,6 +18,8 @@ use App\Http\Controllers\user\Core\core1\DischargeController;
 use App\Http\Controllers\user\Core\core1\StaffManagementController;
 use App\Http\Controllers\user\Core\core1\ReportsController;
 use App\Http\Controllers\user\Core\core1\SettingsController;
+use App\Http\Controllers\user\Core\core1\EncounterController;
+use App\Http\Controllers\user\Core\core1\IPD\AdmissionController;
 
 Route::prefix('core1')->name('core1.')->group(function () {
     // Main index
@@ -100,9 +102,10 @@ Route::middleware([])->group(function () {
         Route::get('/inpatient', [InpatientController::class, 'index'])->name('core1.inpatient.index');
         
         // IPD ADT Routes
-        Route::get('/ipd/dashboard', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'dashboard'])->name('core1.ipd.dashboard');
-        Route::get('/admissions/create', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'create'])->name('core1.admissions.create');
-        Route::post('/admissions', [\App\Http\Controllers\core1\IPD\AdmissionController::class, 'store'])->name('core1.admissions.store');
+        Route::get('/ipd/dashboard', [AdmissionController::class, 'dashboard'])->name('core1.ipd.dashboard');
+        Route::get('/admissions/create', [AdmissionController::class, 'create'])->name('core1.admissions.create');
+        Route::post('/admissions', [AdmissionController::class, 'store'])->name('core1.admissions.store');
+        Route::post('/admissions/{admission}/discharge', [AdmissionController::class, 'discharge'])->name('core1.admissions.discharge');
     });
 
     Route::middleware('role:admin,admin_core1,doctor')->group(function () {
@@ -110,7 +113,7 @@ Route::middleware([])->group(function () {
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
         
         // OPD Encounters
-        Route::post('/encounters', [\App\Http\Controllers\core1\EncounterController::class, 'store'])->name('core1.encounters.store');
+        Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');
     });
 
     Route::post('/patients/{patient}/move', 
@@ -120,28 +123,13 @@ Route::middleware([])->group(function () {
     Route::patch('/patients/{patient}/status', 
         [PatientManagementController::class, 'updateStatus']
     )->name('core1.patients.updateStatus');
-    Route::post('/outpatient/{id}/update-status',
-        [OutpatientController::class, 'updateStatus']
-    )->name('core1.outpatient.updateStatus');
-    Route::post('/core1/outpatient/{id}/triage',
-        [OutpatientController::class, 'saveTriage']
-    )->name('core1.outpatient.saveTriage');
-    // Prescriptions
-    Route::post('/outpatient/prescription/store', [OutpatientController::class, 'storePrescription'])
-        ->name('core1.outpatient.storePrescription');
+    Route::post('/outpatient/{id}/triage', [OutpatientController::class, 'saveTriage'])->name('core1.outpatient.saveTriage');
+    Route::post('/outpatient/{id}/consultation', [OutpatientController::class, 'saveConsultation'])->name('core1.outpatient.saveConsultation');
+    Route::post('/outpatient/{id}/complete', [OutpatientController::class, 'completeConsultation'])->name('core1.outpatient.complete');
 
-    Route::put('/outpatient/prescription/update/{id}', [OutpatientController::class, 'updatePrescription'])
-        ->name('core1.outpatient.updatePrescription');
-
-    Route::post('/core1/outpatient/store-lab-order',
-        [OutpatientController::class, 'storeLabOrder']
-    )->name('core1.outpatient.storeLabOrder');
-
-    Route::post('/outpatient/follow-up/store',
-        [OutpatientController::class,'storeFollowUp']
-    )->name('core1.outpatient.storeFollowUp');
-    Route::put('/outpatient/follow-up/{id}/update', [OutpatientController::class, 'updateFollowUp'])
-        ->name('core1.outpatient.updateFollowUp');
+    // Prescriptions & Lab Orders
+    Route::post('/outpatient/prescription', [OutpatientController::class, 'storePrescription'])->name('core1.outpatient.storePrescription');
+    Route::post('/outpatient/lab-order', [OutpatientController::class, 'storeLabOrder'])->name('core1.outpatient.storeLabOrder');
         
     Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,patient')->group(function () {
         Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('core1.medical-records.index');

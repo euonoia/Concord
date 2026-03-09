@@ -34,4 +34,9 @@ class Admission extends Model
     {
         return $this->belongsTo(Bed::class);
     }
+
+    public function discharge()
+    {
+        return $this->hasOne(Discharge::class, 'encounter_id', 'encounter_id');
+    }
 }

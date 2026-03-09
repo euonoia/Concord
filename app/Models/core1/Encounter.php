@@ -4,6 +4,10 @@ namespace App\Models\core1;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\core1\Triage;
+use App\Models\core1\Consultation;
+use App\Models\core1\LabOrder;
+use App\Models\core1\Prescription;
 
 class Encounter extends Model
 {
@@ -33,5 +37,25 @@ class Encounter extends Model
     public function admission()
     {
         return $this->hasOne(Admission::class);
+    }
+
+    public function triage()
+    {
+        return $this->hasOne(Triage::class, 'encounter_id');
+    }
+
+    public function consultation()
+    {
+        return $this->hasOne(Consultation::class, 'encounter_id');
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class, 'encounter_id');
+    }
+
+    public function labOrders()
+    {
+        return $this->hasMany(LabOrder::class, 'encounter_id');
     }
 }
