@@ -60,30 +60,19 @@ class MedicalRecordController extends Controller
         }
     }
 
-    // Get latest medical record if exists
-    $record = $patient->medicalRecords()->latest('record_date')->first();
+    // Fetch Encounters (IPD, OPD, OR)
+    $encounters = $patient->encounters()
+        ->with(['doctor', 'admission', 'admission.bed.room.ward'])
+        ->orderByDesc('created_at')
+        ->get();
 
-    // If no record, create dummy object
-    if (!$record) {
-        $record = new MedicalRecord();
-        $record->patient = $patient;
-        $record->doctor = $patient->doctor ?? null;
-        $record->record_type = null;
-        $record->record_date = null;
-        $record->diagnosis = null;
-        $record->treatment = null;
-        $record->prescription = null;
-        $record->notes = null;
-    } else {
-        $record->load([
-            'patient',
-            'doctor',
-            'patient.appointments',
-            'patient.bills',
-            'patient.assignedNurse'
-        ]);
-    }
+    $patient->load([
+        'appointments',
+        'bills',
+        'assignedNurse',
+        'doctor'
+    ]);
 
-    return view('core.core1.medical-records.show', compact('record'));
+    return view('core.core1.medical-records.show', compact('patient', 'encounters'));
 }
 }

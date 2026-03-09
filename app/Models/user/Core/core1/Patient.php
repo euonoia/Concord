@@ -59,6 +59,11 @@ class Patient extends Model
         return $this->hasMany(MedicalRecord::class);
     }
 
+    public function encounters()
+    {
+        return $this->hasMany(\App\Models\core1\Encounter::class, 'patient_id');
+    }
+
     public function bills()
     {
         return $this->hasMany(Bill::class);

@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+﻿@extends(request()->ajax() ? 'core.core1.layouts.ajax' : 'core.core1.layouts.app')
 
 @section('title', 'Medical Record Details')
 
@@ -26,53 +26,76 @@
                 <tbody class="divide-y">
                     <tr>
                         <td class="font-medium py-2 w-1/3">Patient</td>
-                        <td>{{ $record->patient->name ?? 'N/A' }}</td>
+                        <td>{{ $patient->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="font-medium py-2">Patient ID</td>
-                        <td>{{ $record->patient->patient_id ?? 'N/A' }}</td>
+                        <td class="font-medium py-2">MRN (Patient ID)</td>
+                        <td class="font-mono text-blue-800">{{ $patient->mrn ?? $patient->patient_id ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="font-medium py-2">Doctor</td>
-                        <td>{{ $record->doctor->name ?? 'N/A' }}</td>
+                        <td class="font-medium py-2">Primary Doctor</td>
+                        <td>{{ $patient->doctor->name ?? 'N/A' }}</td>
                     </tr>
                     
                     <tr>
-                        <td class="font-medium py-2">Record Type</td>
-                        <td>{{ $record->record_type ?? 'N/A' }}</td>
+                        <td class="font-medium py-2">Registration Status</td>
+                        <td>{{ $patient->registration_status ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="font-medium py-2">Record Date</td>
-                        <td>{{ optional($record->record_date)->format('M d, Y') ?? 'N/A' }}</td>
+                        <td class="font-medium py-2">Last Visit</td>
+                        <td>{{ optional($patient->last_visit)->format('M d, Y') ?? 'N/A' }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        {{-- ================= CLINICAL INFORMATION ================= --}}
+        {{-- ================= CLINICAL ENCOUNTERS HISTORY ================= --}}
         <div>
-            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Clinical Information</h2>
-            <table class="w-full text-sm">
-                <tbody class="divide-y">
-                    <tr>
-                        <td class="font-medium py-2 w-1/3">Diagnosis</td>
-                        <td>{{ $record->diagnosis ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">Treatment</td>
-                        <td>{{ $record->treatment ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">Prescription</td>
-                        <td class="whitespace-pre-line">{{ $record->prescription ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">Notes</td>
-                        <td>{{ $record->notes ?? 'N/A' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Clinical Encounters History</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-2 border">Date & Time</th>
+                            <th class="p-2 border">Encounter Type</th>
+                            <th class="p-2 border">Attending Doctor</th>
+                            <th class="p-2 border">Chief Complaint / Details</th>
+                            <th class="p-2 border">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($encounters as $encounter)
+                        <tr>
+                            <td class="p-2 border whitespace-nowrap">{{ $encounter->created_at->format('M d, Y h:i A') }}</td>
+                            <td class="p-2 border font-semibold text-center">
+                                <span class="px-2 py-1 rounded text-xs {{ $encounter->type === 'IPD' ? 'bg-blue-100 text-blue-800' : ($encounter->type === 'Operating Room' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800') }}">
+                                    {{ $encounter->type }}
+                                </span>
+                            </td>
+                            <td class="p-2 border">{{ $encounter->doctor->name ?? 'Unassigned' }}</td>
+                            <td class="p-2 border">
+                                <p class="mb-1">{{ $encounter->chief_complaint ?? '--' }}</p>
+                                @if($encounter->type === 'IPD' && $encounter->admission)
+                                    <div class="mt-2 text-xs bg-gray-50 p-2 rounded border">
+                                        <strong>Admission Details:</strong><br>
+                                        Date: {{ \Carbon\Carbon::parse($encounter->admission->admission_date)->format('M d, Y h:i A') }}<br>
+                                        Location: {{ $encounter->admission->bed->room->ward->name }} - Room {{ $encounter->admission->bed->room->room_number }} (Bed {{ $encounter->admission->bed->bed_number }})<br>
+                                        Discharge: {{ $encounter->admission->discharge_date ? \Carbon\Carbon::parse($encounter->admission->discharge_date)->format('M d, Y h:i A') : 'Ongoing' }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="p-2 border text-center">{{ $encounter->status }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-gray-500 italic">No clinical encounters recorded.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+
 @php $role = auth()->user()->role; @endphp
 
 {{-- ================= ASSIGNED NURSE FOR DOCTOR ================= --}}
@@ -83,7 +106,7 @@
         <tbody class="divide-y">
             <tr>
                 <td class="font-medium py-2 w-1/3">Assigned Nurse</td>
-                <td>{{ optional($record->patient->assignedNurse)->name ?? 'N/A' }}</td>
+                <td>{{ optional($patient->assignedNurse)->name ?? 'N/A' }}</td>
             </tr>
         </tbody>
     </table>
@@ -99,18 +122,18 @@
             <h2 class="text-lg font-semibold mb-4 border-b pb-2">Patient Information</h2>
             <table class="w-full text-sm">
                 <tbody class="divide-y">
-                    <tr><td class="font-medium py-2 w-1/3">Date of Birth</td><td>{{ $record->patient->date_of_birth ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Gender</td><td>{{ $record->patient->gender ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Phone</td><td>{{ $record->patient->phone ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Email</td><td>{{ $record->patient->email ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Address</td><td>{{ $record->patient->address ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Blood Type</td><td>{{ $record->patient->blood_type ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Allergies</td><td>{{ $record->patient->allergies ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Medical History</td><td>{{ $record->patient->medical_history ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Status</td><td>{{ $record->patient->status ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Care Type</td><td>{{ $record->patient->care_type ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Admission Date</td><td>{{ $record->patient->admission_date ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Reason</td><td>{{ $record->patient->reason ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2 w-1/3">Date of Birth</td><td>{{ $patient->date_of_birth ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Gender</td><td>{{ $patient->gender ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Phone</td><td>{{ $patient->phone ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Email</td><td>{{ $patient->email ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Address</td><td>{{ $patient->address ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Blood Type</td><td>{{ $patient->blood_type ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Allergies</td><td>{{ $patient->allergies ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Medical History</td><td>{{ $patient->medical_history ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Status</td><td>{{ $patient->status ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Care Type</td><td>{{ $patient->care_type ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Admission Date</td><td>{{ $patient->admission_date ?? 'N/A' }}</td></tr>
+                    <tr><td class="font-medium py-2">Reason</td><td>{{ $patient->reason ?? 'N/A' }}</td></tr>
                 </tbody>
             </table>
         </div>
@@ -122,11 +145,11 @@
                 <tbody class="divide-y">
                     <tr>
                         <td class="font-medium py-2 w-1/3">Assigned Doctor</td>
-                        <td>{{ optional($record->patient->doctor)->name ?? 'N/A' }}</td>
+                        <td>{{ optional($patient->doctor)->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td class="font-medium py-2">Assigned Nurse</td>
-                        <td>{{ optional($record->patient->assignedNurse)->name ?? 'N/A' }}</td>
+                        <td>{{ optional($patient->assignedNurse)->name ?? 'N/A' }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -146,7 +169,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($record->patient->appointments ?? [] as $appointment)
+                        @forelse($patient->appointments ?? [] as $appointment)
                         <tr>
                             <td class="p-2 border">{{ $appointment->appointment_date ?? 'N/A' }}</td>
                             <td class="p-2 border">{{ $appointment->status ?? 'N/A' }}</td>
@@ -177,7 +200,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($record->patient->bills ?? [] as $bill)
+                        @forelse($patient->bills ?? [] as $bill)
                         <tr>
                             <td class="p-2 border">{{ $bill->bill_number ?? 'N/A' }}</td>
                             <td class="p-2 border">â‚±{{ number_format($bill->total ?? 0, 2) }}</td>
