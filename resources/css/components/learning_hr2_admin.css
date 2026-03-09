@@ -1,0 +1,208 @@
+/* learning_hr2_admin.css */
+
+/* Main Container */
+.learning-hr2-admin {
+    padding: 2rem;
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-900);
+    font-family: inherit;
+}
+
+.learning-hr2-admin h2 {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: var(--color-gray-800);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+/* Form Styling & Sectional Layout */
+.learning-hr2-admin .module-form {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--color-gray-200);
+    margin-bottom: 3rem;
+    max-width: 1000px;
+}
+
+.learning-hr2-admin .form-section {
+    margin-bottom: 2rem;
+}
+
+.learning-hr2-admin .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-gray-800);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.learning-hr2-admin .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.learning-hr2-admin .section-divider {
+    border: 0;
+    border-top: 1px solid var(--color-gray-100);
+    margin: 2rem 0;
+}
+
+/* Form Elements */
+.learning-hr2-admin .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.learning-hr2-admin .full-width {
+    grid-column: 1 / -1;
+}
+
+.learning-hr2-admin label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-gray-700);
+}
+
+.learning-hr2-admin input, 
+.learning-hr2-admin select, 
+.learning-hr2-admin textarea {
+    padding: 0.75rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.learning-hr2-admin input:focus,
+.learning-hr2-admin select:focus,
+.learning-hr2-admin textarea:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 4px var(--color-blue-50);
+}
+
+.learning-hr2-admin .help-text {
+    font-size: 0.75rem;
+    color: var(--color-gray-500);
+    margin-top: 0.25rem;
+}
+
+/* Action Buttons */
+.learning-hr2-admin .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-gray-100);
+}
+
+.learning-hr2-admin .btn-submit {
+    padding: 0.75rem 2rem;
+    background-color: var(--color-blue-600);
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.learning-hr2-admin .btn-submit:hover {
+    background-color: var(--color-blue-700);
+    transform: translateY(-1px);
+}
+
+.learning-hr2-admin .btn-secondary {
+    background: white;
+    border: 1px solid var(--color-gray-300);
+    color: var(--color-gray-700);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Table UI */
+.learning-hr2-admin .table-container {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--color-gray-200);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.learning-hr2-admin table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.learning-hr2-admin th {
+    background: var(--color-gray-50);
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-gray-500);
+    font-weight: 700;
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.learning-hr2-admin td {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid var(--color-gray-100);
+    font-size: 0.9rem;
+}
+
+.learning-hr2-admin tr:hover td {
+    background-color: #fafafa;
+}
+
+/* Badge Styling */
+.learning-hr2-admin .badge-mandatory {
+    background: var(--color-red-50);
+    color: var(--color-red-700);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid var(--color-red-100);
+}
+
+.learning-hr2-admin .badge-optional {
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.learning-hr2-admin .badge-type {
+    background: var(--color-blue-50);
+    color: var(--color-blue-700);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Responsive Logic */
+@media (max-width: 768px) {
+    .learning-hr2-admin .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .learning-hr2-admin .module-form {
+        padding: 1.5rem;
+    }
+}

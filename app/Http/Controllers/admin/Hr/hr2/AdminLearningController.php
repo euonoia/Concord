@@ -84,7 +84,7 @@ class AdminLearningController extends Controller
 
         // Auto-assign module to residents in that dept/specialization
         $residents = DB::table('employees')
-            ->where('dept_code', $request->dept_code)
+            ->where('department_id', $request->dept_code)
             ->where('specialization_name', $request->specialization_name)
             ->where('post_grad_status', 'residency')
             ->get();
