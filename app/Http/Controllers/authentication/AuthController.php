@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Authentication;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Employee; 
+use App\Models\user\Core\core1\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class AuthController extends Controller
         'email'     => 'required|email|unique:users,email',
         'password'  => 'required|min:8|confirmed',
         // Updated to include your admin_hr, admin_logistics, and admin_core roles
-        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse',
+        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist',
         'first_name' => 'required|string|max:255',
         'last_name'  => 'required|string|max:255',
     ]);
@@ -48,6 +49,17 @@ class AuthController extends Controller
                 'last_name'   => $request->last_name,
                 'hire_date'   => now(),
                 'is_on_duty'  => true,
+            ]);
+        }
+
+        if ($userType === 'patient') {
+            Patient::create([
+                'patient_id' => $user->username,
+                'mrn' => Patient::generateMRN(),
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $user->email,
+                'registration_status' => 'PRE_REGISTERED',
             ]);
         }
 
@@ -219,7 +231,7 @@ class AuthController extends Controller
         $role === 'admin_logistics2' => redirect()->route('admin.logistics2.dashboard'),
 
         // --- CORE MODULAR DASHBOARDS ---
-        $role === 'admin_core1' => redirect()->route('admin.core1.dashboard'),
+        $role === 'admin_core1' => redirect()->route('core1.admin.dashboard'),
         $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
 
         // --- FINANCIALS ---
@@ -228,11 +240,13 @@ class AuthController extends Controller
         // --- FALLBACKS FOR GENERAL STAFF ---
         $role === 'doctor'       => redirect()->route('core1.doctor.dashboard'),
         $role === 'nurse'        => redirect()->route('core1.nurse.dashboard'),
+        $role === 'head_nurse'        => redirect()->route('core1.nurse.dashboard'),
         $role === 'receptionist' => redirect()->route('core1.receptionist.dashboard'),
+        $role === 'billing_officer'        => redirect()->route('core1.billing.dashboard'),
         $role === 'employee'     => redirect()->route('hr.dashboard'), 
         
         // --- PATIENTS ---
-       $role === 'patient' => redirect()->route('patients.dashboard'),
+       $role === 'patient' => redirect()->route('core1.patient.dashboard'),
 
         default => redirect('/'),
     };
