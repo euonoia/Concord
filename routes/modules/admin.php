@@ -10,6 +10,7 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
         use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
         use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
+        use App\Http\Controllers\admin\Hr\hr2\AdminLearningMaterialsController;
 
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
@@ -68,13 +69,31 @@
             // Employees by Department and specialization
             Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
 
-        Route::get('/get-specializations/{dept}', [AdminLearningController::class,'getSpecializations'])
-        ->name('hr2.getSpecializations');
-
-        Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])
+            // Employees by Department and specialization learning
+            Route::get('/get-specializations/{dept}', [AdminLearningController::class,'getSpecializations'])
+            ->name('hr2.getSpecializations');
+            Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])
             ->name('hr2.generateModuleCode');
             
+             // Materials selector page
+            Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])
+                ->name('learning.materials.selector');
+
+            Route::get('/materials/{moduleCode}/list', [AdminLearningMaterialsController::class, 'listMaterials'])
+                ->name('learning.materials.list');
+
+            // Store a material
+            Route::post('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'store'])
+                ->name('learning.materials.store');
+
+            // Delete a material
+            Route::delete('/materials/{id}', [AdminLearningMaterialsController::class, 'destroy'])
+                ->name('learning.materials.destroy');
+
+            // AJAX: modules by department+spec
+            Route::get('/modules/{dept}/{spec}', [AdminLearningMaterialsController::class, 'getModulesByDeptSpec']);
         });
+
         Route::resource('competencies', CompetencyController::class);
         Route::resource('learning', AdminLearningController::class);
         Route::resource('training', AdminTrainingController::class);

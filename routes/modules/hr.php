@@ -6,6 +6,7 @@ use App\Http\Controllers\user\Hr\hr2\UserLearningController;
 use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
 use App\Http\Controllers\user\Hr\hr2\UserEssController;
+use App\Http\Controllers\user\Hr\hr2\UserLearningMaterialsController;
 
 // Import the new HR3 Controller
 use App\Http\Controllers\user\Hr\hr3\UserAttendanceController;
@@ -15,13 +16,28 @@ Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('hr.da
 
 // --- START OF HR2 Department (Development & Planning) ---
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
-Route::get('/learning', [UserLearningController::class, 'index'])->name('user.learning.index');
-Route::post('/learning/enroll/{id}', [UserLearningController::class, 'enroll'])->name('user.learning.enroll');
 Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
 Route::any('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
 Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
 Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
 Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');
+Route::prefix('learning')->middleware(['auth'])->group(function () {
+
+    // 1. Available Courses / Enrollment
+    Route::get('/', [UserLearningController::class, 'index'])
+        ->name('user.learning.index');
+
+    Route::post('/enroll/{module_code}', [UserLearningController::class, 'enroll'])
+        ->name('user.learning.enroll');
+
+    // 2. Learning Materials (for enrolled courses)
+    Route::get('/materials', [UserLearningMaterialsController::class, 'index'])
+        ->name('user.learning.materials.index');
+
+    Route::get('/materials/{module_code}', [UserLearningMaterialsController::class, 'showModule'])
+        ->name('user.learning.materials.show');
+
+});
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---

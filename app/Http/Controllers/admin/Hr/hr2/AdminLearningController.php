@@ -30,6 +30,16 @@ class AdminLearningController extends Controller
             return view('admin.hr2.learning', compact('modules','departments'));
         }
 
+        
+        public function getModules($dept, $spec)
+            {
+                $modules = LearningModule::where('dept_code', $dept)
+                    ->where('specialization_name', $spec)
+                    ->get(['module_code','module_name']);
+
+                return response()->json($modules);
+            }
+
       public function getSpecializations($dept)
         {
             $specs = DB::table('department_specializations_hr2')
@@ -85,7 +95,7 @@ class AdminLearningController extends Controller
         // Auto-assign module to residents in that dept/specialization
         $residents = DB::table('employees')
             ->where('department_id', $request->dept_code)
-            ->where('specialization_name', $request->specialization_name)
+            ->where('specialization', $request->specialization_name)
             ->where('post_grad_status', 'residency')
             ->get();
 

@@ -4,8 +4,13 @@
 
 @section('content')
 <div class="learning-hr2-admin">
-    <div class="header-section">
-        <h2>Learning Management</h2>
+    <div class="header-section" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>Learning Management</h2>
+
+    <a href="{{ route('learning.materials.selector') }}"
+       style="padding:8px 14px; background:var(--color-blue-600); color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">
+        Learning Materials
+    </a>
     </div>
 
     @if(session('success'))
@@ -14,7 +19,7 @@
         </div>
     @endif
 
- <form method="POST" action="{{ route('learning.store') }}" class="module-form">
+<form method="POST" action="{{ route('learning.store') }}" class="module-form">
     @csrf
 
     <div class="form-section">
