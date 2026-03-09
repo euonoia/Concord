@@ -22,11 +22,8 @@ class InpatientController extends Controller
         $admissionsQuery = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
             ->where('status', 'Admitted');
 
-        if ($isDoctor) {
-            $admissionsQuery->whereHas('encounter', function($q) use ($user) {
-                $q->where('doctor_id', $user->id);
-            });
-        }
+        // Admin, Head Nurse, Receptionist, Doctors can typically see the ward.
+        // Let's allow everyone to see active admissions for now to avoid the silent empty list failure.
 
         $activeAdmissions = $admissionsQuery->latest()->get();
 

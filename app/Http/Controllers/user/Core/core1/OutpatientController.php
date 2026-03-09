@@ -32,7 +32,7 @@ class OutpatientController extends Controller
         |--------------------------------------------------------------------------
         */
         $query = Encounter::with(['patient', 'doctor', 'triage'])
-            ->where('type', 'OPD')
+            ->whereIn('type', ['OPD', 'Pending'])
             ->where('status', 'Active');
 
         // Doctor sees only her patients
@@ -47,7 +47,7 @@ class OutpatientController extends Controller
         | Consultation Tracking Data
         |--------------------------------------------------------------------------
         */
-        $appointments = $encountersRaw->map(function ($encounter) {
+        $appointments = $encountersRaw->where('type', 'OPD')->map(function ($encounter) {
             return [
                 'id' => $encounter->id,
                 'time' => $encounter->created_at->format('Y-m-d h:i A'),
@@ -65,10 +65,7 @@ class OutpatientController extends Controller
         $registrations = $encountersRaw->map(function ($encounter) use ($user) {
             $status = $encounter->triage ? 'Triaged' : 'Waiting';
             
-            $canAction = false;
-            if ($user->role_slug === 'doctor' && $encounter->doctor_id == $user->id) {
-                $canAction = true;
-            }
+            $canAction = true;
 
             return [
                 'id' => $encounter->id,
@@ -76,7 +73,8 @@ class OutpatientController extends Controller
                 'patient' => $encounter->patient->name ?? 'Unknown',
                 'triage' => $encounter->triage ? "BP: {$encounter->triage->blood_pressure}, HR: {$encounter->triage->heart_rate}" : 'No Triage',
                 'status' => $status,
-                'isEmergency' => false, // Could be derived from encounter if needed
+                'type' => $encounter->type,
+                'isEmergency' => false,
                 'canAction' => $canAction
             ];
         });
@@ -195,6 +193,24 @@ class OutpatientController extends Controller
         LabOrder::create($request->all());
 
         return back()->with('success', 'Lab order created.');
+    }
+    public function disposition(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:OPD,IPD'
+        ]);
+
+        $encounter = Encounter::findOrFail($id);
+        $encounter->update(['type' => $validated['type']]);
+
+        $message = "Encounter dispositioned to " . $validated['type'] . ".";
+
+        if ($validated['type'] === 'IPD') {
+            return redirect()->route('core1.admissions.create', ['encounter_id' => $encounter->id])
+                ->with('success', $message . ' Please complete the admission details.');
+        }
+
+        return back()->with('success', $message);
     }
 }
 

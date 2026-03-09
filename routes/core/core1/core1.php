@@ -126,6 +126,7 @@ Route::middleware([])->group(function () {
     Route::post('/outpatient/{id}/triage', [OutpatientController::class, 'saveTriage'])->name('core1.outpatient.saveTriage');
     Route::post('/outpatient/{id}/consultation', [OutpatientController::class, 'saveConsultation'])->name('core1.outpatient.saveConsultation');
     Route::post('/outpatient/{id}/complete', [OutpatientController::class, 'completeConsultation'])->name('core1.outpatient.complete');
+    Route::post('/outpatient/{id}/disposition', [OutpatientController::class, 'disposition'])->name('core1.outpatient.disposition');
 
     // Prescriptions & Lab Orders
     Route::post('/outpatient/prescription', [OutpatientController::class, 'storePrescription'])->name('core1.outpatient.storePrescription');

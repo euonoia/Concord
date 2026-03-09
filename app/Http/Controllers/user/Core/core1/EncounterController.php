@@ -13,7 +13,7 @@ class EncounterController extends Controller
     {
         $validated = $request->validate([
             'patient_id' => 'required|exists:patients_core1,id',
-            'type' => 'required|string|in:OPD,IPD,Operating Room',
+            'type' => 'required|string|in:OPD,IPD,Operating Room,Pending',
             'chief_complaint' => 'nullable|string'
         ]);
         

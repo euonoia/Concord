@@ -64,11 +64,11 @@
     <!-- Clinical Workflow Tabs -->
     <div class="core1-card no-hover p-0 overflow-hidden mt-30">
         <div class="core1-tabs-header border-bottom">
-            <button class="core1-tab-btn active" onclick="switchTab(event, 'consultation-tracking')">
-                <i class="bi bi-activity mr-5"></i> Consultation Tracking
-            </button>
-            <button class="core1-tab-btn" onclick="switchTab(event, 'arrival-logs')">
+            <button class="core1-tab-btn active" onclick="switchTab(event, 'arrival-logs')">
                 <i class="bi bi-journal-check mr-5"></i> Arrival Logs & Triage
+            </button>
+            <button class="core1-tab-btn" onclick="switchTab(event, 'consultation-tracking')">
+                <i class="bi bi-activity mr-5"></i> Consultation Tracking
             </button>
             <button class="core1-tab-btn" onclick="switchTab(event, 'prescription-recording')">
                 <i class="bi bi-capsule mr-5"></i> Prescription & Treatment
@@ -83,7 +83,7 @@
 
         <div class="tab-content p-25">
             <!-- Consultation Tracking Tab -->
-            <div id="consultation-tracking" class="core1-tab-pane active">
+            <div id="consultation-tracking" class="core1-tab-pane">
                 <div class="d-flex justify-between items-center mb-20">
                     <h3 class="core1-title core1-section-title">Active Queue</h3>
                     <div class="core1-toolbar-search">
@@ -138,10 +138,7 @@
                                     </td>
                             <td class="text-right">
                                 <div class="core1-flex-gap-2 justify-end">
-                                    <button class="core1-btn-sm core1-btn-outline" 
-                                            onclick="openTriageModal({{ $apt['id'] }})">
-                                        <i class="bi bi-heart-pulse"></i> Triage
-                                    </button>
+
                                     <button class="core1-btn-sm core1-btn-primary" 
                                             onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
                                         <i class="bi bi-chat-left-dots"></i> Consult
@@ -156,7 +153,7 @@
             </div>
 
             <!-- Arrival Logs & Triage Tab -->
-            <div id="arrival-logs" class="core1-tab-pane">
+            <div id="arrival-logs" class="core1-tab-pane active">
                 <div class="d-flex justify-between items-center mb-20">
                     <h3 class="core1-title core1-section-title">Patient Arrival & Triage Summary</h3>
                 </div>
@@ -188,12 +185,29 @@
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-right d-flex gap-2 justify-end">
                                         <button class="core1-btn-sm core1-btn-outline" 
-                                                onclick="openTriageModal({{ $reg['id'] }})"
-                                                {{ !$reg['canAction'] ? 'disabled' : '' }}>
-                                            Review Vitals
+                                                onclick="openTriageModal({{ $reg['id'] }})">
+                                            <i class="bi bi-heart-pulse"></i> Triage
                                         </button>
+
+                                        @if($reg['status'] === 'Triaged' && $reg['type'] === 'Pending')
+                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0">
+                                                @csrf
+                                                <input type="hidden" name="type" value="OPD">
+                                                <button type="submit" class="core1-btn-sm core1-btn-primary" title="Send to Outpatient">
+                                                    <i class="bi bi-person-walking"></i> OPD
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0">
+                                                @csrf
+                                                <input type="hidden" name="type" value="IPD">
+                                                <button type="submit" class="core1-btn-sm core1-btn-outline" title="Admit to Inpatient">
+                                                    <i class="bi bi-hospital"></i> IPD
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -457,14 +471,14 @@ function switchTab(evt, tabId) {
 
 function openTriageModal(id) {
     const form = document.getElementById('triageForm');
-    form.action = `/core1/outpatient/${id}/triage`;
+    form.action = `/core/outpatient/${id}/triage`;
     document.getElementById('triageModal').style.display = 'flex';
 }
 
 function openConsultationModal(id, name) {
     currentEncounterId = id;
     const form = document.getElementById('consultationForm');
-    form.action = `/core1/outpatient/${id}/consultation`;
+    form.action = `/core/outpatient/${id}/consultation`;
     document.getElementById('consultingPatientName').innerText = name;
     
     // Complete logic
@@ -473,7 +487,7 @@ function openConsultationModal(id, name) {
         if(confirm('Are you sure you want to close this encounter?')) {
             const tempForm = document.createElement('form');
             tempForm.method = 'POST';
-            tempForm.action = `/core1/outpatient/${id}/complete`;
+            tempForm.action = `/core/outpatient/${id}/complete`;
             const csrf = document.createElement('input');
             csrf.type = 'hidden';
             csrf.name = '_token';

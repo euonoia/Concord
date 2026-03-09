@@ -280,24 +280,15 @@
                                     </form>
                                 @endif
 
-                                {{-- Move to Inpatient/Outpatient --}}
-                                @if($canMovePatient && !$patient->care_type)
-                                    <form method="POST" action="{{ route('core1.patients.move', $patient) }}" class="d-flex gap-1" style="margin: 0;">
+                                @if(!$patient->care_type)
+                                    <form method="POST" action="{{ route('core1.encounters.store') }}" class="d-flex gap-1" style="margin: 0;">
                                         @csrf
-                                        <input type="hidden" name="care_type" value="inpatient">
-                                        <input type="hidden" name="admission_date" value="{{ now()->toDateString() }}">
-                                        <input type="hidden" name="doctor_id" value="{{ auth()->user()->id }}">
-                                        <input type="hidden" name="reason" value="Routine Checkup">
-                                        <button class="core1-btn-sm core1-btn-outline" style="padding: 2px 5px; font-size: 0.75rem;">Move to Inpatient</button>
-                                    </form>
-
-                                    <form method="POST" action="{{ route('core1.patients.move', $patient) }}" class="d-flex gap-1" style="margin: 0;">
-                                        @csrf
-                                        <input type="hidden" name="care_type" value="outpatient">
-                                        <input type="hidden" name="admission_date" value="{{ now()->toDateString() }}">
-                                        <input type="hidden" name="doctor_id" value="{{ auth()->user()->id }}">
-                                        <input type="hidden" name="reason" value="Routine Checkup">
-                                        <button class="core1-btn-sm core1-btn-outline" style="padding: 2px 5px; font-size: 0.75rem;">Move to Outpatient</button>
+                                        <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+                                        <input type="hidden" name="type" value="Pending">
+                                        <input type="hidden" name="chief_complaint" value="Walk-in / Arrival">
+                                        <button class="core1-btn-sm core1-btn-primary" style="padding: 2px 10px; font-size: 0.75rem;">
+                                            <i class="fas fa-hospital-user mr-5"></i> Send to Triage
+                                        </button>
                                     </form>
                                 @elseif($patient->care_type)
                                     <span class="core1-badge {{ $patient->care_type === 'inpatient' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
