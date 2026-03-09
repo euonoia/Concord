@@ -69,12 +69,16 @@
             // Employees by Department and specialization
             Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
 
-            // Employees by Department and specialization learning
-            Route::get('/get-specializations/{dept}', [AdminLearningController::class,'getSpecializations'])
-            ->name('hr2.getSpecializations');
+            Route::get('/departments/{dept_code}/specializations', [AdminLearningController::class, 'getSpecializations'])
+                ->name('departments.specializations');
+
+            // Fetch competencies by department + specialization
+            Route::get('/departments/{dept_code}/{spec}/competencies', [AdminLearningController::class, 'getCompetencies'])
+                ->name('departments.competencies');
+
             Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])
-            ->name('hr2.generateModuleCode');
-            
+                ->name('hr2.generateModuleCode');
+                
              // Materials selector page
             Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])
                 ->name('learning.materials.selector');
