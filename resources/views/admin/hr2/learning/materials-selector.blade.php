@@ -14,7 +14,7 @@
         </svg>
         Back to Modules
     </a>
-</div>
+    </div>
 
     @if(session('success'))
         <div style="padding:1rem; background:#D1FAE5; color:#065F46; border-radius:5px;">

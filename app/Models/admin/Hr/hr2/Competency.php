@@ -5,13 +5,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class Competency extends Model
 {
-    protected $table = 'competencies_hr2';
 
+    protected $table = 'competency_hr2';
 
     protected $fillable = [
-        'code', 
-        'title', 
-        'description', 
-        'competency_group'
-    ]; 
+        'competency_code',
+        'name',
+        'dept_code',
+        'department_id',
+        'specialization_name',
+        'competency_group',
+        'description'
+    ];
+
+
+    public function department()
+    {
+        return $this->belongsTo(
+            Department::class,
+            'department_id',
+            'department_id'
+        );
+    }
+
 }

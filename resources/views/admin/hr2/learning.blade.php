@@ -4,14 +4,13 @@
 
 @section('content')
 <div class="learning-hr2-admin">
-    <div class="header-section" style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>Learning Management</h2>
-
-    <a href="{{ route('learning.materials.selector') }}"
-       style="padding:8px 14px; background:var(--color-blue-600); color:white; border-radius:6px; text-decoration:none; font-size:0.85rem;">
-        Learning Materials
-    </a>
-    </div>
+     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Learning Modules</h2>
+        <a href="{{ route('learning.materials.selector') }}" 
+        style="padding: 8px 16px; background: #4b5563; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            Learning Materials
+        </a>
+        </div>
 
     @if(session('success'))
         <div style="padding: 1rem; margin-bottom: 1.5rem; background: var(--color-green-50); color: var(--color-green-800); border-radius: 6px; border: 1px solid var(--color-green-200);">
