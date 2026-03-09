@@ -4,39 +4,66 @@
 
 @section('content')
 <div class="container">
-    <div class="header-box" style="margin-bottom: 20px;">
+    <div class="header-box mb-4">
         <h2>Available Courses</h2>
         <p>Enroll in training programs to enhance your competencies.</p>
     </div>
 
-   <div class="course-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-    @forelse($modules as $module)
-        <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <span style="font-size: 0.8rem; color: #007bff; font-weight: bold;">{{ $module->learning_type }}</span>
-                <h3 style="margin: 10px 0; color: #333;">{{ $module->title }}</h3>
-                <p style="color: #555; font-size: 0.9rem;">{{ $module->description }}</p>
-                <small style="color: #888;">Duration: {{ $module->duration }}</small>
-            </div>
+    {{-- Success & Error Messages --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                @if($module->enrolls->isNotEmpty())
-                    <button class="btn btn-success btn-sm" style="width: 100%;" disabled>
-                        <i class="fa fa-check"></i> Enrolled
-                    </button>
-                @else
-                    <form action="{{ route('user.learning.enroll', $module->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
-                            Enroll Now
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    {{-- Course Grid --}}
+    <div class="course-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        @forelse($modules as $module)
+            <div class="card p-3" style="border: 1px solid #ddd; border-radius: 8px; background: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;">
+
+                {{-- Module Info --}}
+                <div>
+                    <span class="text-primary font-weight-bold" style="font-size: 0.8rem;">{{ $module->module_type }}</span>
+                    <h3 style="margin: 10px 0; color: #333;">{{ $module->module_name }}</h3>
+                    <p style="color: #555; font-size: 0.9rem;">{{ $module->description ?? 'No description provided.' }}</p>
+                    <p style="font-size: 0.85rem; color: #666; margin:0;">
+                        <strong>Department:</strong> {{ $module->dept_code }} |
+                        <strong>Specialization:</strong> {{ $module->specialization_name }}
+                    </p>
+                    <small style="color: #888;">Duration: {{ $module->duration_hours }} hrs</small>
+
+                    @if($module->is_mandatory)
+                        <p style="color: #e53e3e; font-size: 0.85rem; margin:2px 0;">Mandatory</p>
+                    @endif
+                </div>
+
+                {{-- Enrollment Button --}}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    @php
+                        // Check if the current employee is enrolled in this module
+                        $enrolled = in_array($module->module_code, $enrolledModuleCodes);
+                    @endphp
+
+                    @if($enrolled)
+                        <button class="btn btn-success btn-sm w-100" disabled>
+                            <i class="fa fa-check"></i> Enrolled
                         </button>
-                    </form>
-                @endif
+                    @else
+                        <form action="{{ route('user.learning.enroll', $module->module_code) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                Enroll Now
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
             </div>
-        </div>
-    @empty
-        <p>No learning modules available at the moment.</p>
-    @endforelse
-</div>
+        @empty
+            <p style="grid-column: 1 / -1; text-align:center;">No learning modules available at the moment.</p>
+        @endforelse
+    </div>
 </div>
 @endsection

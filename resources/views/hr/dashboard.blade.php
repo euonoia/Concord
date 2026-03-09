@@ -153,7 +153,7 @@
                         
                         <div style="display: flex; flex-direction: column; align-items: flex-end; background: #eef2ff; padding: 6px 12px; border-radius: 6px; text-align: right;">
                             <span style="color: #6366f1; font-weight: 600; font-size: 0.9rem;">
-                                {{ $employee->position->specialization_name ?? 'Unassigned' }}
+                                {{ $employee->specialization ?? 'Unassigned' }}
                             </span>
                             
                             <span style="color: #4f46e5; font-weight: 500; font-size: 0.75rem; opacity: 0.8;">

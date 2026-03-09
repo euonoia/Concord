@@ -1,10 +1,8 @@
 <?php
-
 namespace App\Models\admin\Hr\hr2;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\admin\Hr\hr2\CourseEnroll;
 
 class LearningModule extends Model
 {
@@ -15,16 +13,19 @@ class LearningModule extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'title',
+        'module_code',
+        'module_name',
+        'dept_code',
+        'specialization_name',
+        'module_type',
+        'duration_hours',
+        'is_mandatory',
         'description',
-        'competency_id',
-        'learning_type',
-        'duration',
     ];
 
-    // Relationship to enrolls
+    // Relationship to employee enrollments
     public function enrolls()
     {
-        return $this->hasMany(CourseEnroll::class, 'course_id', 'id');
+        return $this->hasMany(CourseEnroll::class, 'module_id', 'id');
     }
 }
