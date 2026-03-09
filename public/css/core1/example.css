@@ -655,6 +655,7 @@ tr:hover {
     margin-bottom: 20px;
     border-radius: var(--radius-sm);
     border-left: 4px solid;
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .alert-success {

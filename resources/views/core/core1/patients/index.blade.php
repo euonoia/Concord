@@ -6,19 +6,6 @@
     <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <div class="core1-container">
-    @if(session('success'))
-        <div class="alert alert-success d-flex items-center gap-2" role="alert">
-            <i class="fas fa-check-circle"></i>
-            <p class="m-0">{{ session('success') }}</p>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-error d-flex items-center gap-2" role="alert">
-            <i class="fas fa-exclamation-circle"></i>
-            <p class="m-0">{{ session('error') }}</p>
-        </div>
-    @endif
 
     <div class="core1-flex-between core1-header">
         <div>
