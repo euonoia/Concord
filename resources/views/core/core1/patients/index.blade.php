@@ -828,9 +828,7 @@
             </div>
 
             <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-2 justify-end border-t border-gray-200">
-                <a id="modalEditLink" href="#" class="core1-btn core1-btn-primary text-sm" style="background-color:#1a3a5a;color:white;">
-                    <i class="fas fa-edit"></i><span class="pl-10">Edit Record</span>
-                </a>
+
                 <button type="button" onclick="closePatientModal()" class="core1-btn core1-btn-outline text-sm">Close</button>
             </div>
         </div>
@@ -947,7 +945,7 @@
             document.getElementById('modalInsurance').innerText = p.insurance_provider || '---';
             document.getElementById('modalPolicy').innerText = p.policy_number || '---';
             
-            document.getElementById('modalEditLink').href = `/core/patients/${p.id}/edit`;
+
         })
         .catch(error => {
             console.error('Error fetching patient details:', error);
