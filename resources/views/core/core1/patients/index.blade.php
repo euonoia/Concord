@@ -27,7 +27,7 @@
         </div>
 
         {{-- Only show Register Patient button for Admin and Receptionist --}}
-        @if(auth()->user()->role_slug === 'admin' || auth()->user()->role_slug === 'receptionist')
+        @if(in_array(auth()->user()->role_slug, ['admin', 'admin_core1', 'receptionist']))
         <div class="d-flex gap-2">
         <button type="button" onclick="openRegisterModal()" class="core1-btn core1-btn-primary">
             <i class="fas fa-plus"></i>

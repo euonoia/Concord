@@ -79,8 +79,6 @@
                             <p class="m-0 font-bold text-sm">{{ $activity['action'] }}</p>
                             <p class="m-0 text-xs text-gray">Patient: {{ $activity['patient'] }}</p>
                         </div>
-                        <div class="text-xs text-gray">
-                            {{ $activity['time'] }}
                         </div>
                     </div>
                 @endforeach
@@ -88,3 +86,42 @@
         </div>
     </div>
 </div>
+
+<div class="core1-dashboard-split mt-4">
+    <!-- Recent Patient Registrations -->
+    <div class="core1-card no-hover has-header overflow-hidden core1-scroll-card">
+        <div class="core1-card-header d-flex justify-between items-center">
+            <h2 class="core1-title core1-section-title mb-0">Recent Patient Registrations</h2>
+            <a href="{{ route('core1.patients.create') }}" class="core1-btn core1-btn-primary" style="padding: 5px 10px; font-size: 12px; margin-left: auto;">
+                <i class="fas fa-plus"></i> Register Patient
+            </a>
+        </div>
+        <div class="core1-table-container shadow-none core1-scroll-area">
+            <table class="core1-table">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Registered At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentRegistrations as $patient)
+                    <tr>
+                        <td class="text-xs text-gray font-mono">{{ $patient->patient_id ?? $patient->id }}</td>
+                        <td class="font-bold text-blue">{{ $patient->name }}</td>
+                        <td>{{ ucfirst($patient->gender) }}</td>
+                        <td>{{ $patient->created_at->format('M d, Y') }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="empty-state-cell text-center p-40">No recent registrations found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
