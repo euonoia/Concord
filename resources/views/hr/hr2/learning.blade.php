@@ -4,9 +4,17 @@
 
 @section('content')
 <div class="container">
-    <div class="header-box mb-4">
-        <h2>Available Courses</h2>
-        <p>Enroll in training programs to enhance your competencies.</p>
+    <div class="header-box mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2>Available Courses</h2>
+            <p>Enroll in training programs to enhance your competencies.</p>
+        </div>
+        {{-- Optional navigation button --}}
+        <div>
+            <a href="{{ route('user.learning.materials.index') }}" class="btn btn-success btn-sm">
+                My Courses / Materials
+            </a>
+        </div>
     </div>
 
     {{-- Success & Error Messages --}}
@@ -39,18 +47,19 @@
                     @endif
                 </div>
 
-                {{-- Enrollment Button --}}
+                {{-- Action Buttons --}}
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
                     @php
-                        // Check if the current employee is enrolled in this module
                         $enrolled = in_array($module->module_code, $enrolledModuleCodes);
                     @endphp
 
                     @if($enrolled)
-                        <button class="btn btn-success btn-sm w-100" disabled>
-                            <i class="fa fa-check"></i> Enrolled
-                        </button>
+                        {{-- View Materials button --}}
+                        <a href="{{ route('user.learning.materials.show', $module->module_code) }}" class="btn btn-success btn-sm w-100">
+                            <i class="fa fa-book"></i> View Materials
+                        </a>
                     @else
+                        {{-- Enroll button --}}
                         <form action="{{ route('user.learning.enroll', $module->module_code) }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-primary btn-sm w-100">
