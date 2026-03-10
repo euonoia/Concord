@@ -13,6 +13,7 @@ class LearningModule extends Model
     public $timestamps = true;
 
     protected $fillable = [
+        'competency_code',
         'module_code',
         'module_name',
         'dept_code',
