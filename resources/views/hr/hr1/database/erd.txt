@@ -1,0 +1,124 @@
+flowchart LR
+    %% ============================
+    %% STYLES
+    %% ============================
+    classDef module fill:#2d6a4f,color:#ffffff,stroke:#1b4332,stroke-width:2px;
+    classDef attr fill:#ffffff,color:#1b4332,stroke:#1b4332,stroke-dasharray:2 2;
+    classDef rel fill:#ffffff,color:#1b4332,stroke:#1b4332,stroke-width:2px;
+
+    %% ============================
+    %% MODULES (RECTANGLES)
+    %% ============================
+    AM[Applicant Management]:::module
+    RM[Recruitment Management]:::module
+    NH[New Hire Onboarding]:::module
+    PM[Performance Management]:::module
+    SR[Social Recognition]:::module
+
+    %% ============================
+    %% APPLICANT MANAGEMENT ATTRIBUTES (CIRCLES)
+    %% ============================
+    AM_Id((Applicant ID)):::attr
+    AM_Name((Name)):::attr
+    AM_Email((Email)):::attr
+    AM_Status((Application Status)):::attr
+    AM_AppliedDate((Applied Date)):::attr
+
+    AM --> AM_Id
+    AM --> AM_Name
+    AM --> AM_Email
+    AM --> AM_Status
+    AM --> AM_AppliedDate
+
+    %% ============================
+    %% RECRUITMENT MANAGEMENT ATTRIBUTES (CIRCLES)
+    %% ============================
+    RM_JobId((Job ID)):::attr
+    RM_Title((Job Title)):::attr
+    RM_Dept((Department)):::attr
+    RM_Type((Employment Type)):::attr
+    RM_Status((Posting Status)):::attr
+
+    RM --> RM_JobId
+    RM --> RM_Title
+    RM --> RM_Dept
+    RM --> RM_Type
+    RM --> RM_Status
+
+    %% ============================
+    %% NEW HIRE ONBOARDING ATTRIBUTES (CIRCLES)
+    %% ============================
+    NH_OnbId((Onboarding ID)):::attr
+    NH_StartDate((Start Date)):::attr
+    NH_TaskList((Onboarding Tasks)):::attr
+    NH_TaskStatus((Task Status)):::attr
+    NH_Owner((Assigned To)):::attr
+
+    NH --> NH_OnbId
+    NH --> NH_StartDate
+    NH --> NH_TaskList
+    NH --> NH_TaskStatus
+    NH --> NH_Owner
+
+    %% ============================
+    %% PERFORMANCE MANAGEMENT ATTRIBUTES (CIRCLES)
+    %% ============================
+    PM_FormId((Form / Cycle ID)):::attr
+    PM_Score((Overall Score)):::attr
+    PM_Criteria((Criteria Scores)):::attr
+    PM_ReviewDate((Review Date)):::attr
+    PM_Reviewer((Evaluator)):::attr
+
+    PM --> PM_FormId
+    PM --> PM_Score
+    PM --> PM_Criteria
+    PM --> PM_ReviewDate
+    PM --> PM_Reviewer
+
+    %% ============================
+    %% SOCIAL RECOGNITION ATTRIBUTES (CIRCLES)
+    %% ============================
+    SR_RecId((Recognition ID)):::attr
+    SR_From((From Employee)):::attr
+    SR_To((To Employee)):::attr
+    SR_Type((Award Type)):::attr
+    SR_Reason((Reason)):::attr
+    SR_Date((Recognition Date)):::attr
+
+    SR --> SR_RecId
+    SR --> SR_From
+    SR --> SR_To
+    SR --> SR_Type
+    SR --> SR_Reason
+    SR --> SR_Date
+
+    %% ============================
+    %% RELATIONSHIPS (DIAMONDS)
+    %% ============================
+
+    %% Applicant Management -> Recruitment Management
+    AM_JOB{applies for}:::rel
+    AM --> AM_JOB
+    AM_JOB --> RM
+
+    %% Recruitment Management -> New Hire Onboarding
+    RM_HIRE{hires into}:::rel
+    RM --> RM_HIRE
+    RM_HIRE --> NH
+
+    %% New Hire Onboarding -> Performance Management
+    NH_PERF{evaluated in}:::rel
+    NH --> NH_PERF
+    NH_PERF --> PM
+
+    %% Performance Management -> Social Recognition
+    PM_REC{rewards with}:::rel
+    PM --> PM_REC
+    PM_REC --> SR
+
+    %% Optional feedback loop: Social Recognition influences Performance
+    SR_FEEDBACK{influences}:::rel
+    SR --> SR_FEEDBACK
+    SR_FEEDBACK --> PM
+
+
