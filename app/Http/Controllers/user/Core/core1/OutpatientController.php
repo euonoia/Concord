@@ -31,7 +31,7 @@ class OutpatientController extends Controller
         | Base Query (OPD Encounters)
         |--------------------------------------------------------------------------
         */
-        $query = Encounter::with(['patient', 'doctor', 'triage'])
+        $query = Encounter::with(['patient', 'doctor', 'triage', 'consultation'])
             ->whereIn('type', ['OPD', 'Pending'])
             ->where('status', 'Active');
 
@@ -48,12 +48,20 @@ class OutpatientController extends Controller
         |--------------------------------------------------------------------------
         */
         $appointments = $encountersRaw->where('type', 'OPD')->map(function ($encounter) {
+            $status = 'Active';
+            if ($encounter->triage) {
+                $status = 'Triaged';
+            }
+            if ($encounter->consultation) {
+                $status = 'In consultation';
+            }
+
             return [
                 'id' => $encounter->id,
                 'time' => $encounter->created_at->format('Y-m-d h:i A'),
                 'patient' => $encounter->patient->name ?? 'Unknown',
                 'type' => $encounter->type,
-                'status' => $encounter->triage ? 'Triaged' : 'Active',
+                'status' => $status,
             ];
         });
 
@@ -148,6 +156,11 @@ class OutpatientController extends Controller
         ]);
 
         $encounter = Encounter::findOrFail($id);
+        
+        if (!$encounter->triage) {
+            return back()->with('error', 'Patient must be triaged before consultation.');
+        }
+
         $this->outpatientService->saveConsultation($encounter, $request->all());
 
         return back()->with('success', 'Consultation notes saved.');
@@ -156,9 +169,24 @@ class OutpatientController extends Controller
     public function completeConsultation(Request $request, $id)
     {
         $encounter = Encounter::findOrFail($id);
-        $this->outpatientService->completeEncounter($encounter);
 
-        return redirect()->route('core1.outpatient.index')->with('success', 'Encounter closed and consultation completed.');
+        if (!$encounter->triage) {
+            return back()->with('error', 'Patient must be triaged before closing encounter.');
+        }
+
+        $disposition = $request->input('disposition', 'discharge');
+
+        if ($disposition === 'admit') {
+            $encounter->update(['type' => 'IPD']);
+            return redirect()->route('core1.admissions.create', ['encounter_id' => $encounter->id])
+                ->with('success', 'Admission recommended. Please complete the admission details.');
+        }
+
+        // Default: Discharge path - move to Pending Billing
+        $encounter->update(['status' => 'Pending Billing']);
+        
+        return redirect()->route('core1.billing.index')
+            ->with('success', 'Consultation completed. Patient moved to billing for discharge settlement.');
     }
 
     /*

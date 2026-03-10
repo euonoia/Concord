@@ -139,10 +139,12 @@
                             <td class="text-right">
                                 <div class="core1-flex-gap-2 justify-end">
 
-                                    <button class="core1-btn-sm core1-btn-primary" 
-                                            onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
-                                        <i class="bi bi-chat-left-dots"></i> Consult
-                                    </button>
+                                    @if($apt['status'] === 'Triaged' || $apt['status'] === 'In consultation')
+                                        <button class="core1-btn-sm core1-btn-primary" 
+                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
+                                            <i class="bi bi-chat-left-dots"></i> Consult
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
 
@@ -389,7 +391,8 @@
                     <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('consultationModal')">Pause</button>
                     <div class="core1-flex-gap-2">
                         <button type="submit" class="core1-btn core1-btn-primary">Save Notes</button>
-                        <button type="button" class="core1-btn core1-btn-success" id="completeBtn">Complete & Close</button>
+                        <button type="button" class="core1-btn core1-btn-success" id="dischargeBtn">Discharge Home</button>
+                        <button type="button" class="core1-btn core1-btn-outline-primary" id="admitBtn">Recommend Admission</button>
                     </div>
                 </div>
             </form>
@@ -481,22 +484,32 @@ function openConsultationModal(id, name) {
     form.action = `/core/outpatient/${id}/consultation`;
     document.getElementById('consultingPatientName').innerText = name;
     
-    // Complete logic
-    const completeBtn = document.getElementById('completeBtn');
-    completeBtn.onclick = function() {
-        if(confirm('Are you sure you want to close this encounter?')) {
+    // Disposition logic
+    const dischargeBtn = document.getElementById('dischargeBtn');
+    const admitBtn = document.getElementById('admitBtn');
+    
+    const submitDisposition = function(type) {
+        const actionText = type === 'discharge' ? 'discharge this patient home' : 'recommend admission for this patient';
+        if(confirm(`Are you sure you want to ${actionText}?`)) {
             const tempForm = document.createElement('form');
             tempForm.method = 'POST';
             tempForm.action = `/core/outpatient/${id}/complete`;
+            
             const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
+            csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = '{{ csrf_token() }}';
             tempForm.appendChild(csrf);
+            
+            const dispInput = document.createElement('input');
+            dispInput.type = 'hidden'; dispInput.name = 'disposition'; dispInput.value = type;
+            tempForm.appendChild(dispInput);
+            
             document.body.appendChild(tempForm);
             tempForm.submit();
         }
     };
+
+    dischargeBtn.onclick = () => submitDisposition('discharge');
+    admitBtn.onclick = () => submitDisposition('admit');
 
     document.getElementById('consultationModal').style.display = 'flex';
 }
