@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\hr1;
+namespace App\Http\Controllers\Hr\hr1;
 
 use App\Http\Controllers\Controller;
-use App\Models\hr1\User;
-use App\Models\hr1\JobPosting_hr1;
-use App\Models\hr1\Application_hr1;
-use App\Models\hr1\Recognition_hr1;
-use App\Models\hr1\OnboardingTask_hr1;
-use App\Models\hr1\EvaluationCriterion_hr1;
-use App\Models\hr1\AwardCategory_hr1;
-use App\Models\hr1\LearningModule_hr1;
+use App\Models\Hr\hr1\User;
+use App\Models\Hr\hr1\JobPosting_hr1;
+use App\Models\Hr\hr1\Application_hr1;
+use App\Models\Hr\hr1\Recognition_hr1;
+use App\Models\Hr\hr1\OnboardingTask_hr1;
+use App\Models\Hr\hr1\EvaluationCriterion_hr1;
+use App\Models\Hr\hr1\AwardCategory_hr1;
+use App\Models\Hr\hr1\LearningModule_hr1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -283,7 +283,7 @@ class DashboardController_hr1 extends Controller
         ];
 
         // Return role-specific dashboard view
-        return view("hr1.user_hr1.{$role}.dashboard", $data);
+        return view("hr.hr1.user_hr1.{$role}.dashboard", $data);
     }
 
     public function updateProfile(Request $request)

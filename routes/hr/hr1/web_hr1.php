@@ -1,18 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\hr1\DashboardController_hr1;
-use App\Http\Controllers\hr1\ApplicantController_hr1;
-use App\Http\Controllers\hr1\JobController_hr1;
-use App\Http\Controllers\hr1\ApplicationController_hr1;
-use App\Http\Controllers\hr1\RecognitionController_hr1;
-use App\Http\Controllers\hr1\OnboardingController_hr1;
-use App\Http\Controllers\hr1\LearningModuleController_hr1;
-use App\Http\Controllers\hr1\EvaluationController_hr1;
+use App\Http\Controllers\Hr\hr1\DashboardController_hr1;
+use App\Http\Controllers\Hr\hr1\ApplicantController_hr1;
+use App\Http\Controllers\Hr\hr1\JobController_hr1;
+use App\Http\Controllers\Hr\hr1\ApplicationController_hr1;
+use App\Http\Controllers\Hr\hr1\RecognitionController_hr1;
+use App\Http\Controllers\Hr\hr1\OnboardingController_hr1;
+use App\Http\Controllers\Hr\hr1\LearningModuleController_hr1;
+use App\Http\Controllers\Hr\hr1\EvaluationController_hr1;
 
 // HR1 Index Route
 Route::prefix('hr/hr1')->name('hr.hr1.')->group(function () {
-    Route::get('/', fn () => view('hr1.index'))->name('index');
+    Route::get('/', fn () => view('hr.hr1.index'))->name('index');
 });
 
 // Change FROM:

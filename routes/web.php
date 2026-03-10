@@ -29,6 +29,7 @@ Route::middleware([RedirectIfGuest::class])->group(function () {
 
     Route::prefix('core')->group(base_path('routes/modules/core.php'));
     Route::prefix('hr')->group(base_path('routes/modules/hr.php'));
+    require base_path('routes/hr/hr1/web_hr1.php');
     Route::prefix('logistics')->group(base_path('routes/modules/logistics.php'));
     Route::prefix('financials')->group(base_path('routes/modules/financials.php'));
     Route::prefix('patient')->group(base_path('routes/modules/patients.php'));

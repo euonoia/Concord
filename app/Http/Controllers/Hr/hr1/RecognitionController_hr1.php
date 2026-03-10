@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\hr1;
+namespace App\Http\Controllers\Hr\hr1;
 
 use App\Http\Controllers\Controller;
-use App\Models\hr1\Recognition_hr1;
+use App\Models\Hr\hr1\Recognition_hr1;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

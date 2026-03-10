@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\hr1;
+namespace App\Http\Controllers\Hr\hr1;
 
 use App\Http\Controllers\Controller;
-use App\Models\hr1\JobPosting_hr1;
+use App\Models\Hr\hr1\JobPosting_hr1;
 use App\Services\GeminiService_hr1;
 use Illuminate\Http\Request;
 

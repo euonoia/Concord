@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models\hr1;
+namespace App\Models\Hr\hr1;
 
-use App\Models\hr1\User;
-use App\Models\hr1\JobPosting_hr1;
+use App\Models\Hr\hr1\User;
+use App\Models\Hr\hr1\JobPosting_hr1;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

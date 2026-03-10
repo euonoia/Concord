@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\hr1;
+namespace App\Http\Controllers\Hr\hr1;
 
 use App\Http\Controllers\Controller;
-use App\Models\hr1\LearningModule_hr1;
-use App\Models\hr1\User;
+use App\Models\Hr\hr1\LearningModule_hr1;
+use App\Models\Hr\hr1\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
