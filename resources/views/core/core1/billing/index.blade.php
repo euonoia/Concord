@@ -1,53 +1,80 @@
 ﻿@extends('core.core1.layouts.app')
 
-@section('title', 'Billing Management')
+@section('title', 'Billing & Payments')
 
 @section('content')
-    <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<div class="p-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Billing & Payments</h1>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
+<link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="core1-container">
+
+    {{-- Page Header --}}
+    <div class="core1-flex-between core1-header">
+        <div>
+            <h1 class="core1-title">Billing & Payments</h1>
+            <p class="core1-subtitle">Manage patient invoices and payment records</p>
+        </div>
+        <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-clock" style="color: var(--primary);"></i>
+            <span>{{ now()->format('l, F j, Y') }}</span>
+        </div>
+    </div>
+
+    {{-- Bills Table --}}
+    <div class="core1-card no-hover has-header overflow-hidden" style="padding:0; border-radius: 12px;">
+        <div class="core1-card-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <div class="core1-icon-box" style="background: var(--primary-light); color: var(--primary); width:36px; height:36px; border-radius:8px; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <h2 class="core1-title core1-section-title mb-0" style="font-size:15px;">All Bills</h2>
+        </div>
+
+        <div class="core1-table-container shadow-none">
+            <table class="core1-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th>Bill Number</th>
+                        <th>Patient</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @forelse($bills as $bill)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4">{{ $bill->bill_number }}</td>
-                            <td class="px-6 py-4">{{ $bill->patient->name }}</td>
-                            <td class="px-6 py-4">${{ number_format($bill->total, 2) }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ 
-                                    $bill->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                }}">
-                                    {{ $bill->status }}
-                                </span>
+                        <tr>
+                            <td class="font-mono text-sm" style="color: var(--primary);">{{ $bill->bill_number }}</td>
+                            <td class="font-bold text-blue">{{ $bill->patient->name }}</td>
+                            <td class="font-bold">₱{{ number_format($bill->total, 2) }}</td>
+                            <td>
+                                @php
+                                    $statusClass = $bill->status === 'paid' ? 'core1-tag-stable' : ($bill->status === 'overdue' ? 'tag-red' : 'tag-pending');
+                                @endphp
+                                <span class="core1-status-tag {{ $statusClass }}">{{ ucfirst($bill->status) }}</span>
                             </td>
-                            <td class="px-6 py-4">
-                                <a href="{{ route('billing.show', $bill) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                            <td>
+                                <a href="{{ route('billing.show', $bill) }}" class="core1-btn-sm core1-btn-outline">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">No bills found</td>
+                            <td colspan="5" class="text-center p-40">
+                                <i class="bi bi-receipt-cutoff" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
+                                No bills found.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="mt-6">
-        {{ $bills->links() }}
+
+        @if($bills->hasPages())
+        <div style="padding: 16px 24px; border-top: 1px solid var(--border-color);">
+            {{ $bills->links() }}
+        </div>
+        @endif
     </div>
 </div>
 @endsection
-

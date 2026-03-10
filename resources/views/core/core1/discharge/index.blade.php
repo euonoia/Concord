@@ -3,64 +3,86 @@
 @section('title', 'Discharge Management')
 
 @section('content')
-    <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<div class="p-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">Discharge Management</h1>
+<link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 border-b">
+<div class="core1-container">
+
+    {{-- Page Header --}}
+    <div class="core1-flex-between core1-header">
+        <div>
+            <h1 class="core1-title">Discharge Management</h1>
+            <p class="core1-subtitle">Review and process patient discharge clearances</p>
+        </div>
+        <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-clock" style="color: var(--primary);"></i>
+            <span>{{ now()->format('l, F j, Y') }}</span>
+        </div>
+    </div>
+
+    {{-- Patients Pending Discharge --}}
+    <div class="core1-card no-hover has-header overflow-hidden" style="padding:0; border-radius: 12px;">
+        <div class="core1-card-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--primary-light); color: var(--primary); width:36px; height:36px; border-radius:8px; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-box-arrow-right"></i>
+                </div>
+                <h2 class="core1-title core1-section-title mb-0" style="font-size:15px;">Patients Ready for Discharge</h2>
+            </div>
+        </div>
+
+        <div class="core1-table-container shadow-none">
+            <table class="core1-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Patient</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Patient ID</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Doctor</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Assigned Nurse</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Care Type</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Appointment Date</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Last Diagnosis</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Billing Status</th>
-                        <th class="px-6 py-3 text-left uppercase text-xs font-medium text-gray-500">Action</th>
+                        <th>Patient</th>
+                        <th>Patient ID</th>
+                        <th>Doctor</th>
+                        <th>Assigned Nurse</th>
+                        <th>Care Type</th>
+                        <th>Appointment Date</th>
+                        <th>Last Diagnosis</th>
+                        <th>Billing Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     @forelse($appointments as $appointment)
                         @php
                             $patient = $appointment->patient;
                             $latestRecord = $patient->medicalRecords()->latest('record_date')->first();
                             $latestBill = $patient->bills()->latest('bill_date')->first();
                         @endphp
-
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 font-medium text-gray-900">{{ $patient->name ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">{{ $patient->patient_id ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">{{ optional($appointment->doctor)->name ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">{{ optional($patient->assignedNurse)->name ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">{{ $patient->care_type ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}</td>
-                            <td class="px-6 py-4">{{ $latestRecord->diagnosis ?? 'N/A' }}</td>
-                            <td class="px-6 py-4">
+                        <tr>
+                            <td class="font-bold text-blue">{{ $patient->name ?? 'N/A' }}</td>
+                            <td class="font-mono text-sm" style="color: var(--primary);">{{ $patient->patient_id ?? 'N/A' }}</td>
+                            <td>{{ optional($appointment->doctor)->name ?? 'N/A' }}</td>
+                            <td>{{ optional($patient->assignedNurse)->name ?? 'N/A' }}</td>
+                            <td>{{ $patient->care_type ?? 'N/A' }}</td>
+                            <td style="font-size: 12px; color: var(--text-gray);">
+                                <i class="bi bi-calendar3" style="margin-right: 4px;"></i>
+                                {{ \Carbon\Carbon::parse($appointment->appointment_date)->format('M d, Y') }}
+                            </td>
+                            <td>{{ $latestRecord->diagnosis ?? 'N/A' }}</td>
+                            <td>
                                 @if($latestBill)
-                                    <span class="px-2 py-1 text-xs rounded-full
-                                        {{ $latestBill->status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                    <span class="core1-status-tag {{ $latestBill->status === 'paid' ? 'core1-tag-stable' : 'tag-red' }}">
                                         {{ ucfirst($latestBill->status) }}
                                     </span>
                                 @else
-                                    N/A
+                                    <span class="text-xs text-gray">N/A</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                <button class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
-                                    Mark as Discharged
+                            <td>
+                                <button class="core1-btn-sm core1-btn-primary" style="font-size: 11px;">
+                                    <i class="bi bi-check-circle"></i> Mark Discharged
                                 </button>
                             </td>
                         </tr>
-
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-6 text-center text-gray-500">
+                            <td colspan="9" class="text-center p-40">
+                                <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
                                 No completed patients ready for discharge.
                             </td>
                         </tr>
@@ -68,10 +90,12 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <div class="mt-6">
-        {{ $appointments->links() }}
+        @if($appointments->hasPages())
+        <div style="padding: 16px 24px; border-top: 1px solid var(--border-color);">
+            {{ $appointments->links() }}
+        </div>
+        @endif
     </div>
 </div>
 @endsection

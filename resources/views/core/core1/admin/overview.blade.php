@@ -45,7 +45,9 @@
                 <p class="text-xs text-gray mt-5">{{ $stats['bed_occupancy']['occupied'] }} / {{ $stats['bed_occupancy']['total'] }} beds</p>
             </div>
             <div class="core1-icon-box core1-icon-purple">
-                <i class="bi bi-bed-front"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2.5h8V2a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H2v1a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V3a1 1 0 0 1 1-2zm1 8.5h12V7H2v3.5zm11-5.5H4V4H2v1h12V5h-2z"/>
+                </svg>
             </div>
         </div>
 
