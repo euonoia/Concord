@@ -15,6 +15,10 @@ use App\Http\Controllers\user\Hr\hr3\UserAttendanceController;
 Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
 
 // --- START OF HR2 Department (Development & Planning) ---
+Route::post(
+'/my-competencies/complete/{competency_code}',
+[UserCompetencyController::class,'complete']
+)->name('user.competency.complete');
 Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
 Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
 Route::any('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
