@@ -5,51 +5,71 @@
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
 <div class="core1-container">
+
+    {{-- Page Header --}}
     <div class="core1-flex-between core1-header">
         <div>
-            <h2 class="core1-title">Inpatient Department (IPD)</h2>
-            <p class="core1-subtitle">Manage admitted patients, wards, and beds.</p>
+            <h1 class="core1-title">Inpatient Department (IPD)</h1>
+            <p class="core1-subtitle">Manage admitted patients, wards, and bed assignments</p>
+        </div>
+        <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-clock" style="color: var(--primary);"></i>
+            <span>{{ now()->format('l, F j, Y') }}</span>
         </div>
     </div>
 
     @if (session('success'))
-        <div class="core1-alert core1-alert-success">
-            {{ session('success') }}
-        </div>
+        <div class="core1-alert core1-alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="core1-card">
-        <h3 class="core1-title text-lg mb-4">Currently Admitted Patients</h3>
-        <div style="overflow-x:auto;">
-            <table class="w-full text-left" style="border-collapse: collapse;">
+    {{-- Admitted Patients Card --}}
+    <div class="core1-card no-hover has-header overflow-hidden" style="padding:0; border-radius: 12px;">
+        <div class="core1-card-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--info-light); color: var(--info); width:36px; height:36px; border-radius:8px; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                    <i class="bi bi-hospital-fill"></i>
+                </div>
+                <h2 class="core1-title core1-section-title mb-0" style="font-size:15px;">Currently Admitted Patients</h2>
+            </div>
+            <span style="font-size: 11px; font-weight: 700; background: var(--info-light); color: var(--info); padding: 3px 10px; border-radius: 999px;">
+                {{ $admissions->count() }} Admitted
+            </span>
+        </div>
+
+        <div class="core1-table-container shadow-none">
+            <table class="core1-table">
                 <thead>
-                    <tr style="background-color: #f8fafc;">
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">MRN</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Patient Name</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Ward</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Room</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Bed</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Admission Date</th>
-                        <th class="p-3 border-b text-sm font-semibold tracking-wider text-gray-500 uppercase">Actions</th>
+                    <tr>
+                        <th>MRN</th>
+                        <th>Patient Name</th>
+                        <th>Ward</th>
+                        <th>Room</th>
+                        <th>Bed</th>
+                        <th>Admission Date</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($admissions as $admission)
-                        <tr class="border-b" style="transition: background-color 0.2s; cursor:pointer;" onmouseover="this.style.backgroundColor='#f1f5f9';" onmouseout="this.style.backgroundColor='transparent';">
-                            <td class="p-3 font-mono text-sm" style="color:#1a3a5a;">{{ $admission->encounter->patient->mrn }}</td>
-                            <td class="p-3 font-bold">{{ $admission->encounter->patient->first_name }} {{ $admission->encounter->patient->last_name }}</td>
-                            <td class="p-3">{{ $admission->bed->room->ward->name }}</td>
-                            <td class="p-3">Room {{ $admission->bed->room->room_number }} <span class="text-xstext-gray-500">({{ $admission->bed->room->room_type }})</span></td>
-                            <td class="p-3">Bed {{ $admission->bed->bed_number }}</td>
-                            <td class="p-3">{{ $admission->admission_date->format('M d, Y h:i A') }}</td>
-                            <td class="p-3">
-                                <div class="core1-flex-gap-2">
+                        <tr>
+                            <td class="font-mono text-sm" style="color: var(--primary);">{{ $admission->encounter->patient->mrn }}</td>
+                            <td class="font-bold">{{ $admission->encounter->patient->first_name }} {{ $admission->encounter->patient->last_name }}</td>
+                            <td>{{ $admission->bed->room->ward->name }}</td>
+                            <td>Room {{ $admission->bed->room->room_number }} <span class="text-xs text-gray">({{ $admission->bed->room->room_type }})</span></td>
+                            <td><span class="core1-badge-teal">Bed {{ $admission->bed->bed_number }}</span></td>
+                            <td style="font-size: 12px; color: var(--text-gray);">
+                                <i class="bi bi-calendar3" style="margin-right: 4px;"></i>
+                                {{ $admission->admission_date->format('M d, Y h:i A') }}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
                                     <a href="{{ route('core1.patients.show', $admission->encounter->patient_id) }}" class="core1-btn-sm core1-btn-outline" title="View Patient">
                                         <i class="bi bi-eye"></i> View
                                     </a>
-                                    <button type="button" class="core1-btn-sm core1-btn-primary" 
-                                            onclick="openDischargeModal({{ $admission->id }}, '{{ $admission->encounter->patient->name }}')"
+                                    <button type="button" class="core1-btn-sm core1-btn-primary"
+                                            onclick="openDischargeModal({{ $admission->id }}, '{{ $admission->encounter->patient->first_name }} {{ $admission->encounter->patient->last_name }}')"
                                             title="Discharge Patient">
                                         <i class="bi bi-box-arrow-right"></i> Discharge
                                     </button>
@@ -58,35 +78,51 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="p-6 text-center text-gray-500 italic">No patients are currently admitted in the IPD.</td>
+                            <td colspan="7" class="text-center p-40">
+                                <i class="bi bi-bed" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
+                                No patients are currently admitted in the IPD.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
-        <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
-            <div class="core1-header border-bottom mb-20 pb-10">
-                <h3 class="core1-title">Patient Discharge</h3>
-                <p class="core1-subtitle">Complete discharge for <span id="dischargePatientName" class="font-bold text-dark"></span></p>
+    </div>
+
+    {{-- Discharge Modal --}}
+    <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:520px; max-width:92%; padding:0; border-radius:14px; overflow:hidden;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 9px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                    <i class="bi bi-box-arrow-right"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-dark);">Patient Discharge</h3>
+                    <p style="margin: 0; font-size: 12px; color: var(--text-gray);">Complete discharge for <span id="dischargePatientName" style="font-weight: 700; color: var(--text-dark);"></span></p>
+                </div>
             </div>
             <form id="dischargeForm" method="POST">
                 @csrf
-                <div class="mb-15">
-                    <label class="font-bold block mb-5">Final Diagnosis</label>
-                    <textarea name="final_diagnosis" class="w-full p-10 border rounded" rows="3" required placeholder="Enter final clinical diagnosis..."></textarea>
+                <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Final Diagnosis <span style="color: var(--danger);">*</span></label>
+                        <textarea name="final_diagnosis" rows="3" required placeholder="Enter final clinical diagnosis..."
+                            style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 13px; color: var(--text-dark); background: var(--bg); resize: vertical; font-family: inherit;"></textarea>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Discharge Summary <span style="color: var(--danger);">*</span></label>
+                        <textarea name="discharge_summary" rows="4" required placeholder="Summary of treatment and follow-up instructions..."
+                            style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-color); border-radius: 8px; font-size: 13px; color: var(--text-dark); background: var(--bg); resize: vertical; font-family: inherit;"></textarea>
+                    </div>
                 </div>
-                <div class="mb-20">
-                    <label class="font-bold block mb-5">Discharge Summary</label>
-                    <textarea name="discharge_summary" class="w-full p-10 border rounded" rows="4" required placeholder="Enter brief summary of treatment and follow-up instructions..."></textarea>
-                </div>
-                <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                <div style="padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
                     <button type="button" class="core1-btn core1-btn-outline" onclick="closeDischargeModal()">Cancel</button>
                     <button type="submit" class="core1-btn core1-btn-primary">Confirm Discharge</button>
                 </div>
             </form>
         </div>
     </div>
+
 </div>
 
 <script>
@@ -102,6 +138,10 @@ function closeDischargeModal() {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('dischargeModal').style.display = 'none';
+
+    document.getElementById('dischargeModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDischargeModal();
+    });
 });
 </script>
 @endsection
