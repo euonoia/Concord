@@ -5,10 +5,18 @@
 @section('content')
 <div class="container p-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">Competency Framework</h3>
+ <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h3 class="mb-0">Competency Framework</h3>
+
+    <div>
+        <a href="{{ route('admin.hr2.competency.verification.index') }}" 
+           class="btn btn-primary">
+            Verify Competency Completion
+        </a>
     </div>
 
+</div>
     {{-- Alerts --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm">

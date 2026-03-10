@@ -11,6 +11,8 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
         use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningMaterialsController;
+        use App\Http\Controllers\admin\Hr\hr2\AdminCompetencyVerificationController;
+
 
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
@@ -96,6 +98,16 @@
 
             // AJAX: modules by department+spec
             Route::get('/modules/{dept}/{spec}', [AdminLearningMaterialsController::class, 'getModulesByDeptSpec']);
+
+            Route::get(
+            '/competency-verification',
+            [AdminCompetencyVerificationController::class,'index']
+            )->name('admin.hr2.competency.verification.index');
+
+            Route::post(
+            '/competency-verification/{id}/verify',
+            [AdminCompetencyVerificationController::class,'verify']
+            )->name('admin.hr2.competency.verify');
         });
 
         Route::resource('competencies', CompetencyController::class);
