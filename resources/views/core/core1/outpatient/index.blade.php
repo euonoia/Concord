@@ -70,11 +70,11 @@
             <button class="core1-tab-btn" onclick="switchTab(event, 'consultation-tracking')">
                 <i class="bi bi-activity mr-5"></i> Consultation Tracking
             </button>
-            <button class="core1-tab-btn" onclick="switchTab(event, 'prescription-recording')">
-                <i class="bi bi-capsule mr-5"></i> Prescription & Treatment
-            </button>
             <button class="core1-tab-btn" onclick="switchTab(event, 'diagnostic-orders')">
                 <i class="bi bi-clipboard-pulse mr-5"></i> Diagnostic Orders
+            </button>
+            <button class="core1-tab-btn" onclick="switchTab(event, 'prescription-recording')">
+                <i class="bi bi-capsule mr-5"></i> Prescription & Treatment
             </button>
             <button class="core1-tab-btn" onclick="switchTab(event, 'follow-up')">
                 <i class="bi bi-calendar-check mr-5"></i> Follow Up
@@ -99,7 +99,7 @@
                                 <th>PATIENT</th>
                                 <th>TYPE</th>
                                 <th>STATUS</th>
-                                <th class="text-right">ACTIONS</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -136,9 +136,25 @@
                                             {{ $apt['status'] }}
                                         </span>
                                     </td>
-                            <td class="text-right">
-                                <div class="core1-flex-gap-2 justify-end">
-
+                            <td>
+                                <div class="core1-flex-gap-2">
+                                    <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                            onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    @if($apt['triage'])
+                                        <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                onclick="openViewTriageModal(this)"
+                                                data-bp="{{ $apt['triage']['blood_pressure'] }}"
+                                                data-hr="{{ $apt['triage']['heart_rate'] }}"
+                                                data-temp="{{ $apt['triage']['temperature'] }}"
+                                                data-spo2="{{ $apt['triage']['spo2'] }}"
+                                                data-level="{{ $apt['triage']['triage_level'] }}"
+                                                data-notes="{{ $apt['triage']['notes'] }}"
+                                                title="View Nurse Triage Assessment">
+                                            <i class="bi bi-clipboard2-pulse"></i>
+                                        </button>
+                                    @endif
                                     @if($apt['status'] === 'Triaged' || $apt['status'] === 'In consultation')
                                         <button class="core1-btn-sm core1-btn-primary" 
                                                 onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
@@ -167,7 +183,7 @@
                                 <th>PATIENT</th>
                                 <th>VITALS</th>
                                 <th>STATUS</th>
-                                <th class="text-right">ACTION</th>
+                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,7 +203,11 @@
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td class="text-right d-flex gap-2 justify-end">
+                                    <td class="d-flex gap-2">
+                                        <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                         <button class="core1-btn-sm core1-btn-outline" 
                                                 onclick="openTriageModal({{ $reg['id'] }})">
                                             <i class="bi bi-heart-pulse"></i> Triage
@@ -211,38 +231,6 @@
                                             </form>
                                         @endif
                                     </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Prescription Recording Tab -->
-            <div id="prescription-recording" class="core1-tab-pane">
-                <div class="d-flex justify-between items-center mb-20">
-                    <h3 class="core1-title core1-section-title">Record Prescriptions</h3>
-                    <p class="text-xs text-gray">Prescriptions are issued during the consultation process in the Consultation Room.</p>
-                </div>
-                <div class="core1-table-container shadow-none border">
-                    <table class="core1-table">
-                        <thead>
-                            <tr>
-                                <th>DATE</th>
-                                <th>PATIENT</th>
-                                <th>MEDICATION</th>
-                                <th>DOSAGE</th>
-                                <th>INSTRUCTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($prescriptions as $rx)
-                                <tr>
-                                    <td>{{ $rx->created_at->format('Y-m-d') }}</td>
-                                    <td class="font-bold text-blue">{{ $rx->encounter->patient->name ?? 'Unknown' }}</td>
-                                    <td class="font-bold">{{ $rx->medication }}</td>
-                                    <td>{{ $rx->dosage }}</td>
-                                    <td class="text-xs text-gray">{{ $rx->instructions }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -276,6 +264,38 @@
                                     <td>
                                         <span class="core1-status-tag core1-tag-neutral">Ordered</span>
                                     </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Prescription Recording Tab -->
+            <div id="prescription-recording" class="core1-tab-pane">
+                <div class="d-flex justify-between items-center mb-20">
+                    <h3 class="core1-title core1-section-title">Record Prescriptions</h3>
+                    <p class="text-xs text-gray">Prescriptions are issued during the consultation process in the Consultation Room.</p>
+                </div>
+                <div class="core1-table-container shadow-none border">
+                    <table class="core1-table">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>PATIENT</th>
+                                <th>MEDICATION</th>
+                                <th>DOSAGE</th>
+                                <th>INSTRUCTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($prescriptions as $rx)
+                                <tr>
+                                    <td>{{ $rx->created_at->format('Y-m-d') }}</td>
+                                    <td class="font-bold text-blue">{{ $rx->encounter->patient->name ?? 'Unknown' }}</td>
+                                    <td class="font-bold">{{ $rx->medication }}</td>
+                                    <td>{{ $rx->dosage }}</td>
+                                    <td class="text-xs text-gray">{{ $rx->instructions }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -422,7 +442,7 @@
         </div>
     </div>
 
-    <!-- Prescription Modal -->
+    <!-- Issue e-Prescription Modal -->
     <div id="prescriptionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:flex; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
             <h4 class="font-bold mb-15">Issue e-Prescription</h4>
@@ -452,6 +472,236 @@
                     <button type="submit" class="core1-btn core1-btn-primary">Prescribe</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Patient Details Modal (Clinical View) -->
+    <div id="patientDetailsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
+            <!-- Modal Header -->
+            <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">
+                <div class="d-flex items-center gap-3">
+                    <div class="core1-icon-box" style="background: var(--info-light); color: var(--info); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <h3 class="core1-title" id="modalPatientName" style="font-size: 18px; line-height:1.2; margin:0; padding:0;">Patient Name</h3>
+                        <p class="core1-subtitle" id="modalPatientMRN" style="font-size: 13px; margin:2px 0 0 0; padding:0; font-family: monospace;">MRN: ---</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('patientDetailsModal')" class="core1-btn-sm" style="background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; padding:0;">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 25px;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                    <!-- Section 1: Demographics -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-person-lines-fill"></i> 1. Demographics
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Birth Date</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalDOB">---</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Gender</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalGender">---</p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Email</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalEmail">---</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Age</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalAge">---</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Phone</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalPhone">---</p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Address</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalAddress">---</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Medical Info -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-heart-pulse"></i> 2. Medical Info
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Blood Type</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalBloodType">---</p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Allergies</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--danger);" id="modalAllergies">---</p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Medical History</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalHistory">---</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section 3: Emergency Contact -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-exclamation-triangle"></i> 3. Emergency Contact
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Contact Name</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECName">---</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Relation</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECRelation">---</p>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Phone</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECPhone">---</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Insurance -->
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                            <i class="bi bi-shield-lock"></i> 4. Insurance
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Provider</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalInsurance">---</p>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Policy Number</label>
+                                <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalPolicy">---</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 20px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; justify-content: flex-end; border-radius: 0 0 12px 12px;">
+                <button type="button" class="core1-btn core1-btn-outline" style="border-radius: 8px; padding: 10px 20px;" onclick="closeModal('patientDetailsModal')">Close Record</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Triage Results Modal (Read-Only) -->
+    <div id="viewTriageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:250; display:flex; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:500px; max-width:95%; border-top:none; padding:0; overflow:hidden;">
+            <!-- Modal Header -->
+            <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color);">
+                <div class="d-flex items-center gap-3">
+                    <div class="core1-icon-box" style="background: var(--info-light); color: var(--info); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                        <i class="bi bi-clipboard2-pulse"></i>
+                    </div>
+                    <div>
+                        <h3 class="core1-title" style="font-size: 18px; line-height:1.2; margin:0; padding:0;">Triage Assessment</h3>
+                        <p class="core1-subtitle" style="font-size: 13px; margin:2px 0 0 0; padding:0;">Nurse Recorded Clinical Vitals</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('viewTriageModal')" class="core1-btn-sm" style="background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; padding:0;">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 25px;">
+                <!-- Vitals Grid -->
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-activity"></i> Clinical Vitals
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;">
+                            <div style="width: 36px; height: 36px; border-radius: 6px; background: var(--danger-light); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                <i class="bi bi-droplet"></i>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 2px;">Blood Pressure</label>
+                                <p style="font-size: 14px; font-weight: 700; margin: 0; color: var(--text-dark);" id="viewTriageBP">---</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;">
+                            <div style="width: 36px; height: 36px; border-radius: 6px; background: #ffe4e6; color: #e11d48; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                <i class="bi bi-heart-pulse"></i>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 2px;">Heart Rate</label>
+                                <p style="font-size: 14px; font-weight: 700; margin: 0; color: var(--text-dark);" id="viewTriageHR">---</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;">
+                            <div style="width: 36px; height: 36px; border-radius: 6px; background: var(--warning-light); color: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                <i class="bi bi-thermometer-half"></i>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 2px;">Temp (°C)</label>
+                                <p style="font-size: 14px; font-weight: 700; margin: 0; color: var(--text-dark);" id="viewTriageTemp">---</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff;">
+                            <div style="width: 36px; height: 36px; border-radius: 6px; background: var(--info-light); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                <i class="bi bi-lungs"></i>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 2px;">SpO2 (%)</label>
+                                <p style="font-size: 14px; font-weight: 700; margin: 0; color: var(--text-dark);" id="viewTriageSpO2">---</p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Acuity Section -->
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-shield-check"></i> Urgency Level
+                    </h4>
+                    <div id="viewTriageLevelContainer" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; border-radius: 8px; border: 2px solid var(--border-color); background: var(--bg);">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div id="viewTriageLevelIconContainer" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: #fff; box-shadow: var(--shadow-sm);">
+                                <i id="viewTriageLevelIcon" class="bi bi-speedometer2"></i>
+                            </div>
+                            <div>
+                                <p style="font-size: 12px; font-weight: 600; color: var(--text-light); margin: 0 0 2px 0;">Assigned Acuity</p>
+                                <p style="font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;" id="viewTriageLevel">---</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div>
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-chat-left-text"></i> Nurse Observations
+                    </h4>
+                    <div style="padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg); min-height: 80px;">
+                        <p style="font-size: 14px; color: var(--text-dark); margin: 0; line-height: 1.5; font-style: italic;" id="viewTriageNotes">No notes recorded.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 0 25px 25px 25px; display: flex; justify-content: flex-end;">
+                <button type="button" class="core1-btn core1-btn-primary" style="width: 100%; font-size: 14px; padding: 12px; border-radius: 8px;" onclick="closeModal('viewTriageModal')">
+                    Done Reviewing
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -530,11 +780,90 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
+function openViewTriageModal(btn) {
+    document.getElementById('viewTriageBP').innerText = btn.getAttribute('data-bp') || '---';
+    document.getElementById('viewTriageHR').innerText = btn.getAttribute('data-hr') ? btn.getAttribute('data-hr') + ' bpm' : '---';
+    document.getElementById('viewTriageTemp').innerText = btn.getAttribute('data-temp') ? btn.getAttribute('data-temp') + ' °C' : '---';
+    document.getElementById('viewTriageSpO2').innerText = btn.getAttribute('data-spo2') ? btn.getAttribute('data-spo2') + ' %' : '---';
+    
+    // Core1 colors: danger, warning, success, info
+    const levels = {
+        '1': { text: 'Level 1 - Resuscitation', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', icon: 'bi-exclamation-octagon-fill' },
+        '2': { text: 'Level 2 - Emergent', color: '#ea580c', bg: '#ffedd5', border: '#fdba74', icon: 'bi-lightning-charge-fill' },
+        '3': { text: 'Level 3 - Urgent', color: '#d97706', bg: '#fef3c7', border: '#fcd34d', icon: 'bi-exclamation-triangle-fill' },
+        '4': { text: 'Level 4 - Less Urgent', color: '#16a34a', bg: '#dcfce7', border: '#86efac', icon: 'bi-check-circle-fill' },
+        '5': { text: 'Level 5 - Non-Urgent', color: '#3b82f6', bg: '#dbeafe', border: '#93c5fd', icon: 'bi-info-circle-fill' }
+    };
+    
+    const levelKey = btn.getAttribute('data-level');
+    const levelData = levels[levelKey] || { text: 'Not Assigned', color: '#6b7280', bg: '#f7f8fa', border: '#e5e7eb', icon: 'bi-dash-circle' };
+    
+    const levelText = document.getElementById('viewTriageLevel');
+    const levelContainer = document.getElementById('viewTriageLevelContainer');
+    const levelIcon = document.getElementById('viewTriageLevelIcon');
+    // We already styled the icon container using generic drop shadow and white background.
+    
+    levelText.innerText = levelData.text;
+    levelText.style.color = levelData.color;
+    levelContainer.style.backgroundColor = levelData.bg;
+    levelContainer.style.borderColor = levelData.border; 
+    
+    levelIcon.className = `bi ${levelData.icon}`;
+    levelIcon.style.color = levelData.color;
+    
+    const rawNotes = btn.getAttribute('data-notes');
+    document.getElementById('viewTriageNotes').innerText = (rawNotes && rawNotes !== 'null' && rawNotes !== '') ? rawNotes : 'No nurse observations reported for this encounter.';
+    
+    document.getElementById('viewTriageModal').style.display = 'flex';
+}
+
+
+function openPatientModal(id) {
+    document.getElementById('modalPatientName').innerText = 'Loading...';
+    document.getElementById('patientDetailsModal').style.display = 'flex';
+
+    fetch(`/core/patients/${id}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const p = data.patient;
+        document.getElementById('modalPatientName').innerText = p.first_name + ' ' + (p.middle_name ? p.middle_name + ' ' : '') + p.last_name;
+        document.getElementById('modalPatientMRN').innerText = 'MRN: ' + (p.mrn || 'Not assigned');
+        document.getElementById('modalDOB').innerText = p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '---';
+        document.getElementById('modalAge').innerText = data.age + ' years';
+        document.getElementById('modalGender').innerText = p.gender ? p.gender.charAt(0).toUpperCase() + p.gender.slice(1) : '---';
+        document.getElementById('modalPhone').innerText = p.phone || '---';
+        document.getElementById('modalEmail').innerText = p.email || '---';
+        document.getElementById('modalAddress').innerText = p.address || '---';
+        
+        document.getElementById('modalBloodType').innerText = p.blood_type || '---';
+        document.getElementById('modalAllergies').innerText = p.allergies || 'None';
+        document.getElementById('modalHistory').innerText = p.medical_history || 'None';
+        
+        document.getElementById('modalECName').innerText = p.emergency_contact_name || '---';
+        document.getElementById('modalECPhone').innerText = p.emergency_contact_phone || '---';
+        document.getElementById('modalECRelation').innerText = p.emergency_contact_relation || '---';
+        
+        document.getElementById('modalInsurance').innerText = p.insurance_provider || '---';
+        document.getElementById('modalPolicy').innerText = p.policy_number || '---';
+    })
+    .catch(error => {
+        console.error('Error fetching patient details:', error);
+        document.getElementById('modalPatientName').innerText = 'Error loading details';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     closeModal('triageModal');
     closeModal('consultationModal');
     closeModal('labModal');
     closeModal('prescriptionModal');
+    closeModal('patientDetailsModal');
+    closeModal('viewTriageModal');
 });
 </script>
 @endsection

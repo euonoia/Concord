@@ -60,6 +60,16 @@ class OutpatientController extends Controller
                 'id' => $encounter->id,
                 'time' => $encounter->created_at->format('Y-m-d h:i A'),
                 'patient' => $encounter->patient->name ?? 'Unknown',
+                'patient_id' => $encounter->patient_id,
+                'triage' => $encounter->triage ? [
+                    'blood_pressure' => $encounter->triage->blood_pressure,
+                    'heart_rate'     => $encounter->triage->heart_rate,
+                    'temperature'    => $encounter->triage->temperature,
+                    'spo2'           => $encounter->triage->spo2,
+                    'triage_level'   => $encounter->triage->triage_level,
+                    'notes'          => $encounter->triage->notes,
+                    'summary'        => "BP: {$encounter->triage->blood_pressure}, HR: {$encounter->triage->heart_rate}, Temp: {$encounter->triage->temperature}"
+                ] : null,
                 'type' => $encounter->type,
                 'status' => $status,
             ];
@@ -82,6 +92,7 @@ class OutpatientController extends Controller
                 'triage' => $encounter->triage ? "BP: {$encounter->triage->blood_pressure}, HR: {$encounter->triage->heart_rate}" : 'No Triage',
                 'status' => $status,
                 'type' => $encounter->type,
+                'patient_id' => $encounter->patient_id,
                 'isEmergency' => false,
                 'canAction' => $canAction
             ];
