@@ -339,257 +339,86 @@
 </div>
 
 <!-- Register Patient Modal -->
-<div id="registerModal" class="fixed inset-0 z-[1000] overflow-y-auto" style="display: none;" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" style="z-index: -1;"></div>
-    
-    <div class="flex min-h-screen w-full items-center justify-center p-4 text-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-            <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                <div class="mb-6">
-                    <h3 class="text-2xl font-bold leading-6 text-gray-900" id="modal-title">Register New Patient</h3>
-                    <p class="mt-2 text-sm text-gray-500">Please fill out the form below to add a new patient to the system.</p>
+<!-- Register Patient Modal -->
+<div id="registerModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 90vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
+        <!-- Modal Header -->
+        <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--primary-light); color: var(--primary); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <i class="bi bi-person-plus-fill"></i>
                 </div>
-                
-                <form action="{{ route('core1.patients.store') }}" method="POST" class="space-y-6" id="registerForm">
-                    @csrf
-                    <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-                        <!-- Section 1: Patient Information -->
-                        <div class="col-span-2">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Patient Information</h4>
-                        </div>
-                        
-                        {{-- Name split into first/middle/last --}}
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="first_name" id="modal_first_name" value="{{ old('first_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
-                            <label for="modal_first_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">First Name</label>
-                            @error('first_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="middle_name" id="modal_middle_name" value="{{ old('middle_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name">
-                            <label for="modal_middle_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Middle Name</label>
-                        </div>
-                        <div class="relative col-span-2">
-                            <input type="text" name="last_name" id="modal_last_name" value="{{ old('last_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
-                            <label for="modal_last_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Last Name</label>
-                            @error('last_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- DOB -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date of Birth" required>
-                            <label for="date_of_birth" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Date of Birth</label>
-                            @error('date_of_birth') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Gender -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <select name="gender" id="gender" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
-                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select Gender</option>
-                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
-                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
-                                <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
-                            </select>
-                            <label for="gender" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Gender</label>
-                            @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Phone -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Phone Number" required>
-                            <label for="phone" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Phone Number</label>
-                            @error('phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Email -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="email" name="email" id="email" value="{{ old('email') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Email Address" required>
-                            <label for="email" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Email Address</label>
-                            @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Address -->
-                        <div class="relative col-span-2">
-                            <input type="text" name="address" id="address" value="{{ old('address') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Complete Address">
-                            <label for="address" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Complete Address</label>
-                            @error('address') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Section 2: Medical Information -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">2. Medical Information</h4>
-                        </div>
-
-                        <!-- Blood Type -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <select name="blood_type" id="blood_type" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent">
-                                <option value="" disabled {{ old('blood_type') ? '' : 'selected' }}>Select Blood Type</option>
-                                <option value="A+" {{ old('blood_type') == 'A+' ? 'selected' : '' }}>A+</option>
-                                <option value="A-" {{ old('blood_type') == 'A-' ? 'selected' : '' }}>A-</option>
-                                <option value="B+" {{ old('blood_type') == 'B+' ? 'selected' : '' }}>B+</option>
-                                <option value="B-" {{ old('blood_type') == 'B-' ? 'selected' : '' }}>B-</option>
-                                <option value="AB+" {{ old('blood_type') == 'AB+' ? 'selected' : '' }}>AB+</option>
-                                <option value="AB-" {{ old('blood_type') == 'AB-' ? 'selected' : '' }}>AB-</option>
-                                <option value="O+" {{ old('blood_type') == 'O+' ? 'selected' : '' }}>O+</option>
-                                <option value="O-" {{ old('blood_type') == 'O-' ? 'selected' : '' }}>O-</option>
-                                <option value="Unknown" {{ old('blood_type') == 'Unknown' ? 'selected' : '' }}>Unknown</option>
-                            </select>
-                            <label for="blood_type" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Blood Type</label>
-                            @error('blood_type') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-                        
-                        <!-- Allergies -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="allergies" id="allergies" value="{{ old('allergies') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Allergies (if any)">
-                            <label for="allergies" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Allergies (if any)</label>
-                            @error('allergies') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Medical History -->
-                        <div class="relative col-span-2">
-                            <textarea name="medical_history" id="medical_history" rows="2" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Pre-existing Conditions, Past Surgeries, etc.">{{ old('medical_history') }}</textarea>
-                            <label for="medical_history" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Medical History</label>
-                            @error('medical_history') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Section 3: Emergency Information -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Emergency Information</h4>
-                        </div>
-
-                        <!-- Emergency Contact Name -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="emergency_contact_name" id="emergency_contact_name" value="{{ old('emergency_contact_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Emergency Contact Name">
-                            <label for="emergency_contact_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Emergency Contact Name</label>
-                            @error('emergency_contact_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Emergency Contact Phone -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="tel" name="emergency_contact_phone" id="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Emergency Contact Phone">
-                            <label for="emergency_contact_phone" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Emergency Contact Phone</label>
-                            @error('emergency_contact_phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Emergency Contact Relation -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="emergency_contact_relation" id="emergency_contact_relation" value="{{ old('emergency_contact_relation') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Relationship to Patient">
-                            <label for="emergency_contact_relation" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Relationship to Patient</label>
-                            @error('emergency_contact_relation') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Section 4: Insurance Information -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">4. Insurance Information</h4>
-                        </div>
-
-                        <!-- Insurance Provider -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="insurance_provider" id="insurance_provider" value="{{ old('insurance_provider') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Insurance Provider">
-                            <label for="insurance_provider" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Insurance Provider</label>
-                            @error('insurance_provider') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Policy Number -->
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="policy_number" id="policy_number" value="{{ old('policy_number') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Policy/Member Number">
-                            <label for="policy_number" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Policy/Member Number</label>
-                            @error('policy_number') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        </div>
-
-                    </div>
-                    
-                    <div class="mt-8 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
-                        <button type="button" onclick="closeRegisterModal()" class="w-full sm:w-auto rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all">
-                            Cancel
-                        </button>
-                        <button type="submit" class="w-full sm:w-auto rounded-lg bg-[#1a3a5a] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#142d45] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
-                            Confirm Registration
-                        </button>
-                    </div>
-                </form>
+                <div>
+                    <h3 class="core1-title" id="modal-title" style="font-size: 18px; line-height:1.2; margin:0; padding:0;">Register New Patient</h3>
+                    <p class="core1-subtitle" style="font-size: 13px; margin:2px 0 0 0; padding:0;">Fill out the form below to add a new record.</p>
+                </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 rounded-b-2xl">
-                <p class="text-xs text-center text-gray-500 flex items-center justify-center gap-1">
-                    <i class="fas fa-lock text-xxs"></i> Patient data is secure and encrypted.
-                </p>
-            </div>
+            <button type="button" onclick="closeRegisterModal()" class="core1-btn-sm" style="background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; padding:0;">
+                <i class="bi bi-x"></i>
+            </button>
         </div>
-    </div>
-</div>
 
-@endsection
-
-{{-- Edit Patient Modal --}}
-<div id="editPatientModal" class="fixed inset-0 z-[1000] overflow-y-auto" style="display: none;" aria-labelledby="edit-modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" style="z-index: -1;"></div>
-    
-    <div class="flex min-h-screen w-full items-center justify-center p-4 text-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-            <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                <div class="mb-6">
-                    <h3 class="text-2xl font-bold leading-6 text-gray-900" id="edit-modal-title">Edit Patient Record</h3>
-                    <p class="mt-2 text-sm text-gray-500">Update the patient information below.</p>
-                </div>
+        <form action="{{ route('core1.patients.store') }}" method="POST" id="registerForm" style="padding:0; margin:0;">
+            @csrf
+            <div style="padding: 25px; display: flex; flex-direction: column; gap: 25px;">
                 
-                <form id="editPatientForm" method="POST" class="space-y-6">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-                        <!-- Section 1: Demographics -->
-                        <div class="col-span-2">
-                            <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider border-b pb-1">1. Demographics</h4>
+                {{-- Section 1: Patient Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-person-vcard"></i> 1. Patient Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">First Name</label>
+                            <input type="text" name="first_name" value="{{ old('first_name') }}" class="core1-input" required>
+                            @error('first_name') <small style="color:var(--danger); font-size:10px;">{{ $message }}</small> @enderror
                         </div>
-                        
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="first_name" id="edit_first_name" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
-                            <label for="edit_first_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">First Name</label>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Middle Name</label>
+                            <input type="text" name="middle_name" value="{{ old('middle_name') }}" class="core1-input">
                         </div>
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="middle_name" id="edit_middle_name" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name">
-                            <label for="edit_middle_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Middle Name</label>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Last Name</label>
+                            <input type="text" name="last_name" value="{{ old('last_name') }}" class="core1-input" required>
+                            @error('last_name') <small style="color:var(--danger); font-size:10px;">{{ $message }}</small> @enderror
                         </div>
-                        <div class="relative col-span-2">
-                            <input type="text" name="last_name" id="edit_last_name" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
-                            <label for="edit_last_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Last Name</label>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" class="core1-input" required>
                         </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="date" name="date_of_birth" id="edit_date_of_birth" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" required>
-                            <label for="edit_date_of_birth" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Date of Birth</label>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <select name="gender" id="edit_gender" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Gender</label>
+                            <select name="gender" class="core1-input" required>
+                                <option value="" disabled selected>Select Gender</option>
                                 <option value="male">Male</option>
                                 <option value="female">Female</option>
                                 <option value="other">Other</option>
                             </select>
-                            <label for="edit_gender" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Gender</label>
                         </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="tel" name="phone" id="edit_phone" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Phone Number" required>
-                            <label for="edit_phone" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Phone Number</label>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Phone Number</label>
+                            <input type="tel" name="phone" value="{{ old('phone') }}" class="core1-input" required>
                         </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="email" name="email" id="edit_email" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Email Address" required>
-                            <label for="edit_email" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Email Address</label>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Email Address</label>
+                            <input type="email" name="email" value="{{ old('email') }}" class="core1-input" required>
                         </div>
-
-                        <div class="relative col-span-2">
-                            <input type="text" name="address" id="edit_address" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Complete Address">
-                            <label for="edit_address" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Complete Address</label>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Complete Address</label>
+                            <input type="text" name="address" value="{{ old('address') }}" class="core1-input">
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Section 2: Medical Info -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider border-b pb-1">2. Medical Information</h4>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <select name="blood_type" id="edit_blood_type" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent">
+                {{-- Section 2: Medical Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-heart-pulse"></i> 2. Medical Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Blood Type</label>
+                            <select name="blood_type" class="core1-input">
                                 <option value="Unknown">Unknown</option>
                                 <option value="A+">A+</option>
                                 <option value="A-">A-</option>
@@ -600,275 +429,433 @@
                                 <option value="O+">O+</option>
                                 <option value="O-">O-</option>
                             </select>
-                            <label for="edit_blood_type" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Blood Type</label>
                         </div>
-                        
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="allergies" id="edit_allergies" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Allergies (if any)">
-                            <label for="edit_allergies" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Allergies (if any)</label>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Allergies (if any)</label>
+                            <input type="text" name="allergies" value="{{ old('allergies') }}" class="core1-input">
                         </div>
-
-                        <div class="relative col-span-2">
-                            <textarea name="medical_history" id="edit_medical_history" rows="2" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Medical History"></textarea>
-                            <label for="edit_medical_history" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Medical History</label>
-                        </div>
-
-                        <!-- Section 3: Emergency Contact -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-xs font-bold text-orange-600 uppercase tracking-wider border-b pb-1">3. Emergency Contact</h4>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="emergency_contact_name" id="edit_emergency_contact_name" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Contact Name">
-                            <label for="edit_emergency_contact_name" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Contact Name</label>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="emergency_contact_relation" id="edit_emergency_contact_relation" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Relationship">
-                            <label for="edit_emergency_contact_relation" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Relationship</label>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="tel" name="emergency_contact_phone" id="edit_emergency_contact_phone" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Contact Phone">
-                            <label for="edit_emergency_contact_phone" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Contact Phone</label>
-                        </div>
-
-                        <!-- Section 4: Insurance -->
-                        <div class="col-span-2 mt-4">
-                            <h4 class="text-xs font-bold text-purple-600 uppercase tracking-wider border-b pb-1">4. Insurance</h4>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="insurance_provider" id="edit_insurance_provider" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Insurance Provider">
-                            <label for="edit_insurance_provider" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Insurance Provider</label>
-                        </div>
-
-                        <div class="relative col-span-2 sm:col-span-1">
-                            <input type="text" name="policy_number" id="edit_policy_number" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Policy Number">
-                            <label for="edit_policy_number" class="absolute left-3 top-0 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-0 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Policy Number</label>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Medical History</label>
+                            <textarea name="medical_history" rows="2" class="core1-input" style="resize:none;">{{ old('medical_history') }}</textarea>
                         </div>
                     </div>
-                    
-                    <div class="mt-8 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
-                        <button type="button" onclick="closeEditModal()" class="w-full sm:w-auto rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all">
-                            Cancel
-                        </button>
-                        <button type="submit" class="w-full sm:w-auto rounded-lg bg-[#1a3a5a] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#142d45] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
-                            Save Changes
-                        </button>
+                </div>
+
+                {{-- Section 3: Emergency Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-telephone-outbound"></i> 3. Emergency Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Emergency Contact Name</label>
+                            <input type="text" name="emergency_contact_name" value="{{ old('emergency_contact_name') }}" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Relationship</label>
+                            <input type="text" name="emergency_contact_relation" value="{{ old('emergency_contact_relation') }}" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Contact Phone</label>
+                            <input type="tel" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" class="core1-input">
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                {{-- Section 4: Insurance Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-shield-check"></i> 4. Insurance Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Insurance Provider</label>
+                            <input type="text" name="insurance_provider" value="{{ old('insurance_provider') }}" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Policy/Member Number</label>
+                            <input type="text" name="policy_number" value="{{ old('policy_number') }}" class="core1-input">
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 20px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; justify-content: flex-end; gap: 12px; border-radius: 0 0 12px 12px; position: sticky; bottom:0;">
+                <button type="button" onclick="closeRegisterModal()" class="core1-btn core1-btn-outline" style="border-radius: 8px; padding: 10px 20px;">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary" style="border-radius: 8px; padding: 10px 25px;">
+                    <i class="bi bi-check-circle mr-5"></i> Confirm Registration
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@endsection
+
+{{-- Edit Patient Modal --}}
+<div id="editPatientModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 90vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
+        <!-- Modal Header -->
+        <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--warning-light-more); color: var(--warning); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div>
+                    <h3 class="core1-title" style="font-size: 18px; line-height:1.2; margin:0; padding:0;">Edit Patient Profile</h3>
+                    <p class="core1-subtitle" style="font-size: 13px; margin:2px 0 0 0; padding:0;">Update patient demographic and medical records.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeEditModal()" class="core1-btn-sm" style="background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; padding:0;">
+                <i class="bi bi-x"></i>
+            </button>
         </div>
+
+        <form id="editPatientForm" method="POST" style="padding:0; margin:0;">
+            @csrf
+            @method('PUT')
+            <div style="padding: 25px; display: flex; flex-direction: column; gap: 25px;">
+                
+                {{-- Section 1: Patient Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-person-vcard"></i> 1. Patient Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">First Name</label>
+                            <input type="text" name="first_name" id="edit_first_name" class="core1-input" required>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Middle Name</label>
+                            <input type="text" name="middle_name" id="edit_middle_name" class="core1-input">
+                        </div>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Last Name</label>
+                            <input type="text" name="last_name" id="edit_last_name" class="core1-input" required>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Date of Birth</label>
+                            <input type="date" name="date_of_birth" id="edit_date_of_birth" class="core1-input" required>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Gender</label>
+                            <select name="gender" id="edit_gender" class="core1-input" required>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Phone Number</label>
+                            <input type="tel" name="phone" id="edit_phone" class="core1-input" required>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Email Address</label>
+                            <input type="email" name="email" id="edit_email" class="core1-input" required>
+                        </div>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Complete Address</label>
+                            <input type="text" name="address" id="edit_address" class="core1-input">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 2: Medical Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-heart-pulse"></i> 2. Medical Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Blood Type</label>
+                            <select name="blood_type" id="edit_blood_type" class="core1-input">
+                                <option value="Unknown">Unknown</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Allergies (if any)</label>
+                            <input type="text" name="allergies" id="edit_allergies" class="core1-input">
+                        </div>
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Medical History</label>
+                            <textarea name="medical_history" id="edit_medical_history" rows="2" class="core1-input" style="resize:none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 3: Emergency Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-telephone-outbound"></i> 3. Emergency Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group" style="grid-column: span 2;">
+                            <label class="core1-form-label">Emergency Contact Name</label>
+                            <input type="text" name="emergency_contact_name" id="edit_emergency_contact_name" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Relationship</label>
+                            <input type="text" name="emergency_contact_relation" id="edit_emergency_contact_relation" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Contact Phone</label>
+                            <input type="tel" name="emergency_contact_phone" id="edit_emergency_contact_phone" class="core1-input">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 4: Insurance Information --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-shield-check"></i> 4. Insurance Information
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Insurance Provider</label>
+                            <input type="text" name="insurance_provider" id="edit_insurance_provider" class="core1-input">
+                        </div>
+                        <div class="core1-form-group">
+                            <label class="core1-form-label">Policy/Member Number</label>
+                            <input type="text" name="policy_number" id="edit_policy_number" class="core1-input">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 20px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; justify-content: flex-end; gap: 12px; border-radius: 0 0 12px 12px; position: sticky; bottom:0;">
+                <button type="button" onclick="closeEditModal()" class="core1-btn core1-btn-outline" style="border-radius: 8px; padding: 10px 20px;">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary" style="border-radius: 8px; padding: 10px 25px;">
+                    <i class="bi bi-save mr-5"></i> Save Changes
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 {{-- Duplicate Warning Modal --}}
-<div id="duplicateModal" class="fixed inset-0 z-[1050] overflow-y-auto" style="display:none;" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" style="z-index:-1;"></div>
-    <div class="flex min-h-screen w-full items-center justify-center p-4">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl sm:w-full sm:max-w-lg">
-            <div class="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background-color:#fef3c7;">
-                        <i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">Possible Duplicate Patient Found</h3>
-                        <p class="text-sm text-gray-500">Review the matches below before proceeding.</p>
-                    </div>
+<div id="duplicateModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:500px; max-width:90%; padding:0; border-top:none; border-radius:12px;">
+        <!-- Modal Header -->
+        <div style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--warning-light-more); color: var(--warning); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div>
+                    <h3 class="core1-title" style="font-size: 16px; margin:0;">Possible Duplicates Found</h3>
+                    <p class="core1-subtitle" style="font-size: 12px; margin:2px 0 0 0;">Review existing records before proceeding.</p>
                 </div>
             </div>
-            <div class="px-6 py-4 max-h-64 overflow-y-auto">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Existing Records</p>
-                <div id="duplicateList"></div>
-            </div>
-            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex flex-col sm:flex-row gap-2 justify-end border-t border-gray-200">
-                <button type="button" onclick="closeDuplicateModal(); openRegisterModal();" class="core1-btn core1-btn-outline text-sm">
-                    <i class="fas fa-plus"></i><span class="pl-10">Create New Patient Anyway</span>
-                </button>
-                <button type="button" onclick="closeDuplicateModal();" class="core1-btn core1-btn-primary text-sm" style="background-color:#1a3a5a;color:white;">
-                    <i class="fas fa-arrow-left"></i><span class="pl-10">Go Back & Review</span>
-                </button>
-            </div>
+        </div>
+
+        <div style="padding: 20px 25px;">
+            <p style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">Existing Matches</p>
+            <div id="duplicateList" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding: 15px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 12px 12px;">
+            <button type="button" onclick="closeDuplicateModal(); openRegisterModal();" class="core1-btn core1-btn-outline" style="width: 100%; border-radius: 8px;">
+                <i class="bi bi-person-plus"></i> Create New Patient Anyway
+            </button>
+            <button type="button" onclick="closeDuplicateModal();" class="core1-btn core1-btn-primary" style="width: 100%; border-radius: 8px;">
+                <i class="bi bi-arrow-left"></i> Go Back and Edit
+            </button>
         </div>
     </div>
 </div>
 
 {{-- Patient Details Modal --}}
-<div id="patientDetailsModal" class="fixed inset-0 z-[1060] overflow-y-auto" style="display:none;" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" style="z-index:-1;"></div>
-    <div class="flex min-h-screen w-full items-center justify-center p-4">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl sm:w-full sm:max-w-3xl">
-            <div class="px-6 pt-6 pb-4 border-b border-gray-200 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background-color:#eff6ff;">
-                        <i class="fas fa-user-circle" style="color:#2563eb;"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900" id="modalPatientName">Patient Name</h3>
-                        <p class="text-sm text-gray-500" id="modalPatientMRN">MRN: ---</p>
-                    </div>
+<div id="patientDetailsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
+        <!-- Modal Header -->
+        <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--info-light); color: var(--info); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <i class="bi bi-person-badge"></i>
                 </div>
-                <button type="button" onclick="closePatientModal()" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+                <div>
+                    <h3 class="core1-title" id="modalPatientName" style="font-size: 18px; line-height:1.2; margin:0; padding:0;">Patient Name</h3>
+                    <p class="core1-subtitle" id="modalPatientMRN" style="font-size: 13px; margin:2px 0 0 0; padding:0; font-family: monospace;">MRN: ---</p>
+                </div>
             </div>
-            
-            <div class="px-6 py-5 max-h-[70vh] overflow-y-auto">
-                {{-- Modal Content Grid --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
-                    {{-- Section 1: Demographics --}}
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider border-b pb-2">1. Demographics</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Birth Date</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalDOB">---</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Gender</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalGender">---</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Email</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalEmail">---</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Age</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalAge">---</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Phone</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalPhone">---</p>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Address</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalAddress">---</p>
-                            </div>
+            <button type="button" onclick="closePatientModal()" class="core1-btn-sm" style="background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; padding:0;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        
+        <div style="padding: 25px;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                {{-- Section 1: Demographics --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-person-lines-fill"></i> 1. Demographics
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Birth Date</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalDOB">---</p>
                         </div>
-                    </div>
-
-                    {{-- Section 2: Medical Info --}}
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider border-b pb-2">2. Medical Info</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Blood Type</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalBloodType">---</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Allergies</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalAllergies">---</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Medical History</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalHistory">---</p>
-                            </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Gender</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalGender">---</p>
                         </div>
-                    </div>
-
-                    {{-- Section 3: Emergency Contact --}}
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold text-orange-600 uppercase tracking-wider border-b pb-2">3. Emergency Contact</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Contact Name</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalECName">---</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Relation</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalECRelation">---</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Phone</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalECPhone">---</p>
-                            </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Email</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalEmail">---</p>
                         </div>
-                    </div>
-
-                    {{-- Section 4: Insurance --}}
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold text-purple-600 uppercase tracking-wider border-b pb-2">4. Insurance</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Provider</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalInsurance">---</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Policy Number</label>
-                                <p class="text-sm font-medium text-gray-900" id="modalPolicy">---</p>
-                            </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Age</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalAge">---</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Phone</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalPhone">---</p>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Address</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalAddress">---</p>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-2 justify-end border-t border-gray-200">
+                {{-- Section 2: Medical Info --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-heart-pulse"></i> 2. Medical Info
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Blood Type</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalBloodType">---</p>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Allergies</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--danger);" id="modalAllergies">---</p>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Medical History</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalHistory">---</p>
+                        </div>
+                    </div>
+                </div>
 
-                <button type="button" onclick="closePatientModal()" class="core1-btn core1-btn-outline text-sm">Close</button>
+                {{-- Section 3: Emergency Contact --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-exclamation-triangle"></i> 3. Emergency Contact
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Contact Name</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECName">---</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Relation</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECRelation">---</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Phone</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalECPhone">---</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Section 4: Insurance --}}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <h4 style="font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin:0; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-shield-lock"></i> 4. Insurance
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Provider</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalInsurance">---</p>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 4px;">Policy Number</label>
+                            <p style="font-size: 14px; font-weight: 600; margin: 0; color: var(--text-dark);" id="modalPolicy">---</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <div style="padding: 20px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; justify-content: flex-end; border-radius: 0 0 12px 12px;">
+            <button type="button" onclick="closePatientModal()" class="core1-btn core1-btn-outline" style="border-radius: 8px; padding: 10px 20px;">Close Record</button>
         </div>
     </div>
 </div>
 
 {{-- Merge Patients Modal --}}
-<div id="mergeModal" class="fixed inset-0 z-[1060] overflow-y-auto" style="display:none;" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" style="z-index:-1;"></div>
-    <div class="flex min-h-screen w-full items-center justify-center p-4">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl sm:w-full sm:max-w-md">
-            <div class="px-6 pt-6 pb-4 border-b border-gray-200">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style="background-color:#ede9fe;">
-                        <i class="fas fa-code-branch" style="color:#7c3aed;"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">Merge Patient Records</h3>
-                        <p class="text-sm text-gray-500">The pre-registered record will be absorbed into the primary record.</p>
-                    </div>
+<div id="mergeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:500px; max-width:90%; padding:0; border-top:none; border-radius:12px;">
+        <!-- Modal Header -->
+        <div style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0;">
+            <div class="d-flex items-center gap-3">
+                <div class="core1-icon-box" style="background: var(--primary-light); color: var(--primary); width: 40px; height: 40px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem;">
+                    <i class="bi bi-intersect"></i>
+                </div>
+                <div>
+                    <h3 class="core1-title" style="font-size: 16px; margin:0;">Merge Patient Records</h3>
+                    <p class="core1-subtitle" style="font-size: 12px; margin:2px 0 0 0;">Combine pre-registered data into a primary record.</p>
                 </div>
             </div>
-            <form action="{{ route('core1.patients.merge') }}" method="POST">
-                @csrf
-                <div class="px-6 py-5 space-y-4">
-                    <div>
-                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Primary Patient (REGISTERED)</label>
-                        <select name="primary_patient_id" class="core1-input w-full mt-1" required>
-                            <option value="">— Select Primary Patient —</option>
-                            @foreach($patients as $p)
-                                @if(($p->registration_status ?? '') === 'REGISTERED')
-                                    <option value="{{ $p->id }}">{{ $p->name }} &bull; {{ $p->mrn ?? $p->patient_id }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Secondary Patient (PRE REGISTERED — will be merged)</label>
-                        <select name="secondary_patient_id" class="core1-input w-full mt-1" required>
-                            <option value="">— Select Pre-Registered Patient —</option>
-                            @foreach($patients as $p)
-                                @if(($p->registration_status ?? '') === 'PRE_REGISTERED')
-                                    <option value="{{ $p->id }}">{{ $p->name }} &bull; {{ $p->phone }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="rounded-lg p-3" style="background-color:#fef3c7;border:1px solid #fde68a;">
-                        <p class="text-xs" style="color:#92400e;">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                            All appointments from the secondary patient will be transferred to the primary patient. This action cannot be undone.
-                        </p>
-                    </div>
-                </div>
-                <div class="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-2 justify-end border-t border-gray-200">
-                    <button type="button" onclick="document.getElementById('mergeModal').style.display='none'" class="core1-btn core1-btn-outline text-sm">Cancel</button>
-                    <button type="submit" class="core1-btn text-sm" style="background-color:#7c3aed;color:white;" onclick="return confirm('Are you sure? This will merge the records permanently.')">
-                        <i class="fas fa-code-branch"></i><span class="pl-10">Confirm Merge</span>
-                    </button>
-                </div>
-            </form>
         </div>
+
+        <form action="{{ route('core1.patients.merge') }}" method="POST" style="padding:0; margin:0;">
+            @csrf
+            <div style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+                <div class="core1-form-group">
+                    <label class="core1-form-label" style="font-size: 10px; color: var(--text-gray);">Primary Patient (REGISTERED)</label>
+                    <select name="primary_patient_id" class="core1-input" required>
+                        <option value="">— Select Primary Patient —</option>
+                        @foreach($patients as $p)
+                            @if(($p->registration_status ?? '') === 'REGISTERED')
+                                <option value="{{ $p->id }}">{{ $p->name }} • {{ $p->mrn ?? $p->patient_id }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <div class="core1-form-group">
+                    <label class="core1-form-label" style="font-size: 10px; color: var(--text-gray);">Secondary Patient (PRE-REGISTERED)</label>
+                    <select name="secondary_patient_id" class="core1-input" required>
+                        <option value="">— Select Pre-Registered Patient —</option>
+                        @foreach($patients as $p)
+                            @if(($p->registration_status ?? '') === 'PRE_REGISTERED')
+                                <option value="{{ $p->id }}">{{ $p->name }} • {{ $p->phone }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <div style="background: var(--warning-light-more); padding: 12px; border-radius: 8px; border: 1px solid var(--warning-light);">
+                    <p style="font-size: 11px; color: var(--warning); margin:0;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        All appointments from the secondary patient will be transferred. This action is irreversible.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 15px 25px; border-top: 1px solid var(--border-color); background: var(--bg); display: flex; justify-content: flex-end; gap: 12px; border-radius: 0 0 12px 12px;">
+                <button type="button" onclick="document.getElementById('mergeModal').style.display='none'" class="core1-btn core1-btn-outline" style="border-radius: 8px; padding: 8px 15px;">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary" style="border-radius: 8px; padding: 8px 20px; background: var(--primary);" onclick="return confirm('Confirm permanent merge?')">
+                    <i class="bi bi-intersect mr-5"></i> Confirm Merge
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -882,7 +869,7 @@
     }
 
     function openRegisterModal() {
-        document.getElementById('registerModal').style.display = 'block';
+        document.getElementById('registerModal').style.display = 'flex';
     }
 
     function closeRegisterModal() {
@@ -892,7 +879,7 @@
     function openPatientModal(id) {
         // Show loading state or clear previous
         document.getElementById('modalPatientName').innerText = 'Loading...';
-        document.getElementById('patientDetailsModal').style.display = 'block';
+        document.getElementById('patientDetailsModal').style.display = 'flex';
 
         fetch(`/core/patients/${id}`, {
             headers: {
@@ -936,8 +923,7 @@
     }
 
     function openEditModal(id) {
-        // Show loading state if needed
-        document.getElementById('editPatientModal').style.display = 'block';
+        document.getElementById('editPatientModal').style.display = 'flex';
 
         fetch(`/core/patients/${id}`, {
             headers: {
@@ -994,21 +980,25 @@
         duplicates.forEach(p => {
             const isPreReg = p.registration_status === 'PRE_REGISTERED';
             list.innerHTML += `
-            <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <div style="font-weight:600;font-size:14px;">${p.name}</div>
-                    <div style="font-size:12px;color:#6b7280;">${p.phone} &bull; ${p.email ?? ''}</div>
-                    <span style="font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500;background:${isPreReg?'#fef3c7':'#d1fae5'};color:${isPreReg?'#92400e':'#065f46'};">
-                        ${p.registration_status}
-                    </span>
+            <div style="border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; background: white;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="core1-icon-box" style="background: var(--bg-light); color: var(--text-gray); width: 35px; height: 35px; border-radius: 6px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 13px; color: var(--text-dark);">${p.name}</div>
+                        <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 5px;">
+                            <span>${p.phone}</span> • <span style="font-weight: 600; color: ${isPreReg?'var(--warning)':'var(--success)'};">${p.registration_status}</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:4px;margin-left:12px;">
-                    <a href="/core/patients/${p.id}" class="core1-btn core1-btn-outline" style="font-size:12px;padding:4px 10px;">View</a>
-                    ${isPreReg ? `<a href="/core/patients/${p.id}/complete-registration" class="core1-btn" style="font-size:12px;padding:4px 10px;background:#059669;color:white;">Complete Reg.</a>` : ''}
+                <div style="display: flex; gap: 5px;">
+                    <a href="/core/patients/${p.id}" class="core1-btn-sm" style="background: var(--bg-light); color: var(--text-dark); padding: 5px 10px; font-size: 10px; border-radius: 6px;">View</a>
+                    ${isPreReg ? `<a href="/core/patients/${p.id}/complete-registration" class="core1-btn-sm" style="background: var(--success); color: white; padding: 5px 10px; font-size: 10px; border-radius: 6px;">Register</a>` : ''}
                 </div>
             </div>`;
         });
-        document.getElementById('duplicateModal').style.display = 'block';
+        document.getElementById('duplicateModal').style.display = 'flex';
     }
 
     function closeDuplicateModal() {
@@ -1017,11 +1007,11 @@
     
     // Close modals when clicking outside
     document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('registerModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal || e.target.classList.contains('backdrop-blur-sm') || e.target.classList.contains('min-h-screen')) {
-                    closeRegisterModal();
+        const mergeModal = document.getElementById('mergeModal');
+        if (mergeModal) {
+            mergeModal.addEventListener('click', function(e) {
+                if (e.target === mergeModal) {
+                    mergeModal.style.display = 'none';
                 }
             });
         }

@@ -315,7 +315,7 @@
         </div>
 
     <!-- Generic Triage Modal -->
-    <div id="triageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;">
+    <div id="triageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
             <div class="core1-header border-bottom mb-20 pb-10">
                 <h3 class="core1-title">Clinical Triage</h3>
@@ -364,7 +364,7 @@
     </div>
 
     <!-- Generic Consultation Modal (SOAP) -->
-    <div id="consultationModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;">
+    <div id="consultationModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:700px; max-width:90%; max-height: 90vh; overflow-y: auto;">
             <div class="core1-header border-bottom mb-20 pb-10">
                 <h3 class="core1-title">Consultation Room</h3>
@@ -420,7 +420,7 @@
     </div>
 
     <!-- Lab Order Modal -->
-    <div id="labModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:flex; align-items:center; justify-content:center;">
+    <div id="labModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
             <h4 class="font-bold mb-15">Order Laboratory Test</h4>
             <form method="POST" action="{{ route('core1.outpatient.storeLabOrder') }}">
@@ -443,7 +443,7 @@
     </div>
 
     <!-- Issue e-Prescription Modal -->
-    <div id="prescriptionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; display:flex; align-items:center; justify-content:center;">
+    <div id="prescriptionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
             <h4 class="font-bold mb-15">Issue e-Prescription</h4>
             <form method="POST" action="{{ route('core1.outpatient.storePrescription') }}">
@@ -476,7 +476,7 @@
     </div>
 
     <!-- Patient Details Modal (Clinical View) -->
-    <div id="patientDetailsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; display:flex; align-items:center; justify-content:center;">
+    <div id="patientDetailsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
             <!-- Modal Header -->
             <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">
@@ -598,7 +598,7 @@
     </div>
 
     <!-- View Triage Results Modal (Read-Only) -->
-    <div id="viewTriageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:250; display:flex; align-items:center; justify-content:center;">
+    <div id="viewTriageModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:250; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:500px; max-width:95%; border-top:none; padding:0; overflow:hidden;">
             <!-- Modal Header -->
             <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color);">

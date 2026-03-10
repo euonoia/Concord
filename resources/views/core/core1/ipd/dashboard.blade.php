@@ -64,7 +64,7 @@
                 </tbody>
             </table>
         </div>
-    <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center;">
+    <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
         <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
             <div class="core1-header border-bottom mb-20 pb-10">
                 <h3 class="core1-title">Patient Discharge</h3>
