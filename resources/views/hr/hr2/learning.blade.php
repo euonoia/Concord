@@ -71,7 +71,7 @@
 
             </div>
         @empty
-            <p style="grid-column: 1 / -1; text-align:center;">No learning modules available at the moment.</p>
+            <p style="grid-column: 1 / -1; text-align:center;">you are not enrolled in any competencies.</p>
         @endforelse
     </div>
 </div>

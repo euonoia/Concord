@@ -69,10 +69,13 @@ class CompetencyController extends Controller
     // AJAX: load specializations by department
     public function getSpecializations($dept)
     {
+        // Find the department
         $department = Department::where('department_id', $dept)->first();
+
+        // Ensure we return a flat array of just the names
         $specs = $department && $department->specializations
-            ? $department->specializations->pluck('specialization_name')
-            : collect();
+            ? $department->specializations->pluck('specialization_name')->toArray() 
+            : [];
 
         return response()->json($specs);
     }
