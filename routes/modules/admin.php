@@ -12,6 +12,7 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningMaterialsController;
         use App\Http\Controllers\admin\Hr\hr2\AdminCompetencyVerificationController;
+        use App\Http\Controllers\admin\Hr\hr2\AdminTrainingEvaluationController;
 
 
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
@@ -108,11 +109,30 @@
             '/competency-verification/{id}/verify',
             [AdminCompetencyVerificationController::class,'verify']
             )->name('admin.hr2.competency.verify');
+            // --- Training (AdminTrainingController)
+            Route::get('/training', [AdminTrainingController::class,'index'])->name('hr2.training');
+            Route::get('/training/{id}', [AdminTrainingController::class,'show'])->name('training.show');
+            Route::get('/get-specializations/{dept}', [AdminTrainingController::class,'getSpecializations']);
+            Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class,'getCompetencies']);
+            Route::get('/eligible-employees', [AdminTrainingController::class,'getEligibleEmployees'])->name('hr2.training.employees');
+
+            // Ensure this route matches the URL your browser is trying to visit
+            // Path: /admin/hr2/training-evaluation/evaluate
+            Route::get('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])
+                ->name('hr2.training_evaluation.show');
+
+            // Route for saving the scores
+            Route::post('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'storeEvaluation'])
+                ->name('hr2.training_evaluation.store');
+
+            // These are the dropdown routes you said are working:
+            Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);
+            Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class, 'getCompetencies']);
+            Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees']);
         });
 
         Route::resource('competencies', CompetencyController::class);
         Route::resource('learning', AdminLearningController::class);
-        Route::resource('training', AdminTrainingController::class);
         Route::prefix('succession')->group(function () {
             Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
 
