@@ -28,7 +28,6 @@ class AdminSuccessionController extends Controller
         $departments = Department::where('is_active', 1)->get();
         $positions = DepartmentPositionTitle::where('is_active', 1)->orderBy('position_title')->get();
 
-        // Join with HR1 Validated Grade and Evaluator Info
         $candidates = SuccessorCandidate::with(['position', 'employee'])
             ->leftJoin('validated_training_performance_hr1 as vtp', 'successor_candidates_hr2.employee_id', '=', 'vtp.employee_id')
             ->leftJoin('employees as evaluator', 'vtp.evaluated_by', '=', 'evaluator.employee_id')
@@ -58,7 +57,6 @@ class AdminSuccessionController extends Controller
             'development_plan' => 'nullable|string|max:1000',
         ]);
 
-        // Auto-fetch the Validated Grade from HR1
         $training = DB::table('validated_training_performance_hr1')
             ->where('employee_id', $validated['employee_id'])
             ->first();
@@ -71,45 +69,48 @@ class AdminSuccessionController extends Controller
             'department_id'     => $position->department_id,
             'specialization'    => $position->specialization_name,
             'readiness'         => $validated['readiness'],
-            'performance_score' => $training ? $training->weighted_average : 0, // Swapped to Grade
-            'potential_score'   => 0, // Removed per request
+            'performance_score' => $training ? $training->weighted_average : 0,
+            'potential_score'   => 0,
             'retention_risk'    => $validated['retention_risk'],
             'effective_at'      => $validated['effective_at'],
-            'development_plan'  => $validated['development_plan'], // Now text description
+            'development_plan'  => $validated['development_plan'],
             'is_active'         => 1,
         ]);
 
-        return redirect()->back()->with('success', 'Candidate successfully added to pipeline using HR1 Training Validation.');
+        return redirect()->back()->with('success', 'Candidate added to pipeline.');
     }
 
+    /**
+     * Promote the candidate and update their professional status
+     */
     public function promoteCandidate($id)
     {
         $this->checkAccess();
         try {
             DB::beginTransaction();
+
             $candidate = SuccessorCandidate::findOrFail($id);
             $employee = Employee::where('employee_id', $candidate->employee_id)->firstOrFail();
 
             $employee->update([
-                'position_id'    => $candidate->position_id,
-                'department_id'  => $candidate->department_id,
-                'specialization' => $candidate->specialization
+                'position_id'      => $candidate->position_id,
+                'department_id'    => $candidate->department_id,
+                'specialization'   => $candidate->specialization,
+                'post_grad_status' => 'fellowship', 
             ]);
-
             $candidate->is_active = 0;
             $candidate->save();
 
             DB::commit();
-            return redirect()->back()->with('success', "Promotion Successful! {$employee->first_name} is now the official {$candidate->position->position_title}.");
+            return redirect()->back()->with('success', "Promotion Successful! {$employee->first_name} is now the official {$candidate->position->position_title} with Fellowship status.");
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to promote: ' . $e->getMessage());
         }
     }
 
     public function getEmployeesByDeptAndSpec(Request $request, $dept_id)
     {
-        // AJAX: Returns Grade and Evaluator for the selection preview
         $employees = Employee::query()
             ->leftJoin('validated_training_performance_hr1 as vtp', 'employees.employee_id', '=', 'vtp.employee_id')
             ->leftJoin('employees as evaluator', 'vtp.evaluated_by', '=', 'evaluator.employee_id')

@@ -67,11 +67,10 @@
                         </div>
                     </div>
 
-                    {{-- Development Plan Box --}}
                     <div class="development-plan">
                         <small class="plan-label">Succession Development Focus:</small>
                         <p class="plan-text">
-                            {{-- This now displays the text description you entered in the admin side --}}
+                          
                             "{{ $nomination->development_plan ?? 'Your training path for this role is currently being drafted by HR.' }}"
                         </p>
                     </div>
