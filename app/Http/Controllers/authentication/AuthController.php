@@ -233,6 +233,8 @@ class AuthController extends Controller
         // --- CORE MODULAR DASHBOARDS ---
         $role === 'admin_core1' => redirect()->route('core1.admin.dashboard'),
         $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
+        // Core2 admin 
+        $role === 'core_admin'  => redirect()->route('core2.dashboard'),
 
         // --- FINANCIALS ---
         $role === 'finance' => redirect()->route('admin.financials.dashboard'),
