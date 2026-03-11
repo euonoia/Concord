@@ -28,7 +28,7 @@
             @endif
         </div>
     @empty
-        <p style="color: #999;">There are no Learning Materials available yet.</p>
+        <p style="color: #999;">you are not enrolled in any modules yet</p>
     @endforelse
 
 </div>

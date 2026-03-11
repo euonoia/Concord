@@ -5,18 +5,16 @@
 @section('content')
 <div class="container p-4">
 
- <div class="d-flex justify-content-between align-items-center mb-4">
-
-    <h3 class="mb-0">Competency Framework</h3>
-
-    <div>
-        <a href="{{ route('admin.hr2.competency.verification.index') }}" 
-           class="btn btn-primary">
-            Verify Competency Completion
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Competency Framework</h3>
+        <div>
+            <a href="{{ route('admin.hr2.competency.verification.index') }}" 
+               class="btn btn-primary">
+                Verify Competency Completion
+            </a>
+        </div>
     </div>
 
-</div>
     {{-- Alerts --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm">
@@ -168,6 +166,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
     deptSelect.addEventListener("change", function(){
         let dept = this.value;
+        
+        // Reset and show loading
         specSelect.innerHTML = '<option value="">Select Specialization</option>';
         if(!dept) return;
 
@@ -175,22 +175,37 @@ document.addEventListener("DOMContentLoaded", function(){
         specSelect.disabled = true;
 
         fetch(`/admin/hr2/get-specializations/${dept}`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
         .then(data => {
             specSelect.innerHTML = '<option value="">Select Specialization</option>';
-            if(data.length === 0){
-                specSelect.innerHTML = '<option>No specializations found</option>';
+            
+            if(!data || data.length === 0){
+                specSelect.innerHTML = '<option value="">No specializations found</option>';
             } else {
                 data.forEach(function(spec){
-                    specSelect.innerHTML += `<option value="${spec}">${spec}</option>`;
+                    // This check prevents the [object Object] error.
+                    // If spec is an object, we grab 'specialization_name'.
+                    // If spec is already a string, we use it as is.
+                    let name = (typeof spec === 'object' && spec !== null) 
+                               ? (spec.specialization_name || spec.name) 
+                               : spec;
+                    
+                    let option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    specSelect.appendChild(option);
                 });
             }
-            specSelect.disabled = false;
         })
         .catch(error => {
-            specSelect.innerHTML = '<option>Error loading</option>';
+            specSelect.innerHTML = '<option value="">Error loading</option>';
+            console.error('Fetch error:', error);
+        })
+        .finally(() => {
             specSelect.disabled = false;
-            console.error(error);
         });
     });
 });

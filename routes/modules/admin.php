@@ -20,9 +20,6 @@
 
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
-
-
-        // --- Admin Dashboard ---
         // --- Modular Admin Dashboards ---
 
         // HR Modular

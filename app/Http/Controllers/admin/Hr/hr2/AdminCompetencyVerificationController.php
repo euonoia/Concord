@@ -53,28 +53,32 @@ class AdminCompetencyVerificationController extends Controller
         return view('admin.hr2.competency_verification.index', compact('completions'));
     }
 
-    public function verify(Request $request, $id)
-    {
+   public function verify(Request $request, $id)
+{
         $request->validate([
             'verification_notes' => 'nullable|string|max:1000'
         ]);
 
         $completion = EmployeeCompetencyCompletion::findOrFail($id);
         
-        // Get the logged-in user's employee record to act as the "Verifier"
         $verifier = Employee::where('user_id', Auth::id())->first();
 
         if (!$verifier) {
-            return back()->with('error', 'Verifier record not found.');
+           
+            return back()->with('error', 'Action failed: Your account is not linked to an Employee record.');
         }
 
-        $completion->update([
-            'verified_by' => $verifier->employee_id,
-            'verification_notes' => $request->verification_notes,
-            'status' => 'completed',
-            'verified_at' => now(), // Good practice to track WHEN it was verified
-        ]);
+        $completion->verified_by = $verifier->employee_id;
+        $completion->verification_notes = $request->verification_notes;
+        $completion->status = 'completed';
+        $completion->updated_at = now(); 
+        
+        $saved = $completion->save();
 
-        return redirect()->back()->with('success', 'Competency verified successfully.');
+        if ($saved) {
+            return redirect()->back()->with('success', 'Competency verified successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Database failed to save the record.');
+        }
     }
 }
