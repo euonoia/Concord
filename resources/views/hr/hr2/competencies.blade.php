@@ -26,7 +26,7 @@
 <th>Group</th>
 <th>Status</th>
 <th>Score</th>
-<th>Evaluated By</th>
+<th>Validator</th>
 <th>Action</th>
 </tr>
 </thead>
