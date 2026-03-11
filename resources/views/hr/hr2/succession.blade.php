@@ -2,7 +2,6 @@
 
 @section('title', 'Succession Planning')
 
-{{-- Link to the new component CSS --}}
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/components/succession.css') }}">
 @endpush
@@ -17,7 +16,6 @@
     <div class="succession-list">
         @forelse($nominations as $nomination)
             <div class="nomination-card">
-                {{-- Top Blue Accent Bar --}}
                 <div class="accent-bar"></div>
                 
                 <div class="card-body">
@@ -25,8 +23,16 @@
                         <div class="role-info">
                             <span class="label-text">Target Position</span>
                             <h3 class="position-title">{{ $nomination->target_position_title }}</h3>
+                            
+                            {{-- Updated "Currently serving as" with Specialization --}}
                             <p class="current-status">
-                                Currently serving as: <strong>{{ $nomination->current_position_title }}</strong>
+                                Currently serving as: 
+                                <strong>
+                                    {{ $nomination->current_position_title }} 
+                                    @if($nomination->current_specialization)
+                                        ({{ $nomination->current_specialization }})
+                                    @endif
+                                </strong>
                             </p>
                         </div>
                         
@@ -44,18 +50,11 @@
                     {{-- Metrics Grid --}}
                     <div class="metrics-grid">
                         <div class="metric-item">
-                            <small class="metric-label">Performance</small>
-                            <div class="metric-value">{{ number_format($nomination->performance_score, 1) }}/10</div>
+                            <small class="metric-label">Training Performance</small>
+                            {{-- Showing as Percentage based on your HR1 Grade logic --}}
+                            <div class="metric-value">{{ number_format($nomination->performance_score, 1) }}%</div>
                             <div class="progress-container">
-                                <div class="progress-bar performance" style="width: {{ $nomination->performance_score * 10 }}%;"></div>
-                            </div>
-                        </div>
-
-                        <div class="metric-item">
-                            <small class="metric-label">Potential</small>
-                            <div class="metric-value">{{ number_format($nomination->potential_score, 1) }}/10</div>
-                            <div class="progress-container">
-                                <div class="progress-bar potential" style="width: {{ $nomination->potential_score * 10 }}%;"></div>
+                                <div class="progress-bar performance" style="width: {{ $nomination->performance_score }}%;"></div>
                             </div>
                         </div>
 
@@ -72,6 +71,7 @@
                     <div class="development-plan">
                         <small class="plan-label">Succession Development Focus:</small>
                         <p class="plan-text">
+                            {{-- This now displays the text description you entered in the admin side --}}
                             "{{ $nomination->development_plan ?? 'Your training path for this role is currently being drafted by HR.' }}"
                         </p>
                     </div>
