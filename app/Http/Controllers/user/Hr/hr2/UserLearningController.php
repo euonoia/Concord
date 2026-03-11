@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\user\Hr\hr2;
 
 use App\Http\Controllers\Controller;
 use App\Models\admin\Hr\hr2\LearningModule;
+use App\Models\admin\Hr\hr2\EmployeeTrainingScore;
 use App\Models\user\Hr\hr2\CourseEnroll;
+use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,26 +16,72 @@ class UserLearningController extends Controller
     public function index()
     {
         $employee = Employee::where('user_id', Auth::id())->first();
-        if (!$employee) return redirect()->back()->with('error', 'Employee profile not found.');
 
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee profile not found.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get competencies that are already completed
+        |--------------------------------------------------------------------------
+        */
+        $completedCompetencies = EmployeeCompetencyCompletion::where('employee_id', $employee->employee_id)
+            ->pluck('competency_code')
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get competencies that are already evaluated
+        |--------------------------------------------------------------------------
+        */
+        $evaluatedCompetencies = EmployeeTrainingScore::where('employee_id', $employee->employee_id)
+            ->pluck('competency_code')
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Only competencies that are BOTH completed AND evaluated
+        |--------------------------------------------------------------------------
+        */
+        $finishedCompetencies = array_intersect($completedCompetencies, $evaluatedCompetencies);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fetch learning modules but EXCLUDE finished competencies
+        |--------------------------------------------------------------------------
+        */
         $modules = LearningModule::where('dept_code', $employee->department_id)
             ->where('specialization_name', $employee->specialization)
+            ->whereNotIn('competency_code', $finishedCompetencies)
             ->orderBy('created_at', 'desc')
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Modules already enrolled
+        |--------------------------------------------------------------------------
+        */
         $enrolledModuleCodes = CourseEnroll::where('employee_id', $employee->employee_id)
             ->where('status', 'enrolled')
             ->pluck('module_code')
             ->toArray();
 
-        return view('hr.hr2.learning', compact('modules', 'enrolledModuleCodes', 'employee'));
+        return view('hr.hr2.learning', compact(
+            'modules',
+            'enrolledModuleCodes',
+            'employee'
+        ));
     }
 
     // Enroll in a course
     public function enroll($module_code)
     {
         $employee = Employee::where('user_id', Auth::id())->first();
-        if (!$employee) return redirect()->back()->with('error', 'Employee profile not found.');
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee profile not found.');
+        }
 
         $exists = CourseEnroll::where('employee_id', $employee->employee_id)
             ->where('module_code', $module_code)
@@ -48,6 +97,7 @@ class UserLearningController extends Controller
             'status'      => 'enrolled',
         ]);
 
-        return redirect()->route('user.learning.index')->with('success', 'Successfully enrolled!');
+        return redirect()->route('user.learning.index')
+            ->with('success', 'Successfully enrolled!');
     }
 }

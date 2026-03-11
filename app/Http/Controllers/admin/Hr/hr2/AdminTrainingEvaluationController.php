@@ -10,6 +10,7 @@ use App\Models\admin\Hr\hr2\Competency;
 use App\Models\admin\Hr\hr2\EmployeeTrainingScore;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentSpecialization;
+use App\Models\user\Hr\hr2\CompetencyEnroll;
 use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 
 class AdminTrainingEvaluationController extends Controller
@@ -43,41 +44,60 @@ class AdminTrainingEvaluationController extends Controller
         return view('admin.hr2.training_evaluation_matrix', compact('employee', 'competency'));
     }
 
-    public function storeEvaluation(Request $request) 
-    {
-        $request->validate([
-            'employee_id' => 'required',
-            'competency_code' => 'required',
-            'scores' => 'required|array'
-        ]);
+   public function storeEvaluation(Request $request) 
+{
+    $request->validate([
+        'employee_id' => 'required',
+        'competency_code' => 'required',
+        'scores' => 'required|array'
+    ]);
 
-        $exists = EmployeeTrainingScore::where('employee_id', $request->employee_id)
-            ->where('competency_code', $request->competency_code)
-            ->exists();
+    $exists = EmployeeTrainingScore::where('employee_id', $request->employee_id)
+        ->where('competency_code', $request->competency_code)
+        ->exists();
 
-        if ($exists) {
-            return response()->json(['status' => 'error', 'message' => 'Evaluation already exists.'], 422);
-        }
-
-        $evaluator = Employee::where('user_id', Auth::id())->first();
-        $evaluatorId = $evaluator ? $evaluator->employee_id : 'ADMIN';
-        $total = array_sum($request->scores);
-
-        EmployeeTrainingScore::create([
-            'employee_id' => $request->employee_id,
-            'competency_code' => $request->competency_code,
-            'scores' => json_encode([
-                'ratings' => $request->scores,
-                'remarks' => $request->remarks ?? []
-            ]),
-            'total_score' => $total,
-            'status' => 'completed',
-            'evaluated_by' => $evaluatorId, 
-            'evaluated_at' => now()
-        ]);
-
-        return response()->json(['status' => 'success', 'total_score' => $total]);
+    if ($exists) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Evaluation already exists.'
+        ], 422);
     }
+
+    $evaluator = Employee::where('user_id', Auth::id())->first();
+    $evaluatorId = $evaluator ? $evaluator->employee_id : 'ADMIN';
+
+    $total = array_sum($request->scores);
+
+    EmployeeTrainingScore::create([
+        'employee_id' => $request->employee_id,
+        'competency_code' => $request->competency_code,
+        'scores' => json_encode([
+            'ratings' => $request->scores,
+            'remarks' => $request->remarks ?? []
+        ]),
+        'total_score' => $total,
+        'status' => 'completed',
+        'evaluated_by' => $evaluatorId,
+        'evaluated_at' => now()
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update competency_enroll_hr2 status
+    |--------------------------------------------------------------------------
+    */
+
+    CompetencyEnroll::where('employee_id', $request->employee_id)
+        ->where('competency_code', $request->competency_code)
+        ->update([
+            'status' => 'completed'
+        ]);
+
+    return response()->json([
+        'status' => 'success',
+        'total_score' => $total
+    ]);
+}
 
     public function getEligibleEmployees(Request $request)
     {
