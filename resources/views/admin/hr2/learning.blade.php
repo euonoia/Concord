@@ -13,7 +13,7 @@
     </div>
 
     @if(session('success'))
-        <div style="padding: 1rem; margin-bottom: 1.5rem; background: var(--color-green-50); color: var(--color-green-800); border-radius: 6px; border: 1px solid var(--color-green-200);">
+        <div style="padding: 1rem; margin-bottom: 1.5rem; background: #d1fae5; color: #065f46; border-radius: 6px; border: 1px solid #a7f3d0;">
             {{ session('success') }}
         </div>
     @endif
@@ -134,7 +134,7 @@
                 <td>
                     <form method="POST" action="{{ route('learning.destroy',$m->id) }}" onsubmit="return confirm('Archive this module?')">
                         @csrf @method('DELETE')
-                        <button type="submit">Archive</button>
+                        <button type="submit" class="btn-archive">Archive</button>
                     </form>
                 </td>
             </tr>
@@ -160,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
         if(!dept) return;
 
-        // Load specializations
         specSelect.innerHTML = '<option>Loading...</option>';
         specSelect.disabled = true;
 
@@ -168,12 +167,24 @@ document.addEventListener("DOMContentLoaded", function(){
         .then(res => res.json())
         .then(data => {
             specSelect.innerHTML = '<option value="">Select Specialization</option>';
-            data.forEach(s => {
-                specSelect.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-            specSelect.disabled = false;
+            if (data.length === 0) {
+                specSelect.innerHTML = '<option value="">No specializations found</option>';
+            } else {
+                data.forEach(s => {
+                    // Check if s is an object or string to prevent [object Object]
+                    let val = (typeof s === 'object' && s !== null) ? s.specialization_name : s;
+                    let opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = val;
+                    specSelect.appendChild(opt);
+                });
+            }
         })
-        .catch(console.error);
+        .catch(err => {
+            specSelect.innerHTML = '<option value="">Error loading</option>';
+            console.error(err);
+        })
+        .finally(() => { specSelect.disabled = false; });
     });
 
     specSelect.addEventListener("change", function(){
@@ -181,27 +192,57 @@ document.addEventListener("DOMContentLoaded", function(){
         const spec = this.value;
         if(!dept || !spec) return;
 
+        // Update Module Code
         moduleCode.value = "Generating...";
         fetch(`/admin/hr2/generate-module-code/${dept}/${encodeURIComponent(spec)}`)
             .then(res => res.json())
             .then(data => { moduleCode.value = data.code; })
             .catch(error => { moduleCode.value = "Error"; console.error(error); });
 
+        // Load Competencies
         competencySelect.innerHTML = '<option>Loading...</option>';
         fetch(`/admin/hr2/departments/${dept}/${encodeURIComponent(spec)}/competencies`)
             .then(res => res.json())
             .then(data => {
                 competencySelect.innerHTML = '<option value="">Select Competency</option>';
-                if(data.length === 0){
+                if(!data || data.length === 0){
                     competencySelect.innerHTML = '<option value="">No competencies found</option>';
                 } else {
                     data.forEach(c => {
-                        competencySelect.innerHTML += `<option value="${c.competency_code}">${c.name}</option>`;
+                        // For competencies, we usually need the code as value and name as label
+                        let name = c.name || c.title || "Unnamed Competency";
+                        let code = c.competency_code || c.code;
+                        
+                        let opt = document.createElement('option');
+                        opt.value = code;
+                        opt.textContent = name;
+                        competencySelect.appendChild(opt);
                     });
                 }
             })
-            .catch(error => { competencySelect.innerHTML = '<option>Error loading</option>'; console.error(error); });
+            .catch(error => { 
+                competencySelect.innerHTML = '<option value="">Error loading</option>'; 
+                console.error(error); 
+            });
     });
 });
 </script>
+
+<style>
+    /* Added a small style for the archive button for better UI */
+    .btn-archive {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid #ef4444;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+    }
+    .btn-archive:hover {
+        background: #ef4444;
+        color: white;
+    }
+</style>
 @endsection
