@@ -3,88 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR2 Module</title>
+    <title>MedCore HR1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="{{ asset('css/hr1/template.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1B3C53',
+              'primary-hover': '#234C6A',
+              accent: '#456882',
+              highlight: '#D2C1B6',
+              bg: '#f7f8fa',
+              'text-dark': '#1B3C53',
+              'text-light': '#6b7280',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+          background-color: #f7f8fa;
+          color: #1B3C53;
+          margin: 0;
+          font-family: 'Inter', sans-serif;
+      }
+      * { box-sizing: border-box; transition: all 0.3s ease; }
+      
+      .main-inner {
+          width: 100%;
+          background: #fff;
+          border-radius: 12px;
+          padding: 25px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+
+      .card {
+          background: #fff;
+          border-radius: 12px;
+          padding: 25px;
+          text-align: center;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          border-top: 4px solid #456882;
+          transition: all 0.2s ease;
+      }
+
+      .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          border-top-color: #234C6A;
+      }
+
+      ::-webkit-scrollbar {
+          width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+          background: #1B3C53;
+          border-radius: 10px;
+      }
+      
+      [x-cloak] {
+          display: none !important;
+      }
+    </style>
+    @stack('styles')
 </head>
-<body class="dashboard">
-
-<!-- Mobile Topbar -->
-<div class="dashboard-topbar topbar">
-    <button class="menu-toggle"
-        onclick="document.querySelector('.dashboard .sidebar').classList.toggle('show')">
-        ☰
-    </button>
-    <div class="title">HR2</div>
-</div>
-
-<!-- Sidebar -->
-<div class="dashboard-sidebar sidebar" id="sidebar">
-    <div class="logo">
-        <img src="{{ asset('images/logo.png') }}" alt="HR Logo">
-        <div class="logo-text">HRMS</div>
-    </div>
-
-    <nav>
-        <a href="{{ route('admin.hr1.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-            <i class="bi bi-house-door"></i>
-            <span>Dashboard</span>
-        </a>
-        
-        <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
-            <i class="bi bi-people"></i>
-            <span>Applicant Management</span>
-        </a>
-        <a href="{{ route('hr1.newhires.index') }}" class="{{ request()->routeIs('hr1.newhires.*') ? 'active' : '' }}">
-            <i class="bi bi-person-badge"></i>
-            <span>New Hires</span>
-        </a>
-        <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
-            @csrf
-        </form>
-
-        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-    </nav>
-</div>
-
-<!-- Main Content -->
-<div class="dashboard-main main">
-    <div class="main-inner">
-        @yield('content')
-    </div>
-</div>
-
-</body>
-
-
-<script>
-const sidebar = document.getElementById('sidebar');
-
-// default collapsed on desktop
-if (window.innerWidth > 768) {
-    sidebar.classList.add('collapsed');
-}
-
-// hover expand (desktop)
-sidebar.addEventListener('mouseenter', () => {
-    if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
-});
-
-sidebar.addEventListener('mouseleave', () => {
-    if (window.innerWidth > 768) sidebar.classList.add('collapsed');
-});
-
-// close sidebar on mobile click outside
-document.addEventListener('click', (e) => {
-    const toggle = document.querySelector('.menu-toggle');
-    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-        sidebar.classList.remove('show');
-    }
-});
-</script>
-
+<body class="bg-bg font-sans">
+    @yield('content')
+    @stack('scripts')
 </body>
 </html>
