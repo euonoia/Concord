@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MED-CORE | @yield('title', 'Core2')</title>
+    <title>Concord | @yield('title', 'Core2')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,14 +39,8 @@
     {{-- SIDEBAR --}}
     <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-50 flex-shrink-0">
         {{-- Logo --}}
-        <div class="p-6 flex items-center gap-3 border-b border-slate-100">
-            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            </div>
-            <div>
-                <h1 class="font-black text-lg tracking-tighter text-slate-900 leading-tight">MED-CORE</h1>
-                <span class="text-[10px] font-black text-indigo-500 tracking-[0.2em] uppercase">Core 2 — Enterprise OS</span>
-            </div>
+        <div class="p-6 flex items-center justify-center border-b border-slate-100">
+            <img src="{{ asset('images/Concord (1).png') }}" alt="Concord Logo" style="max-height:40px; width:auto;">
         </div>
 
         {{-- Nav --}}
