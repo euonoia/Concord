@@ -60,75 +60,45 @@
 
         });
 
-
         // --- HR2 Department ---
         Route::prefix('hr2')->group(function () {
-            // Specializations by Department
-            Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])
-                ->name('departments.specializations');
-            // Positions by Department + Specialization
-            Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])
-                ->name('departments.positions');
-            // Employees by Department and specialization
+
+            // --- Succession Management ---
+            Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])->name('departments.specializations');
+            Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])->name('departments.positions');
             Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
 
-            Route::get('/departments/{dept_code}/specializations', [AdminLearningController::class, 'getSpecializations'])
-                ->name('departments.specializations');
-
-            // Fetch competencies by department + specialization
-            Route::get('/departments/{dept_code}/{spec}/competencies', [AdminLearningController::class, 'getCompetencies'])
-                ->name('departments.competencies');
-
-            Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])
-                ->name('hr2.generateModuleCode');
+            // --- Learning & Modules ---
+            Route::get('/departments/{dept_code}/{spec}/competencies', [AdminLearningController::class, 'getCompetencies'])->name('departments.competencies');
+            Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])->name('hr2.generateModuleCode');
                 
-             // Materials selector page
-            Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])
-                ->name('learning.materials.selector');
-
-            Route::get('/materials/{moduleCode}/list', [AdminLearningMaterialsController::class, 'listMaterials'])
-                ->name('learning.materials.list');
-
-            // Store a material
-            Route::post('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'store'])
-                ->name('learning.materials.store');
-
-            // Delete a material
-            Route::delete('/materials/{id}', [AdminLearningMaterialsController::class, 'destroy'])
-                ->name('learning.materials.destroy');
-
-            // AJAX: modules by department+spec
+            // --- Learning Materials ---
+            Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])->name('learning.materials.selector');
+            Route::get('/materials/{moduleCode}/list', [AdminLearningMaterialsController::class, 'listMaterials'])->name('learning.materials.list');
+            Route::post('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'store'])->name('learning.materials.store');
+            Route::delete('/materials/{id}', [AdminLearningMaterialsController::class, 'destroy'])->name('learning.materials.destroy');
             Route::get('/modules/{dept}/{spec}', [AdminLearningMaterialsController::class, 'getModulesByDeptSpec']);
 
-            Route::get(
-            '/competency-verification',
-            [AdminCompetencyVerificationController::class,'index']
-            )->name('admin.hr2.competency.verification.index');
+            // --- Competency Verification ---
+            Route::get('/competency-verification', [AdminCompetencyVerificationController::class,'index'])->name('admin.hr2.competency.verification.index');
+            Route::post('/competency-verification/{id}/verify', [AdminCompetencyVerificationController::class,'verify'])->name('admin.hr2.competency.verify');
 
-            Route::post(
-            '/competency-verification/{id}/verify',
-            [AdminCompetencyVerificationController::class,'verify']
-            )->name('admin.hr2.competency.verify');
-            // --- Training (AdminTrainingController)
+            // --- Training Viewer (AdminTrainingController) ---
             Route::get('/training', [AdminTrainingController::class,'index'])->name('hr2.training');
             Route::get('/training/{id}', [AdminTrainingController::class,'show'])->name('training.show');
-            Route::get('/get-specializations/{dept}', [AdminTrainingController::class,'getSpecializations']);
-            Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class,'getCompetencies']);
+            // Basic employee list (No evaluation scores)
             Route::get('/eligible-employees', [AdminTrainingController::class,'getEligibleEmployees'])->name('hr2.training.employees');
 
-            // Ensure this route matches the URL your browser is trying to visit
-            // Path: /admin/hr2/training-evaluation/evaluate
-            Route::get('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])
-                ->name('hr2.training_evaluation.show');
+            // --- Training EVALUATION (AdminTrainingEvaluationController) ---
+            // NEW UNIQUE URL for evaluation data to avoid collision
+            Route::get('/evaluation-eligible-employees', [AdminTrainingEvaluationController::class, 'getEligibleEmployees'])->name('hr2.evaluation.employees');
+            
+            Route::get('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])->name('hr2.training_evaluation.show');
+            Route::post('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'storeEvaluation'])->name('hr2.training_evaluation.store');
 
-            // Route for saving the scores
-            Route::post('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'storeEvaluation'])
-                ->name('hr2.training_evaluation.store');
-
-            // These are the dropdown routes you said are working:
+            // --- Shared AJAX Dropdowns ---
             Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);
             Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class, 'getCompetencies']);
-            Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees']);
         });
 
         Route::resource('competencies', CompetencyController::class);
