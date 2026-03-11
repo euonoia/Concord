@@ -10,7 +10,7 @@ class DepartmentSpecialization extends Model
     protected $table = 'department_specializations_hr2';
 
     protected $fillable = [
-        'dept_code', // The VARCHAR foreign key
+        'dept_code',
         'specialization_name',
         'is_active',
     ];
