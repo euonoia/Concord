@@ -43,7 +43,6 @@ class AdminTrainingEvaluationController extends Controller
         
         return view('admin.hr2.training_evaluation_matrix', compact('employee', 'competency'));
     }
-
    public function storeEvaluation(Request $request) 
 {
     $request->validate([
