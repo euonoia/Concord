@@ -48,7 +48,7 @@
             <span>Learning</span>
         </a>
 
-        <a href="{{ route('training.index') }}" class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
+        <a href="{{ route('hr2.training') }}" class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>
             <span>Training</span>
         </a>
