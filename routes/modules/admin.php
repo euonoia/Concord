@@ -4,6 +4,8 @@
         use Illuminate\Support\Facades\Route;
 
         use App\Http\Controllers\admin\Hr\hr1\ApplicantManagementController;
+        use App\Http\Controllers\admin\Hr\hr1\NewHireController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminTrainingPerformanceController;
 
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
         use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
@@ -50,11 +52,20 @@
             Route::post('applicants/{id}/status', [ApplicantManagementController::class, 'updateStatus'])->name('hr1.applicants.updateStatus');
 
             // New Hires Management
-            Route::get('/newhires', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'index'])->name('hr1.newhires.index');
-            Route::get('/newhires/{id}', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'show'])->name('hr1.newhires.show');
-            Route::get('/newhires/{id}/resume', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'downloadResume'])->name('hr1.newhires.download');
-            Route::post('/newhires/{id}/status', [\App\Http\Controllers\admin\Hr\hr1\NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
+            Route::get('/newhires', [NewHireController::class, 'index'])->name('hr1.newhires.index');
+            Route::get('/newhires/{id}', [NewHireController::class, 'show'])->name('hr1.newhires.show');
+            Route::get('/newhires/{id}/resume', [NewHireController::class, 'downloadResume'])->name('hr1.newhires.download');
+            Route::post('/newhires/{id}/status', [NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
 
+           Route::get('/training-performance', [AdminTrainingPerformanceController::class, 'index'])
+                 ->name('hr1.training.performance.index');
+
+            Route::get('/training-performance/{employee_id}', [AdminTrainingPerformanceController::class, 'show'])
+                ->name('hr1.training.performance.show');
+            
+            // Fixed: Removed leading /admin/ as the prefix handles it
+            Route::post('/training-performance/{employee_id}/validate', [AdminTrainingPerformanceController::class, 'validateAndStore'])
+                ->name('hr1.training.performance.validate');
         });
 
         // --- HR2 Department ---

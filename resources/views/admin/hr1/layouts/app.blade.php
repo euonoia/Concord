@@ -25,29 +25,35 @@
         <div class="logo-text">HRMS</div>
     </div>
 
-    <nav>
-        <a href="{{ route('admin.hr1.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-            <i class="bi bi-house-door"></i>
-            <span>Dashboard</span>
-        </a>
-        
-        <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
-            <i class="bi bi-people"></i>
-            <span>Applicant Management</span>
-        </a>
-        <a href="{{ route('hr1.newhires.index') }}" class="{{ request()->routeIs('hr1.newhires.*') ? 'active' : '' }}">
-            <i class="bi bi-person-badge"></i>
-            <span>New Hires</span>
-        </a>
-        <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
-            @csrf
-        </form>
+ <nav>
+    <a href="{{ route('admin.hr1.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <i class="bi bi-house-door"></i>
+        <span>Dashboard</span>
+    </a>
+    
+    <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
+        <i class="bi bi-people"></i>
+        <span>Applicant Management</span>
+    </a>
+    <a href="{{ route('hr1.newhires.index') }}" class="{{ request()->routeIs('hr1.newhires.*') ? 'active' : '' }}">
+        <i class="bi bi-person-badge"></i>
+        <span>New Hires</span>
+    </a>
 
-        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-    </nav>
+    <a href="{{ route('hr1.training.performance.index') }}" class="{{ request()->routeIs('hr1.training.performance.*') ? 'active' : '' }}">
+        <i class="bi bi-bar-chart-line"></i>
+        <span>Training Performance</span>
+    </a>
+
+    <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
+        @csrf
+    </form>
+
+    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
+    </a>
+</nav>
 </div>
 
 <!-- Main Content -->
