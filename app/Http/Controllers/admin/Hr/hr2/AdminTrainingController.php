@@ -4,62 +4,70 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\admin\Hr\hr2\TrainingSessions; 
-use Illuminate\Support\Facades\Auth;
+
+use App\Models\admin\Hr\hr2\Department;
+use App\Models\admin\Hr\hr2\DepartmentSpecialization;
+use App\Models\admin\Hr\hr2\Competency;
+use App\Models\Employee;
+use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 
 class AdminTrainingController extends Controller
 {
-    private function authorizeHrAdmin()
-    {
-        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
-            abort(403, 'Unauthorized action.');
-        }
-    }
-
     public function index()
     {
-        $this->authorizeHrAdmin();
+        $departments = Department::where('is_active',1)->get();
+        return view('admin.hr2.training', compact('departments'));
+    }
 
-        $sessions = TrainingSessions::withCount('enrolls')
-            ->orderBy('start_datetime', 'desc')
+    public function getSpecializations($dept)
+    {
+        $specs = DepartmentSpecialization::where('dept_code', $dept)
+            ->where('is_active', 1)
+            ->orderBy('specialization_name')
             ->get();
 
-        return view('admin.hr2.training', compact('sessions'));
+        return response()->json($specs);
     }
 
-    public function store(Request $request)
+    public function getCompetencies($dept,$spec)
     {
-        $this->authorizeHrAdmin();
+        $competencies = Competency::where('department_id', $dept)
+            ->where('specialization_name', $spec)
+            ->where('is_active', 1)
+            ->orderBy('name')
+            ->get();
 
-        $validated = $request->validate([
-            'title'          => 'required|string|max:255',
-            'description'    => 'nullable|string',
-            'start_datetime' => 'required|date',
-            'end_datetime'   => 'nullable|date|after_or_equal:start_datetime',
-            'location'       => 'nullable|string|max:255',
-            'trainer'        => 'nullable|string|max:255',
-            'capacity'       => 'nullable|integer|min:1',
-        ]);
-
-        // Logic for unique TRN ID
-        $last = TrainingSessions::orderBy('id', 'desc')->first();
-        $num = $last ? (int)filter_var($last->training_id, FILTER_SANITIZE_NUMBER_INT) + 1 : 1;
-        $training_id = 'TRN-' . str_pad($num, 4, '0', STR_PAD_LEFT);
-
-        TrainingSessions::create(array_merge($validated, [
-            'training_id' => $training_id
-        ]));
-
-        return redirect()->back()->with('success', 'Training session added successfully.');
+        return response()->json($competencies);
     }
 
-    public function destroy($id)
+    public function getEligibleEmployees(Request $request)
     {
-        $this->authorizeHrAdmin();
+        $employees = EmployeeCompetencyCompletion::join(
+                'employees',
+                'employees.employee_id',
+                '=',
+                'employee_competency_completion_hr2.employee_id'
+            )
+            ->join(
+                'competency_hr2',
+                'competency_hr2.competency_code',
+                '=',
+                'employee_competency_completion_hr2.competency_code'
+            )
+            ->where('competency_hr2.department_id', $request->department_id)
+            ->where('competency_hr2.specialization_name', $request->specialization)
+            ->where('competency_hr2.competency_code', $request->competency_code)
+            ->where('employee_competency_completion_hr2.status', 'completed')
+            ->whereNotNull('employee_competency_completion_hr2.verified_by')
+            ->select(
+                'employees.employee_id',
+                'employees.first_name',
+                'employees.last_name',
+                'employee_competency_completion_hr2.completed_at'
+            )
+            ->orderBy('employees.last_name')
+            ->get();
 
-        $session = TrainingSessions::findOrFail($id);
-        $session->delete();
-
-        return redirect()->back()->with('success', 'Training session archived.');
+        return response()->json($employees);
     }
 }
