@@ -42,7 +42,6 @@
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>
-
         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
             <i class="bi bi-box-arrow-right"></i>
             <span>Logout</span>
