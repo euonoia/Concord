@@ -14,13 +14,29 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
+        $nonOrBedsQuery = \App\Models\core1\Bed::whereHas('room.ward', function($q) {
+            $q->where('ward_type', '!=', 'OR');
+        });
+        $nonOrBedsTotal = (clone $nonOrBedsQuery)->count();
+        $nonOrBedsOccupied = (clone $nonOrBedsQuery)->where('status', 'Occupied')->count();
+
+        $orBedsQuery = \App\Models\core1\Bed::whereHas('room.ward', function($q) {
+            $q->where('ward_type', 'OR');
+        });
+        $orBedsTotal = (clone $orBedsQuery)->count();
+        $orBedsAvailable = (clone $orBedsQuery)->where('status', 'Available')->count();
+
         $stats = [
             'total_patients' => Patient::count(),
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
             'bed_occupancy' => [
-                'occupied' => 42, // TODO: Replace with actual bed occupancy data when beds table is created
-                'total' => 58,
-                'percentage' => 72,
+                'occupied' => $nonOrBedsOccupied,
+                'total' => $nonOrBedsTotal,
+                'percentage' => $nonOrBedsTotal > 0 ? round(($nonOrBedsOccupied / $nonOrBedsTotal) * 100) : 0,
+            ],
+            'or_availability' => [
+                'available' => $orBedsAvailable,
+                'total' => $orBedsTotal,
             ],
             'monthly_revenue' => Bill::whereMonth('bill_date', now()->month)
                 ->whereYear('bill_date', now()->year)
@@ -44,13 +60,29 @@ class AdminDashboardController extends Controller
 
     public function overview()
     {
+        $nonOrBedsQuery = \App\Models\core1\Bed::whereHas('room.ward', function($q) {
+            $q->where('ward_type', '!=', 'OR');
+        });
+        $nonOrBedsTotal = (clone $nonOrBedsQuery)->count();
+        $nonOrBedsOccupied = (clone $nonOrBedsQuery)->where('status', 'Occupied')->count();
+
+        $orBedsQuery = \App\Models\core1\Bed::whereHas('room.ward', function($q) {
+            $q->where('ward_type', 'OR');
+        });
+        $orBedsTotal = (clone $orBedsQuery)->count();
+        $orBedsAvailable = (clone $orBedsQuery)->where('status', 'Available')->count();
+
         $stats = [
             'total_patients' => Patient::count(),
             'today_appointments' => Appointment::whereDate('appointment_date', today())->count(),
             'bed_occupancy' => [
-                'occupied' => 42, // TODO: Replace with actual bed occupancy data when beds table is created
-                'total' => 58,
-                'percentage' => 72,
+                'occupied' => $nonOrBedsOccupied,
+                'total' => $nonOrBedsTotal,
+                'percentage' => $nonOrBedsTotal > 0 ? round(($nonOrBedsOccupied / $nonOrBedsTotal) * 100) : 0,
+            ],
+            'or_availability' => [
+                'available' => $orBedsAvailable,
+                'total' => $orBedsTotal,
             ],
             'monthly_revenue' => Bill::whereMonth('bill_date', now()->month)
                 ->whereYear('bill_date', now()->year)

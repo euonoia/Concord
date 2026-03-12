@@ -53,6 +53,17 @@
 
         <div class="core1-stat-card">
             <div>
+                <p class="text-sm text-gray mb-5">OR Availability</p>
+                <p class="core1-title" style="color: #ef4444;">{{ $stats['or_availability']['available'] }}</p>
+                <p class="text-xs text-gray mt-5">{{ $stats['or_availability']['available'] }} / {{ $stats['or_availability']['total'] }} rooms</p>
+            </div>
+            <div class="core1-icon-box" style="background: linear-gradient(135deg, #fee2e2, #fecaca); color: #ef4444;">
+                <i class="bi bi-heart-pulse"></i>
+            </div>
+        </div>
+
+        <div class="core1-stat-card">
+            <div>
                 <p class="text-sm text-gray mb-5">Monthly Revenue</p>
                 <p class="core1-title text-orange">₱{{ number_format($stats['monthly_revenue'], 0) }}</p>
                 <p class="text-xs text-gray mt-5">Billed this month</p>
