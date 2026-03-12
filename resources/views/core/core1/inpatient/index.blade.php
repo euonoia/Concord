@@ -43,13 +43,18 @@
                 <p class="text-xs text-gray">Current Inpatients</p>
             </div>
         </div>
-        <div class="core1-stat-card">
-            <div class="d-flex flex-col">
-                <i class="bi bi-activity text-red mb-10 core1-icon-stats"></i>
-                <p class="core1-title">{{ $stats['occupied'] }}</p>
-                <p class="text-xs text-gray">Bed Occupancies</p>
+        
+        {{-- Zone Occupancies --}}
+        @foreach(['ICU' => 'bi-heart-pulse-fill', 'ER' => 'bi-lightning-fill', 'WARD' => 'bi-hospital-fill', 'OR' => 'bi-scissors'] as $zoneKey => $icon)
+            <div class="core1-stat-card">
+                <div class="d-flex flex-col">
+                    <i class="bi {{ $icon }} text-red mb-10 core1-icon-stats"></i>
+                    <p class="core1-title">{{ $floorMap[$zoneKey]['occ'] }} <span style="font-size: 14px; font-weight: normal; color: var(--text-gray);">/ {{ $floorMap[$zoneKey]['total'] }}</span></p>
+                    <p class="text-xs text-gray">{{ $zoneKey }} Occupancy</p>
+                </div>
             </div>
-        </div>
+        @endforeach
+
         <div class="core1-stat-card">
             <div class="d-flex flex-col">
                 <i class="bi bi-bed-front text-green mb-10 core1-icon-stats"></i>
@@ -129,8 +134,8 @@
                                             {{ $admission->status }}
                                         </span>
                                     </td>
-                                    <td class="text-right">
-                                        <div class="core1-flex-gap-2 justify-end">
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
                                             <a href="{{ route('core1.patients.show', $admission->encounter->patient_id) }}" class="core1-btn-sm core1-btn-outline" title="View Patient">
                                                 <i class="bi bi-eye"></i>
                                             </a>
