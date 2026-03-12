@@ -101,7 +101,7 @@
                                 <th>Nurse</th>
                                 <th>Reason</th>
                                 <th>Status</th>
-                                <th class="text-right">Actions</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -136,9 +136,11 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center align-items-center gap-2">
-                                            <a href="{{ route('core1.patients.show', $admission->encounter->patient_id) }}" class="core1-btn-sm core1-btn-outline" title="View Patient">
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openRecordModal('{{ route('core1.medical-records.show', $admission->encounter->patient_id) }}')" 
+                                                    title="Clinical Overview">
                                                 <i class="bi bi-eye"></i>
-                                            </a>
+                                            </button>
                                             <button type="button" class="core1-btn-sm core1-btn-primary"
                                                     onclick="openDischargeModal({{ $admission->id }}, '{{ $admission->encounter->patient->name }}')"
                                                     title="Discharge Patient">
@@ -341,11 +343,100 @@ function closeDischargeModal() {
     document.getElementById('dischargeModal').style.display = 'none';
 }
 
+// Discharge Modal Logic
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('dischargeModal').style.display = 'none';
     document.getElementById('dischargeModal').addEventListener('click', function (e) {
         if (e.target === this) closeDischargeModal();
     });
 });
+
+// Clinical Overview Modal Logic
+function openRecordModal(url) {
+    const modal = document.getElementById('medicalRecordModal');
+    const loader = document.getElementById('modalLoader');
+    const content = document.getElementById('modalContentInner');
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    loader.style.display = 'flex';
+    content.innerHTML = '';
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+    .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.text();
+    })
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const titles = doc.querySelectorAll('h1');
+        titles.forEach(h => {
+            if (h.innerText.includes('Medical Record Details')) {
+                const row = h.closest('.flex.justify-between');
+                if(row) row.remove();
+            }
+        });
+        content.innerHTML = doc.body.innerHTML;
+        loader.style.display = 'none';
+    })
+    .catch(error => {
+        console.error('Error fetching record:', error);
+        content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--danger);font-weight:700;"><i class="bi bi-exclamation-triangle-fill" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Failed to load record details. Please try again.</div>`;
+        loader.style.display = 'none';
+    });
+}
+
+function closeRecordModal() {
+    document.getElementById('medicalRecordModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const recordModal = document.getElementById('medicalRecordModal');
+    if (recordModal) {
+        recordModal.addEventListener('click', function(e) {
+            if (e.target === this) closeRecordModal();
+        });
+    }
+});
 </script>
+
+{{-- Medical Record / Clinical Overview Modal --}}
+<div id="medicalRecordModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index:1100; align-items:center; justify-content:center; padding: 20px;" role="dialog" aria-modal="true">
+    <div class="core1-modal-content core1-card" style="width: 100%; max-width: 950px; padding:0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border: 1px solid rgba(255,255,255,0.1);">
+
+        {{-- Modal Header --}}
+        <div style="padding: 20px 28px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: #ffffff;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--info-light); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text-dark); letter-spacing: -0.01em;">Clinical Overview</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-gray); display: flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-shield-check" style="color: var(--success);"></i> Secure Health Record
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeRecordModal()" style="background: var(--bg-hover); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-gray); transition: all 0.2s;">
+                <i class="bi bi-x-lg" style="font-size: 14px;"></i>
+            </button>
+        </div>
+
+        {{-- Modal Body --}}
+        <div style="flex: 1; overflow-y: auto; padding: 0; background: var(--bg);" id="modalContentWrapper">
+            <div id="modalLoader" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding: 80px 0; background: #ffffff;">
+                <div style="width: 48px; height: 48px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+                <h4 style="margin: 0 0 8px 0; font-weight: 600; color: var(--text-dark); font-size: 15px;">Retrieving Records</h4>
+                <p style="font-size: 13px; color: var(--text-gray); margin: 0;">Accessing secure clinical database...</p>
+            </div>
+            <div id="modalContentInner" class="w-full" style="padding: 24px;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
 @endsection
