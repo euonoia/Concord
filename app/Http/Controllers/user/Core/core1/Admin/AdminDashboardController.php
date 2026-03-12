@@ -26,6 +26,8 @@ class AdminDashboardController extends Controller
                 ->whereYear('bill_date', now()->year)
                 ->where('status', 'paid')
                 ->sum('total') ?? 0,
+            'inpatient_count' => Patient::where('care_type', 'inpatient')->count(),
+            'outpatient_count' => Patient::where('care_type', 'outpatient')->count(),
         ];
 
         $admissionData = $this->getAdmissionData();
@@ -54,6 +56,8 @@ class AdminDashboardController extends Controller
                 ->whereYear('bill_date', now()->year)
                 ->where('status', 'paid')
                 ->sum('total') ?? 0,
+            'inpatient_count' => Patient::where('care_type', 'inpatient')->count(),
+            'outpatient_count' => Patient::where('care_type', 'outpatient')->count(),
         ];
 
         $admissionData = $this->getAdmissionData();

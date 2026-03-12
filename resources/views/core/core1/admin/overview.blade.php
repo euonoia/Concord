@@ -1,4 +1,4 @@
-﻿<div class="core1-container">
+<div class="core1-container">
 
     {{-- Page Header --}}
     <div class="core1-flex-between core1-header">
@@ -59,6 +59,28 @@
             </div>
             <div class="core1-icon-box core1-icon-orange">
                 <i class="bi bi-cash-coin"></i>
+            </div>
+        </div>
+        
+        <div class="core1-stat-card">
+            <div>
+                <p class="text-sm text-gray mb-5">Inpatients</p>
+                <p class="core1-title" style="color: #0ea5e9;">{{ $stats['inpatient_count'] ?? 0 }}</p>
+                <p class="text-xs text-gray mt-5">Currently admitted</p>
+            </div>
+            <div class="core1-icon-box" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0ea5e9;">
+                <i class="bi bi-hospital"></i>
+            </div>
+        </div>
+        
+        <div class="core1-stat-card">
+            <div>
+                <p class="text-sm text-gray mb-5">Outpatients</p>
+                <p class="core1-title" style="color: #ec4899;">{{ $stats['outpatient_count'] ?? 0 }}</p>
+                <p class="text-xs text-gray mt-5">Active outpatients</p>
+            </div>
+            <div class="core1-icon-box" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #ec4899;">
+                <i class="bi bi-person-walking"></i>
             </div>
         </div>
     </div>
