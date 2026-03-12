@@ -1,33 +1,127 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @push('styles')
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
 <style>
+    /* Premium FullCalendar Overrides */
     .fc {
         max-width: 100%;
-        background: var(--card-bg, white);
-        padding: 20px;
-        border-radius: 12px;
+        background: var(--card-bg, #ffffff);
+        padding: 24px;
+        border-radius: 16px;
+        font-family: inherit;
+        color: var(--text-dark, #1f2937);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
+    
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: var(--border-color, #e5e7eb);
+    }
+
+    /* Enhanced Header */
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem !important;
+        font-weight: 700;
+        color: var(--text-dark, #1f2937);
+    }
+    
     .fc-header-toolbar {
-        margin-bottom: 2rem !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
     }
-    .fc-button-primary {
-        background-color: var(--primary) !important;
-        border-color: var(--primary) !important;
+
+    /* Premium Buttons */
+    .fc .fc-button-primary {
+        background-color: var(--bg, #f8fafc) !important;
+        border-color: var(--border-color, #e5e7eb) !important;
+        color: var(--text-dark, #4b5563) !important;
+        text-transform: capitalize;
+        font-weight: 500;
+        box-shadow: none !important;
+        transition: all 0.2s ease;
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
     }
+    .fc .fc-button-primary:hover {
+        background-color: var(--bg-hover, #f1f5f9) !important;
+        color: var(--primary, #0ea5e9) !important;
+        transform: translateY(-1px);
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: var(--primary-light, #e0f2fe) !important;
+        border-color: var(--primary, #0ea5e9) !important;
+        color: var(--primary-dark, #0369a1) !important;
+    }
+    .fc .fc-button-primary:focus {
+        box-shadow: 0 0 0 2px var(--primary-light, #bae6fd) !important;
+    }
+
+    /* Day Headers */
+    .fc-col-header-cell {
+        background: var(--bg, #f8fafc);
+        padding: 12px 0 !important;
+    }
+    .fc-col-header-cell-cushion {
+        font-weight: 600 !important;
+        color: var(--text-gray, #6b7280) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Day Cells */
+    .fc-daygrid-day-number {
+        font-weight: 500;
+        color: var(--text-dark, #374151) !important;
+        padding: 8px !important;
+    }
+    .fc-day-today {
+        background-color: var(--primary-light-more, #f0f9ff) !important;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--primary, #0ea5e9) !important;
+        font-weight: 700;
+    }
+
+    /* Events Styling */
     .fc-event {
         cursor: pointer;
-        padding: 2px 5px;
-        border-radius: 4px;
+        padding: 4px 6px;
+        border-radius: 6px;
         border: none;
+        margin-bottom: 3px !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        z-index: 5;
     }
     .fc-event-title {
+        font-weight: 600;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    .fc-event-time {
+        font-size: 0.7rem;
+        opacity: 0.8;
         font-weight: 500;
-        font-size: 0.85rem;
     }
     .fc-daygrid-event {
         white-space: normal !important;
+    }
+    
+    /* Time Grid specifics */
+    .fc-timegrid-slot-label-cushion {
+        font-size: 0.75rem;
+        color: var(--text-gray, #6b7280);
+        font-weight: 500;
+    }
+    .fc-timegrid-event {
+        border-left-width: 3px !important;
     }
 </style>
 @endpush
@@ -240,7 +334,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: initialView,
         initialDate: initialDate.includes('-') && initialDate.split('-').length === 2 ? initialDate + '-01' : initialDate,
-        headerToolbar: false,
+        headerToolbar: {
+            left: 'title',
+            right: 'prev,next today dayGridMonth,timeGridWeek,timeGridDay'
+        },
         themeSystem: 'standard',
         events: events,
         eventClick: function(info) {
