@@ -15,27 +15,22 @@ class UserSuccessionController extends Controller
         // 1. Get the Employee profile linked to the logged-in User
         $employee = Employee::where('user_id', Auth::id())->first();
 
-       
-
         if (!$employee) {
             return view('hr.hr2.succession', ['nominations' => collect([])]);
         }
 
-        // 2. Fetch nominations using a more "forgiving" Left Join
+        // 2. Fetch nominations with Specialization from the Employee table
         $nominations = SuccessorCandidate::query()
-          
             ->leftJoin('department_position_titles_hr2 as target_pos', 'target_pos.id', '=', 'successor_candidates_hr2.position_id')
-            
             ->leftJoin('employees as emp', 'emp.employee_id', '=', 'successor_candidates_hr2.employee_id')
-            
             ->leftJoin('department_position_titles_hr2 as current_pos', 'current_pos.id', '=', 'emp.position_id')
-            
             ->where('successor_candidates_hr2.employee_id', trim($employee->employee_id)) 
             ->where('successor_candidates_hr2.is_active', 1)
             ->select([
                 'successor_candidates_hr2.*',
                 'target_pos.position_title as target_position_title',
                 'current_pos.position_title as current_position_title',
+                'emp.specialization as current_specialization',
             ])
             ->get();
 

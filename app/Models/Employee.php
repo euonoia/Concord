@@ -23,6 +23,7 @@ class Employee extends Model
         'department_id',
         'position_id',
         'specialization',
+        'post_grad_status',
         'hire_date',
         'is_on_duty',
     ];
