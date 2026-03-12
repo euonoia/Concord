@@ -128,6 +128,8 @@ class OutpatientController extends Controller
             $query->where('status', 'Available');
         }])->get();
 
+        $doctors = \App\Models\User::where('role_slug', 'doctor')->get();
+
         return view('core.core1.outpatient.index', compact(
             'stats',
             'appointments',
@@ -136,7 +138,8 @@ class OutpatientController extends Controller
             'diagnosticOrders',
             'followUps',
             'patients',
-            'wards'
+            'wards',
+            'doctors'
         ));
     }
     /*

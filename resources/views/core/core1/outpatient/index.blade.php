@@ -305,11 +305,63 @@
 
             <!-- Follow Up Tab -->
             <div id="follow-up" class="core1-tab-pane">
-                <div class="core1-flex-center py-50">
-                    <div class="text-center">
-                        <i class="bi bi-calendar2-week text-gray mb-20" style="font-size: 3rem;"></i>
-                        <p class="text-gray italic">Follow-up scheduling is integrated into the Consultation Room flow.</p>
-                    </div>
+                <div class="d-flex justify-between items-center mb-20">
+                    <h3 class="core1-title core1-section-title">Schedule Follow-up Appointment</h3>
+                </div>
+                <div class="core1-card shadow-none border" style="max-width: 800px;">
+                    <form action="{{ route('core1.appointments.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="type" value="follow-up">
+                        
+                        <div class="core1-form-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="core1-form-group core1-col-span-2">
+                                <label for="patient_id" class="font-bold block mb-5">Patient *</label>
+                                <select id="patient_id" name="patient_id" required class="core1-input w-full">
+                                    <option value="">Select Patient</option>
+                                    @foreach($patients as $p)
+                                        <option value="{{ $p->id }}" {{ old('patient_id') == $p->id ? 'selected' : '' }}>
+                                            {{ $p->name }} ({{ $p->patient_id ?? $p->mrn }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="core1-form-group core1-col-span-2">
+                                <label for="doctor_id" class="font-bold block mb-5">Doctor *</label>
+                                <select id="doctor_id" name="doctor_id" required class="core1-input w-full">
+                                    <option value="">Select Doctor</option>
+                                    @foreach($doctors as $doctor)
+                                        <option value="{{ $doctor->id }}" {{ old('doctor_id', auth()->user()->id) == $doctor->id ? 'selected' : '' }}>
+                                            Dr. {{ $doctor->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="core1-form-group">
+                                <label for="appointment_date" class="font-bold block mb-5">Date *</label>
+                                <input type="date" id="appointment_date" name="appointment_date" value="{{ old('appointment_date') }}" required class="core1-input w-full">
+                            </div>
+
+                            <div class="core1-form-group">
+                                <label for="appointment_time" class="font-bold block mb-5">Time *</label>
+                                <select id="appointment_time" name="appointment_time" required class="core1-input w-full">
+                                    <option value="">Select Date & Doctor First</option>
+                                </select>
+                                <p id="availability-msg" class="core1-error-text" style="color: var(--text-light); font-size: 12px; margin-top: 5px;"></p>
+                            </div>
+
+                            <div class="core1-form-group core1-col-span-2">
+                                <label for="reason" class="font-bold block mb-5">Reason</label>
+                                <textarea id="reason" name="reason" rows="3" class="core1-input w-full" placeholder="Notes for this follow-up...">{{ old('reason') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                            <button type="reset" class="core1-btn core1-btn-outline">Reset</button>
+                            <button type="submit" class="core1-btn core1-btn-primary">Book Appointment</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -798,6 +850,80 @@ function submitAdmissionAjax(event) {
         
         if (data.success) {
             closeModal('admissionModal');
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error occurred during admission');
+        }
+    })
+    .catch(error => {
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorSelect = document.getElementById('doctor_id');
+    const dateInput = document.getElementById('appointment_date');
+    const timeSelect = document.getElementById('appointment_time');
+    const msg = document.getElementById('availability-msg');
+
+    function checkAvailability() {
+        if (!doctorSelect || !dateInput) return;
+        const doctorId = doctorSelect.value;
+        const date = dateInput.value;
+
+        if (!doctorId || !date) {
+            if(timeSelect) timeSelect.innerHTML = '<option value="">Select Date & Doctor First</option>';
+            return;
+        }
+
+        if(msg) msg.textContent = 'Checking availability...';
+        if(timeSelect) timeSelect.disabled = true;
+
+        fetch(`{{ route('core1.appointments.check-availability') }}?doctor_id=${doctorId}&date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                if(timeSelect) timeSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                
+                if (data.slots && data.slots.length > 0) {
+                    data.slots.forEach(slot => {
+                        if(timeSelect){
+                            const option = document.createElement('option');
+                            option.value = slot.time;
+                            option.textContent = `${slot.time} (${slot.status})`;
+                            if (slot.status === 'booked') {
+                                option.disabled = true;
+                                option.classList.add('bg-gray-100', 'text-gray-400');
+                            }
+                            timeSelect.appendChild(option);
+                        }
+                    });
+                    if(msg) msg.textContent = 'Slots updated.';
+                } else {
+                    if(timeSelect) timeSelect.innerHTML = '<option value="">No slots available</option>';
+                    if(msg) msg.textContent = 'No slots available for this date.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if(msg) msg.textContent = 'Error checking availability.';
+            })
+            .finally(() => {
+                if(timeSelect) timeSelect.disabled = false;
+            });
+    }
+
+    if(doctorSelect && dateInput) {
+        doctorSelect.addEventListener('change', checkAvailability);
+        dateInput.addEventListener('change', checkAvailability);
+        
+        // Check initial state if old values exist
+        if (doctorSelect.value && dateInput.value) {
+            checkAvailability();
+        }
+    }
+});
             
             // Show simple alert or custom notification
             alert('Success: ' + data.message);
