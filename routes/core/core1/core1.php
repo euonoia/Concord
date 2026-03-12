@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\user\Core\core1\core1Controller;
-use App\Http\Controllers\user\Core\core1\Admin\AdminDashboardController;
+use App\Http\Controllers\admin\Core\core1\AdminDashboardController;
 use App\Http\Controllers\user\Core\core1\Doctor\DoctorDashboardController;
 use App\Http\Controllers\user\Core\core1\Nurse\NurseDashboardController;
 use App\Http\Controllers\user\Core\core1\Patient\PatientDashboardController;
