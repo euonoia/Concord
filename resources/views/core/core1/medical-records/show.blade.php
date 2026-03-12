@@ -1,4 +1,4 @@
-﻿@extends(request()->ajax() ? 'core.core1.layouts.ajax' : 'core.core1.layouts.app')
+@extends(request()->ajax() ? 'core.core1.layouts.ajax' : 'core.core1.layouts.app')
 
 @section('title', 'Medical Record Details')
 
@@ -19,76 +19,133 @@
 
     <div class="bg-white shadow-sm rounded-xl border p-6 space-y-8">
 
+    <div style="font-family: 'Inter', system-ui, sans-serif; color: var(--text-dark); display: flex; flex-direction: column; gap: 32px;">
+
         {{-- ================= RECORD INFORMATION ================= --}}
         <div>
-            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Record Information</h2>
-            <table class="w-full text-sm">
-                <tbody class="divide-y">
-                    <tr>
-                        <td class="font-medium py-2 w-1/3">Patient</td>
-                        <td>{{ $patient->name ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">MRN (Patient ID)</td>
-                        <td class="font-mono text-blue-800">{{ $patient->mrn ?? $patient->patient_id ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">Primary Doctor</td>
-                        <td>{{ $patient->doctor->name ?? 'N/A' }}</td>
-                    </tr>
-                    
-                    <tr>
-                        <td class="font-medium py-2">Registration Status</td>
-                        <td>{{ $patient->registration_status ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="font-medium py-2">Last Visit</td>
-                        <td>{{ optional($patient->last_visit)->format('M d, Y') ?? 'N/A' }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h2 style="font-size: 16px; font-weight: 600; color: var(--text-dark); margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 28px; height: 28px; background: var(--primary-light); color: var(--primary); border-radius: 8px; font-size: 14px;"><i class="bi bi-person-vcard"></i></span>
+                Record Information
+            </h2>
+            <div style="background: var(--bg-light); border-radius: 12px; border: 1px solid var(--border-color); padding: 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <tbody>
+                        <tr style="border-bottom: 1px dashed var(--border-color);">
+                            <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500; width: 35%;">Patient Name</td>
+                            <td style="padding: 14px 20px; color: var(--text-dark); font-weight: 600;">{{ $patient->name ?? 'N/A' }}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px dashed var(--border-color);">
+                            <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">MRN (Patient ID)</td>
+                            <td style="padding: 14px 20px; font-family: monospace; font-weight: 600; color: var(--primary);">{{ $patient->mrn ?? $patient->patient_id ?? 'N/A' }}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px dashed var(--border-color);">
+                            <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">Primary Doctor</td>
+                            <td style="padding: 14px 20px; color: var(--text-dark);">
+                                @if(isset($patient->doctor->name))
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 500;">
+                                        <i class="bi bi-person-badge" style="color: var(--primary);"></i> Dr. {{ $patient->doctor->name }}
+                                    </span>
+                                @else
+                                    <span style="color: var(--text-light); font-style: italic;">Unassigned</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px dashed var(--border-color);">
+                            <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">Registration Status</td>
+                            <td style="padding: 14px 20px;">
+                                @if(($patient->registration_status ?? '') === 'REGISTERED')
+                                    <span style="display: inline-flex; align-items: center; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;"><i class="bi bi-check-circle-fill" style="margin-right: 6px;"></i> REGISTERED</span>
+                                @else
+                                    <span style="display: inline-flex; align-items: center; background: var(--warning-light-more); color: var(--warning); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">{{ $patient->registration_status ?? 'N/A' }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">Last Visit</td>
+                            <td style="padding: 14px 20px; color: var(--text-dark);">
+                                @if(optional($patient->last_visit)->format('M d, Y'))
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;"><i class="bi bi-calendar-event" style="color: var(--text-light);"></i> {{ optional($patient->last_visit)->format('M d, Y') }}</span>
+                                @else
+                                    <span style="color: var(--text-light); font-style: italic;">No previous visits</span>
+                                @endif
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {{-- ================= CLINICAL ENCOUNTERS HISTORY ================= --}}
         <div>
-            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Clinical Encounters History</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border">
-                    <thead class="bg-gray-100">
+            <h2 style="font-size: 16px; font-weight: 600; color: var(--text-dark); margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 28px; height: 28px; background: var(--info-light); color: var(--info); border-radius: 8px; font-size: 14px;"><i class="bi bi-activity"></i></span>
+                Clinical Encounters History
+            </h2>
+            <div style="border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; background: white;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                    <thead style="background: var(--bg-light); border-bottom: 1px solid var(--border-color);">
                         <tr>
-                            <th class="p-2 border">Date & Time</th>
-                            <th class="p-2 border">Encounter Type</th>
-                            <th class="p-2 border">Attending Doctor</th>
-                            <th class="p-2 border">Chief Complaint / Details</th>
-                            <th class="p-2 border">Status</th>
+                            <th style="padding: 14px 20px; font-weight: 600; color: var(--text-gray);">Date & Time</th>
+                            <th style="padding: 14px 20px; font-weight: 600; color: var(--text-gray);">Encounter Type</th>
+                            <th style="padding: 14px 20px; font-weight: 600; color: var(--text-gray);">Attending Doctor</th>
+                            <th style="padding: 14px 20px; font-weight: 600; color: var(--text-gray);">Details</th>
+                            <th style="padding: 14px 20px; font-weight: 600; color: var(--text-gray); text-align: center;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($encounters as $encounter)
-                        <tr>
-                            <td class="p-2 border whitespace-nowrap">{{ $encounter->created_at->format('M d, Y h:i A') }}</td>
-                            <td class="p-2 border font-semibold text-center">
-                                <span class="px-2 py-1 rounded text-xs {{ $encounter->type === 'IPD' ? 'bg-blue-100 text-blue-800' : ($encounter->type === 'Operating Room' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800') }}">
-                                    {{ $encounter->type }}
-                                </span>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 16px 20px; color: var(--text-dark); white-space: nowrap;">
+                                <div style="font-weight: 600;">{{ $encounter->created_at->format('M d, Y') }}</div>
+                                <div style="font-size: 12px; color: var(--text-gray); margin-top: 2px;">{{ $encounter->created_at->format('h:i A') }}</div>
                             </td>
-                            <td class="p-2 border">{{ $encounter->doctor->name ?? 'Unassigned' }}</td>
-                            <td class="p-2 border">
-                                <p class="mb-1">{{ $encounter->chief_complaint ?? '--' }}</p>
+                            <td style="padding: 16px 20px;">
+                                @if($encounter->type === 'IPD')
+                                    <span style="display: inline-flex; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">{{ strtoupper($encounter->type) }}</span>
+                                @elseif($encounter->type === 'Operating Room')
+                                    <span style="display: inline-flex; background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">{{ strtoupper($encounter->type) }}</span>
+                                @else
+                                    <span style="display: inline-flex; background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">{{ strtoupper($encounter->type) }}</span>
+                                @endif
+                            </td>
+                            <td style="padding: 16px 20px; color: var(--text-dark); font-weight: 500;">
+                                {{ $encounter->doctor->name ?? 'Unassigned' }}
+                            </td>
+                            <td style="padding: 16px 20px;">
+                                @if(!empty($encounter->chief_complaint))
+                                    <div style="color: var(--text-dark); margin-bottom: 8px; font-weight: 500;">{{ $encounter->chief_complaint }}</div>
+                                @endif
                                 @if($encounter->type === 'IPD' && $encounter->admission)
-                                    <div class="mt-2 text-xs bg-gray-50 p-2 rounded border">
-                                        <strong>Admission Details:</strong><br>
-                                        Date: {{ \Carbon\Carbon::parse($encounter->admission->admission_date)->format('M d, Y h:i A') }}<br>
-                                        Location: {{ $encounter->admission->bed->room->ward->name }} - Room {{ $encounter->admission->bed->room->room_number }} (Bed {{ $encounter->admission->bed->bed_number }})<br>
-                                        Discharge: {{ $encounter->admission->discharge_date ? \Carbon\Carbon::parse($encounter->admission->discharge_date)->format('M d, Y h:i A') : 'Ongoing' }}
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: {{ empty($encounter->chief_complaint) ? '0' : '8px' }};">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"><i class="bi bi-hospital" style="color: var(--primary);"></i> Admission Location</div>
+                                        <div style="color: var(--text-gray); margin-bottom: 6px; font-weight: 500;">{{ $encounter->admission->bed->room->ward->name }} - Room {{ $encounter->admission->bed->room->room_number }} (Bed {{ $encounter->admission->bed->bed_number }})</div>
+                                        <div style="color: var(--text-gray); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-weight: 500;">
+                                            <span style="display: flex; align-items: center; gap: 4px;"><i class="bi bi-box-arrow-in-right" style="color: var(--success);"></i> IN: {{ \Carbon\Carbon::parse($encounter->admission->admission_date)->format('M d, Y h:i A') }}</span>
+                                            @if($encounter->admission->discharge_date)
+                                                <span style="display: flex; align-items: center; gap: 4px;"><i class="bi bi-box-arrow-right" style="color: var(--danger);"></i> OUT: {{ \Carbon\Carbon::parse($encounter->admission->discharge_date)->format('M d, Y h:i A') }}</span>
+                                            @else
+                                                <span style="display: flex; align-items: center; gap: 4px; color: var(--warning);"><i class="bi bi-clock-history"></i> Ongoing</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endif
                             </td>
-                            <td class="p-2 border text-center">{{ $encounter->status }}</td>
+                            <td style="padding: 16px 20px; text-align: center;">
+                                @if(($encounter->status ?? '') === 'Closed')
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--text-gray); font-size: 12px; font-weight: 600;"><i class="bi bi-lock-fill"></i> Closed</span>
+                                @else
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 600;"><i class="bi bi-unlock-fill"></i> {{ $encounter->status }}</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="p-4 text-center text-gray-500 italic">No clinical encounters recorded.</td>
+                            <td colspan="5" style="padding: 40px 20px; text-align: center;">
+                                <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: var(--bg-light); color: var(--text-light); margin-bottom: 12px;">
+                                    <i class="bi bi-journal-x" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div style="color: var(--text-gray); font-size: 13px; font-weight: 500;">No clinical encounters recorded.</div>
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
