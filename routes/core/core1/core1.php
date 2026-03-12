@@ -101,12 +101,15 @@ Route::middleware([])->group(function () {
     Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse')->group(function () {
         Route::get('/inpatient', [InpatientController::class, 'index'])->name('core1.inpatient.index');
         
-        // IPD ADT Routes
-        Route::get('/ipd/dashboard', [AdmissionController::class, 'dashboard'])->name('core1.ipd.dashboard');
+        // IPD ADT Routes — dashboard redirects to unified inpatient page
+        Route::get('/ipd/dashboard', function () {
+            return redirect()->route('core1.inpatient.index');
+        })->name('core1.ipd.dashboard');
         Route::get('/admissions/create', [AdmissionController::class, 'create'])->name('core1.admissions.create');
         Route::post('/admissions', [AdmissionController::class, 'store'])->name('core1.admissions.store');
         Route::post('/admissions/{admission}/discharge', [AdmissionController::class, 'discharge'])->name('core1.admissions.discharge');
     });
+
 
     Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');

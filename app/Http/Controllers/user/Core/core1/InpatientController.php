@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user\Core\core1;
 use App\Http\Controllers\Controller;
 use App\Models\core1\Admission;
 use App\Models\core1\Bed;
+use App\Models\core1\Ward;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,17 +16,12 @@ class InpatientController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $isDoctor = $user->role_slug === 'doctor';
-        $isNurse = $user->role_slug === 'nurse';
 
         // Fetch real active admissions following HIS Architect rules
-        $admissionsQuery = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
-            ->where('status', 'Admitted');
-
-        // Admin, Head Nurse, Receptionist, Doctors can typically see the ward.
-        // Let's allow everyone to see active admissions for now to avoid the silent empty list failure.
-
-        $activeAdmissions = $admissionsQuery->latest()->get();
+        $activeAdmissions = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
+            ->where('status', 'Admitted')
+            ->latest()
+            ->get();
 
         // Stats derived from real production data
         $stats = [
@@ -36,25 +32,82 @@ class InpatientController extends Controller
                 ->count(),
         ];
 
-        // Fetch actual Bed map
-        $beds = Bed::with(['room.ward', 'admissions' => function($q) {
+        // Flat bed list for legacy tab (kept for backward compatibility)
+        $beds = Bed::with(['room.ward', 'admissions' => function ($q) {
             $q->where('status', 'Admitted')->with('encounter.patient');
         }])->get();
 
-        // Map to UI format
-        $uiBeds = $beds->map(function($bed) {
+        $uiBeds = $beds->map(function ($bed) {
             $activeAdmission = $bed->admissions->first();
             return [
-                'id' => 'Bed ' . $bed->bed_number,
-                'ward' => $bed->room->ward->name,
-                'room' => $bed->room->room_number,
-                'type' => $bed->room->room_type,
-                'status' => strtolower($bed->status),
-                'bg' => $bed->status === 'Available' ? 'core1-bed-available' : ($bed->status === 'Occupied' ? 'core1-bed-occupied' : 'core1-bed-cleaning'),
-                'patient' => $activeAdmission ? $activeAdmission->encounter->patient->name : '',
-                'patient_id' => $activeAdmission ? $activeAdmission->encounter->patient->mrn : '',
+                'id'         => 'Bed ' . $bed->bed_number,
+                'ward'       => $bed->room->ward->name,
+                'room'       => $bed->room->room_number,
+                'type'       => $bed->room->room_type,
+                'status'     => strtolower($bed->status),
+                'bg'         => $bed->status === 'Available'
+                    ? 'core1-bed-available'
+                    : ($bed->status === 'Occupied' ? 'core1-bed-occupied' : 'core1-bed-cleaning'),
+                'patient'    => $activeAdmission ? $activeAdmission->encounter->patient->name : '',
+                'patient_id' => $activeAdmission ? $activeAdmission->encounter->patient->mrn  : '',
             ];
         });
+
+        // ── 2D Floor Map: group wards by ward_type ────────────────────────────────
+        $zoneOrder = ['ICU', 'ER', 'WARD', 'OR'];
+        $wards = Ward::with(['rooms.beds.admissions' => function ($q) {
+            $q->where('status', 'Admitted')->with('encounter.patient');
+        }])->get();
+
+        $floorMap = [];
+        foreach ($zoneOrder as $zone) {
+            $floorMap[$zone] = [
+                'wards' => [],
+                'total' => 0,
+                'occ'   => 0,
+                'avail' => 0,
+            ];
+        }
+
+        foreach ($wards as $ward) {
+            $zoneKey = strtoupper(trim($ward->ward_type));
+            if (!array_key_exists($zoneKey, $floorMap)) {
+                $zoneKey = 'WARD';
+            }
+
+            $wardRooms = [];
+            foreach ($ward->rooms as $room) {
+                $roomBeds = [];
+                foreach ($room->beds as $bed) {
+                    $admission = $bed->admissions->first();
+                    $status = strtolower($bed->status);
+                    $roomBeds[] = [
+                        'bed_number' => $bed->bed_number,
+                        'status'     => $status,
+                        'patient'    => $admission ? optional($admission->encounter->patient)->name : null,
+                        'mrn'        => $admission ? optional($admission->encounter->patient)->mrn  : null,
+                    ];
+                    $floorMap[$zoneKey]['total']++;
+                    if ($status === 'occupied')  $floorMap[$zoneKey]['occ']++;
+                    if ($status === 'available') $floorMap[$zoneKey]['avail']++;
+                }
+                if (!empty($roomBeds)) {
+                    $wardRooms[] = [
+                        'room_number' => $room->room_number,
+                        'room_type'   => $room->room_type,
+                        'beds'        => $roomBeds,
+                    ];
+                }
+            }
+
+            if (!empty($wardRooms)) {
+                $floorMap[$zoneKey]['wards'][] = [
+                    'name'  => $ward->name,
+                    'rooms' => $wardRooms,
+                ];
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────────
 
         // Nurses for dropdown (Head Nurse/Admin only)
         $nurses = [];
@@ -63,22 +116,22 @@ class InpatientController extends Controller
         }
 
         return view('core.core1.inpatient.index', [
-            'inpatients' => $activeAdmissions, // Passed as 'inpatients' for backward compatibility in view loop names
-            'stats' => $stats,
-            'beds' => $uiBeds,
-            'nurses' => $nurses
+            'inpatients' => $activeAdmissions,
+            'stats'      => $stats,
+            'beds'        => $uiBeds,
+            'nurses'     => $nurses,
+            'floorMap'   => $floorMap,
         ]);
     }
 
-    public function deactivate(Patient $patient)
-{
-    $newStatus = $patient->status === 'inactive' ? 'active' : 'inactive';
+    public function deactivate(\App\Models\core1\Patient $patient)
+    {
+        $newStatus = $patient->status === 'inactive' ? 'active' : 'inactive';
 
-    $patient->update([
-        'status' => $newStatus
-    ]);
+        $patient->update([
+            'status' => $newStatus,
+        ]);
 
-    return back()->with('success', 'Patient status updated successfully.');
-}
-
+        return back()->with('success', 'Patient status updated successfully.');
+    }
 }

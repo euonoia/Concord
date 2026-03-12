@@ -16,6 +16,7 @@ class Ward extends Model
         'name',
         'description',
         'capacity',
+        'ward_type',
     ];
 
     public function rooms()

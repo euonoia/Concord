@@ -54,7 +54,7 @@ class AdmissionController extends Controller
                 ]);
             }
 
-            return redirect()->route('core1.ipd.dashboard')->with('success', 'Patient successfully admitted.');
+            return redirect()->route('core1.inpatient.index')->with('success', 'Patient successfully admitted.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
@@ -79,7 +79,7 @@ class AdmissionController extends Controller
         try {
             $this->admissionService->discharge($admission, $validated);
 
-            return redirect()->route('core1.ipd.dashboard')->with('success', 'Patient successfully discharged and bed released.');
+            return redirect()->route('core1.inpatient.index')->with('success', 'Patient successfully discharged and bed released.');
         } catch (\Exception $e) {
             return back()->with('error', 'Discharge failed: ' . $e->getMessage());
         }
