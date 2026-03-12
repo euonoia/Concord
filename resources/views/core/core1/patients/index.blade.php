@@ -325,14 +325,116 @@
     </div>
 
     @if($patients->hasPages())
-        <div class="d-flex justify-between items-center mt-25">
-            <div class="text-sm text-gray">
-                Showing {{ $patients->firstItem() }} to {{ $patients->lastItem() }} of {{ $patients->total() }} patients
-            </div>
-            <div>
-                {{ $patients->links() }}
-            </div>
+        <div class="mt-25">
+            {{ $patients->links() }}
         </div>
+        
+        <style>
+            /* Fix Laravel Tailwind pagination without Tailwind classes */
+            nav[role="navigation"] {
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                flex-direction: column; /* Stack vertically */
+                width: 100%;
+                margin-top: 8px;
+            }
+            /* Hide the mobile pagination div */
+            nav[role="navigation"] > div:first-of-type {
+                display: none !important;
+            }
+            /* Flex the desktop pagination container - stacked on left */
+            nav[role="navigation"] > div:last-of-type {
+                display: flex !important;
+                flex-direction: column; /* Stack vertically */
+                width: 100%;
+                align-items: flex-start; /* Align left */
+                justify-content: flex-start !important;
+                gap: 12px;
+            }
+            /* Ensure text container is displayed and moved to the bottom */
+            nav[role="navigation"] > div:last-of-type > div:first-child {
+                display: block !important;
+                order: 2; /* Place after buttons */
+                margin-top: 4px; 
+            }
+            /* The pagination links wrapper (moved to the top) */
+            nav[role="navigation"] > div:last-of-type > div:last-child {
+                order: 1; /* Place before text */
+            }
+            /* Text ("Showing X to Y...") */
+            nav[role="navigation"] p {
+                font-size: 13px;
+                color: var(--text-gray);
+                margin: 0;
+                display: block !important; /* Overrides Laravel's .hidden class */
+            }
+            nav[role="navigation"] p span {
+                font-weight: 600;
+                color: var(--text-dark);
+            }
+            /* The pagination links wrapper */
+            nav[role="navigation"] .shadow-sm {
+                display: flex;
+                gap: 6px;
+                box-shadow: none !important;
+            }
+
+            /* Structural clear: Remove borders from wrapper spans */
+            nav[role="navigation"] .shadow-sm > span {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* Base style for physical buttons */
+            nav[role="navigation"] .shadow-sm a,
+            nav[role="navigation"] .shadow-sm span[aria-disabled="true"] > span,
+            nav[role="navigation"] .shadow-sm span[aria-current="page"] > span {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                min-width: 32px;
+                height: 32px;
+                padding: 0 10px;
+                border: 1px solid var(--border-color) !important;
+                background: white !important;
+                color: var(--text-dark) !important;
+                font-size: 13px;
+                border-radius: 6px !important;
+                text-decoration: none;
+                transition: all 0.2s;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+
+            /* Hover state for clickable links */
+            nav[role="navigation"] .shadow-sm a:hover {
+                background: var(--bg-hover) !important;
+                color: var(--primary) !important;
+            }
+
+            /* Active state */
+            nav[role="navigation"] .shadow-sm span[aria-current="page"] > span {
+                background: var(--primary) !important;
+                color: white !important;
+                border-color: var(--primary) !important;
+            }
+
+            /* Disabled state */
+            nav[role="navigation"] .shadow-sm span[aria-disabled="true"] > span {
+                opacity: 0.5;
+                background: var(--bg-light) !important;
+                color: var(--text-gray) !important;
+            }
+
+            /* Fix SVG size */
+            nav[role="navigation"] svg {
+                width: 16px;
+                height: 16px;
+            }
+        </style>
     @endif
 </div>
 
