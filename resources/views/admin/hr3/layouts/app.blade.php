@@ -33,7 +33,12 @@
 
         <a href="{{ route('shifts.index') }}" class="{{ request()->routeIs('shifts.*') ? 'active' : '' }}">
             <i class="bi bi-calendar-range"></i>
-            <span>Shifts & Schedule</span>
+            <span>Shifts</span>
+        </a>
+
+        <a href="{{ route('schedule.index') }}" class="{{ request()->routeIs('schedule.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-event"></i>
+            <span>Schedule</span>
         </a>
 
         <a href="{{ route('timesheet.index') }}" class="{{ request()->routeIs('timesheet.*') ? 'active' : '' }}">
