@@ -22,7 +22,21 @@ class PatientManagementController extends Controller
         $isDoctor = $user->role_slug === 'doctor';
         $isNurse = $user->role_slug === 'nurse';
 
-        $query = Patient::where('registration_status', '!=', 'PRE_REGISTERED');
+        $query = Patient::where('registration_status', '!=', 'PRE_REGISTERED')
+            ->where(function ($q) {
+                // 1. Newly registered (no encounters)
+                $q->whereDoesntHave('encounters')
+                // 2. OR has an actively running encounter
+                ->orWhereHas('encounters', function ($e) {
+                    $e->where('status', '!=', 'Closed')
+                      ->orWhere(function ($sub) {
+                          $sub->where('type', 'IPD')
+                              ->whereHas('admission', function ($a) {
+                                  $a->whereNull('discharge_date');
+                              });
+                      });
+                });
+            });
 
         if ($isDoctor) {
             $query->whereHas('appointments', function ($q) use ($user) {
@@ -45,7 +59,21 @@ class PatientManagementController extends Controller
             $query->where('status', $statusFilter);
         }
 
-        $patients = $query->latest()->paginate(15);
+        $patients = $query->with([
+            'encounters' => function($q) { $q->latest(); },
+            'encounters.admission.bed.room.ward',
+            'encounters.consultation',
+            'encounters.triage'
+        ])
+        ->select('patients_core1.*')
+        // Order by the most recent encounter first, fallback to patient creation date
+        ->orderByRaw("
+            COALESCE(
+                (SELECT created_at FROM encounters_core1 WHERE patient_id = patients_core1.id ORDER BY created_at DESC LIMIT 1),
+                patients_core1.created_at
+            ) DESC
+        ")
+        ->paginate(15);
 
         $nurses = [];
         if (auth()->user()->isAdmin() || auth()->user()->isHeadNurse()) {

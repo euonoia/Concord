@@ -109,8 +109,8 @@
                     @if(auth()->user()->role !== 'doctor')
                         <th>Assigned Doctor</th>
                     @endif
-                    <th>Last Visit</th>
-                    <th>Reg. Status</th>
+                    <th>Arrival</th>
+                    <th>Care Type</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -194,36 +194,101 @@
                         @endif
 
                         <td>
-                            <div class="text-sm text-dark">
-                                {{ $patient->last_visit ? $patient->last_visit->format('M d, Y') : 'Never' }}
-                            </div>
-                            @if($patient->last_visit)
-                                <div class="text-xs text-gray mt-4">
-                                    {{ $patient->last_visit->diffForHumans() }}
+                            @php
+                                $latestEncounter = $patient->encounters->first();
+                            @endphp
+                            @if($latestEncounter)
+                                <div class="text-sm font-medium text-dark">
+                                    {{ $latestEncounter->created_at->format('M d, Y') }}
+                                </div>
+                                <div class="text-xs text-gray mt-1">
+                                    {{ $latestEncounter->created_at->format('h:i A') }}
+                                </div>
+                            @else
+                                <div class="text-sm text-gray">
+                                    Never
                                 </div>
                             @endif
                         </td>
 
                         <td>
-                            @php $rs = $patient->registration_status ?? 'REGISTERED'; @endphp
-                            <span class="core1-badge {{ $rs === 'REGISTERED' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
-                                <i class="fas {{ $rs === 'REGISTERED' ? 'fa-check-circle' : ($rs === 'MERGED' ? 'fa-code-branch' : 'fa-clock') }} text-xxs"></i>
-                                <span class="ml-2">{{ str_replace('_', ' ', $rs) }}</span>
+                            @php
+                                $careType = 'UNASSIGNED';
+                                $bagdeClass = 'core1-badge-inactive';
+                                $icon = 'fa-user-clock';
+                                
+                                $latestEncounter = $patient->encounters->first();
+                                if ($latestEncounter) {
+                                    $careType = $latestEncounter->type; // IPD, OPD, etc.
+                                    if ($careType === 'IPD') {
+                                        $bagdeClass = 'core1-badge-active';
+                                        $icon = 'fa-bed';
+                                    } elseif ($careType === 'OPD') {
+                                        $bagdeClass = 'core1-badge-active p-1';
+                                        $icon = 'fa-stethoscope';
+                                    } elseif ($careType === 'ER') {
+                                        $bagdeClass = 'core1-badge-inactive'; // might want to make this red/urgent CSS class if available
+                                        $icon = 'fa-ambulance';
+                                    } else {
+                                        $bagdeClass = 'core1-badge-active';
+                                        $icon = 'fa-file-medical';
+                                    }
+                                }
+                            @endphp
+                            <span class="core1-badge {{ $bagdeClass }}">
+                                <i class="fas {{ $icon }} text-xxs"></i>
+                                <span class="ml-2">{{ $careType }}</span>
                             </span>
                         </td>
                         <td>
                             @php
                                 $isPriority = auth()->user()->role === 'nurse' && $patient->assigned_nurse_id === auth()->user()->id;
+                                
+                                // Get latest encounter for location logic
+                                $latestEncounter = $patient->encounters->first();
+                                
+                                $location = 'Waiting / Reception';
+                                $locationColor = 'var(--text-gray)';
+                                
+                                if ($latestEncounter && $latestEncounter->status !== 'Closed') {
+                                    if ($latestEncounter->type === 'IPD' && $latestEncounter->admission) {
+                                        $wardName = optional(optional(optional($latestEncounter->admission->bed)->room)->ward)->name ?? 'Ward';
+                                        $location = 'Admitted: ' . $wardName;
+                                        $locationColor = 'var(--primary)';
+                                    } elseif ($latestEncounter->type === 'IPD') {
+                                        $location = 'Pending Admission';
+                                        $locationColor = 'var(--warning)';
+                                    } elseif ($latestEncounter->status === 'Pending Billing') {
+                                        $location = 'Billing Dept';
+                                        $locationColor = 'var(--info)';
+                                    } elseif ($latestEncounter->consultation) {
+                                        $location = 'Consultation Room';
+                                        $locationColor = 'var(--success)';
+                                    } elseif ($latestEncounter->triage) {
+                                        $location = 'Triage Station';
+                                        $locationColor = 'var(--warning)';
+                                    } else {
+                                        $location = 'Outpatient Dept';
+                                        $locationColor = 'var(--text-dark)';
+                                    }
+                                } elseif ($latestEncounter && $latestEncounter->type === 'IPD' && $latestEncounter->admission && null === $latestEncounter->admission->discharge_date) {
+                                    // Handle bugged IPD records marked Closed but not discharged
+                                    $wardName = optional(optional(optional($latestEncounter->admission->bed)->room)->ward)->name ?? 'Ward';
+                                    $location = 'Admitted: ' . $wardName;
+                                    $locationColor = 'var(--primary)';
+                                }
                             @endphp
-                            <span class="core1-badge {{ $patient->status === 'active' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
-                                <i class="fas fa-circle text-xxs"></i>
-                                <span class="ml-2">
-                                    {{ ucfirst($patient->status) }} 
-                                    @if($isPriority)
-                                        (PRIORITY)
-                                    @endif
+
+                            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                                <span style="display: inline-flex; align-items: center; gap: 4px; color: {{ $locationColor }}; font-size: 11px; font-weight: 700; background: var(--bg-light); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); white-space: nowrap;">
+                                    <i class="bi bi-geo-alt-fill"></i> {{ $location }}
                                 </span>
-                            </span>
+                                @if($isPriority)
+                                    <span style="color: var(--danger); font-size: 10px; font-weight: 700; background: #fee2e2; padding: 2px 6px; border-radius: 4px; white-space: nowrap; border: 1px solid #fca5a5;">
+                                        <i class="fas fa-star text-xxs"></i> PRIORITY
+                                    </span>
+                                @endif
+                            </div>
                         </td>
 
                         {{-- ACTIONS --}}

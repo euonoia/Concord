@@ -12,7 +12,7 @@
         <tbody>
             @forelse($records as $patient)
                 @php
-                    $latestRecord = $patient->medicalRecords->first();
+                    $latestEncounter = $patient->encounters->first();
                     $latestAppointment = $patient->appointments->first();
                 @endphp
                 <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
@@ -36,9 +36,9 @@
                         </div>
                     </td>
                     <td style="padding: 16px 24px;">
-                        @if($latestRecord)
+                        @if($latestEncounter)
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--success-light); color: var(--success); border-radius: 6px; font-size: 12px; font-weight: 500;">
-                                <i class="bi bi-journal-medical"></i> {{ $latestRecord->record_type }}
+                                <i class="bi bi-journal-medical"></i> Encounter ({{ $latestEncounter->type }})
                             </span>
                         @elseif($latestAppointment)
                             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--warning-light-more); color: var(--warning); border-radius: 6px; font-size: 12px; font-weight: 500;">
@@ -49,10 +49,10 @@
                         @endif
                     </td>
                     <td style="padding: 16px 24px; font-size: 13px; color: var(--text-gray);">
-                        @if($latestRecord)
+                        @if($latestEncounter)
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <i class="bi bi-clock-history"></i>
-                                {{ $latestRecord->record_date->format('M d, Y') }}
+                                {{ $latestEncounter->created_at->format('M d, Y') }}
                             </div>
                         @elseif($latestAppointment)
                             <div style="display: flex; align-items: center; gap: 6px;">

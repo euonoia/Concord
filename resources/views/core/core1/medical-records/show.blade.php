@@ -207,10 +207,53 @@
                                 @endif
                             </td>
                             <td style="padding: 16px 20px; text-align: center;">
-                                @if(($encounter->status ?? '') === 'Closed')
-                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--text-gray); font-size: 12px; font-weight: 600;"><i class="bi bi-lock-fill"></i> Closed</span>
+                                @php
+                                    // A record is truly closed ONLY if it's marked as Closed AND (if admitted) they have a discharge date.
+                                    $isActuallyClosed = ($encounter->status ?? '') === 'Closed';
+                                    if ($encounter->type === 'IPD' && $encounter->admission && null === $encounter->admission->discharge_date) {
+                                        $isActuallyClosed = false;
+                                    }
+                                @endphp
+
+                                @if($isActuallyClosed)
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--text-gray); font-size: 12px; font-weight: 600;">
+                                        <i class="bi bi-lock-fill"></i> Closed
+                                    </span>
                                 @else
-                                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 600;"><i class="bi bi-unlock-fill"></i> {{ $encounter->status }}</span>
+                                    @php
+                                        $location = 'Outpatient Dept';
+                                        $locationColor = 'var(--text-dark)';
+                                        
+                                        if ($encounter->type === 'IPD' && $encounter->admission) {
+                                            $wardName = optional(optional(optional($encounter->admission->bed)->room)->ward)->name ?? 'Ward';
+                                            $location = 'Admitted: ' . $wardName;
+                                            $locationColor = 'var(--primary)';
+                                        } elseif ($encounter->type === 'IPD') {
+                                            $location = 'Pending Admission';
+                                            $locationColor = 'var(--warning)';
+                                        } elseif ($encounter->status === 'Pending Billing') {
+                                            $location = 'Billing Dept';
+                                            $locationColor = 'var(--info)';
+                                        } elseif ($encounter->consultation) {
+                                            $location = 'Consultation Room';
+                                            $locationColor = 'var(--success)';
+                                        } elseif ($encounter->triage) {
+                                            $location = 'Triage Station';
+                                            $locationColor = 'var(--warning)';
+                                        } else {
+                                            $location = 'Waiting / Reception';
+                                            $locationColor = 'var(--text-gray)';
+                                        }
+                                    @endphp
+
+                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; color: {{ $locationColor }}; font-size: 11px; font-weight: 700; background: var(--bg-light); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                            <i class="bi bi-geo-alt-fill"></i> {{ $location }}
+                                        </span>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 11px; font-weight: 600;">
+                                            <i class="bi bi-unlock-fill"></i> {{ $encounter->status === 'Closed' ? 'Active' : $encounter->status }}
+                                        </span>
+                                    </div>
                                 @endif
                             </td>
                         </tr>

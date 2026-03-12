@@ -24,8 +24,8 @@ class MedicalRecordController extends Controller
             });
             
             $query->with([
-                'medicalRecords' => function ($q) {
-                    $q->orderByDesc('record_date');
+                'encounters' => function ($q) {
+                    $q->orderByDesc('created_at');
                 },
                 'appointments' => function ($q) use ($user) {
                     $q->where('doctor_id', $user->id)
@@ -36,8 +36,8 @@ class MedicalRecordController extends Controller
         } else {
             // Admin, Head Nurse, Nurse → show all patients
             $query->with([
-                'medicalRecords' => function ($q) {
-                    $q->orderByDesc('record_date');
+                'encounters' => function ($q) {
+                    $q->orderByDesc('created_at');
                 },
                 'appointments' => function ($q) {
                     $q->orderByDesc('appointment_date')->orderByDesc('appointment_time');
