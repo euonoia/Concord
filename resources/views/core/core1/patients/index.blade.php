@@ -72,30 +72,28 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('core1.patients.index') }}" class="core1-search-form">
-        <div class="core1-search-input-wrapper">
-            <i class="fas fa-search core1-search-icon"></i>
+    <form method="GET" action="{{ route('core1.patients.index') }}" class="core1-search-form" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+        <div class="core1-search-input-wrapper" style="flex: 1; display: flex; align-items: center; background: white; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; padding: 0 12px; height: 40px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <i class="bi bi-search" style="color: var(--text-gray); font-size: 14px; margin-right: 8px;"></i>
             <input
                 type="text"
                 name="search"
                 value="{{ $searchTerm }}"
                 placeholder="Search by name, patient ID, or email..."
-                class="core1-search-input"
+                style="border: none; outline: none; box-shadow: none; width: 100%; height: 100%; font-size: 14px; background: transparent; color: var(--text-dark);"
             >
         </div>
-        <select name="status" class="core1-input w-auto m-0">
+        <select name="status" class="core1-input" style="width: auto; height: 40px; min-width: 140px; margin: 0; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
             <option value="">All Status</option>
             <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Active</option>
             <option value="inactive" {{ $statusFilter === 'inactive' ? 'selected' : '' }}>Inactive</option>
         </select>
-        <button type="submit" class="core1-btn core1-btn-primary">
-            <i class="fas fa-search"></i>
-            <span class="ml-2">Search</span>
+        <button type="submit" class="core1-btn" style="height: 40px; padding: 0 16px; background: #476a8a; color: white; border: none; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;">
+            <i class="bi bi-search" style="font-size: 12px;"></i> Search
         </button>
         @if($searchTerm || $statusFilter)
-            <a href="{{ route('core1.patients.index') }}" class="core1-btn core1-btn-outline">
-                <i class="fas fa-times"></i>
-                <span class="ml-2">Clear</span>
+            <a href="{{ route('core1.patients.index') }}" class="core1-btn" style="height: 40px; padding: 0 16px; background: transparent; color: var(--text-gray); border: 1px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">
+                <i class="bi bi-x-lg" style="font-size: 12px;"></i> Clear
             </a>
         @endif
     </form>
@@ -1053,6 +1051,49 @@
                     .catch(() => registerForm.submit());
             });
         }
+        
+        // Real-time table sorting/filtering
+        const searchInput = document.querySelector('input[name="search"]');
+        const statusSelect = document.querySelector('select[name="status"]');
+        const tableRows = document.querySelectorAll('.core1-table tbody tr');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusTerm = statusSelect.value.toLowerCase();
+
+            tableRows.forEach(row => {
+                // Skip the "No patients found" row if present
+                if (row.querySelector('td[colspan]')) return;
+                
+                const text = row.innerText.toLowerCase();
+                const statusCell = row.querySelector('td:nth-last-child(2)'); // The Status column
+                const isActive = statusCell ? statusCell.innerText.toLowerCase().includes('active') && !statusCell.innerText.toLowerCase().includes('inactive') : false;
+                const isInactive = statusCell ? statusCell.innerText.toLowerCase().includes('inactive') : false;
+
+                const matchesSearch = text.includes(searchTerm);
+                
+                let matchesStatus = true;
+                if (statusTerm === 'active') {
+                    matchesStatus = isActive;
+                } else if (statusTerm === 'inactive') {
+                    matchesStatus = isInactive;
+                }
+
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput && tableRows.length > 0) {
+            searchInput.addEventListener('keyup', filterTable);
+        }
+        if (statusSelect && tableRows.length > 0) {
+            statusSelect.addEventListener('change', filterTable);
+        }
+
     });
 </script>
 @endpush
