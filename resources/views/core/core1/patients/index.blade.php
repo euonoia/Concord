@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Patient Management')
 
@@ -20,7 +20,7 @@
             <i class="fas fa-plus"></i>
             <span class="ml-2">Register Patient</span>
         </button>
-        <button type="button" onclick="document.getElementById('mergeModal').style.display='block'"
+        <button type="button" onclick="document.getElementById('mergeModal').style.display='flex'"
                 class="core1-btn core1-btn-outline">
             <i class="fas fa-code-branch"></i>
             <span class="ml-2">Merge Records</span>
