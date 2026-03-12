@@ -344,7 +344,7 @@
                 </div>
                 <div class="mb-15">
                     <label class="font-bold block mb-5">Acuity Level</label>
-                    <select name="triage_level" class="core1-input w-full">
+                    <select name="triage_level" id="triageLevelSelect" class="core1-input w-full" onchange="toggleSendToAdmissionBtn()">
                         <option value="5">Level 5 - Non-Urgent</option>
                         <option value="4">Level 4 - Less Urgent</option>
                         <option value="3">Level 3 - Urgent</option>
@@ -357,7 +357,9 @@
                     <textarea name="notes" class="core1-input w-full" rows="3" placeholder="General observations..."></textarea>
                 </div>
                 <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                    <input type="hidden" name="send_to_admission" id="sendToAdmissionFlag" value="0">
                     <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('triageModal')">Cancel</button>
+                    <button type="button" id="sendToAdmissionBtn" class="core1-btn core1-btn-outline-primary" style="display:none;" onclick="submitTriageForAdmission()">Send to Admission</button>
                     <button type="submit" class="core1-btn core1-btn-primary">Save Triage</button>
                 </div>
             </form>
@@ -438,6 +440,37 @@
                 <div class="core1-flex-gap-2 justify-end">
                     <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('labModal')">Cancel</button>
                     <button type="submit" class="core1-btn core1-btn-primary">Order Test</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admission Modal -->
+    <div id="admissionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1050; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
+            <div class="core1-header border-bottom mb-20 pb-10">
+                <h3 class="core1-title">Admit Patient</h3>
+                <p class="core1-subtitle">Assign a bed for Inpatient stay</p>
+            </div>
+            <form id="admissionForm" method="POST" action="{{ route('core1.admissions.store') }}" onsubmit="submitAdmissionAjax(event)">
+                @csrf
+                <input type="hidden" name="encounter_id" id="admissionEncounterId">
+                <div class="mb-15">
+                     <label class="font-bold block mb-5">Select Ward & Bed</label>
+                     <select name="bed_id" class="core1-input w-full" required>
+                         <option value="">-- Choose Available Bed --</option>
+                         @foreach($wards as $ward)
+                             @foreach($ward->rooms as $room)
+                                 @foreach($room->beds as $bed)
+                                     <option value="{{ $bed->id }}">{{ $ward->name }} - Room {{ $room->room_number }} - Bed {{ $bed->bed_number }}</option>
+                                 @endforeach
+                             @endforeach
+                         @endforeach
+                     </select>
+                </div>
+                <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('admissionModal')">Cancel</button>
+                    <button type="submit" class="core1-btn core1-btn-primary">Admit Patient</button>
                 </div>
             </form>
         </div>
@@ -723,9 +756,74 @@ function switchTab(evt, tabId) {
     evt.currentTarget.classList.add('active');
 }
 
+function toggleSendToAdmissionBtn() {
+    const level = document.getElementById('triageLevelSelect').value;
+    const btn = document.getElementById('sendToAdmissionBtn');
+    if (['1', '2', '3'].includes(level)) {
+        btn.style.display = 'block';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function submitTriageForAdmission() {
+    document.getElementById('sendToAdmissionFlag').value = '1';
+    document.getElementById('triageForm').submit();
+}
+
+function submitAdmissionAjax(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('admissionForm');
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    
+    submitBtn.innerText = 'Admitting...';
+    submitBtn.disabled = true;
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+        
+        if (data.success) {
+            closeModal('admissionModal');
+            
+            // Show simple alert or custom notification
+            alert('Success: ' + data.message);
+        } else {
+            alert('Error: ' + (data.message || 'Admission failed.'));
+        }
+    })
+    .catch(error => {
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+        console.error('Error:', error);
+        alert('An unexpected error occurred during admission.');
+    });
+}
+
+function openAdmissionModal(encounterId) {
+    document.getElementById('admissionEncounterId').value = encounterId;
+    document.getElementById('admissionModal').style.display = 'flex';
+}
+
 function openTriageModal(id) {
     const form = document.getElementById('triageForm');
     form.action = `/core/outpatient/${id}/triage`;
+    document.getElementById('triageLevelSelect').value = '5';
+    document.getElementById('sendToAdmissionFlag').value = '0';
+    toggleSendToAdmissionBtn();
     document.getElementById('triageModal').style.display = 'flex';
 }
 
@@ -865,6 +963,15 @@ document.addEventListener('DOMContentLoaded', function() {
     closeModal('prescriptionModal');
     closeModal('patientDetailsModal');
     closeModal('viewTriageModal');
+    closeModal('admissionModal');
 });
 </script>
+
+@if(session('open_admission_modal'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        openAdmissionModal({{ session('open_admission_modal') }});
+    });
+</script>
+@endif
 @endsection

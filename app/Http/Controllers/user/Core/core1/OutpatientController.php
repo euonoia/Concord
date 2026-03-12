@@ -9,6 +9,7 @@ use App\Models\core1\Triage;
 use App\Models\core1\Consultation;
 use App\Models\core1\LabOrder;
 use App\Models\core1\Prescription;
+use App\Models\core1\Ward;
 use App\Models\user\Core\core1\Patient;
 use App\Services\core1\OutpatientService;
 use Carbon\Carbon;
@@ -123,6 +124,10 @@ class OutpatientController extends Controller
 
         $patients = Patient::where('care_type', 'outpatient')->get();
 
+        $wards = Ward::with(['rooms.beds' => function($query) {
+            $query->where('status', 'Available');
+        }])->get();
+
         return view('core.core1.outpatient.index', compact(
             'stats',
             'appointments',
@@ -130,7 +135,8 @@ class OutpatientController extends Controller
             'prescriptions',
             'diagnosticOrders',
             'followUps',
-            'patients'
+            'patients',
+            'wards'
         ));
     }
     /*
@@ -147,11 +153,18 @@ class OutpatientController extends Controller
             'temperature' => 'nullable|numeric',
             'spo2' => 'nullable|integer',
             'triage_level' => 'nullable|in:1,2,3,4,5',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'send_to_admission' => 'nullable|boolean'
         ]);
 
         $encounter = Encounter::findOrFail($id);
         $this->outpatientService->recordTriage($encounter, $request->all());
+
+        if ($request->input('send_to_admission')) {
+            $encounter->update(['type' => 'IPD']);
+            return back()->with('open_admission_modal', $encounter->id)
+                ->with('success', 'Triage recorded and admission recommended. Please complete the admission details.');
+        }
 
         return back()->with('success', 'Triage vitals recorded.');
     }
@@ -189,7 +202,7 @@ class OutpatientController extends Controller
 
         if ($disposition === 'admit') {
             $encounter->update(['type' => 'IPD']);
-            return redirect()->route('core1.admissions.create', ['encounter_id' => $encounter->id])
+            return back()->with('open_admission_modal', $encounter->id)
                 ->with('success', 'Admission recommended. Please complete the admission details.');
         }
 
@@ -245,7 +258,7 @@ class OutpatientController extends Controller
         $message = "Encounter dispositioned to " . $validated['type'] . ".";
 
         if ($validated['type'] === 'IPD') {
-            return redirect()->route('core1.admissions.create', ['encounter_id' => $encounter->id])
+            return back()->with('open_admission_modal', $encounter->id)
                 ->with('success', $message . ' Please complete the admission details.');
         }
 

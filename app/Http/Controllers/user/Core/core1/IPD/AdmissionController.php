@@ -47,8 +47,21 @@ class AdmissionController extends Controller
 
             $this->admissionService->admit($encounter, $bed);
 
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Patient successfully admitted.'
+                ]);
+            }
+
             return redirect()->route('core1.ipd.dashboard')->with('success', 'Patient successfully admitted.');
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admission failed: ' . $e->getMessage()
+                ], 400);
+            }
             return back()->with('error', 'Admission failed: ' . $e->getMessage());
         }
     }
