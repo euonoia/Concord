@@ -82,7 +82,15 @@ class MedicalRecordController extends Controller
 
     // Fetch Encounters (IPD, OPD, OR)
     $encounters = $patient->encounters()
-        ->with(['doctor', 'admission', 'admission.bed.room.ward'])
+        ->with([
+            'doctor', 
+            'admission', 
+            'admission.bed.room.ward',
+            'triage',
+            'consultation',
+            'labOrders',
+            'prescriptions'
+        ])
         ->orderByDesc('created_at')
         ->get();
 

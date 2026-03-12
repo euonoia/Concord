@@ -115,10 +115,16 @@
                                 @if(!empty($encounter->chief_complaint))
                                     <div style="color: var(--text-dark); margin-bottom: 8px; font-weight: 500;">{{ $encounter->chief_complaint }}</div>
                                 @endif
+
+                                {{-- ADMISSION DETAILS (If IPD) --}}
                                 @if($encounter->type === 'IPD' && $encounter->admission)
-                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: {{ empty($encounter->chief_complaint) ? '0' : '8px' }};">
-                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"><i class="bi bi-hospital" style="color: var(--primary);"></i> Admission Location</div>
-                                        <div style="color: var(--text-gray); margin-bottom: 6px; font-weight: 500;">{{ $encounter->admission->bed->room->ward->name }} - Room {{ $encounter->admission->bed->room->room_number }} (Bed {{ $encounter->admission->bed->bed_number }})</div>
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="bi bi-hospital" style="color: var(--primary);"></i> Admission Location
+                                        </div>
+                                        <div style="color: var(--text-gray); margin-bottom: 6px; font-weight: 500;">
+                                            {{ optional(optional(optional($encounter->admission->bed)->room)->ward)->name }} - Room {{ optional(optional($encounter->admission->bed)->room)->room_number }} (Bed {{ optional($encounter->admission->bed)->bed_number }})
+                                        </div>
                                         <div style="color: var(--text-gray); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-weight: 500;">
                                             <span style="display: flex; align-items: center; gap: 4px;"><i class="bi bi-box-arrow-in-right" style="color: var(--success);"></i> IN: {{ \Carbon\Carbon::parse($encounter->admission->admission_date)->format('M d, Y h:i A') }}</span>
                                             @if($encounter->admission->discharge_date)
@@ -127,6 +133,76 @@
                                                 <span style="display: flex; align-items: center; gap: 4px; color: var(--warning);"><i class="bi bi-clock-history"></i> Ongoing</span>
                                             @endif
                                         </div>
+                                    </div>
+                                @endif
+
+                                {{-- TRIAGE DETAILS --}}
+                                @if($encounter->triage)
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-heart-pulse" style="color: var(--danger);"></i> Triage Vitals</div>
+                                            <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->triage->created_at->format('M d, Y h:i A') }}</span>
+                                        </div>
+                                        <div style="color: var(--text-gray); display: flex; flex-wrap: wrap; gap: 12px; font-weight: 500;">
+                                            <span><strong>BP:</strong> {{ $encounter->triage->blood_pressure ?? '--' }}</span>
+                                            <span><strong>HR:</strong> {{ $encounter->triage->heart_rate ?? '--' }} bpm</span>
+                                            <span><strong>Temp:</strong> {{ $encounter->triage->temperature ?? '--' }} °C</span>
+                                            <span><strong>SpO2:</strong> {{ $encounter->triage->oxygen_saturation ?? '--' }} %</span>
+                                            <span><strong>Weight:</strong> {{ $encounter->triage->weight ?? '--' }} kg</span>
+                                        </div>
+                                        @if($encounter->triage->notes)
+                                            <div style="margin-top: 6px; font-size: 11px; color: var(--text-gray); font-style: italic;">"{{ $encounter->triage->notes }}"</div>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                {{-- CONSULTATION DETAILS --}}
+                                @if($encounter->consultation)
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-stethoscope" style="color: var(--info);"></i> Consultation Note</div>
+                                            <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->consultation->created_at->format('M d, Y h:i A') }}</span>
+                                        </div>
+                                        <div style="color: var(--text-gray); font-weight: 500; margin-bottom: 4px;">
+                                            <span style="color: var(--text-dark);">Diagnosis:</span> {{ $encounter->consultation->diagnosis ?? 'Not specified' }}
+                                        </div>
+                                        <div style="color: var(--text-gray); font-weight: 500;">
+                                            <span style="color: var(--text-dark);">Notes:</span> {{ $encounter->consultation->notes ?? 'No additional notes' }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- LAB ORDERS --}}
+                                @if($encounter->labOrders->count() > 0)
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="bi bi-droplet-half" style="color: var(--warning);"></i> Laboratory Orders
+                                        </div>
+                                        <ul style="margin: 0; padding-left: 20px; color: var(--text-gray); font-weight: 500;">
+                                            @foreach($encounter->labOrders as $lab)
+                                                <li style="margin-bottom: 2px;">
+                                                    {{ $lab->test_name }} 
+                                                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }};">{{ $lab->status }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
+                                {{-- PRESCRIPTIONS --}}
+                                @if($encounter->prescriptions->count() > 0)
+                                    <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                            <i class="bi bi-capsule" style="color: var(--primary);"></i> Prescriptions
+                                        </div>
+                                        <ul style="margin: 0; padding-left: 20px; color: var(--text-gray); font-weight: 500;">
+                                            @foreach($encounter->prescriptions as $rx)
+                                                <li style="margin-bottom: 4px;">
+                                                    <strong style="color: var(--text-dark);">{{ $rx->medication_name }}</strong> ({{ $rx->dosage }}) <br>
+                                                    <span style="font-size: 11px; font-style: italic;">Sig: {{ $rx->instructions }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </div>
                                 @endif
                             </td>
