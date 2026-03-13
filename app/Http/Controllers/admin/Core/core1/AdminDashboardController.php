@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\user\Core\core1\Patient;
 use App\Models\user\Core\core1\Appointment;
 use App\Models\user\Core\core1\Bill;
+use App\Models\core1\Admission;
+use App\Models\core1\Encounter;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -42,8 +44,8 @@ class AdminDashboardController extends Controller
                 ->whereYear('bill_date', now()->year)
                 ->where('status', 'paid')
                 ->sum('total') ?? 0,
-            'inpatient_count' => Patient::where('care_type', 'inpatient')->count(),
-            'outpatient_count' => Patient::where('care_type', 'outpatient')->count(),
+            'inpatient_count' => Admission::where('status', 'Admitted')->count(),
+            'outpatient_count' => Encounter::whereIn('type', ['OPD', 'Pending'])->where('status', 'Active')->count(),
         ];
 
         $admissionData = $this->getAdmissionData();
@@ -88,8 +90,8 @@ class AdminDashboardController extends Controller
                 ->whereYear('bill_date', now()->year)
                 ->where('status', 'paid')
                 ->sum('total') ?? 0,
-            'inpatient_count' => Patient::where('care_type', 'inpatient')->count(),
-            'outpatient_count' => Patient::where('care_type', 'outpatient')->count(),
+            'inpatient_count' => Admission::where('status', 'Admitted')->count(),
+            'outpatient_count' => Encounter::whereIn('type', ['OPD', 'Pending'])->where('status', 'Active')->count(),
         ];
 
         $admissionData = $this->getAdmissionData();
