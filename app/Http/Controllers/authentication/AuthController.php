@@ -19,7 +19,7 @@ class AuthController extends Controller
         'email'     => 'required|email|unique:users,email',
         'password'  => 'required|min:8|confirmed',
         // Updated to include your admin_hr, admin_logistics, and admin_core roles
-        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse',
+        'role_slug' => 'required|string|in:admin_financials,admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse',
         'first_name' => 'required|string|max:255',
         'last_name'  => 'required|string|max:255',
     ]);
@@ -65,7 +65,6 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Support login via email or PAT-XXXX username
         $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         $credentials = [
@@ -114,7 +113,7 @@ class AuthController extends Controller
         $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
 
         // --- FINANCIALS ---
-        $role === 'finance' => redirect()->route('admin.financials.dashboard'),
+        $role === 'admin_financials' => redirect()->route('admin.financials.dashboard'),
 
         // --- FALLBACKS FOR GENERAL STAFF ---
         $role === 'doctor'       => redirect()->route('core1.doctor.dashboard'),

@@ -42,7 +42,7 @@
         Route::get('/core2/dashboard', function () { return view('admin.core2.index'); })->name('admin.core2.dashboard');
 
         // Financials (General)
-        Route::get('/financials/dashboard', function () { return view('admin.financials.index'); })->name('admin.financials.dashboard');
+        Route::get('/financials/dashboard', function () { return view('admin.financials.dashboard'); })->name('admin.financials.dashboard');
 
       // --- HR1 Department ---
         Route::prefix('hr1')->group(function () {
