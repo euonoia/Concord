@@ -267,6 +267,9 @@
                                     } elseif ($latestEncounter->triage) {
                                         $location = 'Triage Station';
                                         $locationColor = 'var(--warning)';
+                                    } elseif ($latestEncounter->type === 'Pending') {
+                                        $location = 'Triage';
+                                        $locationColor = 'var(--warning)';
                                     } else {
                                         $location = 'Outpatient Dept';
                                         $locationColor = 'var(--text-dark)';
