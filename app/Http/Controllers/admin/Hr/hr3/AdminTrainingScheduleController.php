@@ -35,9 +35,7 @@ class AdminTrainingScheduleController extends Controller
             ->select('employees.employee_id', 'employees.first_name', 'employees.last_name')
             ->get();
 
-        /** * 3. Fetch schedules and join with employees to get Presenter name 
-         * (Assuming your model has a 'presenter' relationship linked to presented_by)
-         */
+        // 3. Get all existing training schedules with trainer and presenter info
         $schedules = TrainingScheduleHr3::with(['trainer', 'presenter'])->latest()->get();
 
         return view('admin.hr3.schedule.training_index', compact('eligibleEmployees', 'schedules', 'availableTrainers'));

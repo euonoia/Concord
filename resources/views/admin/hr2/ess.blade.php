@@ -1,11 +1,11 @@
 @extends('admin.hr2.layouts.app')
 
-@section('title', 'ESS Requests - HR2 Admin')
+@section('title', 'General ESS Requests - HR2 Admin')
 
 @section('content')
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Employee Self-Service Requests</h2>
+        <h2>General Employee Requests</h2>
         <span class="badge" style="padding: 5px 10px; background: #eee; border-radius: 4px;">Total: {{ $requests->count() }}</span>
     </div>
 
@@ -21,8 +21,7 @@
             <tr>
                 <th style="padding: 12px;">ID</th>
                 <th style="padding: 12px;">Employee</th>
-                <th style="padding: 12px;">Request Details</th>
-                <th style="padding: 12px;">Schedule/Dates</th>
+                <th style="padding: 12px;">Request Type & Details</th>
                 <th style="padding: 12px;">Status</th>
                 <th style="padding: 12px;">Submitted</th>
                 <th style="padding: 12px; text-align: center;">Actions</th>
@@ -52,23 +51,6 @@
                             {{ strtoupper($r->type) }}
                         </span><br>
                         <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #333;">{{ $r->details }}</p>
-                    </td>
-                    <td style="padding: 12px; font-size: 0.9em;">
-                        @if($r->shift_id)
-                            <div><strong>Shift ID:</strong> {{ $r->shift_id }}</div>
-                        @endif
-                        
-                        @if($r->leave_date)
-                            <div><strong>Start:</strong> {{ \Carbon\Carbon::parse($r->leave_date)->format('M d, Y') }}</div>
-                        @endif
-
-                        @if($r->end_date)
-                            <div><strong>End:</strong> {{ \Carbon\Carbon::parse($r->end_date)->format('M d, Y') }}</div>
-                        @endif
-
-                        @if(!$r->shift_id && !$r->leave_date)
-                            <span style="color: #999;">N/A</span>
-                        @endif
                     </td>
                     <td style="padding: 12px;">
                         <strong style="color: {{ $statusColor }}; text-transform: capitalize;">
@@ -106,7 +88,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align:center; padding: 30px; color: #999;">No employee requests found.</td>
+                    <td colspan="6" style="text-align:center; padding: 30px; color: #999;">No general requests found.</td>
                 </tr>
             @endforelse
         </tbody>
