@@ -27,4 +27,5 @@ package-lock.json
 .agents
 /database/migrations
 /database/seeders
-/database/sql  
+/database/sql
+/encounter.json
