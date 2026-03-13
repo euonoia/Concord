@@ -3,13 +3,15 @@
 namespace App\Services\core1;
 
 use App\Models\core1\LabOrder;
-use Illuminate\Support\Facades\Http;
+use App\Models\core2\TestOrder;
 use Illuminate\Support\Facades\Log;
 
 class LabSyncService
 {
     /**
-     * Sync a Core 1 lab order to Core 2 Laboratory via internal API.
+     * Sync a Core 1 lab order to Core 2 Laboratory via direct DB write.
+     * Since Core 1 and Core 2 share the same database, we write directly
+     * to test_orders_core2 instead of going through HTTP API.
      *
      * @param LabOrder $labOrder  The newly created lab order
      * @param array    $context   Additional context: patient_name, patient_mrn, ordering_doctor
@@ -17,48 +19,33 @@ class LabSyncService
      */
     public function syncToCore2(LabOrder $labOrder, array $context = []): bool
     {
-        $payload = [
-            'core1_lab_order_id' => $labOrder->id,
-            'encounter_id'       => $labOrder->encounter_id,
-            'patient_id'         => $labOrder->patient_id,
-            'doctor_id'          => $labOrder->doctor_id,
-            'test_name'          => $labOrder->test_name,
-            'clinical_note'      => $labOrder->clinical_note,
-            'patient_name'       => $context['patient_name'] ?? null,
-            'patient_mrn'        => $context['patient_mrn'] ?? null,
-            'ordering_doctor'    => $context['ordering_doctor'] ?? null,
-            'priority'           => $labOrder->priority ?? 'Routine',
-            'date_ordered'       => $labOrder->created_at->toDateString(),
-        ];
-
         try {
-            $baseUrl = rtrim(config('app.url'), '/');
-            $response = Http::timeout(10)
-                ->acceptJson()
-                ->post("{$baseUrl}/api/lab-sync/order", $payload);
-
-            if ($response->successful() && $response->json('success')) {
-                $labOrder->update([
-                    'sync_status'    => 'Synced',
-                    'core2_order_id' => $response->json('core2_order_id'),
-                ]);
-
-                return true;
-            }
-
-            Log::warning('LabSync: Core 2 returned non-success response.', [
-                'status'  => $response->status(),
-                'body'    => $response->body(),
-                'payload' => $payload,
+            $testOrder = TestOrder::create([
+                'order_id'           => 'LAB-' . str_pad($labOrder->id, 6, '0', STR_PAD_LEFT),
+                'core1_lab_order_id' => $labOrder->id,
+                'encounter_id'       => $labOrder->encounter_id,
+                'patient_id'         => $labOrder->patient_id,
+                'test_id'            => $labOrder->test_name,
+                'test_name'          => $labOrder->test_name,
+                'clinical_note'      => $labOrder->clinical_note,
+                'patient_name'       => $context['patient_name'] ?? null,
+                'patient_mrn'        => $context['patient_mrn'] ?? null,
+                'ordering_doctor'    => $context['ordering_doctor'] ?? null,
+                'priority'           => $labOrder->priority ?? 'Routine',
+                'date_ordered'       => $labOrder->created_at->toDateString(),
+                'status'             => 'Received',
             ]);
 
-            $labOrder->update(['sync_status' => 'Failed']);
+            $labOrder->update([
+                'sync_status'    => 'Synced',
+                'core2_order_id' => $testOrder->id,
+            ]);
 
-            return false;
+            return true;
         } catch (\Exception $e) {
             Log::error('LabSync: Failed to sync to Core 2.', [
-                'error'   => $e->getMessage(),
-                'payload' => $payload,
+                'error'        => $e->getMessage(),
+                'lab_order_id' => $labOrder->id,
             ]);
 
             $labOrder->update(['sync_status' => 'Failed']);

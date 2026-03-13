@@ -8,7 +8,6 @@ use App\Models\core2\SampleTracking;
 use App\Models\core2\ResultValidation;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class LaboratoryController extends Controller
@@ -75,7 +74,7 @@ class LaboratoryController extends Controller
     }
 
     /**
-     * Validate result and send back to Core 1 via API.
+     * Validate result and send back to Core 1 via direct DB write.
      */
     public function validateAndSend(int $id): RedirectResponse
     {
@@ -94,31 +93,22 @@ class LaboratoryController extends Controller
             'validated_by_name' => auth()->user()->name ?? 'Lab Technician',
         ]);
 
-        // Send result back to Core 1 via API
+        // Send result back to Core 1 via direct DB write
         try {
-            $baseUrl = rtrim(config('app.url'), '/');
-            $response = Http::timeout(10)->acceptJson()->post("{$baseUrl}/api/lab-sync/result", [
-                'core1_lab_order_id' => $order->core1_lab_order_id,
-                'core2_order_id'     => $order->id,
+            $labOrder = \App\Models\core1\LabOrder::findOrFail($order->core1_lab_order_id);
+
+            $labOrder->update([
                 'result_data'        => $order->result_data,
-                'validated_by'       => $order->validated_by_name,
+                'sync_status'        => 'ResultReceived',
+                'result_received_at' => now(),
             ]);
 
-            if ($response->successful() && $response->json('success')) {
-                $order->update([
-                    'status'         => 'Sent',
-                    'result_sent_at' => now(),
-                ]);
-
-                return back()->with('success', 'Result validated and sent to Core 1 Diagnostic Orders.');
-            }
-
-            Log::warning('LabSync validateAndSend: Core 1 returned non-success.', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
+            $order->update([
+                'status'         => 'Sent',
+                'result_sent_at' => now(),
             ]);
 
-            return back()->with('error', 'Result validated but failed to sync to Core 1. Check logs.');
+            return back()->with('success', 'Result validated and sent to Core 1 Diagnostic Orders.');
         } catch (\Exception $e) {
             Log::error('LabSync validateAndSend failed: ' . $e->getMessage());
 
