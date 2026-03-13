@@ -188,6 +188,62 @@ class BedLinenController extends Controller
             ->with('success', 'Bed status record added successfully.');
     }
 
+    /**
+     * Update bed status from the 2D floor map.
+     */
+    public function updateBedStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:Available,Cleaning,Maintenance,Occupied',
+        ]);
+
+        try {
+            $bed = Bed::findOrFail($id);
+
+            // Guardrail: DO NOT allow manual transition to "Occupied" if it violates architecture.
+            // If they try to set it to Occupied from here, they should be advised to use the Admission flow.
+            if ($validated['status'] === 'Occupied' && $bed->status !== 'Occupied') {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Beds cannot be manually set to Occupied. Please use the Patient Admission workflow to assign a bed.'
+                ], 403);
+            }
+
+            // Check if bed is currently occupied. If so, and we are trying to set it to something else
+            // we probably shouldn't allow it without a discharge, but we will allow transitioning 
+            // from Cleaning/Maintenance back to Available.
+            if ($bed->status === 'Occupied' && $validated['status'] !== 'Occupied') {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot change status of an Occupied bed directly. The patient must be transferred or discharged first.'
+                ], 403);
+            }
+
+            $bed->status = $validated['status'];
+            $bed->save();
+
+            // Log the change in Core 2 history (optional but good for tracking)
+            BedStatusAllocation::create([
+                'bed_id' => $bed->id,
+                'room_id' => $bed->room_id,
+                'status' => $validated['status'],
+                'patient_id' => null, // If we were tracking this better we might lookup the active admission
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bed status updated to ' . $validated['status'],
+                'new_status' => $bed->status,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update bed status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     // ── Patient Transfer Management ─────────────────────────────────────────────
 
     public function patientTransferIndex(Request $request)

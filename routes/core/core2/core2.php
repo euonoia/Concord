@@ -101,6 +101,7 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/bed-status',        [BedLinenController::class, 'bedStatusIndex'])->name('bed-status.index');
         Route::get('/bed-status/create', [BedLinenController::class, 'bedStatusCreate'])->name('bed-status.create');
         Route::post('/bed-status',       [BedLinenController::class, 'bedStatusStore'])->name('bed-status.store');
+        Route::patch('/bed-status/{id}', [BedLinenController::class, 'updateBedStatus'])->name('bed-status.update');
 
         // Patient Transfer Management
         Route::get('/patient-transfer',        [BedLinenController::class, 'patientTransferIndex'])->name('patient-transfer.index');
