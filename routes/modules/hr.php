@@ -24,7 +24,6 @@ Route::post('/competency/enroll/{competency_code}',[UserCompetencyController::cl
 
 Route::post('/competency/complete/{competency_code}', [UserCompetencyController::class,'complete'])->name('user.competency.complete');
 Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
-Route::any('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->name('user.training.enroll');
 Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
 Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
 Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');

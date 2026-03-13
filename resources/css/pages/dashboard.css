@@ -109,6 +109,39 @@ body.dashboard {
 }
 .dashboard .collapsed nav a span { opacity: 0; visibility: hidden; }
 
+/* Dropdown Container Hidden by Default */
+.dropdown-container {
+    display: none;
+    background: rgba(0, 0, 0, 0.05); /* Slightly darker background for contrast */
+    padding-left: 10px;
+}
+
+/* Show container when parent has .open class */
+.nav-dropdown.open .dropdown-container {
+    display: block;
+}
+
+/* Sub-link Styling */
+.sub-link {
+    font-size: 0.9rem;
+    padding: 10px 15px !important;
+}
+
+/* Arrow Rotation */
+.arrow-icon {
+    transition: transform 0.3s;
+    font-size: 0.8rem;
+}
+
+.nav-dropdown.open .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* Ensure icons align when collapsed */
+.sidebar.collapsed .arrow-icon {
+    display: none;
+}
+
 /* =========================================================
    TOPBAR
    ========================================================= */

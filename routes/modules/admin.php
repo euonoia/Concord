@@ -20,7 +20,8 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
-
+        use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
+        
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
         // --- Modular Admin Dashboards ---
@@ -147,8 +148,11 @@
 
             Route::get('/get-specializations/{dept}',
                 [AdminInterviewScheduleController::class,'getSpecializations']);
-
            Route::get('/get-interview-applicants/{dept}', [AdminInterviewScheduleController::class, 'getInterviewApplicants']);
+
+           Route::get('/training-schedule', [AdminTrainingScheduleController::class, 'index'])->name('training_schedule.index');
+            Route::post('/training-schedule', [AdminTrainingScheduleController::class, 'store'])->name('training_schedule.store');
+            Route::get('/get-verified-competencies/{emp_id}', [AdminTrainingScheduleController::class, 'getCompetencies']);
         });
 
         // --- END OF HR3 Department ---
