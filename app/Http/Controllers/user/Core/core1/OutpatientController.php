@@ -118,7 +118,10 @@ class OutpatientController extends Controller
         $encounterIds = $encountersRaw->pluck('id');
 
         $prescriptions = Prescription::whereIn('encounter_id', $encounterIds)->get();
-        $diagnosticOrders = LabOrder::whereIn('encounter_id', $encounterIds)->get();
+        $diagnosticOrders = LabOrder::whereIn('encounter_id', $encounterIds)
+            ->with(['patient', 'doctor', 'encounter.patient'])
+            ->latest()
+            ->get();
 
         $followUps = []; // Potentially handle follow-ups via a dedicated table later
 
@@ -246,11 +249,31 @@ class OutpatientController extends Controller
             'encounter_id' => 'required|exists:encounters_core1,id',
             'test_name' => 'required|string',
             'clinical_note' => 'nullable|string',
+            'priority' => 'nullable|in:Routine,Urgent,STAT',
         ]);
 
-        LabOrder::create($request->all());
+        $encounter = Encounter::with('patient', 'doctor')->findOrFail($request->encounter_id);
 
-        return back()->with('success', 'Lab order created.');
+        $labOrder = LabOrder::create([
+            'encounter_id' => $encounter->id,
+            'patient_id'   => $encounter->patient_id,
+            'doctor_id'    => auth()->user()->id,
+            'test_name'    => $request->test_name,
+            'clinical_note' => $request->clinical_note,
+            'priority'     => $request->priority ?? 'Routine',
+            'status'       => 'Ordered',
+            'sync_status'  => 'Pending',
+        ]);
+
+        // Sync to Core 2 Laboratory via internal API
+        $syncService = app(\App\Services\core1\LabSyncService::class);
+        $syncService->syncToCore2($labOrder, [
+            'patient_name'    => $encounter->patient->name ?? 'Unknown',
+            'patient_mrn'     => $encounter->patient->mrn ?? null,
+            'ordering_doctor' => 'Dr. ' . (auth()->user()->name ?? 'Unknown'),
+        ]);
+
+        return back()->with('success', 'Lab order created and synced to laboratory.');
     }
     public function disposition(Request $request, $id)
     {

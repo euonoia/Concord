@@ -8,6 +8,8 @@ use App\Models\core2\SampleTracking;
 use App\Models\core2\ResultValidation;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LaboratoryController extends Controller
 {
@@ -37,6 +39,91 @@ class LaboratoryController extends Controller
 
         return redirect()->route('core2.laboratory.test-orders.index')
             ->with('success', 'Test order record added successfully.');
+    }
+
+    /**
+     * Update the status of a test order (lab workflow progression).
+     */
+    public function updateOrderStatus(Request $request, int $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:Received,SampleCollected,Processing,ResultReady,Validated,Sent',
+        ]);
+
+        $order = TestOrder::findOrFail($id);
+        $order->update(['status' => $validated['status']]);
+
+        return back()->with('success', "Order status updated to {$validated['status']}.");
+    }
+
+    /**
+     * Enter result data for a test order.
+     */
+    public function enterResult(Request $request, int $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'result_data' => 'required|string',
+        ]);
+
+        $order = TestOrder::findOrFail($id);
+        $order->update([
+            'result_data' => $validated['result_data'],
+            'status'      => 'ResultReady',
+        ]);
+
+        return back()->with('success', 'Result saved. Ready for validation.');
+    }
+
+    /**
+     * Validate result and send back to Core 1 via API.
+     */
+    public function validateAndSend(int $id): RedirectResponse
+    {
+        $order = TestOrder::findOrFail($id);
+
+        if (!$order->result_data) {
+            return back()->with('error', 'Cannot validate — no result data entered.');
+        }
+
+        if (!$order->core1_lab_order_id) {
+            return back()->with('error', 'Cannot send — this order was not synced from Core 1.');
+        }
+
+        $order->update([
+            'status'            => 'Validated',
+            'validated_by_name' => auth()->user()->name ?? 'Lab Technician',
+        ]);
+
+        // Send result back to Core 1 via API
+        try {
+            $baseUrl = rtrim(config('app.url'), '/');
+            $response = Http::timeout(10)->acceptJson()->post("{$baseUrl}/api/lab-sync/result", [
+                'core1_lab_order_id' => $order->core1_lab_order_id,
+                'core2_order_id'     => $order->id,
+                'result_data'        => $order->result_data,
+                'validated_by'       => $order->validated_by_name,
+            ]);
+
+            if ($response->successful() && $response->json('success')) {
+                $order->update([
+                    'status'         => 'Sent',
+                    'result_sent_at' => now(),
+                ]);
+
+                return back()->with('success', 'Result validated and sent to Core 1 Diagnostic Orders.');
+            }
+
+            Log::warning('LabSync validateAndSend: Core 1 returned non-success.', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+            return back()->with('error', 'Result validated but failed to sync to Core 1. Check logs.');
+        } catch (\Exception $e) {
+            Log::error('LabSync validateAndSend failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Result validated but sync failed: ' . $e->getMessage());
+        }
     }
 
     // ── Sample Tracking & LIS Integration ──────────────────────────────────────

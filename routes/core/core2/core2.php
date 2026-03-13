@@ -53,6 +53,9 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/test-orders',        [LaboratoryController::class, 'testOrdersIndex'])->name('test-orders.index');
         Route::get('/test-orders/create', [LaboratoryController::class, 'testOrdersCreate'])->name('test-orders.create');
         Route::post('/test-orders',       [LaboratoryController::class, 'testOrdersStore'])->name('test-orders.store');
+        Route::patch('/test-orders/{id}/status', [LaboratoryController::class, 'updateOrderStatus'])->name('test-orders.update-status');
+        Route::post('/test-orders/{id}/result',  [LaboratoryController::class, 'enterResult'])->name('test-orders.enter-result');
+        Route::post('/test-orders/{id}/validate-send', [LaboratoryController::class, 'validateAndSend'])->name('test-orders.validate-send');
 
         // Sample Tracking & LIS Integration
         Route::get('/sample-tracking',        [LaboratoryController::class, 'sampleTrackingIndex'])->name('sample-tracking.index');

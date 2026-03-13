@@ -249,20 +249,57 @@
                             <tr>
                                 <th>ORDERED</th>
                                 <th>PATIENT</th>
+                                <th>ORDERED BY</th>
                                 <th>TEST</th>
+                                <th>PRIORITY</th>
                                 <th>INDICATION</th>
-                                <th>STATUS</th>
+                                <th>SYNC STATUS</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($diagnosticOrders as $order)
+                                @php
+                                    $syncClass = match($order->sync_status ?? 'Pending') {
+                                        'Synced'         => 'core1-tag-stable',
+                                        'ResultReceived' => 'core1-tag-critical',
+                                        'Failed'         => 'core1-tag-cleaning',
+                                        default          => 'core1-tag-neutral',
+                                    };
+                                    $syncLabel = match($order->sync_status ?? 'Pending') {
+                                        'ResultReceived' => 'Result Received',
+                                        default          => $order->sync_status ?? 'Pending',
+                                    };
+                                    $priorityClass = match($order->priority ?? 'Routine') {
+                                        'STAT'   => 'core1-tag-critical',
+                                        'Urgent' => 'core1-tag-cleaning',
+                                        default  => 'core1-tag-neutral',
+                                    };
+                                @endphp
                                 <tr>
                                     <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                                    <td class="font-bold text-blue">{{ $order->encounter->patient->name ?? 'Unknown' }}</td>
+                                    <td class="font-bold text-blue">{{ $order->patient->name ?? $order->encounter->patient->name ?? 'Unknown' }}</td>
+                                    <td class="text-xs">{{ $order->doctor->name ?? 'Unknown' }}</td>
                                     <td class="font-bold">{{ $order->test_name }}</td>
+                                    <td>
+                                        <span class="core1-status-tag {{ $priorityClass }}">{{ $order->priority ?? 'Routine' }}</span>
+                                    </td>
                                     <td class="text-xs">{{ $order->clinical_note }}</td>
                                     <td>
-                                        <span class="core1-status-tag core1-tag-neutral">Ordered</span>
+                                        <span class="core1-status-tag {{ $syncClass }}">{{ $syncLabel }}</span>
+                                    </td>
+                                    <td>
+                                        @if($order->sync_status === 'ResultReceived' && $order->result_data)
+                                            <button type="button" class="core1-btn-sm core1-btn-outline"
+                                                    onclick="openResultsModal(this)"
+                                                    data-test="{{ $order->test_name }}"
+                                                    data-patient="{{ $order->patient->name ?? 'Unknown' }}"
+                                                    data-result="{{ $order->result_data }}"
+                                                    data-received="{{ $order->result_received_at ? $order->result_received_at->format('Y-m-d H:i') : '' }}"
+                                                    title="View Lab Results">
+                                                <i class="bi bi-file-earmark-medical"></i> View Results
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -492,6 +529,14 @@
                         <option value="Microbiology/Molecular Tests">Microbiology/Molecular Tests</option>
                     </select>
                 </div>
+                <div class="mb-10">
+                    <label class="font-bold block mb-5">Priority</label>
+                    <select name="priority" class="core1-input w-full">
+                        <option value="Routine">Routine</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="STAT">STAT (Emergency)</option>
+                    </select>
+                </div>
                 <div class="mb-15">
                     <label class="font-bold block mb-5">Clinical Indication</label>
                     <textarea name="clinical_note" class="core1-input w-full" rows="2" placeholder="Reason for test..."></textarea>
@@ -501,6 +546,35 @@
                     <button type="submit" class="core1-btn core1-btn-primary">Order Test</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Lab Results Modal -->
+    <div id="labResultsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1050; align-items:center; justify-content:center;">
+        <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
+            <div class="core1-flex-between mb-15">
+                <h4 class="font-bold">Lab Results</h4>
+                <button type="button" onclick="closeModal('labResultsModal')" style="background:transparent; border:none; font-size:1.4rem; color:var(--text-gray); cursor:pointer;"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="mb-10">
+                <label class="text-xs font-bold text-gray block mb-3">TEST</label>
+                <p id="resultTestName" class="font-bold text-dark" style="font-size:15px;"></p>
+            </div>
+            <div class="mb-10">
+                <label class="text-xs font-bold text-gray block mb-3">PATIENT</label>
+                <p id="resultPatientName" class="font-bold text-blue" style="font-size:14px;"></p>
+            </div>
+            <div class="mb-10">
+                <label class="text-xs font-bold text-gray block mb-3">RECEIVED AT</label>
+                <p id="resultReceivedAt" class="text-dark" style="font-size:13px;"></p>
+            </div>
+            <div class="mb-15" style="background:#f8f9fb; border:1px solid var(--border-color); border-radius:8px; padding:15px;">
+                <label class="text-xs font-bold text-gray block mb-5">RESULT DATA</label>
+                <pre id="resultDataContent" style="font-size:13px; white-space:pre-wrap; word-break:break-word; margin:0; color:var(--text-dark);"></pre>
+            </div>
+            <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('labResultsModal')">Close</button>
+            </div>
         </div>
     </div>
 
@@ -1210,6 +1284,22 @@ function openLabModal() {
     if (!currentEncounterId) return;
     document.getElementById('labEncounterId').value = currentEncounterId;
     document.getElementById('labModal').style.display = 'flex';
+}
+
+function openResultsModal(btn) {
+    document.getElementById('resultTestName').innerText = btn.getAttribute('data-test') || '---';
+    document.getElementById('resultPatientName').innerText = btn.getAttribute('data-patient') || '---';
+    document.getElementById('resultReceivedAt').innerText = btn.getAttribute('data-received') || '---';
+
+    let resultRaw = btn.getAttribute('data-result') || '';
+    try {
+        let parsed = JSON.parse(resultRaw);
+        document.getElementById('resultDataContent').innerText = JSON.stringify(parsed, null, 2);
+    } catch(e) {
+        document.getElementById('resultDataContent').innerText = resultRaw;
+    }
+
+    document.getElementById('labResultsModal').style.display = 'flex';
 }
 
 function openPrescriptionModal() {
