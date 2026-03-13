@@ -124,8 +124,8 @@ class OutpatientController extends Controller
 
         $patients = Patient::where('care_type', 'outpatient')->get();
 
-        $wards = Ward::with(['rooms.beds' => function($query) {
-            $query->where('status', 'Available');
+        $wards = Ward::with(['rooms.beds.admissions' => function($query) {
+            $query->where('status', 'Admitted')->with('encounter.patient');
         }])->get();
 
         $doctors = \App\Models\User::where('role_slug', 'doctor')->get();

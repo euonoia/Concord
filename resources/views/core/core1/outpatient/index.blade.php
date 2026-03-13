@@ -497,33 +497,185 @@
         </div>
     </div>
 
-    <!-- Admission Modal -->
+    <!-- Admission Modal – 2D Bed Picker -->
     <div id="admissionModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1050; align-items:center; justify-content:center;">
-        <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
-            <div class="core1-header border-bottom mb-20 pb-10">
-                <h3 class="core1-title">Admit Patient</h3>
-                <p class="core1-subtitle">Assign a bed for Inpatient stay</p>
+        <div class="core1-modal-content core1-card" style="width:820px; max-width:95%; max-height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:14px;">
+
+            {{-- Modal Header --}}
+            <div style="padding:20px 24px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; background:#fff;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:var(--info-light); color:var(--info); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                        <i class="bi bi-hospital"></i>
+                    </div>
+                    <div>
+                        <h3 class="core1-title" style="margin:0; font-size:17px;">Admit Patient</h3>
+                        <p class="core1-subtitle" style="margin:0; font-size:12px;">Select an available bed from the floor plan below</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('admissionModal')" style="background:transparent; border:none; font-size:1.6rem; color:var(--text-gray); cursor:pointer; line-height:1;">
+                    <i class="bi bi-x"></i>
+                </button>
             </div>
-            <form id="admissionForm" method="POST" action="{{ route('core1.admissions.store') }}" onsubmit="submitAdmissionAjax(event)">
+
+            <form id="admissionForm" method="POST" action="{{ route('core1.admissions.store') }}" onsubmit="submitAdmissionAjax(event)" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                 @csrf
                 <input type="hidden" name="encounter_id" id="admissionEncounterId">
-                <div class="mb-15">
-                     <label class="font-bold block mb-5">Select Ward & Bed</label>
-                     <select name="bed_id" class="core1-input w-full" required>
-                         <option value="">-- Choose Available Bed --</option>
-                         @foreach($wards as $ward)
-                             @foreach($ward->rooms as $room)
-                                 @foreach($room->beds as $bed)
-                                     <option value="{{ $bed->id }}">{{ $ward->name }} - Room {{ $room->room_number }} - Bed {{ $bed->bed_number }}</option>
-                                 @endforeach
-                             @endforeach
-                         @endforeach
-                     </select>
+                <input type="hidden" name="bed_id" id="selectedBedId" required>
+
+                {{-- Zone Tab Strip --}}
+                @php
+                    $bpZones = ['ICU' => 'bi-heart-pulse-fill', 'ER' => 'bi-lightning-fill', 'WARD' => 'bi-hospital-fill', 'OR' => 'bi-scissors'];
+                    $bpFloor = [];
+                    foreach ($bpZones as $zk => $_) {
+                        $bpFloor[$zk] = [];
+                    }
+                    foreach ($wards as $ward) {
+                        $zk = strtoupper(trim($ward->ward_type));
+                        if (!array_key_exists($zk, $bpFloor)) $zk = 'WARD';
+                        $bpFloor[$zk][] = $ward;
+                    }
+                    $firstZone = collect($bpFloor)->first(fn($w) => !empty($w)) ? array_key_first(array_filter($bpFloor, fn($w) => !empty($w))) : 'WARD';
+                @endphp
+
+                <div class="bp-zone-tabs" style="display:flex; gap:0; background:#f8f9fb; border-bottom:1px solid var(--border-color); flex-shrink:0;">
+                    @foreach($bpZones as $zk => $icon)
+                        @php
+                            $zoneColors = ['ICU' => '#dc2626', 'ER' => '#ea580c', 'WARD' => '#2563eb', 'OR' => '#7c3aed'];
+                            $hasZoneBeds = !empty($bpFloor[$zk]);
+                        @endphp
+                        <button type="button"
+                            class="bp-zone-tab {{ $zk === $firstZone ? 'active' : '' }} {{ !$hasZoneBeds ? 'bp-zone-tab-empty' : '' }}"
+                            data-zone="{{ $zk }}"
+                            onclick="switchBpZone('{{ $zk }}')"
+                            style="padding:12px 20px; border:none; background:none; font-size:13px; font-weight:600; color:{{ $zk === $firstZone ? $zoneColors[$zk] : 'var(--text-gray)' }}; cursor:pointer; border-bottom:2px solid {{ $zk === $firstZone ? $zoneColors[$zk] : 'transparent' }}; display:flex; align-items:center; gap:7px; transition:all 0.15s; white-space:nowrap;"
+                            data-color="{{ $zoneColors[$zk] }}">
+                            <i class="bi {{ $icon }}" style="font-size:13px;"></i> {{ $zk }}
+                            <span style="font-size:11px; font-weight:500; background:{{ !$hasZoneBeds ? '#e5e7eb' : '#eef2ff' }}; color:{{ !$hasZoneBeds ? '#9ca3af' : 'var(--info)' }}; padding:1px 7px; border-radius:20px; margin-left:2px;">
+                                {{ collect($bpFloor[$zk] ?? [])->flatMap->rooms->flatMap->beds->count() }}
+                            </span>
+                        </button>
+                    @endforeach
                 </div>
-                <div class="core1-flex-gap-2 justify-end pt-10 border-top">
-                    <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('admissionModal')">Cancel</button>
-                    <button type="submit" class="core1-btn core1-btn-primary">Admit Patient</button>
+
+                {{-- Floor Plan Body --}}
+                <div style="flex:1; overflow-y:auto; padding:20px 24px; background:#f8f9fb;">
+
+                    @foreach($bpZones as $zk => $icon)
+                        <div id="bp-zone-{{ $zk }}" class="bp-zone-panel" style="{{ $zk === $firstZone ? '' : 'display:none;' }}">
+                            @if(empty($bpFloor[$zk]))
+                                <div style="text-align:center; padding:40px 0; color:var(--text-light);">
+                                    <i class="bi bi-building-slash" style="font-size:2rem; display:block; margin-bottom:8px; opacity:0.4;"></i>
+                                    No wards configured for {{ $zk }}
+                                </div>
+                            @else
+                                @foreach($bpFloor[$zk] as $ward)
+                                    <div class="bp-ward" style="margin-bottom:20px;">
+                                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                                            <i class="bi bi-signpost-2" style="color:var(--text-gray); font-size:12px;"></i>
+                                            <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dark);">{{ $ward->name }}</span>
+                                        </div>
+
+                                        @foreach($ward->rooms as $room)
+                                            <div class="bp-room" style="background:#fff; border:1px solid var(--border-color); border-radius:10px; padding:14px; margin-bottom:10px;">
+                                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                                                    <span style="font-size:11px; font-weight:700; background:#f3f4f6; color:var(--text-dark); padding:2px 10px; border-radius:20px;">Room {{ $room->room_number }}</span>
+                                                    @if($room->room_type)
+                                                        <span style="font-size:10px; color:var(--text-gray);">{{ $room->room_type }}</span>
+                                                    @endif
+                                                </div>
+                                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                                    @foreach($room->beds as $bed)
+                                                        @php
+                                                            $bedStatus = strtolower($bed->status);
+                                                            $activeAdmission = $bed->admissions->first();
+                                                            $patientName = $activeAdmission?->encounter?->patient?->name;
+                                                            $firstName = $patientName ? explode(' ', $patientName)[0] : null;
+                                                            $mrn = $activeAdmission?->encounter?->patient?->mrn;
+
+                                                            $isAvailable = $bedStatus === 'available';
+                                                            $isOccupied  = $bedStatus === 'occupied';
+                                                        @endphp
+
+                                                        <div class="bp-bed-wrap" style="position:relative;">
+                                                            <div class="bp-bed bp-bed-{{ $bedStatus }} {{ $isAvailable ? 'bp-bed-clickable' : '' }}"
+                                                                 data-bed-id="{{ $bed->id }}"
+                                                                 data-bed-label="{{ $ward->name }} — Room {{ $room->room_number }} — Bed {{ $bed->bed_number }}"
+                                                                 @if($isAvailable) onclick="selectBed(this)" @endif
+                                                                 title="{{ $isOccupied && $patientName ? $patientName . ($mrn ? ' (MRN: '.$mrn.')' : '') : ucfirst($bedStatus) }}"
+                                                                 style="
+                                                                    width:70px; height:80px;
+                                                                    border-radius:8px;
+                                                                    border:2px solid {{ $isAvailable ? '#86efac' : ($isOccupied ? '#fca5a5' : '#fcd34d') }};
+                                                                    background:{{ $isAvailable ? '#f0fff4' : ($isOccupied ? '#fff5f5' : '#fffbeb') }};
+                                                                    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+                                                                    cursor:{{ $isAvailable ? 'pointer' : 'not-allowed' }};
+                                                                    opacity:{{ $isAvailable ? '1' : '0.7' }};
+                                                                    transition:all 0.15s;
+                                                                    position:relative; overflow:hidden;
+                                                                    user-select:none;
+                                                                 ">
+                                                                {{-- Bed icon --}}
+                                                                <i class="bi bi-caret-up-fill" style="font-size:9px; color:{{ $isAvailable ? '#166534' : ($isOccupied ? '#991b1b' : '#92400e') }};"></i>
+                                                                <div style="width:46px; height:24px; border-radius:4px 4px 6px 6px; background:{{ $isAvailable ? '#bbf7d0' : ($isOccupied ? '#fecaca' : '#fde68a') }};"></div>
+                                                                {{-- Bed number --}}
+                                                                <span style="font-size:10px; font-weight:700; color:{{ $isAvailable ? '#166534' : ($isOccupied ? '#991b1b' : '#92400e') }};">{{ $bed->bed_number }}</span>
+                                                                {{-- Patient short name (occupied only) --}}
+                                                                @if($isOccupied && $firstName)
+                                                                    <span style="font-size:9px; font-weight:600; color:#991b1b; max-width:66px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; line-height:1.1;">{{ $firstName }}</span>
+                                                                @endif
+                                                                {{-- Status badge --}}
+                                                                @if(!$isAvailable && !$isOccupied)
+                                                                    <span style="font-size:8px; color:#92400e; font-weight:600;">Cleaning</span>
+                                                                @endif
+                                                                {{-- Selected checkmark overlay --}}
+                                                                <div class="bp-bed-check" style="display:none; position:absolute; inset:0; background:rgba(37,99,235,0.12); border-radius:6px; align-items:center; justify-content:center;">
+                                                                    <i class="bi bi-check-circle-fill" style="font-size:1.4rem; color:#2563eb;"></i>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
+                    @endforeach
+
                 </div>
+
+                {{-- Legend + Selection Bar + Actions --}}
+                <div style="flex-shrink:0; border-top:1px solid var(--border-color); background:#fff; padding:14px 24px;">
+                    {{-- Legend --}}
+                    <div style="display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-gray);">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#f0fff4; border:2px solid #86efac; display:inline-block;"></span> Available
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-gray);">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#fff5f5; border:2px solid #fca5a5; display:inline-block;"></span> Occupied
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-gray);">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#fffbeb; border:2px solid #fcd34d; display:inline-block;"></span> Cleaning
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-gray);">
+                            <span style="width:12px; height:12px; border-radius:3px; background:rgba(37,99,235,0.12); border:2px solid #2563eb; display:inline-block;"></span> Selected
+                        </div>
+                    </div>
+                    {{-- Selection indicator + actions --}}
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                        <div id="bpSelectionBar" style="font-size:13px; color:var(--text-gray); font-style:italic;">
+                            No bed selected — click an available bed above
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('admissionModal')">Cancel</button>
+                            <button type="submit" class="core1-btn core1-btn-primary" id="admitPatientBtn" disabled style="opacity:0.5;">
+                                <i class="bi bi-hospital mr-5"></i> Admit Patient
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </form>
         </div>
     </div>
@@ -928,7 +1080,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function openAdmissionModal(encounterId) {
     document.getElementById('admissionEncounterId').value = encounterId;
+
+    // Reset bed picker state
+    document.getElementById('selectedBedId').value = '';
+    document.getElementById('bpSelectionBar').textContent = 'No bed selected — click an available bed above';
+    const admitBtn = document.getElementById('admitPatientBtn');
+    admitBtn.disabled = true;
+    admitBtn.style.opacity = '0.5';
+
+    // Clear any previously selected bed highlight
+    document.querySelectorAll('.bp-bed').forEach(b => {
+        b.style.borderColor = b.classList.contains('bp-bed-available') ? '#86efac'
+            : b.classList.contains('bp-bed-occupied') ? '#fca5a5' : '#fcd34d';
+        b.style.background = b.classList.contains('bp-bed-available') ? '#f0fff4'
+            : b.classList.contains('bp-bed-occupied') ? '#fff5f5' : '#fffbeb';
+        const check = b.querySelector('.bp-bed-check');
+        if (check) check.style.display = 'none';
+    });
+
     document.getElementById('admissionModal').style.display = 'flex';
+}
+
+function selectBed(el) {
+    // Deselect all beds first
+    document.querySelectorAll('.bp-bed.bp-bed-available').forEach(b => {
+        b.style.borderColor = '#86efac';
+        b.style.background = '#f0fff4';
+        b.style.boxShadow = 'none';
+        const check = b.querySelector('.bp-bed-check');
+        if (check) check.style.display = 'none';
+    });
+
+    // Highlight selected bed
+    el.style.borderColor = '#2563eb';
+    el.style.background = '#eff6ff';
+    el.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.2)';
+    const check = el.querySelector('.bp-bed-check');
+    if (check) { check.style.display = 'flex'; }
+
+    // Set hidden input and update selection bar
+    const bedId = el.getAttribute('data-bed-id');
+    const bedLabel = el.getAttribute('data-bed-label');
+    document.getElementById('selectedBedId').value = bedId;
+    document.getElementById('bpSelectionBar').innerHTML =
+        `<i class="bi bi-check-circle-fill" style="color:#2563eb; margin-right:6px;"></i><strong style="color:var(--text-dark);">Selected:</strong> <span style="color:#2563eb; font-style:normal;">${bedLabel}</span>`;
+
+    // Enable admit button
+    const admitBtn = document.getElementById('admitPatientBtn');
+    admitBtn.disabled = false;
+    admitBtn.style.opacity = '1';
+}
+
+function switchBpZone(zone) {
+    // Hide all zone panels
+    document.querySelectorAll('.bp-zone-panel').forEach(p => p.style.display = 'none');
+    // Show selected zone panel
+    const panel = document.getElementById('bp-zone-' + zone);
+    if (panel) panel.style.display = '';
+
+    // Update zone tab styles
+    document.querySelectorAll('.bp-zone-tab').forEach(tab => {
+        const tabZone = tab.getAttribute('data-zone');
+        const color = tab.getAttribute('data-color');
+        if (tabZone === zone) {
+            tab.style.color = color;
+            tab.style.borderBottomColor = color;
+            tab.style.background = 'white';
+        } else {
+            tab.style.color = 'var(--text-gray)';
+            tab.style.borderBottomColor = 'transparent';
+            tab.style.background = 'none';
+        }
+    });
 }
 
 function openTriageModal(id) {
