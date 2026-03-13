@@ -29,30 +29,34 @@
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Account Role & Department</label>
-               <select id="role_slug" name="role_slug" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" required>
-    <option value="" disabled selected>Select your role</option>
-    
-    <optgroup label="HR Administration">
-        <option value="admin_hr1">HR 1 (Admin 1)</option>
-        <option value="admin_hr2">HR 2 (Admin 2)</option>
-        <option value="admin_hr3">HR 3(Admin 3)</option>
-        <option value="admin_hr4">HR 4(Admin 4)</option>
-    </optgroup>
+                <select id="role_slug" name="role_slug" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all" required>
+                    <option value="" disabled selected>Select your role</option>
+                    
+                    <optgroup label="HR Administration">
+                        <option value="admin_hr1">HR 1 (Admin 1)</option>
+                        <option value="admin_hr2">HR 2 (Admin 2)</option>
+                        <option value="admin_hr3">HR 3(Admin 3)</option>
+                        <option value="admin_hr4">HR 4(Admin 4)</option>
+                    </optgroup>
 
-    <optgroup label="Logistics Administration">
-        <option value="admin_logistics1">Logistics 1</option>
-        <option value="admin_logistics2">Logistics 2</option>
-    </optgroup>
+                    <optgroup label="Logistics Administration">
+                        <option value="admin_logistics1">Logistics 1</option>
+                        <option value="admin_logistics2">Logistics 2</option>
+                    </optgroup>
 
-    <optgroup label="Core Medical Admin">
-        <option value="admin_core1">Core 1</option>
-        <option value="admin_core2">Core 2</option>
-    </optgroup>
+                    <optgroup label="Core Medical Admin">
+                        <option value="admin_core1">Core 1</option>
+                        <option value="admin_core2">Core 2</option>
+                    </optgroup>
 
-    <optgroup label="Patient Portal">
-        <option value="patient">Patient</option>
-    </optgroup>
-</select>
+                    <optgroup label="Financials">
+                        <option value="admin_financials">Financials</option>
+                    </optgroup>
+
+                    <optgroup label="Patient Portal">
+                        <option value="patient">Patient</option>
+                    </optgroup>
+                </select>
             </div>
 
             <div id="staff_fields" class="grid grid-cols-2 gap-4 hidden">
@@ -109,35 +113,28 @@
     </div>
 
     <script>
-        const roleCategory = document.getElementById('role_category');
-        const roleSlugHidden = document.getElementById('role_slug');
-        const subRoleSelect = document.getElementById('sub_role_select');
-        const staffFields = document.getElementById('staff_fields');
-        const coreSubRoleFields = document.getElementById('core_sub_role_fields');
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('role_slug');
+            const staffFields = document.getElementById('staff_fields');
 
-        function toggleFields() {
-            const category = roleCategory.value;
-            
-            // Show names if role category contains 'employee' or 'admin'
-            if (category.includes('employee') || category.includes('admin')) {
-                staffFields.classList.remove('hidden');
-            } else {
-                staffFields.classList.add('hidden');
+            function toggleFields() {
+                const selectedRole = roleSelect.value;
+                
+                // Show name fields if a role is selected and it's NOT a patient
+                // This covers all your admin_hr, admin_logistics, etc. roles
+                if (selectedRole && selectedRole !== 'patient') {
+                    staffFields.classList.remove('hidden');
+                } else {
+                    staffFields.classList.add('hidden');
+                }
             }
 
-            // Show/Hide Core Medical Sub-Roles
-            if (category === 'core_employee') {
-                coreSubRoleFields.classList.remove('hidden');
-                roleSlugHidden.value = subRoleSelect.value;
-            } else {
-                coreSubRoleFields.classList.add('hidden');
-                roleSlugHidden.value = category;
-            }
-        }
+            // Listen for selection changes
+            roleSelect.addEventListener('change', toggleFields);
 
-        roleCategory.addEventListener('change', toggleFields);
-        subRoleSelect.addEventListener('change', toggleFields);
-        window.addEventListener('DOMContentLoaded', toggleFields); 
+            // Run on initial load to handle "old" values after a validation error
+            toggleFields();
+        });
     </script>
 </body>
 </html>
