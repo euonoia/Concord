@@ -75,45 +75,47 @@
             </p>
          </div>
 
-         <div style="display: flex; align-items: center; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+            {{-- Unified Attendance Button --}}
+            <form action="{{ route('attendance.verify') }}" method="POST" style="margin: 0;">
+                @csrf
+                {{-- If you need a token to clock in, it should be passed here. 
+                    If clocking from dashboard is allowed without QR, the controller handles it. --}}
+                <input type="hidden" name="token" value="DASHBOARD_CLOCK"> 
+                
                 @if($isClockedIn)
-                    {{-- CLOCK OUT FORM --}}
-                    <form action="{{ route('attendance.verify') }}" method="POST" style="margin: 0;">
-                        @csrf
-                        <button type="submit" 
+                    {{-- CLOCK OUT BUTTON --}}
+                    <button type="submit" 
                         title="Clock Out Now"
                         style="display: flex; align-items: center; justify-content: center; background: #dc2626; color: white; width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(220,38,38,0.2);"
                         onmouseover="this.style.backgroundColor='#b91c1c'; this.style.transform='translateY(-2px)'" 
                         onmouseout="this.style.backgroundColor='#dc2626'; this.style.transform='translateY(0)'">
-                            <i class="fas fa-history" style="font-size: 1.25rem;"></i>
-                        </button>
-                    </form>
+                        <i class="fas fa-sign-out-alt" style="font-size: 1.25rem;"></i>
+                    </button>
                 @else
-                    {{-- CLOCK IN LINK --}}
-                    <a href="{{ route('user.attendance.scan') }}" 
-                    title="Scan to Clock In"
-                    style="display: flex; align-items: center; justify-content: center; background: #2563eb; color: white; width: 48px; height: 48px; border-radius: 12px; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);"
-                    onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.transform='translateY(-2px)'" 
-                    onmouseout="this.style.backgroundColor='#2563eb'; this.style.transform='translateY(0)'">
-                        <i class="fas fa-qrcode" style="font-size: 1.25rem;"></i>
-                    </a>
+                    {{-- CLOCK IN BUTTON --}}
+                    <button type="submit" 
+                        title="Clock In Now"
+                        style="display: flex; align-items: center; justify-content: center; background: #2563eb; color: white; width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);"
+                        onmouseover="this.style.backgroundColor='#1d4ed8'; this.style.transform='translateY(-2px)'" 
+                        onmouseout="this.style.backgroundColor='#2563eb'; this.style.transform='translateY(0)'">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </button>
                 @endif
+            </form>
 
-
-                <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center; gap: 12px;">
-                    <div style="display: flex; align-items: center;">
-                        <i class="far fa-calendar-alt" style="margin-right: 8px; color: #2563eb;"></i> 
-                        {{ date('F j, Y') }}
-                    </div>
-
-                    <div style="width: 1px; height: 20px; background: #e2e8f0;"></div>
-
-                    <div style="display: flex; align-items: center; color: #1e293b; min-width: 85px;">
-                        <i class="far fa-clock" style="margin-right: 8px; color: #2563eb;"></i>
-                        <span id="live-clock">--:--:--</span>
-                    </div>
+            <div class="date-chip" style="background: #ffffff; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.875rem; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 48px; display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center;">
+                    <i class="far fa-calendar-alt" style="margin-right: 8px; color: #2563eb;"></i> 
+                    {{ date('F j, Y') }}
+                </div>
+                <div style="width: 1px; height: 20px; background: #e2e8f0;"></div>
+                <div style="display: flex; align-items: center; color: #1e293b; min-width: 85px;">
+                    <i class="far fa-clock" style="margin-right: 8px; color: #2563eb;"></i>
+                    <span id="live-clock">--:--:--</span>
                 </div>
             </div>
+        </div>
         </div>
 
         <div class="dashboard_grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; align-content: start;">            <div class="dashboard_card" style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); overflow: hidden;">
