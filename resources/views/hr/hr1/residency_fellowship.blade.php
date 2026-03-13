@@ -38,81 +38,94 @@
         <h2 class="text-center fw-bold mb-2">Open Specialty Tracks</h2>
         <p class="text-center text-muted mb-5">Select a department to view specific residency and fellowship requirements.</p>
 
-        <h4 class="mb-4 border-bottom pb-2 text-primary-base">Medical Residency & General Practice</h4>
-        <div class="row g-4 mb-5">
-         @php
-        $tracks = [
-        ['title'=>'General Physician','dept'=>'MED-GEN','vacancies'=>'15 Vacancies','desc'=>'Comprehensive primary care training focusing on diagnostics and preventive medicine.'],
-        ['title'=>'Pediatrics','dept'=>'PED-01','vacancies'=>'8 Vacancies','desc'=>'Specialized training in neonatal care and adolescent medicine.'],
-        ['title'=>'Psychology','dept'=>'PSY-01','vacancies'=>'5 Vacancies','desc'=>'Advanced clinical psychology tracks with focus on behavioral health and therapy.'],
-        ['title'=>'Neurology','dept'=>'NEURO-01','vacancies'=>'3 Vacancies','desc'=>'Deep dive into neuro-diagnostics and complex brain disorder management.'],
-        ['title'=>'Pathology','dept'=>'PATH-01','vacancies'=>'4 Vacancies','desc'=>'Laboratory-based residency focusing on cellular analysis and forensic pathology.'],
-        ['title'=>'Radiology','dept'=>'RAD-01','vacancies'=>'6 Vacancies','desc'=>'Training in MRI, CT imaging, and interventional radiology techniques.'],
-        ];
+        @php
+            $residencyPostings  = $postings->where('track_type', 'residency')->values();
+            $fellowshipPostings = $postings->where('track_type', 'fellowship')->values();
+            $nursingPostings    = $postings->where('track_type', 'nursing')->values();
         @endphp
-            @foreach($tracks as $track)
+
+        {{-- ===== RESIDENCY ===== --}}
+        @if($residencyPostings->count())
+        <h4 class="mb-4 border-bottom pb-2 text-primary-base">Medical Residency &amp; General Practice</h4>
+        <div class="row g-4 mb-5">
+            @foreach($residencyPostings as $p)
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
                     <div class="d-flex justify-content-between mb-3">
-                        <h5 class="fw-bold mb-0 text-dark">{{ $track['title'] }}</h5>
-                        <span class="badge bg-light text-primary border">{{ $track['vacancies'] }}</span>
+                        <h5 class="fw-bold mb-0 text-dark">{{ $p->title }}</h5>
+                        <span class="badge bg-light text-primary border">{{ $p->needed_applicants }} Vacancies</span>
                     </div>
-                    <p class="text-muted small mb-4">{{ $track['desc'] }}</p>
-                    <a href="{{ route('careers.apply',['dept'=>$track['dept']]) }}"
-                    class="mt-auto text-decoration-none fw-bold small">
-                    Apply for Track <i class="bi bi-arrow-right"></i>
+                    <p class="text-muted small mb-4">{{ $p->description }}</p>
+                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                       class="mt-auto text-decoration-none fw-bold small">
+                        Apply for Track <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
             @endforeach
         </div>
+        @endif
 
-        <h4 class="mb-4 border-bottom pb-2 text-primary-base">Specialized Surgery & Fellowships</h4>
+        {{-- ===== FELLOWSHIP ===== --}}
+        @if($fellowshipPostings->count())
+        <h4 class="mb-4 border-bottom pb-2 text-primary-base">Specialized Surgery &amp; Fellowships</h4>
         <div class="row g-4 mb-5">
+            @foreach($fellowshipPostings as $p)
             <div class="col-lg-6">
                 <div class="card h-100 border-0 shadow-sm p-4 hover-shadow border-start border-primary border-4">
                     <div class="d-flex justify-content-between mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1">Cardiology & Cardiac Surgery</h5>
-                            <span class="text-danger small fw-bold"><i class="bi bi-fire"></i> High Demand</span>
+                            <h5 class="fw-bold mb-1">{{ $p->title }}</h5>
+                            @if($p->needed_applicants > 0)
+                                <span class="text-primary small fw-bold">{{ $p->needed_applicants }} Seats Remaining</span>
+                            @else
+                                <span class="text-danger small fw-bold"><i class="bi bi-fire"></i> High Demand</span>
+                            @endif
                         </div>
                         <span class="badge bg-primary">Fellowship</span>
                     </div>
-                    <p class="text-muted small">Specialized surgical training in invasive cardiology and open-heart procedures.</p>
-                    <a href="#" class="mt-auto text-decoration-none fw-bold">View Fellowship Requirements <i class="bi bi-arrow-right"></i></a>
+                    <p class="text-muted small">{{ $p->description }}</p>
+                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                       class="mt-auto text-decoration-none fw-bold">
+                        Apply for Fellowship <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card h-100 border-0 shadow-sm p-4 hover-shadow border-start border-primary border-4">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div>
-                            <h5 class="fw-bold mb-1">Orthopedics & Orthopedic Surgery</h5>
-                            <span class="text-primary small fw-bold">4 Seats Remaining</span>
-                        </div>
-                        <span class="badge bg-primary">Fellowship</span>
-                    </div>
-                    <p class="text-muted small">Comprehensive training in musculoskeletal trauma and joint replacement surgery.</p>
-                    <a href="#" class="mt-auto text-decoration-none fw-bold">View Fellowship Requirements <i class="bi bi-arrow-right"></i></a>
-                </div>
-            </div>
+            @endforeach
         </div>
+        @endif
 
+        {{-- ===== NURSING ===== --}}
+        @if($nursingPostings->count())
         <h4 class="mb-4 border-bottom pb-2 text-primary-base">Nursing Specialization Tracks</h4>
         <div class="row g-4">
+            @foreach($nursingPostings as $p)
             <div class="col-md-12">
                 <div class="card border-0 shadow-sm p-4 bg-accent-light">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h5 class="fw-bold">Specialized Nursing Program</h5>
-                            <p class="text-muted small mb-0">We are recruiting nurses for **ICU, Pediatric, and Surgical** specializations. Join our multidisciplinary teams.</p>
+                            <h5 class="fw-bold">{{ $p->title }}</h5>
+                            <p class="text-muted small mb-0">{{ $p->description }}</p>
                         </div>
                         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                            <a href="#" class="btn btn-primary px-4">Apply as Specialist Nurse</a>
+                            <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                               class="btn btn-primary px-4">Apply as Specialist Nurse</a>
                         </div>
                     </div>
                 </div>
             </div>
+            @endforeach
         </div>
+        @endif
+
+        {{-- Empty state --}}
+        @if($postings->isEmpty())
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-megaphone fs-1 d-block mb-3"></i>
+            <p>No open positions at this time. Please check back later.</p>
+        </div>
+        @endif
+
     </section>
 
 </div>

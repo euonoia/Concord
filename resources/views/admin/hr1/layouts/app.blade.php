@@ -45,6 +45,11 @@
         <span>Training Performance</span>
     </a>
 
+    <a href="{{ route('hr1.recruitment.index') }}" class="{{ request()->routeIs('hr1.recruitment.*') ? 'active' : '' }}">
+        <i class="bi bi-megaphone"></i>
+        <span>Recruitment</span>
+    </a>
+
     <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
         @csrf
     </form>

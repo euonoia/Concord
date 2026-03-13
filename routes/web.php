@@ -12,9 +12,14 @@ require base_path('routes/landing/landing.php');
 // Home or onboarding (optional)
 // Route::get('/', function () { return view('onboarding'); });
 
-// Residency & Fellowship page
+// Residency & Fellowship page — served with live job postings from DB
 Route::get('/careers/residency-fellowship', function () {
-    return view('hr.hr1.residency_fellowship');
+    $postings = \Illuminate\Support\Facades\DB::table('job_postings_hr1')
+        ->where('is_active', 1)
+        ->orderBy('track_type')
+        ->orderBy('id')
+        ->get();
+    return view('hr.hr1.residency_fellowship', compact('postings'));
 })->name('careers.residency');
 
 // --- Applicant Routes ---

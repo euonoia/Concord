@@ -6,6 +6,8 @@
         use App\Http\Controllers\admin\Hr\hr1\ApplicantManagementController;
         use App\Http\Controllers\admin\Hr\hr1\NewHireController;
         use App\Http\Controllers\admin\Hr\hr1\AdminTrainingPerformanceController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminRecruitmentController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminHr1DashboardController;
 
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
         use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
@@ -28,7 +30,7 @@
         // --- Modular Admin Dashboards ---
 
         // HR Modular
-        Route::get('/hr1/dashboard', function () { return view('admin.hr1.dashboard'); })->name('admin.hr1.dashboard');
+        Route::get('/hr1/dashboard', [AdminHr1DashboardController::class, 'index'])->name('admin.hr1.dashboard');
         Route::get('/hr2/dashboard', function () { return view('admin.hr2.dashboard'); })->name('admin.hr2.dashboard');
         Route::get('/hr3/dashboard', function () { return view('admin.hr3.dashboard'); })->name('admin.hr3.dashboard');
         Route::get('/hr4/dashboard', function () { return view('admin.hr4.dashboard'); })->name('admin.hr4.dashboard');
@@ -69,6 +71,11 @@
             // Fixed: Removed leading /admin/ as the prefix handles it
             Route::post('/training-performance/{employee_id}/validate', [AdminTrainingPerformanceController::class, 'validateAndStore'])
                 ->name('hr1.training.performance.validate');
+
+            // Recruitment (Job Postings)
+            Route::get('/recruitment', [AdminRecruitmentController::class, 'index'])->name('hr1.recruitment.index');
+            Route::get('/recruitment/{id}', [AdminRecruitmentController::class, 'show'])->name('hr1.recruitment.show');
+            Route::post('/recruitment/{id}/toggle', [AdminRecruitmentController::class, 'toggle'])->name('hr1.recruitment.toggle');
         });
 
         // --- HR2 Department ---
