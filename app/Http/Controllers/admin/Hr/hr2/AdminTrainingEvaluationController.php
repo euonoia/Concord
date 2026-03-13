@@ -97,41 +97,41 @@ class AdminTrainingEvaluationController extends Controller
         'total_score' => $total
     ]);
 }
+public function getEligibleEmployees(Request $request)
+{
+    $employees = EmployeeCompetencyCompletion::join('employees', 'employees.employee_id', '=', 'employee_competency_completion_hr2.employee_id')
+        ->join('competency_hr2', 'competency_hr2.competency_code', '=', 'employee_competency_completion_hr2.competency_code')
+        
+        // HR3 Join
+        ->leftJoin('training_schedule_hr3', function($join) {
+            $join->on('employees.employee_id', '=', 'training_schedule_hr3.employee_id')
+                 ->on('competency_hr2.competency_code', '=', 'training_schedule_hr3.competency_code');
+        })
+        
+        // Evaluation Score Join (To check if button is needed)
+        ->leftJoin('employee_training_scores_hr2', function($join) {
+            $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
+                 ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
+        })
+        
+        ->where('competency_hr2.department_id', $request->department_id)
+        ->where('competency_hr2.specialization_name', $request->specialization)
+        ->where('competency_hr2.competency_code', $request->competency_code)
+        ->where('employee_competency_completion_hr2.status', 'completed')
+        ->select(
+            'employees.employee_id',
+            'employees.first_name',
+            'employees.last_name',
+            'employee_competency_completion_hr2.completed_at',
+            'training_schedule_hr3.training_date',
+            'training_schedule_hr3.training_time',
+            'training_schedule_hr3.venue',
+            'employee_training_scores_hr2.total_score as training_score' // Check if evaluated
+        )
+        ->get();
 
-    public function getEligibleEmployees(Request $request)
-    {
-        $employees = EmployeeCompetencyCompletion::join('employees', 'employees.employee_id', '=', 'employee_competency_completion_hr2.employee_id')
-            ->join('competency_hr2', 'competency_hr2.competency_code', '=', 'employee_competency_completion_hr2.competency_code')
-            
-            // Join with scores table
-            ->leftJoin('employee_training_scores_hr2', function($join) {
-                $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
-                     ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
-            })
-            
-            // Join again with employees to get Evaluator's Name via their Employee ID
-            ->leftJoin('employees as evaluator', 'evaluator.employee_id', '=', 'employee_training_scores_hr2.evaluated_by')
-            
-            ->where('competency_hr2.department_id', $request->department_id)
-            ->where('competency_hr2.specialization_name', $request->specialization)
-            ->where('competency_hr2.competency_code', $request->competency_code)
-            ->where('employee_competency_completion_hr2.status', 'completed')
-            
-            ->select(
-                'employees.employee_id',
-                'employees.first_name',
-                'employees.last_name',
-                'employee_competency_completion_hr2.completed_at',
-                'employee_training_scores_hr2.total_score as training_score',
-                'employee_training_scores_hr2.evaluated_by',
-                'evaluator.first_name as eval_fname', 
-                'evaluator.last_name as eval_lname'
-            )
-            ->orderBy('employees.last_name')
-            ->get();
-
-        return response()->json($employees);
-    }
+    return response()->json($employees);
+}
 
     public function getSpecializations($dept) {
         return response()->json(DepartmentSpecialization::where('dept_code', $dept)->where('is_active', 1)->get());

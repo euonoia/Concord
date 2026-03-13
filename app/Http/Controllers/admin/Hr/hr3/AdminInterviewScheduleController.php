@@ -15,13 +15,9 @@ use App\Mail\InterviewScheduleMail;
 
 class AdminInterviewScheduleController extends Controller
 {
-    /**
-     * Authorization check consistent with your AdminEssController
-     */
     private function authorizeHrAdmin()
     {
-        // Adjust the role_slug to 'admin_hr3' or whichever role manages schedules
-        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3', 'admin_hr1', 'admin_hr2'])) {
+        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3'])) {
             abort(403, 'Unauthorized action.');
         }
     }
@@ -30,8 +26,7 @@ class AdminInterviewScheduleController extends Controller
     {
         $this->authorizeHrAdmin();
         $departments = Department::where('is_active', 1)->get();
-        
-        // Eager load applicant and validator (Employee)
+        // Eager load applicant relationship
         $schedules = InterviewScheduleHr3::with(['applicant', 'validator'])->latest()->get();
         
         return view('admin.hr3.schedule.index', compact('departments', 'schedules'));
@@ -52,10 +47,11 @@ class AdminInterviewScheduleController extends Controller
     {
         $spec = $request->query('spec');
 
+        // Target 'application_id' based on your table schema
         $applicants = ApplicantHr1::where('department_id', $dept)
             ->where('specialization', $spec)
             ->where('application_status', 'interview')
-            ->select('id', 'first_name', 'last_name')
+            ->select('id', 'application_id', 'first_name', 'last_name')
             ->get();
 
         return response()->json($applicants);
@@ -66,23 +62,19 @@ class AdminInterviewScheduleController extends Controller
         $this->authorizeHrAdmin();
 
         $request->validate([
-            // Changed to string since you altered the column to VARCHAR
-            'applicant_id'  => 'required|string', 
+            'applicant_id'  => 'required', // This is the primary key 'id'
             'schedule_date' => 'required|date',
             'schedule_time' => 'required'
         ]);
 
-        // Fetch the employee_id from the employees table associated with the logged-in User
-        // This assumes your employees table has a 'user_id' column
         $employee = DB::table('employees')
             ->where('user_id', Auth::id())
             ->first();
 
-        // Fallback: If no employee record found, use the Auth ID, otherwise the employee_id
         $validatedBy = $employee ? $employee->employee_id : Auth::id();
 
         $schedule = InterviewScheduleHr3::create([
-            'applicant_id'  => $request->applicant_id,
+            'applicant_id'  => $request->applicant_id, 
             'schedule_date' => $request->schedule_date,
             'schedule_time' => $request->schedule_time,
             'location'      => $request->location,
@@ -97,7 +89,6 @@ class AdminInterviewScheduleController extends Controller
                 new InterviewScheduleMail($applicant, $schedule)
             );
         } catch (\Exception $e) {
-            // Log error but keep the schedule record
             Log::error("Mail failed: " . $e->getMessage());
         }
 

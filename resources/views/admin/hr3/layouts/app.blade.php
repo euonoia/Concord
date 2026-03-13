@@ -26,7 +26,7 @@
     </div>
 
     <nav>
-        <a href="{{ route('admin.hr3.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('admin.hr3.dashboard') }}" class="{{ request()->routeIs('admin.hr3.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
@@ -36,7 +36,7 @@
             <span>Shifts</span>
         </a>
 
-        <div class="nav-dropdown {{ request()->routeIs('schedule.*') ? 'open' : '' }}">
+        <div class="nav-dropdown {{ (request()->routeIs('schedule.*') || request()->routeIs('training_schedule.*')) ? 'open' : '' }}">
             <a href="javascript:void(0)" class="dropdown-toggle" onclick="toggleDropdown(this)">
                 <i class="bi bi-calendar-event"></i>
                 <span>Schedule</span>
@@ -47,7 +47,11 @@
                     <i class="bi bi-person-video3"></i>
                     <span>Interview Schedule</span>
                 </a>
-               
+                
+                <a href="{{ route('training_schedule.index') }}" class="sub-link {{ request()->routeIs('training_schedule.index') ? 'active' : '' }}">
+                    <i class="bi bi-journal-check"></i>
+                    <span>Training Schedule</span>
+                </a>
             </div>
         </div>
 
