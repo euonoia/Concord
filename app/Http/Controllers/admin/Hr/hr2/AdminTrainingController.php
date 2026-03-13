@@ -15,7 +15,7 @@ class AdminTrainingController extends Controller
 {
     public function index()
     {
-        $departments = Department::where('is_active',1)->get();
+        $departments = Department::where('is_active', 1)->get();
         return view('admin.hr2.training', compact('departments'));
     }
 
@@ -29,7 +29,7 @@ class AdminTrainingController extends Controller
         return response()->json($specs);
     }
 
-    public function getCompetencies($dept,$spec)
+    public function getCompetencies($dept, $spec)
     {
         $competencies = Competency::where('department_id', $dept)
             ->where('specialization_name', $spec)
@@ -54,16 +54,35 @@ class AdminTrainingController extends Controller
                 '=',
                 'employee_competency_completion_hr2.competency_code'
             )
+            // JOIN WITH HR3 TRAINING SCHEDULE
+            ->leftJoin('training_schedule_hr3', function($join) {
+                $join->on('employees.employee_id', '=', 'training_schedule_hr3.employee_id')
+                     ->on('competency_hr2.competency_code', '=', 'training_schedule_hr3.competency_code');
+            })
+            // JOIN WITH HR2 TRAINING SCORES
+            ->leftJoin('employee_training_scores_hr2', function($join) {
+                $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
+                     ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
+            })
+            // JOIN TO GET EVALUATOR NAME FROM EMPLOYEES TABLE
+            ->leftJoin('employees as evaluator', 'evaluator.employee_id', '=', 'employee_training_scores_hr2.evaluated_by')
+            
             ->where('competency_hr2.department_id', $request->department_id)
             ->where('competency_hr2.specialization_name', $request->specialization)
             ->where('competency_hr2.competency_code', $request->competency_code)
             ->where('employee_competency_completion_hr2.status', 'completed')
-            ->whereNotNull('employee_competency_completion_hr2.verified_by')
             ->select(
                 'employees.employee_id',
                 'employees.first_name',
                 'employees.last_name',
-                'employee_competency_completion_hr2.completed_at'
+                'employee_competency_completion_hr2.completed_at',
+                'training_schedule_hr3.training_date',
+                'training_schedule_hr3.training_time',
+                'training_schedule_hr3.venue',
+                'employee_training_scores_hr2.total_score as training_score',
+                'employee_training_scores_hr2.evaluated_by',
+                'evaluator.first_name as eval_fname', 
+                'evaluator.last_name as eval_lname'
             )
             ->orderBy('employees.last_name')
             ->get();

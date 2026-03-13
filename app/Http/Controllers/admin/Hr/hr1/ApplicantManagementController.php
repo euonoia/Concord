@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ApplicantManagementController extends Controller
 {
-    // Ensure only HR/admin can access
+    
     private function authorizeHr1Admin()
     {
         if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr1') {
@@ -54,15 +54,24 @@ class ApplicantManagementController extends Controller
     }
 
     // Show individual applicant details
-    public function show($id)
+   public function show($id)
     {
         $this->authorizeHr1Admin();
 
         $applicant = DB::table('applicants_hr1')
             ->leftJoin('departments_hr2', 'applicants_hr1.department_id', '=', 'departments_hr2.department_id')
+            // Join the interview schedule
+            ->leftJoin('interview_schedule_hr3', 'applicants_hr1.id', '=', 'interview_schedule_hr3.applicant_id')
+            // Join the employees table to get the validator's name
+            ->leftJoin('employees', 'interview_schedule_hr3.validated_by', '=', 'employees.employee_id')
             ->select(
                 'applicants_hr1.*',
-                'departments_hr2.name as department_name'
+                'departments_hr2.name as department_name',
+                'interview_schedule_hr3.schedule_date',
+                'interview_schedule_hr3.schedule_time',
+                'interview_schedule_hr3.location as interview_location',
+                'employees.first_name as validator_first',
+                'employees.last_name as validator_last'
             )
             ->where('applicants_hr1.id', $id)
             ->first();
@@ -71,7 +80,6 @@ class ApplicantManagementController extends Controller
 
         return view('admin.hr1.applicants.show', compact('applicant'));
     }
-
     // Download CV
     public function downloadResume($id)
     {
@@ -104,7 +112,6 @@ class ApplicantManagementController extends Controller
                 'updated_at' => now(),
             ]);
 
-        // If status is accepted, create a new hire record if it doesn't exist
         if ($request->application_status === 'accepted') {
             $applicant = DB::table('applicants_hr1')->where('id', $id)->first();
             $existingHire = DB::table('new_hires_hr1')->where('applicant_id', $id)->first();

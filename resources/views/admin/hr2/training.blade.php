@@ -39,12 +39,13 @@
                             <th>Employee ID</th>
                             <th>Full Name</th>
                             <th>Completed At</th>
+                            <th>Training At (HR3)</th> 
                             <th>Action / Status</th>
                         </tr>
                     </thead>
                     <tbody id="employeeTable">
                         <tr>
-                            <td colspan="4" align="center" class="py-5 text-muted small italic">
+                            <td colspan="5" align="center" class="py-5 text-muted small italic">
                                 <i class="fas fa-filter mr-2"></i> Please select filters above to load eligible employees...
                             </td>
                         </tr>
@@ -55,22 +56,19 @@
     </div>
 </div>
 
-
-
 <script>
 const dept = document.getElementById('department');
 const spec = document.getElementById('specialization');
 const comp = document.getElementById('competency');
 const table = document.getElementById('employeeTable');
 
-// Points to the specific show method in AdminTrainingEvaluationController
+// Ensure this route points to your evaluation controller's show method
 const trainingEvaluationRoute = "{{ route('hr2.training_evaluation.show') }}";
 
-// 1. Load Specializations
 dept.addEventListener('change', function() {
     let value = this.value;
     spec.innerHTML = '<option value="">Loading...</option>';
-    comp.innerHTML = '<option value="">Select Competency</option>'; // Reset competency
+    comp.innerHTML = '<option value="">Select Competency</option>';
     if(!value) return;
     fetch(`/admin/hr2/get-specializations/${value}`)
     .then(res => res.json())
@@ -82,7 +80,6 @@ dept.addEventListener('change', function() {
     });
 });
 
-// 2. Load Competencies
 spec.addEventListener('change', function() {
     let deptVal = dept.value;
     let specVal = this.value;
@@ -98,7 +95,6 @@ spec.addEventListener('change', function() {
     });
 });
 
-// 3. Load and Display Employees (FIXED URL TO AVOID CONFLICT)
 comp.addEventListener('change', function() {
     let department = dept.value;
     let specialization = spec.value;
@@ -106,29 +102,41 @@ comp.addEventListener('change', function() {
 
     if(!competency) return;
 
-    table.innerHTML = '<tr><td colspan="4" align="center" class="py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Searching records...</td></tr>';
+    table.innerHTML = '<tr><td colspan="5" align="center" class="py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Searching records...</td></tr>';
 
-    // *** CRITICAL FIX ***
-    // We point this to the new unique route that uses AdminTrainingEvaluationController
-    fetch(`/admin/hr2/evaluation-eligible-employees?department_id=${department}&specialization=${specialization}&competency_code=${competency}`)
+    // Update fetch URL to point to your AdminTrainingController method
+    fetch(`/admin/hr2/eligible-employees?department_id=${department}&specialization=${specialization}&competency_code=${competency}`)
     .then(res => res.json())
     .then(data => {
         table.innerHTML = '';
         if(data.length === 0){
-            table.innerHTML = `<tr><td colspan="4" align="center" class="py-4">No eligible employees found for this competency.</td></tr>`;
+            table.innerHTML = `<tr><td colspan="5" align="center" class="py-4">No eligible employees found.</td></tr>`;
             return;
         }
 
         data.forEach(emp => {
             let actionHTML = '';
             
-            // Check if evaluated (using alias training_score from your Controller)
+            // Format Training Schedule (HR3) Column
+            let trainingAtHTML = `<span class="text-muted small italic">Not Scheduled</span>`;
+            if(emp.training_date) {
+                trainingAtHTML = `
+                    <div class="small">
+                        <i class="fas fa-calendar-alt text-primary"></i> ${emp.training_date}<br>
+                        <i class="fas fa-clock text-muted"></i> ${emp.training_time}<br>
+                        <i class="fas fa-map-marker-alt text-danger"></i> ${emp.venue || 'TBA'}
+                    </div>`;
+            }
+
+            // Status/Action Column Logic
             if(emp.training_score !== null && emp.training_score !== undefined) {
-                
-                // Use the eval_fname and eval_lname from your Controller's join
-                const evaluatorName = emp.eval_fname 
-                    ? `${emp.eval_fname} ${emp.eval_lname}` 
-                    : (emp.evaluated_by || 'Admin');
+                // Determine Evaluator Name (Priority: Name > ID > Admin)
+                let evaluatorName = 'Admin';
+                if(emp.eval_fname) {
+                    evaluatorName = `${emp.eval_fname} ${emp.eval_lname}`;
+                } else if(emp.evaluated_by) {
+                    evaluatorName = `ID: ${emp.evaluated_by}`;
+                }
                 
                 actionHTML = `
                     <div class="text-success small p-2 bg-light border rounded shadow-sm text-center">
@@ -136,20 +144,21 @@ comp.addEventListener('change', function() {
                         <span class="text-muted" style="font-size: 0.7rem;">BY: ${evaluatorName}</span>
                     </div>`;
             } else {
-                // If not evaluated, show the Evaluate button
                 const finalUrl = `${trainingEvaluationRoute}?employee_id=${emp.employee_id}&competency_code=${competency}`;
-                actionHTML = `<div class="text-center">
-                                <a href="${finalUrl}" class="btn btn-sm btn-primary px-4 shadow-sm font-weight-bold">
-                                    <i class="fas fa-clipboard-check mr-1"></i> EVALUATE
-                                </a>
-                              </div>`;
+                actionHTML = `
+                    <div class="text-center">
+                        <a href="${finalUrl}" class="btn btn-sm btn-primary px-4 shadow-sm font-weight-bold">
+                            <i class="fas fa-clipboard-check mr-1"></i> EVALUATE
+                        </a>
+                    </div>`;
             }
 
             table.innerHTML += `
                 <tr>
-                    <td class="align-middle">${emp.employee_id}</td>
+                    <td class="align-middle text-center">${emp.employee_id}</td>
                     <td class="align-middle font-weight-bold text-dark">${emp.first_name} ${emp.last_name}</td>
-                    <td class="align-middle text-muted">${emp.completed_at ?? '-'}</td>
+                    <td class="align-middle text-center text-muted small">${emp.completed_at ?? '-'}</td>
+                    <td class="align-middle">${trainingAtHTML}</td>
                     <td class="align-middle" style="min-width: 180px;">${actionHTML}</td>
                 </tr>`;
         });
@@ -158,7 +167,6 @@ comp.addEventListener('change', function() {
 </script>
 
 <style>
-    /* Custom hover effect for rows */
     .table-hover tbody tr:hover {
         background-color: rgba(78, 115, 223, 0.05);
     }
