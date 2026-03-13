@@ -253,7 +253,7 @@
                                 <th>TEST</th>
                                 <th>PRIORITY</th>
                                 <th>INDICATION</th>
-                                <th>SYNC STATUS</th>
+                                <th>STATUS</th>
                                 <th>ACTIONS</th>
                             </tr>
                         </thead>
@@ -261,14 +261,13 @@
                             @foreach($diagnosticOrders as $order)
                                 @php
                                     $syncClass = match($order->sync_status ?? 'Pending') {
-                                        'Synced'         => 'core1-tag-stable',
                                         'ResultReceived' => 'core1-tag-critical',
                                         'Failed'         => 'core1-tag-cleaning',
                                         default          => 'core1-tag-neutral',
                                     };
                                     $syncLabel = match($order->sync_status ?? 'Pending') {
                                         'ResultReceived' => 'Result Received',
-                                        default          => $order->sync_status ?? 'Pending',
+                                        default          => 'Pending',
                                     };
                                     $priorityClass = match($order->priority ?? 'Routine') {
                                         'STAT'   => 'core1-tag-critical',
@@ -568,9 +567,12 @@
                 <label class="text-xs font-bold text-gray block mb-3">RECEIVED AT</label>
                 <p id="resultReceivedAt" class="text-dark" style="font-size:13px;"></p>
             </div>
-            <div class="mb-15" style="background:#f8f9fb; border:1px solid var(--border-color); border-radius:8px; padding:15px;">
-                <label class="text-xs font-bold text-gray block mb-5">RESULT DATA</label>
-                <pre id="resultDataContent" style="font-size:13px; white-space:pre-wrap; word-break:break-word; margin:0; color:var(--text-dark);"></pre>
+            <div class="mb-15" style="background:#f8f9fb; border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
+                <table class="w-full text-left border-collapse" style="font-size:13px; color:var(--text-dark);">
+                    <tbody id="resultDataContent">
+                        <!-- Dynamic rows injected here -->
+                    </tbody>
+                </table>
             </div>
             <div class="core1-flex-gap-2 justify-end pt-10 border-top">
                 <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('labResultsModal')">Close</button>
@@ -1292,11 +1294,38 @@ function openResultsModal(btn) {
     document.getElementById('resultReceivedAt').innerText = btn.getAttribute('data-received') || '---';
 
     let resultRaw = btn.getAttribute('data-result') || '';
+    const tbody = document.getElementById('resultDataContent');
+    tbody.innerHTML = ''; // Clear previous
+
     try {
         let parsed = JSON.parse(resultRaw);
-        document.getElementById('resultDataContent').innerText = JSON.stringify(parsed, null, 2);
+        for (const [key, value] of Object.entries(parsed)) {
+            // Format key (e.g., "specific_gravity" -> "Specific Gravity")
+            const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-slate-200 last:border-0 hover:bg-slate-100/50';
+            
+            const tdKey = document.createElement('td');
+            tdKey.className = 'px-4 py-3 text-xs font-bold text-slate-500 w-1/3 bg-slate-50/50';
+            tdKey.textContent = formattedKey;
+            
+            const tdVal = document.createElement('td');
+            tdVal.className = 'px-4 py-3 text-sm font-bold text-slate-900';
+            tdVal.textContent = value;
+            
+            tr.appendChild(tdKey);
+            tr.appendChild(tdVal);
+            tbody.appendChild(tr);
+        }
     } catch(e) {
-        document.getElementById('resultDataContent').innerText = resultRaw;
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.className = 'px-4 py-3 text-sm text-slate-800 whitespace-pre-wrap';
+        td.colSpan = 2;
+        td.textContent = resultRaw;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
     }
 
     document.getElementById('labResultsModal').style.display = 'flex';

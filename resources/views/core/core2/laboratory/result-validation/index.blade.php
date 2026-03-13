@@ -132,13 +132,11 @@
     <div style="background:white; border-radius:20px; width:500px; max-width:90%; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
         <h3 class="text-lg font-black text-slate-900 mb-1">Enter Lab Result</h3>
         <p id="resultEntryTestLabel" class="text-xs font-bold text-indigo-600 mb-4"></p>
-        <form id="resultEntryForm" method="POST">
+        <form id="resultEntryForm" method="POST" onsubmit="compileResultData(event)">
             @csrf
-            <div class="mb-4">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Result Data (JSON)</label>
-                <textarea name="result_data" id="resultDataInput" rows="8" required
-                    class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition"
-                    placeholder='Loading example...'></textarea>
+            <input type="hidden" name="result_data" id="hiddenResultData">
+            <div id="dynamicResultFields" class="max-h-[50vh] overflow-y-auto pr-2 mb-4 space-y-3">
+                <!-- Dynamic input fields will be injected here -->
             </div>
             <div class="flex justify-end gap-3">
                 <button type="button" onclick="closeResultEntryModal()" class="px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
@@ -150,10 +148,16 @@
 
 {{-- View Result Modal --}}
 <div id="viewResultModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; border-radius:20px; width:550px; max-width:90%; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <div style="background:white; border-radius:20px; width:600px; max-width:90%; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
         <h3 class="text-lg font-black text-slate-900 mb-1">Lab Result Data</h3>
         <p id="viewResultTestLabel" class="text-xs font-bold text-indigo-600 mb-4"></p>
-        <pre id="viewResultData" class="bg-slate-50 rounded-xl p-4 text-sm font-mono text-slate-800 overflow-auto max-h-[400px] border border-slate-200"></pre>
+        <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <tbody id="viewResultTableBody" class="text-sm">
+                    <!-- Dynamic rows injected here -->
+                </tbody>
+            </table>
+        </div>
         <div class="flex justify-end mt-4">
             <button type="button" onclick="closeViewResultModal()" class="px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Close</button>
         </div>
@@ -236,16 +240,66 @@ const resultExamples = {
     }, null, 2)
 };
 
+function formatLabel(key) {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function openResultEntryModal(orderId, testName) {
     const form = document.getElementById('resultEntryForm');
-    form.action = `/core2/laboratory/result-validation/${orderId}/result`;
+    
+    let baseUrl = '{{ route("core2.laboratory.result-validation.enter-result", ":id") }}';
+    form.action = baseUrl.replace(':id', orderId);
 
     document.getElementById('resultEntryTestLabel').innerText = testName || 'Lab Test';
 
-    const textarea = document.getElementById('resultDataInput');
-    textarea.value = resultExamples[testName] || JSON.stringify({"result": "Enter result here"}, null, 2);
+    const container = document.getElementById('dynamicResultFields');
+    container.innerHTML = ''; // clear existing
+    
+    // Parse the template to get the keys
+    let templateObj = {};
+    if (resultExamples[testName]) {
+        templateObj = JSON.parse(resultExamples[testName]);
+    } else {
+        templateObj = { "Result": "" };
+    }
+
+    for (const [key, placeholder] of Object.entries(templateObj)) {
+        const labelText = formatLabel(key);
+        
+        const div = document.createElement('div');
+        div.className = 'flex flex-col gap-1';
+        
+        const label = document.createElement('label');
+        label.className = 'text-[10px] font-black text-slate-500 uppercase tracking-wider';
+        label.textContent = labelText;
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'dynamic-result-input border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-300 focus:outline-none';
+        input.dataset.key = key;
+        input.placeholder = placeholder;
+        
+        div.appendChild(label);
+        div.appendChild(input);
+        container.appendChild(div);
+    }
 
     document.getElementById('resultEntryModal').style.display = 'flex';
+}
+
+function compileResultData(event) {
+    const inputs = document.querySelectorAll('.dynamic-result-input');
+    let resultObj = {};
+    
+    inputs.forEach(input => {
+        // If left blank, we can either omit it, or use the placeholder as default, or store empty.
+        // Let's store the typed value, or default to placeholder (which usually represents "Normal" or a unit template) if they didn't type anything.
+        // Actually, for proper clinical data, blank means blank. But to be helpful, let's just use what they typed, or if empty, skip or keep empty string.
+        resultObj[input.dataset.key] = input.value.trim() || input.placeholder;
+    });
+
+    document.getElementById('hiddenResultData').value = JSON.stringify(resultObj);
+    // Proceed with form submission
 }
 
 function closeResultEntryModal() {
@@ -255,11 +309,36 @@ function closeResultEntryModal() {
 function viewResultData(orderId, testName, rawData) {
     document.getElementById('viewResultTestLabel').innerText = testName || 'Lab Test';
 
+    const tbody = document.getElementById('viewResultTableBody');
+    tbody.innerHTML = ''; // clear
+
     try {
         const parsed = JSON.parse(rawData);
-        document.getElementById('viewResultData').textContent = JSON.stringify(parsed, null, 2);
+        for (const [key, value] of Object.entries(parsed)) {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-slate-200 last:border-0 hover:bg-slate-100/50';
+            
+            const tdKey = document.createElement('td');
+            tdKey.className = 'px-4 py-3 text-xs font-bold text-slate-500 w-1/3 bg-slate-50/50';
+            tdKey.textContent = formatLabel(key);
+            
+            const tdVal = document.createElement('td');
+            tdVal.className = 'px-4 py-3 text-sm font-bold text-slate-900';
+            tdVal.textContent = value;
+            
+            tr.appendChild(tdKey);
+            tr.appendChild(tdVal);
+            tbody.appendChild(tr);
+        }
     } catch (e) {
-        document.getElementById('viewResultData').textContent = rawData;
+        // Fallback for non-JSON
+        const tr = document.createElement('tr');
+        const tdVal = document.createElement('td');
+        tdVal.className = 'px-4 py-3 text-sm text-slate-800 whitespace-pre-wrap';
+        tdVal.colSpan = 2;
+        tdVal.textContent = rawData;
+        tr.appendChild(tdVal);
+        tbody.appendChild(tr);
     }
 
     document.getElementById('viewResultModal').style.display = 'flex';
