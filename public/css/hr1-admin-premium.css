@@ -1,0 +1,167 @@
+/* HR1 Admin Premium Design System */
+
+:root {
+    --hr1-primary: #1e3c72;
+    --hr1-secondary: #2a5298;
+    --hr1-accent: #0d6efd;
+    --hr1-success: #198754;
+    --hr1-danger: #dc3545;
+    --hr1-warning: #ffc107;
+    --hr1-info: #0dcaf0;
+    --hr1-bg-soft: #f8f9fa;
+    --hr1-text-main: #1a1a2e;
+    --hr1-text-muted: #8a90a0;
+    --hr1-shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --hr1-shadow-md: 0 4px 15px rgba(0,0,0,0.1);
+    --hr1-border-radius: 12px;
+}
+
+/* Base Layout Overrides */
+.dashboard-main.main {
+    background-color: #f4f7fa !important;
+}
+
+/* Premium Gradient Header */
+.hr1-premium-header {
+    background: linear-gradient(135deg, var(--hr1-primary) 0%, var(--hr1-secondary) 100%);
+    color: #ffffff;
+    border-radius: var(--hr1-border-radius);
+    padding: 1.5rem 1.75rem;
+    box-shadow: var(--hr1-shadow-md);
+    margin-bottom: 30px !important;
+}
+.hr1-premium-header h2, .hr1-premium-header h3 {
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+}
+.hr1-premium-header p {
+    opacity: 0.85;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Metric Cards (Standardized Square) */
+.hr1-metrics-container {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    margin-bottom: 35px !important;
+}
+
+.hr1-metric-card {
+    background: #fff;
+    border-radius: var(--hr1-border-radius);
+    padding: 15px;
+    box-shadow: var(--hr1-shadow-sm);
+    border: none;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 150px;
+    height: 150px;
+}
+.hr1-metric-card:hover {
+    transform: translateY(-5px);
+}
+.hr1-metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+.hr1-metric-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--hr1-text-muted);
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+.hr1-metric-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--hr1-text-main);
+    line-height: 1;
+}
+
+/* Premium Table Container */
+.hr1-premium-table-card {
+    background: #fff;
+    border-radius: var(--hr1-border-radius);
+    box-shadow: var(--hr1-shadow-sm);
+    border: none;
+    overflow: hidden;
+    margin-bottom: 30px !important;
+}
+.hr1-table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fcfcfc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.hr1-table-header h6 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--hr1-text-main);
+}
+
+.hr1-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hr1-text-muted);
+    padding: 12px 20px !important;
+    background: #f8f9fa !important;
+    border: none !important;
+}
+.hr1-table td {
+    padding: 12px 20px !important;
+    border: none !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+/* Status Badges */
+.hr1-badge {
+    font-size: 0.65rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+.hr1-badge-success { background: rgba(25, 135, 84, 0.1); color: #198754; }
+.hr1-badge-warning { background: rgba(255, 193, 7, 0.1); color: #856404; }
+.hr1-badge-danger { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
+.hr1-badge-info { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+.hr1-badge-primary { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
+
+/* Filter Card */
+.hr1-filter-card {
+    background: #fff;
+    border-radius: var(--hr1-border-radius);
+    padding: 20px;
+    box-shadow: var(--hr1-shadow-sm);
+    border: none;
+    margin-bottom: 25px !important;
+}
+.hr1-filter-card .form-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--hr1-text-main);
+}
+
+/* Spacing Helpers */
+.hr1-mt-5 { margin-top: 30px !important; }
+.hr1-mb-5 { margin-bottom: 30px !important; }
