@@ -257,7 +257,7 @@
                                 <th>ACTIONS</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="diagnosticOrdersTbody">
                             @foreach($diagnosticOrders as $order)
                                 @php
                                     $syncClass = match($order->sync_status ?? 'Pending') {
@@ -798,6 +798,74 @@
 
     <!-- Patient Details Modal (Clinical View) -->
     <div id="patientDetailsModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+
+<script>
+    function fetchDiagnosticOrders() {
+        fetch('{{ route("core1.outpatient.diagnosticOrders.json") }}')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('diagnosticOrdersTbody');
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                data.forEach(order => {
+                    let syncClass = 'core1-tag-neutral';
+                    let syncLabel = 'Pending';
+                    if (order.sync_status === 'ResultReceived') {
+                        syncClass = 'core1-tag-critical';
+                        syncLabel = 'Result Received';
+                    } else if (order.sync_status === 'Failed') {
+                        syncClass = 'core1-tag-cleaning';
+                    }
+
+                    let priorityClass = 'core1-tag-neutral';
+                    if (order.priority === 'STAT') {
+                        priorityClass = 'core1-tag-critical';
+                    } else if (order.priority === 'Urgent') {
+                        priorityClass = 'core1-tag-cleaning';
+                    }
+
+                    let tr = document.createElement('tr');
+                    
+                    let td1 = document.createElement('td'); td1.textContent = order.created_at_fmt;
+                    let td2 = document.createElement('td'); td2.className = 'font-bold text-blue'; td2.textContent = order.patient_name;
+                    let td3 = document.createElement('td'); td3.className = 'text-xs'; td3.textContent = order.doctor_full;
+                    let td4 = document.createElement('td'); td4.className = 'font-bold'; td4.textContent = order.test_name;
+                    
+                    let td5 = document.createElement('td');
+                    let span5 = document.createElement('span'); span5.className = `core1-status-tag ${priorityClass}`; span5.textContent = order.priority;
+                    td5.appendChild(span5);
+                    
+                    let td6 = document.createElement('td'); td6.className = 'text-xs'; td6.textContent = order.clinical_note || '';
+
+                    let td7 = document.createElement('td');
+                    let span7 = document.createElement('span'); span7.className = `core1-status-tag ${syncClass}`; span7.textContent = syncLabel;
+                    td7.appendChild(span7);
+
+                    let td8 = document.createElement('td');
+                    if (order.sync_status === 'ResultReceived' && order.result_data) {
+                        let btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'core1-btn-sm core1-btn-outline';
+                        btn.setAttribute('onclick', 'openResultsModal(this)');
+                        btn.setAttribute('data-test', order.test_name);
+                        btn.setAttribute('data-patient', order.patient_name);
+                        btn.setAttribute('data-result', order.result_data);
+                        btn.setAttribute('data-received', order.result_received_at_fmt);
+                        btn.title = 'View Lab Results';
+                        btn.innerHTML = '<i class="bi bi-file-earmark-medical"></i> View Results';
+                        td8.appendChild(btn);
+                    }
+
+                    tr.append(td1, td2, td3, td4, td5, td6, td7, td8);
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => console.error("Failed to fetch diagnostic orders", err));
+    }
+
+    // Auto refresh every 5 seconds
+    setInterval(fetchDiagnosticOrders, 5000);
+</script>
         <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
             <!-- Modal Header -->
             <div class="core1-flex-between" style="background: var(--bg); padding: 20px 25px; border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10;">

@@ -275,6 +275,39 @@ class OutpatientController extends Controller
 
         return back()->with('success', 'Lab order created and synced to laboratory.');
     }
+
+    public function getDiagnosticOrdersJson()
+    {
+        $user = auth()->user();
+        $query = Encounter::whereIn('type', ['OPD', 'Pending'])
+            ->where('status', 'Active');
+
+        if ($user->role_slug === 'doctor') {
+            $query->where('doctor_id', $user->id);
+        }
+        $encounterIds = $query->pluck('id');
+
+        $diagnosticOrders = LabOrder::whereIn('encounter_id', $encounterIds)
+            ->with(['patient', 'doctor', 'encounter.patient'])
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'created_at_fmt' => $order->created_at->format('Y-m-d'),
+                    'patient_name' => $order->patient->name ?? $order->encounter->patient->name ?? 'Unknown',
+                    'doctor_full' => $order->doctor->name ?? 'Unknown',
+                    'test_name' => $order->test_name,
+                    'priority' => $order->priority ?? 'Routine',
+                    'clinical_note' => $order->clinical_note,
+                    'sync_status' => $order->sync_status ?? 'Pending',
+                    'result_data' => $order->result_data,
+                    'result_received_at_fmt' => $order->result_received_at ? $order->result_received_at->format('Y-m-d H:i') : ''
+                ];
+            });
+
+        return response()->json($diagnosticOrders);
+    }
     public function disposition(Request $request, $id)
     {
         $validated = $request->validate([
