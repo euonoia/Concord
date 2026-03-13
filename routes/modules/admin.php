@@ -21,6 +21,7 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminLeaveManagementController;
         
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
@@ -148,11 +149,20 @@
 
             Route::get('/get-specializations/{dept}',
                 [AdminInterviewScheduleController::class,'getSpecializations']);
-           Route::get('/get-interview-applicants/{dept}', [AdminInterviewScheduleController::class, 'getInterviewApplicants']);
+            Route::get('/get-interview-applicants/{dept}', [AdminInterviewScheduleController::class, 'getInterviewApplicants']);
 
-           Route::get('/training-schedule', [AdminTrainingScheduleController::class, 'index'])->name('training_schedule.index');
+            Route::get('/training-schedule', [AdminTrainingScheduleController::class, 'index'])->name('training_schedule.index');
             Route::post('/training-schedule', [AdminTrainingScheduleController::class, 'store'])->name('training_schedule.store');
             Route::get('/get-verified-competencies/{emp_id}', [AdminTrainingScheduleController::class, 'getCompetencies']);
+
+            // Designated Leave Management Routes
+            Route::prefix('leave')->group(function () {
+                Route::get('/', [AdminLeaveManagementController::class, 'index'])
+                    ->name('admin.hr3.leave.index');
+                    
+                Route::post('/{id}/update', [AdminLeaveManagementController::class, 'updateStatus'])
+                    ->name('admin.hr3.leave.update');
+            });
         });
 
         // --- END OF HR3 Department ---
