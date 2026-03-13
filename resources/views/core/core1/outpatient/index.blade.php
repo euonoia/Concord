@@ -924,20 +924,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-            
-            // Show simple alert or custom notification
-            alert('Success: ' + data.message);
-        } else {
-            alert('Error: ' + (data.message || 'Admission failed.'));
-        }
-    })
-    .catch(error => {
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
-        console.error('Error:', error);
-        alert('An unexpected error occurred during admission.');
-    });
-}
+
 
 function openAdmissionModal(encounterId) {
     document.getElementById('admissionEncounterId').value = encounterId;

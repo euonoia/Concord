@@ -1041,6 +1041,44 @@ tr:hover {
     font-weight: 500;
     cursor: pointer;
     border: 1px solid transparent;
+    background: transparent;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.core1-btn-sm.core1-btn-outline {
+    border-color: var(--border-color);
+    color: var(--text-dark);
+    background: var(--white);
+}
+
+.core1-btn-sm.core1-btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--info-light);
+}
+
+.core1-btn-sm.core1-btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.core1-btn-sm.core1-btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.core1-btn-sm.core1-btn-outline-primary {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: transparent;
+}
+
+.core1-btn-sm.core1-btn-outline-primary:hover {
+    background: var(--info-light);
 }
 
 /* UTILITIES */
