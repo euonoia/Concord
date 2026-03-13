@@ -483,7 +483,14 @@
                 <input type="hidden" name="encounter_id" id="labEncounterId">
                 <div class="mb-10">
                     <label class="font-bold block mb-5">Test Name</label>
-                    <input type="text" name="test_name" class="core1-input w-full" required placeholder="e.g. Complete Blood Count (CBC)">
+                    <select name="test_name" class="core1-input w-full" required>
+                        <option value="">Select Test...</option>
+                        <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                        <option value="Urinalysis">Urinalysis</option>
+                        <option value="Blood Chemistry Panel">Blood Chemistry Panel</option>
+                        <option value="Lipid Panel">Lipid Panel</option>
+                        <option value="Microbiology/Molecular Tests">Microbiology/Molecular Tests</option>
+                    </select>
                 </div>
                 <div class="mb-15">
                     <label class="font-bold block mb-5">Clinical Indication</label>
