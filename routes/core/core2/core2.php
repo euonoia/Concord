@@ -49,23 +49,20 @@ Route::prefix('core2')->name('core2.')->group(function () {
     // ── LABORATORY ────────────────────────────────────────────────────────────────
     Route::prefix('laboratory')->name('laboratory.')->group(function () {
 
-        // Test Ordering & Registration
+        // Test Ordering & Registration (Received orders only)
         Route::get('/test-orders',        [LaboratoryController::class, 'testOrdersIndex'])->name('test-orders.index');
         Route::get('/test-orders/create', [LaboratoryController::class, 'testOrdersCreate'])->name('test-orders.create');
         Route::post('/test-orders',       [LaboratoryController::class, 'testOrdersStore'])->name('test-orders.store');
-        Route::patch('/test-orders/{id}/status', [LaboratoryController::class, 'updateOrderStatus'])->name('test-orders.update-status');
-        Route::post('/test-orders/{id}/result',  [LaboratoryController::class, 'enterResult'])->name('test-orders.enter-result');
-        Route::post('/test-orders/{id}/validate-send', [LaboratoryController::class, 'validateAndSend'])->name('test-orders.validate-send');
+        Route::patch('/test-orders/{id}/collect-sample', [LaboratoryController::class, 'collectSample'])->name('test-orders.collect-sample');
 
-        // Sample Tracking & LIS Integration
-        Route::get('/sample-tracking',        [LaboratoryController::class, 'sampleTrackingIndex'])->name('sample-tracking.index');
-        Route::get('/sample-tracking/create', [LaboratoryController::class, 'sampleTrackingCreate'])->name('sample-tracking.create');
-        Route::post('/sample-tracking',       [LaboratoryController::class, 'sampleTrackingStore'])->name('sample-tracking.store');
+        // Sample Tracking & LIS Integration (SampleCollected + Processing)
+        Route::get('/sample-tracking',                          [LaboratoryController::class, 'sampleTrackingIndex'])->name('sample-tracking.index');
+        Route::patch('/sample-tracking/{id}/start-processing',  [LaboratoryController::class, 'startProcessing'])->name('sample-tracking.start-processing');
 
-        // Result Entry & Validation
-        Route::get('/result-validation',        [LaboratoryController::class, 'resultValidationIndex'])->name('result-validation.index');
-        Route::get('/result-validation/create', [LaboratoryController::class, 'resultValidationCreate'])->name('result-validation.create');
-        Route::post('/result-validation',       [LaboratoryController::class, 'resultValidationStore'])->name('result-validation.store');
+        // Result Entry & Validation (Processing + ResultReady + Validated + Sent)
+        Route::get('/result-validation',                     [LaboratoryController::class, 'resultValidationIndex'])->name('result-validation.index');
+        Route::post('/result-validation/{id}/result',        [LaboratoryController::class, 'enterResult'])->name('result-validation.enter-result');
+        Route::post('/result-validation/{id}/validate-send', [LaboratoryController::class, 'validateAndSend'])->name('result-validation.validate-send');
     });
 
     // ── SURGERY & DIET ────────────────────────────────────────────────────────────

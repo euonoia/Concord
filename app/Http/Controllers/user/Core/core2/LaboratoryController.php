@@ -4,8 +4,6 @@ namespace App\Http\Controllers\user\Core\core2;
 
 use App\Http\Controllers\Controller;
 use App\Models\core2\TestOrder;
-use App\Models\core2\SampleTracking;
-use App\Models\core2\ResultValidation;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -13,10 +11,14 @@ use Illuminate\Support\Facades\Log;
 class LaboratoryController extends Controller
 {
     // ── Test Ordering & Registration ────────────────────────────────────────────
+    // Shows ONLY "Received" orders — the intake queue for incoming lab requests.
 
     public function testOrdersIndex(Request $request)
     {
-        $records = TestOrder::latest()->paginate(15);
+        $records = TestOrder::where('status', 'Received')
+            ->latest()
+            ->paginate(15);
+
         return view('core.core2.laboratory.test-orders.index', compact('records'));
     }
 
@@ -41,22 +43,74 @@ class LaboratoryController extends Controller
     }
 
     /**
-     * Update the status of a test order (lab workflow progression).
+     * Collect sample — transitions order from Received → SampleCollected.
+     * Generates a barcode and captures collection timestamp + technician name.
      */
-    public function updateOrderStatus(Request $request, int $id): RedirectResponse
+    public function collectSample(Request $request, int $id): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|in:Received,SampleCollected,Processing,ResultReady,Validated,Sent',
+        $order = TestOrder::findOrFail($id);
+
+        if ($order->status !== 'Received') {
+            return back()->with('error', 'Sample can only be collected from a Received order.');
+        }
+
+        $barcode = 'SMP-' . str_pad($order->id, 6, '0', STR_PAD_LEFT);
+
+        $order->update([
+            'status'              => 'SampleCollected',
+            'sample_barcode'      => $barcode,
+            'sample_collected_at' => now(),
+            'sample_collected_by' => auth()->user()->name ?? 'Lab Technician',
         ]);
 
-        $order = TestOrder::findOrFail($id);
-        $order->update(['status' => $validated['status']]);
+        return back()->with('success', "Sample collected. Barcode: {$barcode}");
+    }
 
-        return back()->with('success', "Order status updated to {$validated['status']}.");
+    // ── Sample Tracking & LIS Integration ──────────────────────────────────────
+    // Shows orders in SampleCollected or Processing status — the active bench queue.
+
+    public function sampleTrackingIndex(Request $request)
+    {
+        $records = TestOrder::whereIn('status', ['SampleCollected', 'Processing'])
+            ->latest()
+            ->paginate(15);
+
+        return view('core.core2.laboratory.sample-tracking.index', compact('records'));
     }
 
     /**
-     * Enter result data for a test order.
+     * Start processing — transitions order from SampleCollected → Processing.
+     */
+    public function startProcessing(Request $request, int $id): RedirectResponse
+    {
+        $order = TestOrder::findOrFail($id);
+
+        if ($order->status !== 'SampleCollected') {
+            return back()->with('error', 'Only collected samples can be set to Processing.');
+        }
+
+        $order->update([
+            'status'               => 'Processing',
+            'processing_started_at' => now(),
+        ]);
+
+        return back()->with('success', 'Sample is now being processed.');
+    }
+
+    // ── Result Entry & Validation ───────────────────────────────────────────────
+    // Shows orders in Processing, ResultReady, Validated, or Sent status.
+
+    public function resultValidationIndex(Request $request)
+    {
+        $records = TestOrder::whereIn('status', ['Processing', 'ResultReady', 'Validated', 'Sent'])
+            ->latest()
+            ->paginate(15);
+
+        return view('core.core2.laboratory.result-validation.index', compact('records'));
+    }
+
+    /**
+     * Enter result data for a test order (Processing → ResultReady).
      */
     public function enterResult(Request $request, int $id): RedirectResponse
     {
@@ -74,7 +128,7 @@ class LaboratoryController extends Controller
     }
 
     /**
-     * Validate result and send back to Core 1 via direct DB write.
+     * Validate result and send back to Core 1 Diagnostic Orders via direct DB write.
      */
     public function validateAndSend(int $id): RedirectResponse
     {
@@ -93,7 +147,7 @@ class LaboratoryController extends Controller
             'validated_by_name' => auth()->user()->name ?? 'Lab Technician',
         ]);
 
-        // Send result back to Core 1 via direct DB write
+        // Send result back to Core 1 Diagnostic Orders via direct DB write
         try {
             $labOrder = \App\Models\core1\LabOrder::findOrFail($order->core1_lab_order_id);
 
@@ -114,61 +168,5 @@ class LaboratoryController extends Controller
 
             return back()->with('error', 'Result validated but sync failed: ' . $e->getMessage());
         }
-    }
-
-    // ── Sample Tracking & LIS Integration ──────────────────────────────────────
-
-    public function sampleTrackingIndex(Request $request)
-    {
-        $records = SampleTracking::latest()->paginate(15);
-        return view('core.core2.laboratory.sample-tracking.index', compact('records'));
-    }
-
-    public function sampleTrackingCreate()
-    {
-        return view('core.core2.laboratory.sample-tracking.create');
-    }
-
-    public function sampleTrackingStore(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'sample_id'     => 'required|string|max:50',
-            'test_order_id' => 'nullable|string|max:50',
-            'status'        => 'nullable|string|max:50',
-            'lab_id'        => 'nullable|string|max:50',
-        ]);
-
-        SampleTracking::create($validated);
-
-        return redirect()->route('core2.laboratory.sample-tracking.index')
-            ->with('success', 'Sample tracking record added successfully.');
-    }
-
-    // ── Result Entry & Validation ───────────────────────────────────────────────
-
-    public function resultValidationIndex(Request $request)
-    {
-        $records = ResultValidation::latest()->paginate(15);
-        return view('core.core2.laboratory.result-validation.index', compact('records'));
-    }
-
-    public function resultValidationCreate()
-    {
-        return view('core.core2.laboratory.result-validation.create');
-    }
-
-    public function resultValidationStore(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'result_id'    => 'required|string|max:50',
-            'sample_id'    => 'nullable|string|max:50',
-            'test_result'  => 'nullable|string',
-            'validated_by' => 'nullable|string|max:100',
-        ]);
-
-        ResultValidation::create($validated);
-
-        return redirect()->route('core2.laboratory.result-validation.index')
-            ->with('success', 'Result validation record added successfully.');
     }
 }

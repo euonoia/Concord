@@ -25,10 +25,16 @@ class TestOrder extends Model
         'result_data',
         'validated_by_name',
         'result_sent_at',
+        'sample_barcode',
+        'sample_collected_at',
+        'sample_collected_by',
+        'processing_started_at',
     ];
 
     protected $casts = [
-        'date_ordered'   => 'date',
-        'result_sent_at' => 'datetime',
+        'date_ordered'         => 'date',
+        'result_sent_at'       => 'datetime',
+        'sample_collected_at'  => 'datetime',
+        'processing_started_at'=> 'datetime',
     ];
 }
