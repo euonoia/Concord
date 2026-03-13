@@ -164,9 +164,11 @@ class OutpatientController extends Controller
         $this->outpatientService->recordTriage($encounter, $request->all());
 
         if ($request->input('send_to_admission')) {
-            $encounter->update(['type' => 'IPD']);
+            // Do NOT change type to IPD here — the patient must remain visible
+            // in the OPD list until a bed is selected and admitted.
+            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
             return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', 'Triage recorded and admission recommended. Please complete the admission details.');
+                ->with('success', 'Triage recorded. Please select a bed to complete admission.');
         }
 
         return back()->with('success', 'Triage vitals recorded.');
@@ -204,9 +206,10 @@ class OutpatientController extends Controller
         $disposition = $request->input('disposition', 'discharge');
 
         if ($disposition === 'admit') {
-            $encounter->update(['type' => 'IPD']);
+            // Do NOT change type to IPD here — patient stays visible until bed is assigned.
+            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
             return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', 'Admission recommended. Please complete the admission details.');
+                ->with('success', 'Admission recommended. Please select a bed to complete admission.');
         }
 
         // Default: Discharge path - move to Pending Billing
@@ -261,8 +264,11 @@ class OutpatientController extends Controller
         $message = "Encounter dispositioned to " . $validated['type'] . ".";
 
         if ($validated['type'] === 'IPD') {
+            // Do NOT change type to IPD here — patient stays visible until bed is assigned.
+            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
+            $encounter->update(['type' => 'Pending']);
             return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', $message . ' Please complete the admission details.');
+                ->with('success', $message . ' Please select a bed to complete admission.');
         }
 
         return back()->with('success', $message);
