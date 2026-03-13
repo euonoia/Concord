@@ -23,12 +23,13 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminLeaveManagementController;
         
-        use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
+    use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
+    use App\Http\Controllers\admin\Hr\hr1\AdminDashboardController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
         // --- Modular Admin Dashboards ---
 
         // HR Modular
-        Route::get('/hr1/dashboard', function () { return view('admin.hr1.dashboard'); })->name('admin.hr1.dashboard');
+    Route::get('/hr1/dashboard', [AdminDashboardController::class, 'index'])->name('admin.hr1.dashboard');
         Route::get('/hr2/dashboard', function () { return view('admin.hr2.dashboard'); })->name('admin.hr2.dashboard');
         Route::get('/hr3/dashboard', function () { return view('admin.hr3.dashboard'); })->name('admin.hr3.dashboard');
         Route::get('/hr4/dashboard', function () { return view('admin.hr4.dashboard'); })->name('admin.hr4.dashboard');

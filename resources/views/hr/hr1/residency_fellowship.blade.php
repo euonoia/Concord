@@ -40,31 +40,27 @@
 
         <h4 class="mb-4 border-bottom pb-2 text-primary-base">Medical Residency & General Practice</h4>
         <div class="row g-4 mb-5">
-         @php
-        $tracks = [
-        ['title'=>'General Physician','dept'=>'MED-GEN','vacancies'=>'15 Vacancies','desc'=>'Comprehensive primary care training focusing on diagnostics and preventive medicine.'],
-        ['title'=>'Pediatrics','dept'=>'PED-01','vacancies'=>'8 Vacancies','desc'=>'Specialized training in neonatal care and adolescent medicine.'],
-        ['title'=>'Psychology','dept'=>'PSY-01','vacancies'=>'5 Vacancies','desc'=>'Advanced clinical psychology tracks with focus on behavioral health and therapy.'],
-        ['title'=>'Neurology','dept'=>'NEURO-01','vacancies'=>'3 Vacancies','desc'=>'Deep dive into neuro-diagnostics and complex brain disorder management.'],
-        ['title'=>'Pathology','dept'=>'PATH-01','vacancies'=>'4 Vacancies','desc'=>'Laboratory-based residency focusing on cellular analysis and forensic pathology.'],
-        ['title'=>'Radiology','dept'=>'RAD-01','vacancies'=>'6 Vacancies','desc'=>'Training in MRI, CT imaging, and interventional radiology techniques.'],
-        ];
-        @endphp
-            @foreach($tracks as $track)
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
-                    <div class="d-flex justify-content-between mb-3">
-                        <h5 class="fw-bold mb-0 text-dark">{{ $track['title'] }}</h5>
-                        <span class="badge bg-light text-primary border">{{ $track['vacancies'] }}</span>
+            @if(isset($vacantPositions) && $vacantPositions->count() > 0)
+                @foreach($vacantPositions->take(9) as $p)
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">{{ $p->position_title }}</h5>
+                            <span class="badge bg-light text-primary border">{{ $p->available_slots }} Vacancies</span>
+                        </div>
+                        <p class="text-muted small mb-4">{{ $p->department->name ?? 'General' }}</p>
+                        <a href="{{ route('careers.apply', ['dept' => $p->department->department_id ?? '']) }}"
+                        class="mt-auto text-decoration-none fw-bold small">
+                        Apply for Track <i class="bi bi-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="text-muted small mb-4">{{ $track['desc'] }}</p>
-                    <a href="{{ route('careers.apply',['dept'=>$track['dept']]) }}"
-                    class="mt-auto text-decoration-none fw-bold small">
-                    Apply for Track <i class="bi bi-arrow-right"></i>
-                    </a>
                 </div>
-            </div>
-            @endforeach
+                @endforeach
+            @else
+                <div class="col-12">
+                    <div class="alert alert-info">No open residency tracks at the moment. Please check back later or contact HR for inquiries.</div>
+                </div>
+            @endif
         </div>
 
         <h4 class="mb-4 border-bottom pb-2 text-primary-base">Specialized Surgery & Fellowships</h4>

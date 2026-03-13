@@ -14,6 +14,7 @@ class DepartmentPositionTitle extends Model
         'rank_level',
         'employee_type',
         'base_salary',
+        'max_slots',
         'is_active'
     ];
 

@@ -662,6 +662,8 @@
             </div>
         </div>
 
+        {{-- Vacancy summaries moved to Careers page (/careers/residency-fellowship) to keep landing page clean --}}
+
 
 </section>
 

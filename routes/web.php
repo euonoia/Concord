@@ -13,9 +13,9 @@ require base_path('routes/landing/landing.php');
 // Route::get('/', function () { return view('onboarding'); });
 
 // Residency & Fellowship page
-Route::get('/careers/residency-fellowship', function () {
-    return view('hr.hr1.residency_fellowship');
-})->name('careers.residency');
+use App\Http\Controllers\CareersController;
+Route::get('/careers/residency-fellowship', [CareersController::class, 'residency'])
+    ->name('careers.residency');
 
 // --- Applicant Routes ---
 Route::prefix('careers')->group(function () {
