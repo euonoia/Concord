@@ -64,14 +64,14 @@
         </div>
     </div>
 
-    <div class="d-flex justify-end mt-15">
+    <!--<div class="d-flex justify-end mt-15">
         @if(auth()->user()->role !== 'doctor')
             <a href="{{ route('core1.patients.create') }}" class="core1-btn core1-btn-primary">
                 <i class="bi bi-plus"></i>
                 <span class="ml-10">Admit Patient</span>
             </a>
         @endif
-    </div>
+    </div>-->
 
     {{-- Tabs --}}
     <div class="core1-card no-hover p-0 overflow-hidden mt-30">
