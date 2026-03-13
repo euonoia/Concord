@@ -13,5 +13,14 @@ class RoomAssignment extends Model
         'patient_id',
         'room',
         'date_assigned',
+        'encounter_id',
+        'bed_id_core1',
+        'ward_name',
+        'bed_number',
+        'mrn',
+        'status',
+        'patient_name',
+        'triage_summary',
+        'triage_level',
     ];
 }

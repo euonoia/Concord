@@ -87,6 +87,11 @@ Route::prefix('core2')->name('core2.')->group(function () {
     // ── BED & LINEN ───────────────────────────────────────────────────────────────
     Route::prefix('bed-linen')->name('bed-linen.')->group(function () {
 
+        // Pending Admissions Queue (Core 1 → Core 2 sync)
+        Route::get('/pending-admissions', [BedLinenController::class, 'pendingAdmissionsIndex'])->name('pending-admissions.index');
+        Route::get('/floor-map-data', [BedLinenController::class, 'floorMapData'])->name('floor-map-data');
+        Route::post('/allocate-bed', [BedLinenController::class, 'allocateBed'])->name('allocate-bed');
+
         // Room Assignment
         Route::get('/room-assignment',        [BedLinenController::class, 'roomAssignmentIndex'])->name('room-assignment.index');
         Route::get('/room-assignment/create', [BedLinenController::class, 'roomAssignmentCreate'])->name('room-assignment.create');

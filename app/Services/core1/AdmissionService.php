@@ -7,16 +7,24 @@ use App\Models\core1\Encounter;
 use App\Models\core1\Bed;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\core1\AdmissionSyncService;
 
 class AdmissionService
 {
+    protected AdmissionSyncService $syncService;
+
+    public function __construct(AdmissionSyncService $syncService)
+    {
+        $this->syncService = $syncService;
+    }
+
     /**
      * Admit a patient to a bed.
      * follows Phase 3: Clinical Care (ADT) of HIS Architect Rules.
      */
     public function admit(Encounter $encounter, Bed $bed): Admission
     {
-        return DB::transaction(function () use ($encounter, $bed) {
+        $admission = DB::transaction(function () use ($encounter, $bed) {
             // 1. Lock bed for update to prevent double booking
             $bed = Bed::where('id', $bed->id)->lockForUpdate()->firstOrFail();
             
@@ -40,6 +48,11 @@ class AdmissionService
 
             return $admission;
         });
+
+        // 5. Sync admission to Core 2 Bed & Linen
+        $this->syncService->syncAdmissionToCore2($encounter, $bed, $admission);
+
+        return $admission;
     }
 
     /**
@@ -48,7 +61,7 @@ class AdmissionService
      */
     public function discharge(Admission $admission, array $data): bool
     {
-        return DB::transaction(function () use ($admission, $data) {
+        $result = DB::transaction(function () use ($admission, $data) {
             // 1. Validate discharge summary and diagnosis are provided (as per rule)
             if (empty($data['discharge_summary']) || empty($data['final_diagnosis'])) {
                 throw new \Exception('Discharge summary and final diagnosis are required.');
@@ -64,13 +77,9 @@ class AdmissionService
             $admission->bed->update(['status' => 'Available']);
 
             // 4. Close the Encounter (Phase 4: Encounter Closure)
-            // Note: In a full HIS this would wait for billing sync, 
-            // but here we mark it closed to complete the clinical cycle.
             $admission->encounter->update(['status' => 'Closed']);
 
-            // 5. Create Discharge Record (if a separate table for summaries exists)
-            // For now, we assume Admission or a dedicated Discharges table stores this.
-            // Based on rules, discharges_core1 is mentioned.
+            // 5. Create Discharge Record
             DB::table('discharges_core1')->insert([
                 'encounter_id' => $admission->encounter_id,
                 'discharge_summary' => $data['discharge_summary'],
@@ -81,5 +90,10 @@ class AdmissionService
 
             return true;
         });
+
+        // 6. Sync discharge to Core 2 Bed & Linen (release bed)
+        $this->syncService->syncDischargeToCore2($admission);
+
+        return $result;
     }
 }

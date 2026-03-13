@@ -12,15 +12,18 @@ use App\Models\core1\Prescription;
 use App\Models\core1\Ward;
 use App\Models\user\Core\core1\Patient;
 use App\Services\core1\OutpatientService;
+use App\Services\core1\AdmissionSyncService;
 use Carbon\Carbon;
 
 class OutpatientController extends Controller
 {
     protected $outpatientService;
+    protected $admissionSyncService;
 
-    public function __construct(OutpatientService $outpatientService)
+    public function __construct(OutpatientService $outpatientService, AdmissionSyncService $admissionSyncService)
     {
         $this->outpatientService = $outpatientService;
+        $this->admissionSyncService = $admissionSyncService;
     }
 
     public function index()
@@ -167,11 +170,11 @@ class OutpatientController extends Controller
         $this->outpatientService->recordTriage($encounter, $request->all());
 
         if ($request->input('send_to_admission')) {
-            // Do NOT change type to IPD here — the patient must remain visible
-            // in the OPD list until a bed is selected and admitted.
-            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
-            return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', 'Triage recorded. Please select a bed to complete admission.');
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', 'Patient has been recommended for Admission. Queued for Room Assignment.');
         }
 
         return back()->with('success', 'Triage vitals recorded.');
@@ -209,10 +212,11 @@ class OutpatientController extends Controller
         $disposition = $request->input('disposition', 'discharge');
 
         if ($disposition === 'admit') {
-            // Do NOT change type to IPD here — patient stays visible until bed is assigned.
-            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
-            return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', 'Admission recommended. Please select a bed to complete admission.');
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', 'Admission recommended. Patient queued for Room Assignment.');
         }
 
         // Default: Discharge path - move to Pending Billing
@@ -320,11 +324,11 @@ class OutpatientController extends Controller
         $message = "Encounter dispositioned to " . $validated['type'] . ".";
 
         if ($validated['type'] === 'IPD') {
-            // Do NOT change type to IPD here — patient stays visible until bed is assigned.
-            // AdmissionService::admit() sets type = 'IPD' inside its transaction.
-            $encounter->update(['type' => 'Pending']);
-            return back()->with('open_admission_modal', $encounter->id)
-                ->with('success', $message . ' Please select a bed to complete admission.');
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', $message . ' Patient queued for Room Assignment.');
         }
 
         return back()->with('success', $message);

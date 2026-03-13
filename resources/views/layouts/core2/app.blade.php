@@ -235,6 +235,7 @@
                     <svg class="w-3 h-3 opacity-40 core2-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div id="menu-bed" class="core2-submenu ml-6 border-l border-slate-100 {{ $bedActive ? 'show' : '' }}">
+                    <a href="{{ route('core2.bed-linen.pending-admissions.index') }}" class="core2-sub-node {{ request()->routeIs('core2.bed-linen.pending-admissions.*') ? 'active' : '' }}">Pending Admissions</a>
                     <a href="{{ route('core2.bed-linen.room-assignment.index') }}" class="core2-sub-node {{ request()->routeIs('core2.bed-linen.room-assignment.*') ? 'active' : '' }}">Room Assignment</a>
                     <a href="{{ route('core2.bed-linen.bed-status.index') }}" class="core2-sub-node {{ request()->routeIs('core2.bed-linen.bed-status.*') ? 'active' : '' }}">Bed Status &amp; Allocation</a>
                     <a href="{{ route('core2.bed-linen.patient-transfer.index') }}" class="core2-sub-node {{ request()->routeIs('core2.bed-linen.patient-transfer.*') ? 'active' : '' }}">Patient Transfer</a>

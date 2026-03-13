@@ -13,5 +13,7 @@ class BedStatusAllocation extends Model
         'room_id',
         'status',
         'patient_id',
+        'encounter_id',
+        'bed_id_core1',
     ];
 }

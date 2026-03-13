@@ -7,11 +7,131 @@ use App\Models\core2\RoomAssignment;
 use App\Models\core2\BedStatusAllocation;
 use App\Models\core2\PatientTransferManagement;
 use App\Models\core2\HouseKeepingStatus;
+use App\Models\core1\Bed;
+use App\Models\core1\Ward;
+use App\Models\core1\Encounter;
+use App\Services\core1\AdmissionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class BedLinenController extends Controller
 {
+    // ── Pending Admissions Queue ─────────────────────────────────────────────
+
+    public function pendingAdmissionsIndex(Request $request)
+    {
+        $records = RoomAssignment::where('status', 'Pending')
+            ->latest()
+            ->paginate(15);
+
+        // Also show assigned (recent) for context
+        $assigned = RoomAssignment::where('status', 'Assigned')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('core.core2.bed-linen.pending-admissions.index', compact('records', 'assigned'));
+    }
+
+    /**
+     * JSON endpoint returning all beds with current status for the 2D floor map.
+     */
+    public function floorMapData(Request $request)
+    {
+        $wards = Ward::with(['rooms.beds.admissions' => function($query) {
+            $query->where('status', 'Admitted')->with('encounter.patient');
+        }])->get();
+
+        $floors = [];
+
+        foreach ($wards as $ward) {
+            $wardData = [
+                'id'    => $ward->id,
+                'name'  => $ward->name,
+                'type'  => $ward->ward_type ?? 'WARD',
+                'rooms' => [],
+            ];
+
+            foreach ($ward->rooms as $room) {
+                $roomData = [
+                    'id'          => $room->id,
+                    'room_number' => $room->room_number,
+                    'room_type'   => $room->room_type,
+                    'beds'        => [],
+                ];
+
+                foreach ($room->beds as $bed) {
+                    $activeAdmission = $bed->admissions->first();
+                    $patientName = null;
+                    $mrn = null;
+                    
+                    if ($activeAdmission && $activeAdmission->encounter && $activeAdmission->encounter->patient) {
+                        $patientName = $activeAdmission->encounter->patient->name ?? null;
+                        if (!$patientName && isset($activeAdmission->encounter->patient->first_name)) {
+                             $patientName = $activeAdmission->encounter->patient->first_name . ' ' . $activeAdmission->encounter->patient->last_name;
+                        }
+                        $mrn = $activeAdmission->encounter->patient->mrn ?? null;
+                    }
+
+                    $roomData['beds'][] = [
+                        'id'           => $bed->id,
+                        'bed_number'   => $bed->bed_number,
+                        'status'       => $bed->status,
+                        'patient_name' => $patientName,
+                        'mrn'          => $mrn,
+                    ];
+                }
+
+                $wardData['rooms'][] = $roomData;
+            }
+
+            $floors[] = $wardData;
+        }
+
+        return response()->json($floors);
+    }
+
+    /**
+     * Allocate a bed from the 2D picker for a pending admission.
+     * Bridges Core 1 AdmissionService and Core 2 sync.
+     */
+    public function allocateBed(Request $request)
+    {
+        $validated = $request->validate([
+            'room_assignment_id' => 'required|exists:room_assignments_core2,id',
+            'bed_id'             => 'required|exists:beds_core1,id',
+        ]);
+
+        try {
+            $roomAssignment = RoomAssignment::findOrFail($validated['room_assignment_id']);
+
+            if ($roomAssignment->status !== 'Pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This admission request has already been processed.'
+                ], 400);
+            }
+
+            $encounter = Encounter::findOrFail($roomAssignment->encounter_id);
+            $bed = Bed::findOrFail($validated['bed_id']);
+
+            // Use AdmissionService to perform the admission (which also syncs to Core 2)
+            $admissionService = app(AdmissionService::class);
+            $admissionService->admit($encounter, $bed);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient successfully admitted and bed allocated.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bed allocation failed: ' . $e->getMessage()
+            ], 400);
+        }
+    }
+
     // ── Room Assignment ─────────────────────────────────────────────────────────
 
     public function roomAssignmentIndex(Request $request)
