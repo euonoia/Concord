@@ -145,6 +145,7 @@ class UserAttendanceController extends Controller
                     $scheduledEnd->addDay();
                 }
 
+                // Check if user is trying to clock out too early
                 if ($now->lt($scheduledEnd)) {
 
                     $remaining = $now->diffForHumans($scheduledEnd, true);
