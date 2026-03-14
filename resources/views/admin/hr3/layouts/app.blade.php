@@ -60,6 +60,10 @@
             <span>Timesheet</span>
         </a>
 
+        <a href="{{ route('admin.hr3.leave.index') }}" class="{{ request()->routeIs('admin.hr3.leave.*') ? 'active' : '' }}">
+            <i class="bi bi-calendar2-check"></i>
+            <span>Leave Management</span>
+        </a>
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>

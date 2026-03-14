@@ -46,33 +46,44 @@ class UserAttendanceController extends Controller
             ->latest('clock_in')
             ->first();
 
+        // --- UPDATED TOKEN LOGIC ---
+        $tokenValue = null;
         if (!$existingLog) {
             $rawToken = $request->input('token');
-            $tokenValue = str_contains($rawToken ?? '', '/') ? collect(explode('/', $rawToken))->last() : $rawToken;
 
-            if (!$tokenValue) {
-                return $this->handleResponse($request, false, 'Invalid Request: QR Token required to Clock In.', 400);
-            }
+            // Allow bypass if clicking the button from the dashboard
+            if ($rawToken === 'DASHBOARD_BUTTON') {
+                $tokenValue = 'DIRECT_CLOCK_' . now()->timestamp;
+            } else {
+                $tokenValue = str_contains($rawToken ?? '', '/') ? collect(explode('/', $rawToken))->last() : $rawToken;
 
-            $validToken = Cache::pull("attendance_token_$tokenValue");
-            if (!$validToken) {
-                return $this->handleResponse($request, false, 'QR code has expired or is invalid.', 422);
+                if (!$tokenValue) {
+                    return $this->handleResponse($request, false, 'Invalid Request: QR Token or Action required.', 400);
+                }
+
+                $validToken = Cache::pull("attendance_token_$tokenValue");
+                if (!$validToken) {
+                    return $this->handleResponse($request, false, 'QR code has expired or is invalid.', 422);
+                }
             }
         } else {
             $tokenValue = $existingLog->qr_token; 
         }
 
         try {
-            if ($existingLog) {
-                $now = now();
-                
-                $scheduledEnd = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->end_time);
+            $now = now();
 
+            if ($existingLog) {
+                // --- CLOCK OUT LOGIC ---
+                $scheduledEnd = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->end_time);
                 $scheduledStart = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->start_time);
+
+                // Handle overnight shifts
                 if ($scheduledEnd->lt($scheduledStart) && $now->gt($scheduledStart)) {
                     $scheduledEnd->addDay();
                 }
 
+                // Check if user is trying to clock out too early
                 if ($now->lt($scheduledEnd)) {
                     $remaining = $now->diffForHumans($scheduledEnd, true);
                     return $this->handleResponse($request, false, "Shift incomplete. Your scheduled shift ends at " . $scheduledEnd->format('H:i') . " (in $remaining).", 422);
@@ -82,23 +93,22 @@ class UserAttendanceController extends Controller
                 return $this->handleResponse($request, true, 'Clock-out recorded successfully!');
             }
 
-            $now = now();
+            // --- CLOCK IN LOGIC ---
             $scheduledStart = Carbon::parse($now->format('Y-m-d') . ' ' . $assignedShift->start_time);
-            
             $status = $now->gt($scheduledStart->addMinutes(15)) ? 'late' : 'on-time';
 
-           $employee->load('position'); 
+            $employee->load('position'); 
 
-                AttendanceLog::create([
-                    'employee_id'        => $employee->employee_id, 
-                    'department_id'      => $employee->department_id, 
-                    'specialization'     => $employee->position->specialization_name ?? $employee->specialization,
-                    'position_title'     => $employee->position->position_title ?? 'Unassigned', // <--- This pulls the actual name
-                    'qr_token'           => $tokenValue,
-                    'clock_in'           => $now, 
-                    'device_fingerprint' => md5($request->userAgent() ?? ''),
-                    'status'             => $status, 
-                ]);
+            AttendanceLog::create([
+                'employee_id'        => $employee->employee_id, 
+                'department_id'      => $employee->department_id, 
+                'specialization'     => $employee->position->specialization_name ?? $employee->specialization,
+                'position_title'     => $employee->position->position_title ?? 'Unassigned',
+                'qr_token'           => $tokenValue,
+                'clock_in'           => $now, 
+                'device_fingerprint' => md5($request->userAgent() ?? ''),
+                'status'             => $status, 
+            ]);
 
             return $this->handleResponse($request, true, "Clock-in successful! You are marked as $status.");
 
@@ -126,6 +136,6 @@ class UserAttendanceController extends Controller
 
     public function success()
     {
-    return redirect()->route('hr.dashboard')->with('success', 'Attendance logged successfully!');    
+        return redirect()->route('hr.dashboard')->with('success', 'Attendance logged successfully!');    
     }
 }

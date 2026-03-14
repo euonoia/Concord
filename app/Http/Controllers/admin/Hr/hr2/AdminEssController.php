@@ -37,8 +37,7 @@ class AdminEssController extends Controller
         $ess->update(['status' => $request->status]);
         Log::info("Step 1: Request #{$id} status set to {$request->status}");
 
-        // 2. Deactivate Shift (Using direct DB update to bypass all Model logic)
-        // We use trim() and strtolower() to prevent "ignore" bugs
+    
         if ($request->status === 'approved' && strtolower(trim($ess->type)) === 'leave') {
             
             $shiftId = (int)$ess->shift_id;
