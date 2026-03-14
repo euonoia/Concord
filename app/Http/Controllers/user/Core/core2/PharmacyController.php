@@ -30,6 +30,7 @@ class PharmacyController extends Controller
             'drug_num'    => 'required|string|max:50',
             'drug_name'   => 'required|string|max:100',
             'quantity'    => 'required|integer|min:0',
+            'statusS'     => 'required|string|in:Completed,Pending',
             'expiry_date' => 'nullable|date',
             'supplier'    => 'nullable|string|max:100',
         ]);

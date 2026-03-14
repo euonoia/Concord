@@ -22,7 +22,10 @@
                     <th class="px-8 py-6">Quantity</th>
                     <th class="px-8 py-6">Expiry Date</th>
                     <th class="px-8 py-6">Supplier</th>
+                    <th class="px-8 py-6">status</th>
                     <th class="px-8 py-6">Created</th>
+                    
+
                 </tr>
             </thead>
             <tbody>
@@ -33,8 +36,21 @@
                     <td class="px-8 py-5 text-xs font-semibold text-slate-700">{{ $r->quantity }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->expiry_date ?? '—' }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->supplier ?? '—' }}</td>
+                    <td class="px-8 py-5">
+    @if($r->quantity <= 10)
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">
+            Pending
+        </span>
+    @else
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+            Full Stock
+        </span>
+    @endif
+</td>
+                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->status }}</td>
                     <td class="px-8 py-5 text-xs text-slate-400">{{ $r->created_at->format('M d, Y') }}</td>
                 </tr>
+               
                 @empty
                 <tr><td colspan="6" class="py-20 text-center text-slate-300 font-bold italic">No drug inventory records found.</td></tr>
                 @endforelse

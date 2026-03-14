@@ -12,7 +12,9 @@ class DrugInventory extends Model
         'drug_num',
         'drug_name',
         'quantity',
+        'status',
         'expiry_date',
         'supplier',
+        
     ];
 }
