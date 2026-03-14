@@ -8,6 +8,8 @@ class DirectCompensation extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql'; // Connect to TiDB cloud
+
     protected $table = 'direct_compensations_hr4';
     protected $primaryKey = 'id';
 

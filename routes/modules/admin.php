@@ -116,4 +116,14 @@
             Route::post('/direct-compensation/generate', [AdminDirectCompensationController::class, 'generate'])
                 ->name('hr4.direct_compensation.generate');
 
+            // Job Postings
+            Route::get('/job-postings', [AdminDirectCompensationController::class, 'jobPostingsIndex'])
+                ->name('hr4.job_postings.index');
+
+            Route::get('/job-postings/create', [AdminDirectCompensationController::class, 'createJobPosting'])
+                ->name('hr4.job_postings.create');
+
+            Route::post('/job-postings', [AdminDirectCompensationController::class, 'storeJobPosting'])
+                ->name('hr4.job_postings.store');
+
         });

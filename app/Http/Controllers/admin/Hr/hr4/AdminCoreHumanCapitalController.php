@@ -5,7 +5,10 @@ namespace App\Http\Controllers\admin\Hr\hr4;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\admin\Hr\hr2\Department;
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminCoreHumanCapitalController extends Controller
 {
@@ -27,16 +30,20 @@ class AdminCoreHumanCapitalController extends Controller
         // Check role
         $this->authorizeHrAdmin();
 
-        // Load data
-        $employees = Employee::with(['position', 'position.department'])->get();
-        $departments = \App\Models\admin\Hr\hr2\Department::all();
-        $positions = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::with('department')->get();
+        // Fetch employees data from Core Human Capital
+        $employees = Employee::with('department', 'position')->get();
+        $departments = Department::all();
+        $positions = DepartmentPositionTitle::with('department')->get();
+
+        // Fetch HR1 employees dynamically
+        $hr1_employees = DB::table('new_hires_hr1')->select('id', 'first_name', 'last_name')->get();
 
         // Return view (compact fully closed)
         return view('admin.hr4.core_human_capital', compact(
             'employees',
             'departments',
-            'positions'
+            'positions',
+            'hr1_employees'
         ));
     }
 }

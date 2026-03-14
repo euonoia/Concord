@@ -4,12 +4,30 @@
 
 @section('content')
 
+<div class="flex gap-4">
+<div class="w-3/4">
+
 <h2>Core Human Capital</h2>
 
+<style>
+.tab-link {
+    padding: 8px 16px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+}
+.tab-link:hover {
+    background-color: #e5e7eb;
+}
+</style>
+
 <div style="margin-bottom:20px; display:flex; gap:10px;">
-    <button onclick="showTab('employees')">Employees</button>
-    <button onclick="showTab('departments')">Departments</button>
-    <button onclick="showTab('positions')">Positions</button>
+    <a href="#employees" onclick="showTab('employees'); return false;" class="tab-link">Employees</a>
+    <a href="#departments" onclick="showTab('departments'); return false;" class="tab-link">Departments</a>
+    <a href="#positions" onclick="showTab('positions'); return false;" class="tab-link">Positions</a>
 </div>
 
 {{-- EMPLOYEES --}}
@@ -51,18 +69,14 @@
 </thead>
 
 <tbody>
-@foreach($employees as $e)
-<tr
-    data-department="{{ $e->position->department->id ?? '' }}"
-    data-name="{{ strtolower($e->first_name.' '.$e->last_name) }}"
-    data-empid="{{ strtolower($e->employee_id) }}"
->
-<td>{{ $e->id }}</td>
-<td>{{ $e->first_name }} {{ $e->last_name }}</td>
-<td>{{ $e->employee_id }}</td>
-<td>{{ $e->position->department->name ?? 'N/A' }}</td>
-<td>{{ $e->position->position_title ?? 'N/A' }}</td>
-<td>{{ $e->is_on_duty ? 'On Duty' : 'Off Duty' }}</td>
+@foreach($employees as $emp)
+<tr data-name="{{ strtolower($emp->first_name . ' ' . $emp->last_name) }}" data-empid="{{ $emp->employee_id }}" data-department="{{ $emp->department_id }}">
+<td>{{ $emp->id }}</td>
+<td>{{ $emp->first_name }} {{ $emp->last_name }}</td>
+<td>{{ $emp->employee_id }}</td>
+<td>{{ $emp->department->name ?? 'N/A' }}</td>
+<td>{{ $emp->position->position_title ?? 'N/A' }}</td>
+<td>{{ $emp->is_on_duty ? 'On Duty' : 'Off Duty' }}</td>
 </tr>
 @endforeach
 </tbody>
@@ -129,6 +143,7 @@
 </div>
 
 
+
 <script>
 
 // --- Tab Switching ---
@@ -139,6 +154,16 @@ function showTab(tab)
     });
     document.getElementById(tab).style.display = 'block';
 }
+
+// Show tab based on URL hash on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash.substring(1); // Remove #
+    if (hash && ['employees', 'departments', 'positions'].includes(hash)) {
+        showTab(hash);
+    } else {
+        showTab('employees'); // Default to employees
+    }
+});
 
 // --- Employee Filtering ---
 const departmentFilter = document.getElementById('departmentFilter')
@@ -175,5 +200,8 @@ function filterEmployees()
 }
 
 </script>
+
+</div>
+</div>
 
 @endsection

@@ -5,10 +5,12 @@ namespace App\Http\Controllers\admin\Hr\hr4;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\admin\Hr\hr4\DirectCompensation;
+use App\Models\admin\Hr\hr4\AvailableJob;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\admin\Hr\hr3\Shift;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminDirectCompensationController extends Controller
 {
@@ -67,5 +69,62 @@ class AdminDirectCompensationController extends Controller
         }
 
         return redirect()->back()->with('success', "Monthly compensation generated for {$month}.");
+    }
+
+    /**
+     * Show job postings
+     */
+    public function jobPostingsIndex()
+    {
+        $this->authorizeHrAdmin();
+
+        $jobPostings = AvailableJob::with('poster')
+            ->leftJoin('departments_hr2', 'available_jobs_hr4.department', '=', 'departments_hr2.department_id')
+            ->select('available_jobs_hr4.*', 'departments_hr2.name as department_name')
+            ->orderBy('available_jobs_hr4.created_at', 'desc')
+            ->get();
+
+        return view('admin.hr4.job_postings', compact('jobPostings'));
+    }
+
+    /**
+     * Show create job posting form
+     */
+    public function createJobPosting()
+    {
+        $this->authorizeHrAdmin();
+
+        $departments = DB::table('departments_hr2')->where('is_active', 1)->orderBy('name')->get();
+        $positions = DB::table('department_position_titles_hr2')->where('is_active', 1)->orderBy('position_title')->get();
+
+        return view('admin.hr4.create_job_posting', compact('departments', 'positions'));
+    }
+
+    /**
+     * Store job posting
+     */
+    public function storeJobPosting(Request $request)
+    {
+        $this->authorizeHrAdmin();
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'description' => 'required|string',
+            'requirements' => 'required|string',
+            'salary_range' => 'nullable|string|max:255',
+        ]);
+
+        AvailableJob::create([
+            'title' => $request->title,
+            'department' => $request->department,
+            'description' => $request->description,
+            'requirements' => $request->requirements,
+            'salary_range' => $request->salary_range,
+            'posted_by' => Auth::id(),
+            'posted_at' => now(),
+        ]);
+
+        return redirect()->route('hr4.job_postings.index')->with('success', 'Available job added successfully.');
     }
 }
