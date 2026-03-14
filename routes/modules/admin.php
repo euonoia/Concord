@@ -8,6 +8,7 @@
         use App\Http\Controllers\admin\Hr\hr1\AdminTrainingPerformanceController;
         use App\Http\Controllers\admin\Hr\hr1\AdminRecruitmentController;
         use App\Http\Controllers\admin\Hr\hr1\AdminHr1DashboardController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminSocialRecognitionController;
 
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
         use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
@@ -76,6 +77,16 @@
             Route::get('/recruitment', [AdminRecruitmentController::class, 'index'])->name('hr1.recruitment.index');
             Route::get('/recruitment/{id}', [AdminRecruitmentController::class, 'show'])->name('hr1.recruitment.show');
             Route::post('/recruitment/{id}/toggle', [AdminRecruitmentController::class, 'toggle'])->name('hr1.recruitment.toggle');
+
+            // Social Recognition (CRUD)
+            Route::resource('recognition', AdminSocialRecognitionController::class)->names([
+                'index' => 'admin.hr1.recognition.index',
+                'create' => 'admin.hr1.recognition.create',
+                'store' => 'admin.hr1.recognition.store',
+                'edit' => 'admin.hr1.recognition.edit',
+                'update' => 'admin.hr1.recognition.update',
+                'destroy' => 'admin.hr1.recognition.destroy',
+            ]);
         });
 
         // --- HR2 Department ---

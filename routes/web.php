@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\authentication\AuthController;
 use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Controllers\user\Hr\hr1\ApplicantController;
+use App\Http\Controllers\hr\hr1\SocialRecognitionController;
 use App\Http\Middleware\RedirectIfGuest;
 
 // --- Public Routes ---
@@ -37,6 +38,10 @@ Route::prefix('careers')->group(function () {
     Route::get('/get-positions', [ApplicantController::class, 'getPositions'])
         ->name('careers.getPositions');
 });
+
+// Social Recognition Interactions
+Route::post('/recognition/{id}/like', [SocialRecognitionController::class, 'like'])->name('recognition.like');
+Route::post('/recognition/{id}/comment', [SocialRecognitionController::class, 'comment'])->name('recognition.comment');
 
 // --- Attendance Station (Public QR display) ---
 Route::get('/attendance/station', [AdminAttendanceController::class, 'showStation'])

@@ -49,6 +49,10 @@
         <i class="bi bi-megaphone"></i>
         <span>Recruitment</span>
     </a>
+    <a href="{{ route('admin.hr1.recognition.index') }}" class="{{ request()->routeIs('admin.hr1.recognition.*') ? 'active' : '' }}">
+        <i class="bi bi-patch-check"></i>
+        <span>Social Recognition</span>
+    </a>
 
     <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
         @csrf
