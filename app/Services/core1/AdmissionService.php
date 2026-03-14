@@ -8,6 +8,7 @@ use App\Models\core1\Bed;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Services\core1\AdmissionSyncService;
+use App\Services\core1\BillingService;
 
 class AdmissionService
 {
@@ -73,13 +74,21 @@ class AdmissionService
                 'status' => 'Discharged'
             ]);
 
-            // 3. Release the Bed (Phase 4: Bed Release)
-            $admission->bed->update(['status' => 'Available']);
+            // 3. Release the Bed (Phase 4: Bed Release) - Safe update
+            if ($admission->bed) {
+                $admission->bed->update(['status' => 'Available']);
+            }
 
-            // 4. Close the Encounter (Phase 4: Encounter Closure)
-            $admission->encounter->update(['status' => 'Closed']);
+            // 4. Update encounter status for billing (Phase 4: Encounter Closure - Pending Billing)
+            if ($admission->encounter) {
+                $admission->encounter->update(['status' => 'Pending Billing']);
+                
+                // 5. Aggregate final IPD charges for the billing office
+                $billingService = app(BillingService::class);
+                $billingService->aggregateCharges($admission->encounter);
+            }
 
-            // 5. Create Discharge Record
+            // 6. Create Discharge Record
             DB::table('discharges_core1')->insert([
                 'encounter_id' => $admission->encounter_id,
                 'discharge_summary' => $data['discharge_summary'],

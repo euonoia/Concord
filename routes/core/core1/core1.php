@@ -63,6 +63,8 @@ Route::middleware([])->group(function () {
     Route::prefix('billing')->middleware('role:billing_officer')->group(function () {
         Route::get('/dashboard', [BillingDashboardController::class, 'index'])->name('core1.billing.dashboard');
         Route::get('/overview', [BillingDashboardController::class, 'overview'])->name('core1.billing.overview');
+        Route::get('/dashboard/updates', [BillingDashboardController::class, 'updates'])->name('core1.billing.dashboard.updates');
+        Route::post('/pay/{bill}', [BillingDashboardController::class, 'pay'])->name('core1.billing.dashboard.pay');
     });
     
     // Shared Feature Routes
