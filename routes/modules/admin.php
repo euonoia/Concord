@@ -126,4 +126,16 @@
             Route::post('/job-postings', [AdminDirectCompensationController::class, 'storeJobPosting'])
                 ->name('hr4.job_postings.store');
 
+            Route::get('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'showJobPosting'])
+                ->name('hr4.job_postings.show');
+
+            Route::get('/job-postings/{jobPosting}/edit', [AdminDirectCompensationController::class, 'editJobPosting'])
+                ->name('hr4.job_postings.edit');
+
+            Route::put('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'updateJobPosting'])
+                ->name('hr4.job_postings.update');
+
+            Route::delete('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'archiveJobPosting'])
+                ->name('hr4.job_postings.destroy');
+
         });

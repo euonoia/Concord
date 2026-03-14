@@ -46,9 +46,19 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $posting->poster->username ?? 'Unknown' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $posting->posted_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                    <a href="{{ route('hr4.job_postings.show', $posting) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                         <i class="bi bi-eye"></i> View
-                                    </button>
+                                    </a>
+                                    <a href="{{ route('hr4.job_postings.edit', $posting) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <form method="POST" action="{{ route('hr4.job_postings.destroy', $posting) }}" class="inline" onsubmit="return confirm('Are you sure you want to archive this job posting?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-orange-600 hover:text-orange-900">
+                                            <i class="bi bi-archive"></i> Archive
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach

@@ -127,4 +127,69 @@ class AdminDirectCompensationController extends Controller
 
         return redirect()->route('hr4.job_postings.index')->with('success', 'Available job added successfully.');
     }
+
+    /**
+     * Show job posting details
+     */
+    public function showJobPosting(AvailableJob $jobPosting)
+    {
+        $this->authorizeHrAdmin();
+
+        $jobPosting->load('poster');
+
+        return view('admin.hr4.show_job_posting', compact('jobPosting'));
+    }
+
+    /**
+     * Show edit job posting form
+     */
+    public function editJobPosting(AvailableJob $jobPosting)
+    {
+        $this->authorizeHrAdmin();
+
+        $departments = DB::table('departments_hr2')->where('is_active', 1)->orderBy('name')->get();
+        $positions = DB::table('department_position_titles_hr2')->where('is_active', 1)->orderBy('position_title')->get();
+
+        return view('admin.hr4.edit_job_posting', compact('jobPosting', 'departments', 'positions'));
+    }
+
+    /**
+     * Update job posting
+     */
+    public function updateJobPosting(Request $request, AvailableJob $jobPosting)
+    {
+        $this->authorizeHrAdmin();
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+            'description' => 'required|string',
+            'requirements' => 'required|string',
+            'salary_range' => 'nullable|string|max:255',
+            'status' => 'required|in:open,closed',
+        ]);
+
+        $jobPosting->update([
+            'title' => $request->title,
+            'department' => $request->department,
+            'description' => $request->description,
+            'requirements' => $request->requirements,
+            'salary_range' => $request->salary_range,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('hr4.job_postings.index')->with('success', 'Available job updated successfully.');
+    }
+
+    /**
+     * Archive job posting (soft delete by setting status to closed)
+     */
+    public function archiveJobPosting(AvailableJob $jobPosting)
+    {
+        $this->authorizeHrAdmin();
+
+        $jobPosting->update(['status' => 'closed']);
+
+        return redirect()->route('hr4.job_postings.index')->with('success', 'Available job archived successfully.');
+    }
 }

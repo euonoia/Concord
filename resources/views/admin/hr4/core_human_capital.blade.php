@@ -28,6 +28,7 @@
     <a href="#employees" onclick="showTab('employees'); return false;" class="tab-link">Employees</a>
     <a href="#departments" onclick="showTab('departments'); return false;" class="tab-link">Departments</a>
     <a href="#positions" onclick="showTab('positions'); return false;" class="tab-link">Positions</a>
+    <a href="#userlogs" onclick="showTab('userlogs'); return false;" class="tab-link">User Logs</a>
 </div>
 
 {{-- EMPLOYEES --}}
@@ -41,7 +42,7 @@
     <select id="departmentFilter">
         <option value="">All Departments</option>
         @foreach($departments as $d)
-            <option value="{{ $d->id }}">{{ $d->name }}</option>
+            <option value="{{ $d->department_id }}">{{ $d->name }}</option>
         @endforeach
     </select>
 
@@ -144,6 +145,37 @@
 
 
 
+{{-- USER LOGS --}}
+<div id="userlogs" class="tab-section" style="display:none">
+
+<h3>User Logs</h3>
+
+<table border="1" style="width:100%;border-collapse:collapse">
+<thead>
+<tr>
+<th>Username</th>
+<th>Email</th>
+<th>User Type</th>
+<th>Role Slug</th>
+</tr>
+</thead>
+
+<tbody>
+@foreach($users as $user)
+<tr>
+<td>{{ $user->username }}</td>
+<td>{{ $user->email }}</td>
+<td>{{ $user->user_type }}</td>
+<td>{{ $user->role_slug }}</td>
+</tr>
+@endforeach
+</tbody>
+</table>
+
+</div>
+
+
+
 <script>
 
 // --- Tab Switching ---
@@ -158,7 +190,7 @@ function showTab(tab)
 // Show tab based on URL hash on page load
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash.substring(1); // Remove #
-    if (hash && ['employees', 'departments', 'positions'].includes(hash)) {
+    if (hash && ['employees', 'departments', 'positions', 'userlogs'].includes(hash)) {
         showTab(hash);
     } else {
         showTab('employees'); // Default to employees

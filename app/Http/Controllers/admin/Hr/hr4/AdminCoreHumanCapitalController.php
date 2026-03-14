@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,7 @@ class AdminCoreHumanCapitalController extends Controller
         $employees = Employee::with('department', 'position')->get();
         $departments = Department::all();
         $positions = DepartmentPositionTitle::with('department')->get();
+        $users = User::all();
 
         // Fetch HR1 employees dynamically
         $hr1_employees = DB::table('new_hires_hr1')->select('id', 'first_name', 'last_name')->get();
@@ -43,7 +45,8 @@ class AdminCoreHumanCapitalController extends Controller
             'employees',
             'departments',
             'positions',
-            'hr1_employees'
+            'hr1_employees',
+            'users'
         ));
     }
 }
