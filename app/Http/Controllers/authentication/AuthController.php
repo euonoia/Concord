@@ -3,7 +3,8 @@ namespace App\Http\Controllers\Authentication;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Employee; 
+use App\Models\Employee;
+
 use App\Models\user\Core\core1\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,77 +14,74 @@ use Carbon\Carbon;
 
 class AuthController extends Controller
 {
-    public function store(Request $request)
-{
-    $validated = $request->validate([
-        'username'  => 'required|string|max:50|unique:users', 
-        'email'     => 'required|email|unique:users,email',
-        'password'  => 'required|min:8|confirmed',
-        // Updated to include your admin_hr, admin_logistics, and admin_core roles
-        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist',
-        'first_name' => 'required|string|max:255',
-        'last_name'  => 'required|string|max:255',
-    ]);
-
-    // Simplified logic: If it's not a patient, it's staff
-    $userType = str_contains($validated['role_slug'], 'patient') ? 'patient' : 'staff';
-
-    $user = DB::transaction(function () use ($validated, $userType, $request) {
-        
-        $user = User::create([
-            'username'  => $validated['username'],
-            'email'     => $validated['email'],
-            'password'  => Hash::make($validated['password']),
-            'user_type' => $userType,
-            'role_slug' => $validated['role_slug'],
-            'is_active' => 1,
-            // UUID is usually handled by a boot method in the Model, 
-            // but you can also use: 'uuid' => (string) \Illuminate\Support\Str::uuid(),
+    public function store(Request $request)    {
+        $validated = $request->validate([
+            'username' => 'required|string|max:50|unique:users',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+            // Updated to include your admin_hr, admin_logistics, and admin_core roles
+            'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist, admin_financials, patient',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
         ]);
 
-        if ($userType === 'staff') {
-            Employee::create([
-                'user_id'     => $user->id,         
-                'employee_id' => $user->username,   
-                'first_name'  => $request->first_name,
-                'last_name'   => $request->last_name,
-                'hire_date'   => now(),
-                'is_on_duty'  => true,
+        // Simplified logic: If it's not a patient, it's staff
+        $userType = str_contains($validated['role_slug'], 'patient') ? 'patient' : 'staff';
+
+        $user = DB::transaction(function () use ($validated, $userType, $request) {
+
+            $user = User::create([
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'user_type' => $userType,
+                'role_slug' => $validated['role_slug'],
+                'is_active' => 1,
+                // UUID is usually handled by a boot method in the Model, 
+                // but you can also use: 'uuid' => (string) \Illuminate\Support\Str::uuid(),
             ]);
-        }
 
-        if ($userType === 'patient') {
-            Patient::create([
-                'patient_id' => $user->username,
-                'mrn' => Patient::generateMRN(),
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $user->email,
-                'registration_status' => 'PRE_REGISTERED',
-            ]);
-        }
+            if ($userType === 'staff') {
+                Employee::create([
+                    'user_id' => $user->id,
+                    'employee_id' => $user->username,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'hire_date' => now(),
+                    'is_on_duty' => true,
+                ]);
+            }
 
-        return $user;
-    });
+            if ($userType === 'patient') {
+                Patient::create([
+                    'patient_id' => $user->username,
+                    'mrn' => Patient::generateMRN(),
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $user->email,
+                    'registration_status' => 'PRE_REGISTERED',
+                ]);
+            }
 
-    Auth::login($user);
-    return $this->redirectByUserRole($user);
-}
+            return $user;
+        });
+
+        Auth::login($user);
+        return $this->redirectByUserRole($user);    }
 
     public function login(Request $request)
     {
         $request->validate([
-            'login'    => ['required', 'string'],
+            'login' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        // Support login via email or PAT-XXXX username
         $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         $credentials = [
-            $loginType   => $request->login,
-            'password'   => $request->password,
-            'is_active'  => 1,
+            $loginType => $request->login,
+            'password' => $request->password,
+            'is_active' => 1,
             'deleted_at' => null,
         ];
 
@@ -205,54 +203,52 @@ class AuthController extends Controller
         // Store
         \App\Models\OTP::create([
             'identifier' => $user->email,
-            'otp_code'   => $otpCode,
+            'otp_code' => $otpCode,
             'expires_at' => now()->addMinutes(5),
-            'attempts'   => 0,
-            'is_used'    => false,
+            'attempts' => 0,
+            'is_used' => false,
         ]);
 
         // Send Email
         \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\OTPMail($otpCode));
     }
 
-    protected function redirectByUserRole($user)
-{
-    $role = $user->role_slug;
+    protected function redirectByUserRole($user)    {
+        $role = $user->role_slug;
 
-    return match (true) {
-        // --- HR MODULAR DASHBOARDS ---
-        $role === 'admin_hr1' => redirect()->route('admin.hr1.dashboard'),
-        $role === 'admin_hr2' => redirect()->route('admin.hr2.dashboard'),
-        $role === 'admin_hr3' => redirect()->route('admin.hr3.dashboard'),
-        $role === 'admin_hr4' => redirect()->route('admin.hr4.dashboard'),
+        return match (true) {
+                // --- HR MODULAR DASHBOARDS ---
+                $role === 'admin_hr1' => redirect()->route('admin.hr1.dashboard'),
+                $role === 'admin_hr2' => redirect()->route('admin.hr2.dashboard'),
+                $role === 'admin_hr3' => redirect()->route('admin.hr3.dashboard'),
+                $role === 'admin_hr4' => redirect()->route('admin.hr4.dashboard'),
 
-        // --- LOGISTICS MODULAR DASHBOARDS ---
-        $role === 'admin_logistics1' => redirect()->route('admin.logistics1.dashboard'),
-        $role === 'admin_logistics2' => redirect()->route('admin.logistics2.dashboard'),
+                // --- LOGISTICS MODULAR DASHBOARDS ---
+                $role === 'admin_logistics1' => redirect()->route('admin.logistics1.dashboard'),
+                $role === 'admin_logistics2' => redirect()->route('admin.logistics2.dashboard'),
 
-        // --- CORE MODULAR DASHBOARDS ---
-        $role === 'admin_core1' => redirect()->route('core1.admin.dashboard'),
-        $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
-        // Core2 admin 
-        $role === 'core_admin'  => redirect()->route('core2.dashboard'),
+                // --- CORE MODULAR DASHBOARDS ---
+                $role === 'admin_core1' => redirect()->route('core1.admin.dashboard'),
+                $role === 'admin_core2' => redirect()->route('admin.core2.dashboard'),
+                // Core2 admin 
+                $role === 'core_admin' => redirect()->route('core2.dashboard'),
 
-        // --- FINANCIALS ---
-        $role === 'finance' => redirect()->route('admin.financials.dashboard'),
+                // --- FINANCIALS ---
+                $role === 'admin_financials' => redirect()->route('admin.financials.dashboard'),
 
-        // --- FALLBACKS FOR GENERAL STAFF ---
-        $role === 'doctor'       => redirect()->route('core1.doctor.dashboard'),
-        $role === 'nurse'        => redirect()->route('core1.nurse.dashboard'),
-        $role === 'head_nurse'        => redirect()->route('core1.nurse.dashboard'),
-        $role === 'receptionist' => redirect()->route('core1.receptionist.dashboard'),
-        $role === 'billing_officer'        => redirect()->route('core1.billing.dashboard'),
-        $role === 'employee'     => redirect()->route('hr.dashboard'), 
-        
-        // --- PATIENTS ---
-       $role === 'patient' => redirect()->route('core1.patient.dashboard'),
+                // --- FALLBACKS FOR GENERAL STAFF ---
+                $role === 'doctor' => redirect()->route('core1.doctor.dashboard'),
+                $role === 'nurse' => redirect()->route('core1.nurse.dashboard'),
+                $role === 'head_nurse' => redirect()->route('core1.nurse.dashboard'),
+                $role === 'receptionist' => redirect()->route('core1.receptionist.dashboard'),
+                $role === 'billing_officer' => redirect()->route('core1.billing.dashboard'),
+                $role === 'employee' => redirect()->route('hr.dashboard'),
 
-        default => redirect('/'),
-    };
-}
+                // --- PATIENTS ---
+                $role === 'patient' => redirect()->route('core1.patient.dashboard'),
+
+                default => redirect('/'),
+            };    }
     public function destroy(Request $request)
     {
         Auth::logout();
