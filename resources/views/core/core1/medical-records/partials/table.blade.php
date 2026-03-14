@@ -28,11 +28,38 @@
                         </div>
                     </td>
                     <td style="padding: 16px 24px;">
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dark);">
-                            <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: var(--danger-light); color: var(--danger);">
-                                <i class="bi bi-droplet-fill" style="font-size: 11px;"></i>
-                            </span>
-                            {{ $patient->blood_type ?? 'Unknown' }}
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            {{-- Blood Type --}}
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dark);">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: var(--danger-light); color: var(--danger);">
+                                    <i class="bi bi-droplet-fill" style="font-size: 11px;"></i>
+                                </span>
+                                <span style="font-weight: 600;">{{ $patient->blood_type ?? 'Unknown' }}</span>
+                            </div>
+
+                            {{-- Allergies --}}
+                            @if($patient->allergies && !in_array(strtolower(trim($patient->allergies)), ['none', 'n/a', 'no', 'unknown']))
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #b91c1c; background: #fee2e2; padding: 4px 10px; border-radius: 6px; border: 1px solid #fecaca; width: fit-content;">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <span style="font-weight: 700; text-transform: uppercase; font-size: 10px;">Allergies:</span>
+                                    <span style="font-weight: 500;">{{ $patient->allergies }}</span>
+                                </div>
+                            @else
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-gray); padding-left: 4px;">
+                                    <i class="bi bi-check-circle" style="color: var(--success);"></i>
+                                    <span>No known allergies</span>
+                                </div>
+                            @endif
+
+                            {{-- Medical History Summary --}}
+                            @if($patient->medical_history && !in_array(strtolower(trim($patient->medical_history)), ['none', 'n/a', 'no', 'unknown']))
+                                <div style="display: flex; align-items: flex-start; gap: 6px; font-size: 11px; color: var(--text-gray); padding-left: 4px; max-width: 200px;">
+                                    <i class="bi bi-info-circle-fill" style="color: var(--info); font-size: 10px; margin-top: 2px;"></i>
+                                    <span style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2;">
+                                        {{ $patient->medical_history }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     </td>
                     <td style="padding: 16px 24px;">

@@ -52,6 +52,24 @@ class BillingService
                 $subtotal += 300;
             }
 
+            // 4. Room & Bed Charges (IPD)
+            $admission = $encounter->admission;
+            if ($admission) {
+                $start = $admission->admission_date;
+                $end = $admission->discharge_date ?: now();
+                
+                $days = max(1, $start->diffInDays($end));
+                $bedRate = 2000; // Standard Clinical Rate
+                $bedTotal = $days * $bedRate;
+                
+                $items[] = [
+                    'desc' => 'Room & Bed Charges (' . $days . ' day' . ($days > 1 ? 's' : '') . ')',
+                    'qty' => $days,
+                    'price' => $bedRate
+                ];
+                $subtotal += $bedTotal;
+            }
+
             $bill->items = $items;
             $bill->subtotal = $subtotal;
             $bill->tax = $subtotal * 0.12; // 12% VAT
