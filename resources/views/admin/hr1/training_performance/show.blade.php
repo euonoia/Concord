@@ -3,54 +3,42 @@
 @section('title','Employee Training Grade')
 
 @section('content')
-<div class="container-fluid py-4">
-    {{-- Header --}}
-    <div class="hr1-premium-header d-flex justify-content-between align-items-center flex-wrap" style="gap: 15px;">
-        <div>
-            <h3 class="text-white">Performance Validation</h3>
-            <p class="text-white">Reviewing scores for Employee <strong>#{{ $employee_id }}</strong></p>
-        </div>
-        <div>
-            <a href="{{ route('hr1.training.performance.index') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                <i class="bi bi-chevron-left me-1"></i> Back to List
-            </a>
-        </div>
-    </div>
+<div class="container p-5">
 
     {{-- Session Alerts --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show hr1-mb-5" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- Score Summary Card --}}
-    <div class="hr1-premium-table-card hr1-mb-5 border-start border-primary border-4">
-        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap" style="gap: 20px;">
+    <h2 class="mb-4">Training Performance Validation</h2>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body bg-light d-flex justify-content-between align-items-center">
             <div>
-                <div class="text-muted small fw-bold text-uppercase mb-1">Standard Weighted Average</div>
-                <h2 class="display-5 fw-bold mb-1">
+                <h5 class="text-muted mb-1">Standard Grade Calculation</h5>
+                <h2 class="display-5 fw-bold mb-0">
                     <span class="{{ $weightedAverage >= 75 ? 'text-success' : 'text-danger' }}">
                         {{ number_format($weightedAverage, 2) }}%
                     </span>
                 </h2>
-                <p class="text-muted small mb-0">
-                    Aggregation of {{ $scores->count() }} Competencies 
-                    | Final Status: <strong class="{{ $weightedAverage >= 75 ? 'text-success' : 'text-danger' }}">{{ $weightedAverage >= 75 ? 'PASSED' : 'FOR REVIEW' }}</strong>
+                <p class="text-muted mb-0">
+                    Average of {{ $scores->count() }} Competencies 
+                    | Status: <strong>{{ $weightedAverage >= 75 ? 'PASSED' : 'FOR REVIEW' }}</strong>
                 </p>
             </div>
-            <div class="d-flex align-items-center">
+            <div>
                 @if($isValidated)
-                    <div class="text-center px-5 border py-2 bg-light rounded-pill">
-                        <i class="bi bi-shield-check text-success fs-4 me-2"></i>
-                        <span class="fw-bold text-success">GRADES VALIDATED</span>
-                    </div>
+                    <button class="btn btn-secondary btn-lg px-5 shadow-sm" disabled>
+                        <i class="fas fa-check-double me-2"></i> Validated
+                    </button>
                 @else
                     <form id="validateForm" method="POST" action="{{ route('hr1.training.performance.validate', $employee_id) }}">
                         @csrf
-                        <button type="button" onclick="confirmValidation()" class="btn btn-success rounded-pill px-5 py-2 shadow-sm fw-bold">
-                            <i class="bi bi-clipboard-check me-2"></i> Validate & Store Grade
+                        <button type="button" onclick="confirmValidation()" class="btn btn-success btn-lg px-5 shadow-sm">
+                            <i class="fas fa-check-circle me-2"></i> Validate & Store Grade
                         </button>
                     </form>
                 @endif
@@ -58,59 +46,55 @@
         </div>
     </div>
 
-    {{-- Detailed Metrics Table --}}
-    <div class="hr1-premium-table-card">
-        <div class="hr1-table-header">
-            <h6>Competency Performance Breakdown</h6>
-        </div>
-        <div class="table-responsive">
-            <table class="table hr1-table align-middle mb-0">
-                <thead>
-                    <tr class="text-center">
-                        <th class="text-start">Competency</th>
-                        <th>Technical</th>
-                        <th>Knowledge</th>
-                        <th>Participation</th>
-                        <th>Attendance</th>
-                        <th class="bg-primary text-white">Final Score</th>
-                        <th>Evaluated By</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($scores as $score)
-                    @php
-                        $data = $score->decoded_scores ?? [];
-                        $ratings = $data['ratings'] ?? $data;
-                        $rowGrade = $score->total_score / 4;
-                    @endphp
-                    <tr class="text-center">
-                        <td class="text-start">
-                            <div class="fw-bold text-dark">{{ $score->competency_code }}</div>
-                            <div class="small text-muted">{{ $score->competency_name }}</div>
-                        </td>
-                        <td class="small">{{ $ratings['technical'] ?? '0' }}</td>
-                        <td class="small">{{ $ratings['knowledge'] ?? '0' }}</td>
-                        <td class="small">{{ $ratings['participation'] ?? '0' }}</td>
-                        <td class="small">{{ $ratings['attendance'] ?? '0' }}</td>
-                        <td class="fw-bold {{ $rowGrade >= 75 ? 'text-success' : 'text-danger' }}" style="font-size: 1rem;">
-                            {{ number_format($rowGrade, 2) }}%
-                        </td>
-                        <td>
-                            <div class="small fw-semibold">{{ $score->evaluator_first_name }} {{ $score->evaluator_last_name }}</div>
-                        </td>
-                        <td class="small text-muted">
-                            {{ $score->evaluated_at ? \Carbon\Carbon::parse($score->evaluated_at)->format('M d, Y') : '-' }}
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">No competency data available for this employee.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle table-bordered shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Competency</th>
+                    <th>Technical</th>
+                    <th>Knowledge</th>
+                    <th>Participation</th>
+                    <th>Attendance</th>
+                    <th class="bg-primary text-white">Grade (0-100)</th>
+                    <th>Evaluator</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($scores as $score)
+                @php
+                    $data = $score->decoded_scores ?? [];
+                    $ratings = $data['ratings'] ?? $data;
+                    $rowGrade = $score->total_score / 4;
+                @endphp
+                <tr class="text-center">
+                    <td class="text-start">
+                        <strong>{{ $score->competency_code }}</strong><br>
+                        <small class="text-muted">{{ $score->competency_name }}</small>
+                    </td>
+                    <td>{{ $ratings['technical'] ?? '0' }}</td>
+                    <td>{{ $ratings['knowledge'] ?? '0' }}</td>
+                    <td>{{ $ratings['participation'] ?? '0' }}</td>
+                    <td>{{ $ratings['attendance'] ?? '0' }}</td>
+                    <td class="fw-bold fs-5">
+                        {{ number_format($rowGrade, 2) }}%
+                    </td>
+                    <td>{{ $score->evaluator_first_name }} {{ $score->evaluator_last_name }}</td>
+                    <td>{{ $score->evaluated_at ? \Carbon\Carbon::parse($score->evaluated_at)->format('M d, Y') : '-' }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8" class="text-center p-5 text-muted">No records found.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ route('hr1.training.performance.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-chevron-left me-1"></i> Back to List
+        </a>
     </div>
 </div>
 
@@ -120,17 +104,13 @@
     function confirmValidation() {
         Swal.fire({
             title: 'Confirm Validation',
-            html: `You are about to finalize a grade of <strong>{{ number_format($weightedAverage, 2) }}%</strong>.<br><small class="text-muted">This action stores the record permanently.</small>`,
+            text: "Are you sure you want to store the grade of {{ number_format($weightedAverage, 2) }}% for this employee? This will finalize the HR1 training performance record.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#198754',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Validate it!',
-            cancelButtonText: 'Review Again',
-            customClass: {
-                confirmButton: 'rounded-pill px-4',
-                cancelButton: 'rounded-pill px-4'
-            }
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('validateForm').submit();
@@ -138,4 +118,10 @@
         })
     }
 </script>
+
+<style>
+    .table th { vertical-align: middle; }
+    .display-5 { letter-spacing: -1px; }
+    .alert { border-left: 5px solid #198754; }
+</style>
 @endsection
