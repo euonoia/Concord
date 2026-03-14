@@ -7,6 +7,16 @@
         <h2 class="text-4xl font-black text-slate-900 tracking-tight uppercase">Drug Inventory</h2>
         <p class="text-slate-500 font-bold text-sm mt-1">Manage pharmaceutical stock records</p>
     </div>
+    <div class="flex gap-3">
+        {{-- New Request Form Button --}}
+        {{-- Update the route name below to an existing route or remove the button if not needed --}}
+       <a href="{{ route('core2.pharmacy.drug-inventory.request') }}" class="bg-white text-slate-700 border border-slate-200 px-7 py-4 rounded-2xl font-black text-xs uppercase flex items-center gap-3 shadow-sm hover:bg-slate-50 transition">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    Request Form
+</a>
+
     <a href="{{ route('core2.pharmacy.drug-inventory.create') }}" class="bg-indigo-600 text-white px-7 py-4 rounded-2xl font-black text-xs uppercase flex items-center gap-3 shadow-lg hover:bg-indigo-700 transition">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         New Record
@@ -24,7 +34,7 @@
                     <th class="px-8 py-6">Supplier</th>
                     <th class="px-8 py-6">status</th>
                     <th class="px-8 py-6">Created</th>
-                    
+                     
 
                 </tr>
             </thead>

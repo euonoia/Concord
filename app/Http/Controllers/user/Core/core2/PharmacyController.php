@@ -40,6 +40,10 @@ class PharmacyController extends Controller
         return redirect()->route('core2.pharmacy.drug-inventory.index')
             ->with('success', 'Drug inventory record added successfully.');
     }
+    public function drugInventoryRequest()
+{
+    return view('core.core2.pharmacy.drug-inventory.requestform');
+}
 
     // ── Formula Management ─────────────────────────────────────────────────────
 

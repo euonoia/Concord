@@ -20,6 +20,7 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/drug-inventory',        [PharmacyController::class, 'drugInventoryIndex'])->name('drug-inventory.index');
         Route::get('/drug-inventory/create', [PharmacyController::class, 'drugInventoryCreate'])->name('drug-inventory.create');
         Route::post('/drug-inventory',       [PharmacyController::class, 'drugInventoryStore'])->name('drug-inventory.store');
+        Route::get('/drug-inventory/requestform', [PharmacyController::class, 'drugInventoryRequest'])->name('core2.pharmacy.drug-inventory.requestform');
 
         // Formula Management
         Route::get('/formula-management',        [PharmacyController::class, 'formulaManagementIndex'])->name('formula-management.index');
