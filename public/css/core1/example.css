@@ -2202,3 +2202,43 @@ tr:hover {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* --- 5. BILLING & INVOICE MODAL IMPROVEMENTS --- */
+.core1-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.core1-modal-content {
+    background-color: #fefefe;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.core1-tag-stable { background: var(--success-light); color: var(--success); }
+.core1-tag-recovering { background: var(--info-light); color: var(--info); }
+.core1-tag-critical { background: var(--danger-light); color: var(--danger); }
+.core1-tag-neutral { background: var(--bg); color: var(--text-gray); }
+
+.tag-pending { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.tag-red { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+@media print {
+    body * { visibility: hidden; }
+    #billModal, #billModal * { visibility: visible; }
+    #billModal { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: white !important; }
+    .core1-modal-footer, .core1-modal-header button { display: none !important; }
+}

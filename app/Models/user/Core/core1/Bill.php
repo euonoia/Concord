@@ -14,6 +14,7 @@ class Bill extends Model
     protected $fillable = [
         'bill_number',
         'patient_id',
+        'encounter_id',
         'bill_date',
         'due_date',
         'items',
@@ -40,5 +41,10 @@ class Bill extends Model
     public function patient()
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function encounter()
+    {
+        return $this->belongsTo(\App\Models\core1\Encounter::class);
     }
 }

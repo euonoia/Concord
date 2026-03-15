@@ -222,7 +222,7 @@ class OutpatientController extends Controller
         // Default: Discharge path - move to Pending Billing
         $encounter->update(['status' => 'Pending Billing']);
         
-        return redirect()->route('core1.billing.index')
+        return redirect()->route('core1.billing.overview')
             ->with('success', 'Consultation completed. Patient moved to billing for discharge settlement.');
     }
 

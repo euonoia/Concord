@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Bill Details')
 
@@ -12,7 +12,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">Bill Details</h1>
                 <p class="text-gray-600 mt-1">View billing information</p>
             </div>
-            <a href="{{ route('billing.index') }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <a href="{{ route('core1.billing.index') }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                 Back to List
             </a>
         </div>

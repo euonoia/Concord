@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\user\Core\core1\Bill;
 use App\Models\user\Core\core1\Patient;
+use App\Services\core1\BillingService;
 use Illuminate\Support\Facades\DB;
 
 class BillingDashboardController extends Controller
@@ -96,13 +97,38 @@ class BillingDashboardController extends Controller
             ->orderBy('due_date', 'asc')
             ->take(10)
             ->get();
-        
+
         $revenueByStatus = Bill::select('status', DB::raw('SUM(total) as total'))
             ->groupBy('status')
             ->get()
             ->pluck('total', 'status');
 
         return view('core.core1.billing.overview', compact('stats', 'recentBills', 'pendingBills', 'overdueBills', 'revenueByStatus'));
+    }
+
+    public function updates()
+    {
+        $hasNewBills = Bill::where('updated_at', '>=', now()->subMinute())->exists();
+        return response()->json(['requires_refresh' => $hasNewBills]);
+    }
+
+    public function pay(Request $request, Bill $bill)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'required|string',
+            'transaction_reference' => 'nullable|string'
+        ]);
+
+        $billingService = app(\App\Services\core1\BillingService::class);
+        $billingService->recordPayment(
+            $bill, 
+            $request->amount, 
+            $request->payment_method, 
+            $request->transaction_reference
+        );
+
+        return back()->with('success', 'Payment recorded successfully.');
     }
 }
 

@@ -13,6 +13,7 @@ class Patient extends Model
 
     protected $fillable = [
         'patient_id',
+        'mrn',
         'first_name',
         'middle_name',
         'last_name',
@@ -37,6 +38,14 @@ class Patient extends Model
         'reason',
         'last_visit',
     ];
+
+    /**
+     * Get the bills for the patient.
+     */
+    public function bills()
+    {
+        return $this->hasMany(\App\Models\user\Core\core1\Bill::class, 'patient_id');
+    }
 
     /**
      * Get the appointments for the patient.

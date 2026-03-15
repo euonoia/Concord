@@ -17,6 +17,15 @@ class BillingController extends Controller
     public function show(Bill $bill)
     {
         $bill->load('patient');
+        
+        if (request()->ajax()) {
+            return response()->json([
+                'bill' => $bill,
+                'patient' => $bill->patient,
+                'items' => $bill->items ?? []
+            ]);
+        }
+        
         return view('core.core1.billing.show', compact('bill'));
     }
 }

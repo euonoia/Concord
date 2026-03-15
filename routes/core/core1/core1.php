@@ -60,9 +60,11 @@ Route::middleware([])->group(function () {
         Route::get('/online-appointments/pending', [ReceptionistDashboardController::class, 'pendingBookingsJson'])->name('core1.receptionist.online-appointments.pending');
     });
     
-    Route::prefix('billing')->middleware('role:billing_officer')->group(function () {
+    Route::prefix('billing')->middleware('role:admin,admin_core1,billing_officer')->group(function () {
         Route::get('/dashboard', [BillingDashboardController::class, 'index'])->name('core1.billing.dashboard');
         Route::get('/overview', [BillingDashboardController::class, 'overview'])->name('core1.billing.overview');
+        Route::get('/dashboard/updates', [BillingDashboardController::class, 'updates'])->name('core1.billing.dashboard.updates');
+        Route::post('/pay/{bill}', [BillingDashboardController::class, 'pay'])->name('core1.billing.dashboard.pay');
     });
     
     // Shared Feature Routes
@@ -114,14 +116,13 @@ Route::middleware([])->group(function () {
     Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
+        Route::post('/discharge', [DischargeController::class, 'store'])->name('core1.discharge.store');
         
         // OPD Encounters
         Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');
     });
 
-    Route::post('/patients/{patient}/move', 
-        [\App\Http\Controllers\user\Core\core1\PatientManagementController::class, 'move']
-    )->name('core1.patients.move');
+    Route::post('/patients/{patient}/move', [PatientManagementController::class, 'move'])->name('core1.patients.move');
     Route::patch('/inpatient/{patient}/deactivate', [InpatientController::class, 'deactivate'])->name('core1.inpatients.deactivate');
     Route::patch('/patients/{patient}/status', 
         [PatientManagementController::class, 'updateStatus']

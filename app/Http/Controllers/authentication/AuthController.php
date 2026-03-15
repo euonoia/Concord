@@ -21,7 +21,7 @@ class AuthController extends Controller
         'email'     => 'required|email|unique:users,email',
         'password'  => 'required|min:8|confirmed',
         // Updated to include your admin_hr, admin_logistics, and admin_core roles
-        'role_slug' => 'required|string|in:admin_financials,admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,receptionist,billing_officer,head_nurse',
+        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist, admin_financials, patient',
         'first_name' => 'required|string|max:255',
         'last_name'  => 'required|string|max:255',
     ]);
