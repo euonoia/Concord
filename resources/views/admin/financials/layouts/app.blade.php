@@ -19,66 +19,67 @@
 </div>
 
 <!-- Sidebar -->
+<!-- SIDEBAR -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
     <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="HR Logo">
         <div class="logo-text">HRMS</div>
     </div>
 
- <nav>
-
-<a href="{{ route('admin.hr1.dashboard') }}"
-   class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-    <i class="bi bi-house-door"></i>
-    <span>Dashboard</span>
-</a>
-
-
-<nav>
-
-<a href="{{ route('admin.hr1.dashboard') }}"
-   class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-    <i class="bi bi-house-door"></i>
-    <span>Dashboard</span>
-</a>
-
-
-<!-- DISBURSEMENT DROPDOWN -->
-<div class="nav-dropdown">
-
-    <a href="#" onclick="toggleDropdown(event)">
-        <i class="bi bi-cash-stack"></i>
-        <span>Disbursement</span>
-        <i class="bi bi-chevron-down arrow-icon"></i>
-    </a>
-
-    <div class="dropdown-container">
-
-        <a href="{{ route('financials.reimbursement.index') }}" class="sub-link">
-            <i class="bi bi-receipt"></i>
-            <span>Reimbursements</span>
+    <nav>
+        <a href="{{ route('admin.hr1.dashboard') }}"
+           class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <i class="bi bi-house-door"></i>
+            <span>Dashboard</span>
         </a>
 
-        <a href="#" class="sub-link">
-            <i class="bi bi-journal-text"></i>
-            <span>Disbursement Ledger</span>
+        <!-- DISBURSEMENT DROPDOWN -->
+        <div class="nav-dropdown">
+            <a href="#" onclick="toggleDropdown(event)">
+                <i class="bi bi-cash-stack"></i>
+                <span>Disbursement</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </a>
+            <div class="dropdown-container">
+                <a href="{{ route('financials.reimbursement.index') }}" class="sub-link">
+                    <i class="bi bi-receipt"></i>
+                    <span>Reimbursements</span>
+                </a>
+                <a href="#" class="sub-link">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Disbursement Ledger</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- COLLECTIONS DROPDOWN -->
+        <div class="nav-dropdown">
+            <a href="#" onclick="toggleDropdown(event)">
+                <i class="bi bi-collection"></i>
+                <span>Collections</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </a>
+            <div class="dropdown-container">
+                <a href="{{ route('financials.bills.index') }}" class="sub-link">
+                    <i class="bi bi-receipt"></i>
+                    <span>Bills Collection</span>
+                </a>
+                <a href="#" class="sub-link">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Collection Ledger</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- LOGOUT -->
+        <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
+            @csrf
+        </form>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
         </a>
-
-    </div>
-
-</div>
-
-
-<form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
-    @csrf
-</form>
-
-<a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-    <i class="bi bi-box-arrow-right"></i>
-    <span>Logout</span>
-</a>
-
-</nav>
+    </nav>
 </div>
 
 <!-- Main Content -->
