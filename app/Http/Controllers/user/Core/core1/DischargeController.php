@@ -21,9 +21,9 @@ class DischargeController extends Controller
     {
         $user = Auth::user();
 
-        // Query active admissions (IPD)
+        // Query active admissions and those approved for discharge
         $query = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
-            ->where('status', 'Admitted');
+            ->whereIn('status', ['Admitted', 'Doctor Approved']);
 
         // Doctor sees only their admitted patients
         if ($user->role_slug === 'doctor') {
@@ -48,14 +48,34 @@ class DischargeController extends Controller
         try {
             $admission = Admission::findOrFail($request->admission_id);
             
-            $this->admissionService->discharge($admission, [
+            $this->admissionService->requestDischarge($admission, [
                 'discharge_summary' => $request->discharge_summary,
                 'final_diagnosis' => $request->final_diagnosis,
             ]);
 
-            return redirect()->back()->with('success', 'Patient discharged successfully. Billing has been notified.');
+            return redirect()->back()->with('success', 'Discharge approved by doctor. Waiting for financial clearance.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Discharge failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Discharge initiation failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Finalize the discharge after financial clearance.
+     */
+    public function finalize(Request $request)
+    {
+        $request->validate([
+            'admission_id' => 'required|exists:admissions_core1,id',
+        ]);
+
+        try {
+            $admission = Admission::findOrFail($request->admission_id);
+            
+            $this->admissionService->finalizeDischarge($admission);
+
+            return redirect()->back()->with('success', 'Patient finalized and bed released successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Finalization failed: ' . $e->getMessage());
         }
     }
 }

@@ -67,9 +67,9 @@ class AdmissionController extends Controller
     }
 
     /**
-     * Handle patient discharge.
+     * Handle patient clinical discharge request.
      */
-    public function discharge(Request $request, Admission $admission)
+    public function requestDischarge(Request $request, Admission $admission)
     {
         $validated = $request->validate([
             'discharge_summary' => 'required|string',
@@ -77,11 +77,25 @@ class AdmissionController extends Controller
         ]);
 
         try {
-            $this->admissionService->discharge($admission, $validated);
+            $this->admissionService->requestDischarge($admission, $validated);
 
-            return redirect()->route('core1.inpatient.index')->with('success', 'Patient successfully discharged and bed released.');
+            return redirect()->route('core1.inpatient.index')->with('success', 'Discharge approved by doctor. Waiting for financial clearance.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Discharge failed: ' . $e->getMessage());
+            return back()->with('error', 'Discharge initiation failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Handle patient final release.
+     */
+    public function finalizeDischarge(Request $request, Admission $admission)
+    {
+        try {
+            $this->admissionService->finalizeDischarge($admission);
+
+            return redirect()->route('core1.inpatient.index')->with('success', 'Patient successfully released and bed marked as available.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Final release failed: ' . $e->getMessage());
         }
     }
 
