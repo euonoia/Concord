@@ -116,6 +116,7 @@ Route::middleware([])->group(function () {
     Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
+        Route::post('/discharge', [DischargeController::class, 'store'])->name('core1.discharge.store');
         
         // OPD Encounters
         Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');
