@@ -22,6 +22,7 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminLeaveManagementController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminClaimsController;
         
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
@@ -163,6 +164,11 @@
                 Route::post('/{id}/update', [AdminLeaveManagementController::class, 'updateStatus'])
                     ->name('admin.hr3.leave.update');
             });
+           
+            // Claims & Reimbursement
+            Route::get('/claims', [AdminClaimsController::class, 'index'])->name('admin.hr3.claims.index');
+            Route::post('/claims/{claim_id}/approve', [AdminClaimsController::class, 'approve'])->name('admin.hr3.claims.approve');
+            Route::post('/claims/{claim_id}/reject', [AdminClaimsController::class, 'reject'])->name('admin.hr3.claims.reject');
         });
 
         // --- END OF HR3 Department ---
