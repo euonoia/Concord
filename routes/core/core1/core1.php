@@ -60,7 +60,7 @@ Route::middleware([])->group(function () {
         Route::get('/online-appointments/pending', [ReceptionistDashboardController::class, 'pendingBookingsJson'])->name('core1.receptionist.online-appointments.pending');
     });
     
-    Route::prefix('billing')->middleware('role:billing_officer')->group(function () {
+    Route::prefix('billing')->middleware('role:admin,admin_core1,billing_officer')->group(function () {
         Route::get('/dashboard', [BillingDashboardController::class, 'index'])->name('core1.billing.dashboard');
         Route::get('/overview', [BillingDashboardController::class, 'overview'])->name('core1.billing.overview');
         Route::get('/dashboard/updates', [BillingDashboardController::class, 'updates'])->name('core1.billing.dashboard.updates');

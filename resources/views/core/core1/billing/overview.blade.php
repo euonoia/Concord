@@ -226,6 +226,27 @@
                         </div>
                     </div>
 
+                    {{-- Itemized Breakdown --}}
+                    <div style="margin-bottom: 24px;">
+                        <span class="text-xxs text-gray uppercase tracking-wider font-bold mb-8 d-block">Bill Breakdown</span>
+                        <div id="paymentBreakdown" style="border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
+                            <div id="breakdownLoading" style="padding: 15px; text-align: center; color: var(--text-gray); font-size: 13px;">
+                                <i class="bi bi-arrow-repeat spin d-inline-block"></i> Loading itemized charges...
+                            </div>
+                            <table id="breakdownTable" style="width: 100%; font-size: 13px; display: none;">
+                                <thead style="background: var(--bg-light); border-bottom: 1px solid var(--border-color);">
+                                    <tr>
+                                        <th style="padding: 10px 14px; text-align: left; font-weight: 600;">Service/Item</th>
+                                        <th style="padding: 10px 14px; text-align: right; font-weight: 600;">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="breakdownItems">
+                                    {{-- Dynamic --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="mb-20">
                         <label class="core1-label" style="font-weight: 600; color: var(--text-dark); margin-bottom: 8px; display: block;">Amount to Pay</label>
                         <div style="position: relative;">
@@ -282,6 +303,46 @@
         
         document.getElementById('paymentAmountInput').value = total;
         document.getElementById('paymentForm').action = '/core/billing/pay/' + billId;
+        
+        // Breakdown fetching
+        const breakdownTable = document.getElementById('breakdownTable');
+        const breakdownLoading = document.getElementById('breakdownLoading');
+        const breakdownItems = document.getElementById('breakdownItems');
+        
+        breakdownTable.style.display = 'none';
+        breakdownLoading.style.display = 'block';
+        breakdownItems.innerHTML = '';
+
+        fetch(`/core/billing/${billId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const items = data.items || [];
+            if(items.length > 0) {
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid var(--border-color)';
+                    tr.innerHTML = `
+                        <td style="padding: 10px 14px; color: var(--text-dark);">${item.desc}</td>
+                        <td style="padding: 10px 14px; text-align: right; font-weight: 600;">₱${parseFloat(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    `;
+                    breakdownItems.appendChild(tr);
+                });
+                breakdownLoading.style.display = 'none';
+                breakdownTable.style.display = 'table';
+            } else {
+                breakdownLoading.innerHTML = 'No itemized charges found.';
+            }
+        })
+        .catch(err => {
+            console.error('Breakdown fetch error:', err);
+            breakdownLoading.innerHTML = '<span class="text-danger">Failed to load breakdown.</span>';
+        });
+
         document.getElementById('paymentModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
