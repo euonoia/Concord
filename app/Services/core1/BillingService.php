@@ -105,8 +105,8 @@ class BillingService
 
             $bill->save();
 
-            // If OPD encounter and paid, it might be ready for closing
-            if ($bill->status === 'paid' && $bill->encounter->status === 'Pending Billing') {
+            // If the bill is fully paid, close the clinical encounter to remove it from "Billing Dept"
+            if ($bill->status === 'paid' && $bill->encounter && $bill->encounter->status === 'Pending Billing') {
                 $bill->encounter->update(['status' => 'Closed']);
             }
 
