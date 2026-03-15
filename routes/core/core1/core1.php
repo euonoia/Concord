@@ -122,9 +122,7 @@ Route::middleware([])->group(function () {
         Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');
     });
 
-    Route::post('/patients/{patient}/move', 
-        [\App\Http\Controllers\user\Core\core1\PatientManagementController::class, 'move']
-    )->name('core1.patients.move');
+    Route::post('/patients/{patient}/move', [PatientManagementController::class, 'move'])->name('core1.patients.move');
     Route::patch('/inpatient/{patient}/deactivate', [InpatientController::class, 'deactivate'])->name('core1.inpatients.deactivate');
     Route::patch('/patients/{patient}/status', 
         [PatientManagementController::class, 'updateStatus']
