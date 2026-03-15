@@ -21,24 +21,51 @@ class AdminTrainingScheduleController extends Controller
     {
         $this->authorizeHr3();
 
-        // 1. Get employees who have completed competencies in HR2
-        $eligibleEmployees = DB::table('employee_competency_completion_hr2')
-            ->where('status', 'completed')
-            ->select('employee_id')
+        /*
+        |--------------------------------------------------------------------------
+        | Get employees who completed HR2 competencies
+        |--------------------------------------------------------------------------
+        */
+        $eligibleEmployees = DB::table('employee_competency_completion_hr2 as ecc')
+            ->join('employees as e', 'ecc.employee_id', '=', 'e.employee_id')
+            ->where('ecc.status', 'completed')
+            ->select(
+                'e.employee_id',
+                'e.first_name',
+                'e.last_name'
+            )
             ->distinct()
+            ->orderBy('e.first_name')
             ->get();
 
-        // 2. Get all Employees who have the 'admin_hr2' role slug (Selected as Trainer)
+        /*
+        |--------------------------------------------------------------------------
+        | Get HR2 Admins as Trainers
+        |--------------------------------------------------------------------------
+        */
         $availableTrainers = DB::table('users')
             ->join('employees', 'users.id', '=', 'employees.user_id')
             ->where('users.role_slug', 'admin_hr2')
-            ->select('employees.employee_id', 'employees.first_name', 'employees.last_name')
+            ->select(
+                'employees.employee_id',
+                'employees.first_name',
+                'employees.last_name'
+            )
             ->get();
 
-        // 3. Get all existing training schedules with trainer and presenter info
-        $schedules = TrainingScheduleHr3::with(['trainer', 'presenter'])->latest()->get();
+        /*
+        |--------------------------------------------------------------------------
+        | Training schedules
+        |--------------------------------------------------------------------------
+        */
+        $schedules = TrainingScheduleHr3::with(['trainer', 'presenter', 'employee'])
+            ->latest()
+            ->get();
 
-        return view('admin.hr3.schedule.training_index', compact('eligibleEmployees', 'schedules', 'availableTrainers'));
+        return view(
+            'admin.hr3.schedule.training_index',
+            compact('eligibleEmployees', 'schedules', 'availableTrainers')
+        );
     }
 
     public function store(Request $request)
@@ -51,10 +78,14 @@ class AdminTrainingScheduleController extends Controller
             'training_date'   => 'required|date',
             'training_time'   => 'required',
             'venue'           => 'required',
-            'trainer_id'      => 'required', // Selected HR2 Admin
+            'trainer_id'      => 'required',
         ]);
 
-        // AUTOMATION: Get the Employee ID of the logged-in user (The Presenter)
+        /*
+        |--------------------------------------------------------------------------
+        | Logged-in user becomes presenter automatically
+        |--------------------------------------------------------------------------
+        */
         $loggedInEmployee = DB::table('employees')
             ->where('user_id', Auth::id())
             ->first();
@@ -66,13 +97,23 @@ class AdminTrainingScheduleController extends Controller
             'training_time'   => $request->training_time,
             'venue'           => $request->venue,
             'notes'           => $request->notes,
-            'trainer_id'      => $request->trainer_id, // From dropdown
-            'presented_by'    => $loggedInEmployee ? $loggedInEmployee->employee_id : 'SYSTEM', // Logged in User
+            'trainer_id'      => $request->trainer_id,
+            'presented_by'    => $loggedInEmployee
+                ? $loggedInEmployee->employee_id
+                : 'SYSTEM',
         ]);
 
-        return back()->with('success', 'Training scheduled successfully. You are marked as the presenter.');
+        return back()->with(
+            'success',
+            'Training scheduled successfully. You are marked as the presenter.'
+        );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fetch employee info + competencies
+    |--------------------------------------------------------------------------
+    */
     public function getCompetencies($emp_id)
     {
         $employeeInfo = DB::table('employees')
@@ -81,7 +122,7 @@ class AdminTrainingScheduleController extends Controller
 
         $competencies = DB::table('employee_competency_completion_hr2')
             ->where('employee_id', $emp_id)
-            ->where('status', 'completed') 
+            ->where('status', 'completed')
             ->get(['competency_code']);
 
         return response()->json([

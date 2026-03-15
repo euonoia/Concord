@@ -14,15 +14,31 @@ use Carbon\Carbon;
 
 class AuthController extends Controller
 {
-    public function store(Request $request)    {
-        $validated = $request->validate([
-            'username' => 'required|string|max:50|unique:users',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            // Updated to include your admin_hr, admin_logistics, and admin_core roles
-            'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist, admin_financials, patient',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+    public function store(Request $request)
+{
+    $validated = $request->validate([
+        'username'  => 'required|string|max:50|unique:users', 
+        'email'     => 'required|email|unique:users,email',
+        'password'  => 'required|min:8|confirmed',
+        // Updated to include your admin_hr, admin_logistics, and admin_core roles
+        'role_slug' => 'required|string|in:admin_hr1,admin_hr2,admin_hr3,admin_hr4,admin_logistics1,admin_logistics2,admin_core1,admin_core2,patient,admin,doctor,nurse,head_nurse,billing_officer,receptionist, admin_financials, patient',
+        'first_name' => 'required|string|max:255',
+        'last_name'  => 'required|string|max:255',
+    ]);
+
+    // Simplified logic: If it's not a patient, it's staff
+    $userType = str_contains($validated['role_slug'], 'patient') ? 'patient' : 'staff';
+
+    $user = DB::transaction(function () use ($validated, $userType, $request) {
+        
+        $user = User::create([
+            'username'  => $validated['username'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            'user_type' => $userType,
+            'role_slug' => $validated['role_slug'],
+            'is_active' => 1,
+
         ]);
 
         // Simplified logic: If it's not a patient, it's staff
