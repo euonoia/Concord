@@ -20,6 +20,9 @@ class AttendanceLog extends Model
         'qr_token',
         'clock_in',
         'clock_out',
+        'worked_hours',
+        'overtime_hours',
+        'night_diff_hours',
         'device_fingerprint',
         'status',
     ];
