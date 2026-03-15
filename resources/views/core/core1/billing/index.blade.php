@@ -37,6 +37,7 @@
                         <th>Patient</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Validated By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -51,6 +52,14 @@
                                     $statusClass = $bill->status === 'paid' ? 'core1-tag-stable' : ($bill->status === 'overdue' ? 'tag-red' : 'tag-pending');
                                 @endphp
                                 <span class="core1-status-tag {{ $statusClass }}">{{ ucfirst($bill->status) }}</span>
+                            </td>
+                            <td class="text-sm">
+                                @if($bill->validator)
+                                    <span class="font-semibold">{{ $bill->validator->full_name }}</span>
+                                    <div class="text-xs text-gray">{{ $bill->validated_by }}</div>
+                                @else
+                                    <span class="text-gray italic">N/A</span>
+                                @endif
                             </td>
                             <td style="display: flex; gap: 8px;">
                                 <button type="button" onclick="viewBillDetails({{ $bill->id }})" class="core1-btn-sm core1-btn-outline" style="padding: 4px 10px; font-size: 11px;">
@@ -74,7 +83,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center p-40">
+                            <td colspan="6" class="text-center p-40">
                                 <i class="bi bi-receipt-cutoff" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
                                 No bills found.
                             </td>

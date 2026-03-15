@@ -10,7 +10,7 @@ class BillingController extends Controller
 {
     public function index()
     {
-        $bills = Bill::with('patient')->latest()->paginate(20);
+        $bills = Bill::with(['patient', 'validator'])->latest()->paginate(20);
         return view('core.core1.billing.index', compact('bills'));
     }
 

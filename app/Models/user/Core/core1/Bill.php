@@ -25,6 +25,7 @@ class Bill extends Model
         'status',
         'payment_method',
         'paid_at',
+        'validated_by',
     ];
 
     protected $casts = [
@@ -46,5 +47,10 @@ class Bill extends Model
     public function encounter()
     {
         return $this->belongsTo(\App\Models\core1\Encounter::class);
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(\App\Models\Employee::class, 'validated_by', 'employee_id');
     }
 }
