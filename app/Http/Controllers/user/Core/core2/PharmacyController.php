@@ -30,9 +30,7 @@ class PharmacyController extends Controller
             'drug_num'    => 'required|string|max:50',
             'drug_name'   => 'required|string|max:100',
             'quantity'    => 'required|integer|min:0',
-            'statusS'     => 'required|string|in:Completed,Pending',
-            'expiry_date' => 'nullable|date',
-            'supplier'    => 'nullable|string|max:100',
+
         ]);
 
         DrugInventory::create($validated);
@@ -102,22 +100,40 @@ class PharmacyController extends Controller
             ->with('success', 'Prescription record added successfully.');
     }
 
-    public function dispense(Request $request, Prescription $prescription): RedirectResponse
-    {
+  public function dispense(Request $request, Prescription $prescription): RedirectResponse
+{
+    // 1. Find the drug using the drug_num from the prescription
+    $inventory = DrugInventory::where('drug_num', $prescription->drug_num)->first();
+
+    // 2. Check if the drug exists and has stock
+    if (!$inventory) {
+        return back()->with('error', 'Drug record not found.');
+    }
+
+    if ($inventory->quantity <= 0) {
+        return back()->with('error', 'Out of stock! Cannot dispense ' . $inventory->drug_name);
+    }
+
+    // 3. Update everything in one go
+    \DB::transaction(function () use ($prescription, $inventory) {
+        // Reduce the inventory quantity by 1 (or $prescription->quantity if you have it)
+        $inventory->decrement('quantity', 1);
+
+        // Mark prescription as Dispensed
         $prescription->update([
             'status'        => 'Dispensed',
             'dispensed_at'  => now(),
             'pharmacist_id' => auth()->id(),
         ]);
 
-        // Sync back to Core 1
+        // 4. Sync to Core 1 if link exists
         if ($prescription->core1_prescription_id) {
-            $core1Prescription = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
-            if ($core1Prescription) {
-                $core1Prescription->update(['status' => 'Dispensed']);
+            $core1 = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
+            if ($core1) {
+                $core1->update(['status' => 'Dispensed']);
             }
         }
+    });
 
-        return back()->with('success', 'Medication dispensed and clinical record updated.');
-    }
-}
+    return back()->with('success', 'Stock updated for ' . $inventory->drug_name);
+}}
