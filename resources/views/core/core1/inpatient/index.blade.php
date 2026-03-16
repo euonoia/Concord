@@ -74,7 +74,7 @@
     </div>-->
 
     {{-- Tabs --}}
-    <div class="core1-card no-hover p-0 overflow-hidden mt-30">
+    <div class="core1-card no-hover p-0 mt-30" style="overflow: visible;">
         <div class="core1-tabs-header border-bottom">
             <button class="core1-tab-btn active" onclick="switchTab(event, 'inpatient-list')">
                 <i class="bi bi-person-lines-fill mr-5"></i> Inpatient List
@@ -89,7 +89,7 @@
             {{-- ─── Inpatient List Tab ─────────────────────────────────────────────── --}}
             <div id="inpatient-list" class="core1-tab-pane active">
                 <h3 class="mb-20 text-sm font-bold">Admitted Patients</h3>
-                <div class="core1-table-container shadow-none border">
+                <div class="core1-table-container shadow-none border" style="overflow: visible !important;">
                     <table class="core1-table" style="table-layout: fixed;">
                         <thead>
                             <tr>
