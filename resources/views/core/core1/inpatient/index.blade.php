@@ -169,26 +169,57 @@
                                         @endif
                                     </td>
                                     <td style="vertical-align: middle;">
-                                        @forelse($meds as $rx)
-                                            <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                                        <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
-                                                        <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                        @if($meds->isNotEmpty())
+                                            <div id="medication-container-{{ $admission->encounter_id }}">
+                                                @foreach($meds->take(1) as $rx)
+                                                    <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                        <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                                <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
+                                                                <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                            </div>
+                                                            @if($rx->status === 'Administered')
+                                                                <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
+                                                            @endif
+                                                        </div>
+                                                        <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
+                                                            {{ $rx->instructions }}
+                                                        </div>
                                                     </div>
-                                                    @if($rx->status === 'Administered')
-                                                        <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
-                                                    @endif
-                                                </div>
-                                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
-                                                    {{ $rx->instructions }}
-                                                </div>
+                                                @endforeach
+
+                                                @if($meds->count() > 1)
+                                                    <div id="extra-meds-{{ $admission->encounter_id }}" style="display: none;">
+                                                        @foreach($meds->skip(1) as $rx)
+                                                            <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                                        <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
+                                                                        <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                                    </div>
+                                                                    @if($rx->status === 'Administered')
+                                                                        <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
+                                                                    @endif
+                                                                </div>
+                                                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
+                                                                    {{ $rx->instructions }}
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                    <button type="button" 
+                                                            onclick="toggleMeds({{ $admission->encounter_id }})" 
+                                                            id="btn-toggle-meds-{{ $admission->encounter_id }}"
+                                                            style="background: none; border: none; color: var(--info); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 0;">
+                                                        <i class="bi bi-plus-circle"></i> Show all ({{ $meds->count() }})
+                                                    </button>
+                                                @endif
                                             </div>
-                                        @empty
+                                        @else
                                             <div style="color: var(--text-gray); font-size: 11px; font-style: italic; background: var(--bg-light); border: 1px dashed var(--border-color); border-radius: 8px; padding: 12px; text-align: center;">
                                                 <i class="bi bi-prescription2 mb-4"></i><br>No active prescriptions
                                             </div>
-                                        @endforelse
+                                        @endif
                                     </td>
                                     <td style="vertical-align: middle;">
                                         <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -495,6 +526,20 @@ function openRecordModal(url) {
 
 function closeRecordModal() {
     closeModal('medicalRecordModal');
+}
+
+function toggleMeds(encounterId) {
+    const extraMeds = document.getElementById(`extra-meds-${encounterId}`);
+    const btn = document.getElementById(`btn-toggle-meds-${encounterId}`);
+    const isHidden = extraMeds.style.display === 'none';
+    
+    if (isHidden) {
+        extraMeds.style.display = 'block';
+        btn.innerHTML = '<i class="bi bi-dash-circle"></i> Show less';
+    } else {
+        extraMeds.style.display = 'none';
+        btn.innerHTML = `<i class="bi bi-plus-circle"></i> Show all`;
+    }
 }
 </script>
 
