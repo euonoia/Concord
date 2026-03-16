@@ -217,48 +217,80 @@
                                 {{-- LAB ORDERS --}}
                                 @if($encounter->labOrders->count() > 0)
                                     <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
-                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                                            <i class="bi bi-droplet-half" style="color: var(--warning);"></i> Laboratory Orders
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-droplet-half" style="color: var(--warning);"></i> Laboratory Orders</div>
+                                            <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->labOrders->count() }} test(s)</span>
                                         </div>
                                         
-                                        <button type="button" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'); this.querySelector('i').className = (this.nextElementSibling.style.display === 'none' ? 'bi bi-chevron-down' : 'bi bi-chevron-up')" style="width: 100%; background: white; border: 1px dashed var(--border-color); padding: 6px; border-radius: 6px; color: var(--warning); font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 8px; transition: all 0.2s;">
-                                            <i class="bi bi-chevron-down"></i> VIEW LAB RESULTS
+                                        <button type="button" onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; this.querySelector('i').className = isHidden ? 'bi bi-chevron-up' : 'bi bi-chevron-down'; this.style.borderColor = isHidden ? 'var(--warning)' : 'var(--border-color)';" 
+                                                style="width: 100%; background: white; border: 1px solid var(--border-color); padding: 8px; border-radius: 8px; color: var(--warning); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            <i class="bi bi-chevron-down"></i> <span style="letter-spacing: 0.3px;">VIEW LABORATORY DETAILS</span>
                                         </button>
 
-                                        <div style="display: none; flex-direction: column; gap: 8px;">
+                                        <div style="display: none; flex-direction: column; gap: 10px;">
                                             @foreach($encounter->labOrders as $lab)
-                                                <div style="padding: 8px; background: white; border-radius: 6px; border: 1px solid var(--border-color);">
-                                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                                                        <span style="font-weight: 700; color: var(--text-dark);">{{ $lab->test_name }}</span>
-                                                        <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }}; font-weight: 700;">{{ strtoupper($lab->status) }}</span>
+                                                <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                                                        <span style="font-weight: 700; color: var(--text-dark); font-size: 13px;">{{ $lab->test_name }}</span>
+                                                        <span style="font-size: 10px; padding: 3px 8px; border-radius: 6px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }}; font-weight: 700; letter-spacing: 0.5px;">{{ strtoupper($lab->status) }}</span>
                                                     </div>
-                                                    <div style="font-size: 11px; color: var(--text-gray); display: flex; flex-direction: column; gap: 4px;">
-                                                        <div style="display: flex; gap: 12px;">
-                                                            <span><i class="bi bi-calendar-check"></i> Ordered: {{ $lab->created_at->format('M d, Y') }}</span>
+                                                    
+                                                    <div style="font-size: 11px; color: var(--text-gray); display: flex; flex-direction: column; gap: 6px;">
+                                                        <div style="display: flex; gap: 16px; font-weight: 500;">
+                                                            <span style="display: flex; align-items: center; gap: 4px;"><i class="bi bi-calendar-event"></i> {{ $lab->created_at->format('M d, Y') }}</span>
                                                             @if($lab->result_received_at)
-                                                                <span><i class="bi bi-clock-history"></i> Result: {{ $lab->result_received_at->format('M d, Y h:i A') }}</span>
+                                                                <span style="display: flex; align-items: center; gap: 4px; color: var(--primary);"><i class="bi bi-clock-history"></i> {{ $lab->result_received_at->format('h:i A') }}</span>
                                                             @endif
                                                         </div>
+                                                        
                                                         @if($lab->clinical_note)
-                                                            <div style="font-style: italic; color: var(--text-dark);">
-                                                                <strong>Note:</strong> {{ $lab->clinical_note }}
+                                                            <div style="padding: 6px 10px; background: #f8fafc; border-radius: 6px; font-style: italic; color: #475569; font-size: 11px; border-left: 2px solid #cbd5e1;">
+                                                                <strong style="color: #1e293b; font-style: normal;">Clinical Note:</strong> {{ $lab->clinical_note }}
+                                                            </div>
+                                                        @endif
+
+                                                        @if($lab->result_received_at)
+                                                            <div style="margin-top: 4px;">
+                                                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--text-dark); font-weight: 700; font-size: 11px;">
+                                                                    <i class="bi bi-clipboard2-pulse" style="color: var(--success);"></i> CLINICAL RESULTS
+                                                                </div>
+                                                                
+                                                                @if($lab->result_data && is_array($lab->result_data))
+                                                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;">
+                                                                        @foreach($lab->result_data as $key => $value)
+                                                                            <div style="padding: 8px; background: #f0fdf4; border-radius: 6px; border: 1px solid #dcfce7;">
+                                                                                <div style="font-size: 9px; text-transform: uppercase; color: #166534; font-weight: 700; margin-bottom: 2px;">{{ str_replace('_', ' ', $key) }}</div>
+                                                                                <div style="font-size: 12px; color: #064e3b; font-weight: 600; font-family: 'JetBrains Mono', monospace;">{{ $value }}</div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @elseif($lab->result_data)
+                                                                    {{-- Fallback if not an array but has content --}}
+                                                                    <div style="padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid var(--success); font-family: monospace; font-size: 11px; color: #064e3b; line-height: 1.5;">
+                                                                        {{ $lab->result_data }}
+                                                                    </div>
+                                                                @else
+                                                                    <div style="padding: 10px; background: #fff7ed; border-radius: 6px; border-left: 3px solid var(--warning); color: #9a3412; font-size: 11px; font-style: italic;">
+                                                                        <i class="bi bi-exclamation-triangle"></i> Result data is empty or pending final validation.
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @else
+                                                            <div style="margin-top: 8px; padding: 12px; background: #fffbeb; border-radius: 8px; border: 1px solid #fef3c7; color: #92400e; font-size: 11px; display: flex; align-items: center; gap: 8px;">
+                                                                <div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #fef3c7; border-radius: 50%;"><i class="bi bi-hourglass-split" style="font-size: 14px;"></i></div>
+                                                                <div>
+                                                                    <div style="font-weight: 700;">Results Pending</div>
+                                                                    <div style="font-size: 10px; opacity: 0.8;">Sample is being processed by the laboratory.</div>
+                                                                </div>
                                                             </div>
                                                         @endif
                                                     </div>
-                                                    @if($lab->result_data)
-                                                        <div style="margin-top: 6px; padding: 6px; background: var(--bg-light); border-radius: 4px; font-family: monospace; font-size: 11px; color: var(--text-dark); border-left: 3px solid var(--success);">
-                                                            <strong>Results:</strong> {!! nl2br(e($lab->result_data)) !!}
-                                                        </div>
-                                                    @else
-                                                        <div style="margin-top: 6px; font-size: 10px; color: var(--text-light); font-style: italic;">
-                                                            <i class="bi bi-hourglass-split"></i> Results currently pending...
-                                                        </div>
-                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
                                     </div>
                                 @endif
+
 
                                 {{-- PRESCRIPTIONS --}}
                                 @if($encounter->prescriptions->count() > 0)

@@ -24,6 +24,7 @@ class LabOrder extends Model
 
     protected $casts = [
         'result_received_at' => 'datetime',
+        'result_data' => 'array',
     ];
 
     public function encounter()
