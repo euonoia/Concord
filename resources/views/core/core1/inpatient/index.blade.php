@@ -6,6 +6,38 @@
     <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+<style>
+.core1-med-popover {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 2000;
+    background: white;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 768px) {
+    .core1-med-popover {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 400px;
+        right: auto;
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 0 100vmax rgba(0,0,0,0.4);
+    }
+}
+</style>
+
 @php
     $zoneConfig = [
         'ICU'  => ['icon' => 'bi-heart-pulse-fill', 'label' => 'Intensive Care Unit',   'cls' => 'core1-zone-icu'],
@@ -74,7 +106,7 @@
     </div>-->
 
     {{-- Tabs --}}
-    <div class="core1-card no-hover p-0 mt-30" style="overflow: visible;">
+    <div class="core1-card no-hover p-0 overflow-hidden mt-30">
         <div class="core1-tabs-header border-bottom">
             <button class="core1-tab-btn active" onclick="switchTab(event, 'inpatient-list')">
                 <i class="bi bi-person-lines-fill mr-5"></i> Inpatient List
@@ -89,7 +121,7 @@
             {{-- ─── Inpatient List Tab ─────────────────────────────────────────────── --}}
             <div id="inpatient-list" class="core1-tab-pane active">
                 <h3 class="mb-20 text-sm font-bold">Admitted Patients</h3>
-                <div class="core1-table-container shadow-none border" style="overflow: visible !important;">
+                <div class="core1-table-container shadow-none border" style="min-height: 600px;">
                     <table class="core1-table" style="table-layout: fixed;">
                         <thead>
                             <tr>
@@ -169,58 +201,53 @@
                                         @endif
                                     </td>
                                     <td style="vertical-align: middle; position: relative;">
-                                        @if($meds->isNotEmpty())
-                                            <div id="medication-container-{{ $admission->encounter_id }}">
-                                                @foreach($meds->take(1) as $rx)
-                                                    <div style="margin-bottom: 4px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                                                        <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                                                            <div style="display: flex; align-items: center; gap: 6px;">
-                                                                <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
-                                                                <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
-                                                            </div>
-                                                            @if($rx->status === 'Administered')
-                                                                <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
-                                                            @endif
-                                                        </div>
-                                                        <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
-                                                            {{ $rx->instructions }}
-                                                        </div>
-                                                    </div>
-                                                @endforeach
+                                        @php $firstMed = $meds->first(); @endphp
+                                        @if($firstMed)
+                                            <div style="margin-bottom: 4px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
+                                                    <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $firstMed->medication }} 
+                                                    <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $firstMed->dosage }})</span>
+                                                </div>
+                                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
+                                                    {{ $firstMed->instructions }}
+                                                </div>
+                                            </div>
 
-                                                @if($meds->count() > 1)
-                                                    <div id="extra-meds-{{ $admission->encounter_id }}" style="display: none; position: absolute; left: 0; right: 0; top: 0; z-index: 1001; background: white; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);">
-                                                        <div style="font-weight: 800; font-size: 10px; color: var(--text-gray); text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">All Medications</div>
-                                                        @foreach($meds as $rx)
-                                                            <div style="margin-bottom: 8px; padding: 8px; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 8px;">
-                                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                                                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                                                        <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
-                                                                        <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
-                                                                    </div>
-                                                                    @if($rx->status === 'Administered')
-                                                                        <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
-                                                                    @endif
-                                                                </div>
-                                                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
-                                                                    {{ $rx->instructions }}
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                        <button type="button" 
-                                                                onclick="toggleMeds({{ $admission->encounter_id }})" 
-                                                                style="width: 100%; background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-dark); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; margin-top: 4px;">
-                                                            Close
-                                                        </button>
+                                            @if($meds->count() > 1)
+                                                <div id="extra-meds-{{ $admission->encounter_id }}" class="core1-med-popover">
+                                                    <div style="font-weight: 800; font-size: 10px; color: var(--text-gray); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                                        <span>All Medications</span>
+                                                        <span style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px;">{{ $meds->count() }}</span>
                                                     </div>
+                                                    @foreach($meds as $rx)
+                                                        <div style="margin-bottom: 8px; padding: 10px; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 10px;">
+                                                            <div style="font-weight: 700; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                                    <i class="bi bi-capsule-pill" style="color: var(--primary); font-size: 14px;"></i> {{ $rx->medication }} 
+                                                                    <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                                </div>
+                                                                @if($rx->status === 'Administered')
+                                                                    <i class="bi bi-check-circle-fill" style="color: var(--success); font-size: 14px;" title="Administered"></i>
+                                                                @endif
+                                                            </div>
+                                                            <div style="font-size: 11px; color: var(--text-light); margin-top: 6px; padding-left: 22px; line-height: 1.5; border-top: 1px solid rgba(0,0,0,0.03); padding-top: 4px;">
+                                                                {{ $rx->instructions }}
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                     <button type="button" 
                                                             onclick="toggleMeds({{ $admission->encounter_id }})" 
-                                                            id="btn-toggle-meds-{{ $admission->encounter_id }}"
-                                                            style="background: none; border: none; color: var(--info); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 0;">
-                                                        <i class="bi bi-plus-circle"></i> Show all ({{ $meds->count() }})
+                                                            style="width: 100%; background: var(--primary); border: none; color: white; border-radius: 8px; font-size: 12px; font-weight: 700; padding: 10px; cursor: pointer; margin-top: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                        Close Medications
                                                     </button>
-                                                @endif
-                                            </div>
+                                                </div>
+                                                <button type="button" 
+                                                        onclick="toggleMeds({{ $admission->encounter_id }})" 
+                                                        id="btn-toggle-meds-{{ $admission->encounter_id }}"
+                                                        style="background: none; border: none; color: var(--info); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 0;">
+                                                    <i class="bi bi-plus-circle"></i> Show all ({{ $meds->count() }})
+                                                </button>
+                                            @endif
                                         @else
                                             <div style="color: var(--text-gray); font-size: 11px; font-style: italic; background: var(--bg-light); border: 1px dashed var(--border-color); border-radius: 8px; padding: 12px; text-align: center;">
                                                 <i class="bi bi-prescription2 mb-4"></i><br>No active prescriptions
@@ -287,13 +314,6 @@
                                                     title="Issue Medication"
                                                     style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
                                                 <i class="bi bi-capsule"></i>
-                                            </button>
-
-                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
-                                                    onclick="openAdministrationModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
-                                                    title="Mark as Administered"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--success); border-color: rgba(16, 185, 129, 0.2);">
-                                                <i class="bi bi-clipboard2-check"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
@@ -493,6 +513,24 @@ function switchTab(evt, tabId) {
     evt.currentTarget.classList.add('active');
 }
 
+function toggleMeds(encounterId) {
+    const extraMeds = document.getElementById('extra-meds-' + encounterId);
+    const toggleBtn = document.getElementById('btn-toggle-meds-' + encounterId);
+    
+    if (extraMeds.style.display === 'none' || extraMeds.style.display === '') {
+        // Toggle off all other popovers first to avoid clutter
+        document.querySelectorAll('.core1-med-popover').forEach(pop => {
+            pop.style.display = 'none';
+        });
+        
+        extraMeds.style.display = 'block';
+        if (toggleBtn) toggleBtn.style.visibility = 'hidden';
+    } else {
+        extraMeds.style.display = 'none';
+        if (toggleBtn) toggleBtn.style.visibility = 'visible';
+    }
+}
+
 // Discharge Modal Logic
 // Clinical Overview Modal Logic
 function openRecordModal(url) {
@@ -533,20 +571,6 @@ function openRecordModal(url) {
 function closeRecordModal() {
     closeModal('medicalRecordModal');
 }
-
-function toggleMeds(encounterId) {
-    const extraMeds = document.getElementById(`extra-meds-${encounterId}`);
-    const btn = document.getElementById(`btn-toggle-meds-${encounterId}`);
-    const isHidden = extraMeds.style.display === 'none';
-    
-    if (isHidden) {
-        extraMeds.style.display = 'block';
-        btn.innerHTML = '<i class="bi bi-dash-circle"></i> Show less';
-    } else {
-        extraMeds.style.display = 'none';
-        btn.innerHTML = `<i class="bi bi-plus-circle"></i> Show all`;
-    }
-}
 </script>
 
 {{-- Medical Record / Clinical Overview Modal --}}
@@ -585,6 +609,5 @@ function toggleMeds(encounterId) {
 
 <style>
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.core1-spin { animation: spin 1s linear infinite; display: inline-block; }
 </style>
 @endsection
