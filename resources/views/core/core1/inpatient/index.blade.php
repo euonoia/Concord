@@ -168,11 +168,11 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td style="vertical-align: middle;">
+                                    <td style="vertical-align: middle; position: relative;">
                                         @if($meds->isNotEmpty())
                                             <div id="medication-container-{{ $admission->encounter_id }}">
                                                 @foreach($meds->take(1) as $rx)
-                                                    <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                    <div style="margin-bottom: 4px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                                                         <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                                                             <div style="display: flex; align-items: center; gap: 6px;">
                                                                 <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
@@ -189,9 +189,10 @@
                                                 @endforeach
 
                                                 @if($meds->count() > 1)
-                                                    <div id="extra-meds-{{ $admission->encounter_id }}" style="display: none;">
-                                                        @foreach($meds->skip(1) as $rx)
-                                                            <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                    <div id="extra-meds-{{ $admission->encounter_id }}" style="display: none; position: absolute; left: 0; right: 0; top: 0; z-index: 1001; background: white; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);">
+                                                        <div style="font-weight: 800; font-size: 10px; color: var(--text-gray); text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">All Medications</div>
+                                                        @foreach($meds as $rx)
+                                                            <div style="margin-bottom: 8px; padding: 8px; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 8px;">
                                                                 <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                                                                     <div style="display: flex; align-items: center; gap: 6px;">
                                                                         <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
@@ -206,6 +207,11 @@
                                                                 </div>
                                                             </div>
                                                         @endforeach
+                                                        <button type="button" 
+                                                                onclick="toggleMeds({{ $admission->encounter_id }})" 
+                                                                style="width: 100%; background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-dark); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 6px; cursor: pointer; margin-top: 4px;">
+                                                            Close
+                                                        </button>
                                                     </div>
                                                     <button type="button" 
                                                             onclick="toggleMeds({{ $admission->encounter_id }})" 
