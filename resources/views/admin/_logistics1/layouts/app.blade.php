@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR2 Module</title>
+    <title>Logistics 1 Module</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="dashboard">
 
-<!-- Mobile Topbar -->
 <div class="dashboard-topbar topbar">
     <button class="menu-toggle"
         onclick="document.querySelector('.dashboard .sidebar').classList.toggle('show')">
         ☰
     </button>
-    <div class="title">Logistics1</div>
+    <div class="title">Logistics 1</div>
 </div>
 
-<!-- SIDEBAR -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
     <div class="logo">
         <img src="{{ asset('images/logo.png') }}" alt="HR Logo">
@@ -26,54 +24,68 @@
     </div>
 
     <nav>
-        <a href="{{ route('admin.hr1.dashboard') }}"
-           class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('admin.logistics2.dashboard') }}" {{-- Updated to a valid logistics dashboard route --}}
+           class="{{ request()->routeIs('admin.logistics2.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
 
         <a href="{{ route('admin.logistics1.warehouse.index') }}"
-        class="{{ request()->routeIs('admin.logistics1.warehouse.*') ? 'active' : '' }}">
+           class="{{ request()->routeIs('admin.logistics1.warehouse.*') ? 'active' : '' }}">
             <i class="bi bi-archive"></i>
             <span>Warehouse Inventory</span>
         </a>
 
         <a href="{{ route('admin.logistics1.procurement.index') }}"
-        class="{{ request()->routeIs('admin.logistics1.procurement.*') ? 'active' : '' }}">
+           class="{{ request()->routeIs('admin.logistics1.procurement.*') ? 'active' : '' }}">
             <i class="bi bi-truck"></i>
             <span>Procurement & Suppliers</span>
         </a>
 
-        <!-- LOGOUT -->
+        <a href="{{ route('admin.logistics1.maintenance.index') }}"
+           class="{{ request()->routeIs('admin.logistics1.maintenance.*') ? 'active' : '' }}">
+            <i class="bi bi-tools"></i>
+            <span>Maintenance </span>
+        </a>
+
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>
-        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="margin-top: auto;">
             <i class="bi bi-box-arrow-right"></i>
             <span>Logout</span>
         </a>
     </nav>
 </div>
 
-<!-- Main Content -->
 <div class="dashboard-main main">
     <div class="main-inner">
+        {{-- Alert Messages --}}
+        @if(session('success'))
+            <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
+                <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div style="padding: 15px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 20px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+            </div>
+        @endif
+
         @yield('content')
     </div>
 </div>
 
-</body>
-
-
 <script>
 const sidebar = document.getElementById('sidebar');
 
-// default collapsed on desktop
+// Default collapsed on desktop
 if (window.innerWidth > 768) {
     sidebar.classList.add('collapsed');
 }
 
-// hover expand (desktop)
+// Hover expand (desktop)
 sidebar.addEventListener('mouseenter', () => {
     if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
 });
@@ -82,24 +94,19 @@ sidebar.addEventListener('mouseleave', () => {
     if (window.innerWidth > 768) sidebar.classList.add('collapsed');
 });
 
-// close sidebar on mobile click outside
+// Close sidebar on mobile click outside
 document.addEventListener('click', (e) => {
     const toggle = document.querySelector('.menu-toggle');
-    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+    if (sidebar && !sidebar.contains(e.target) && toggle && !toggle.contains(e.target)) {
         sidebar.classList.remove('show');
     }
 });
 
 function toggleDropdown(event) {
-
     event.preventDefault();
-
     const parent = event.currentTarget.parentElement;
-
     parent.classList.toggle('open');
-
 }
 </script>
-
 </body>
 </html>

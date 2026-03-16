@@ -18,7 +18,7 @@
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Qty</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Requester</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Time Received</th>
-                        <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Dispatch Action</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Assign Vehicle & Dispatch</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,7 +29,9 @@
                                 <code style="font-size: 0.75rem; color: #666;">{{ $request->drug_num }}</code>
                             </td>
                             <td style="padding: 12px;">
-                                <span class="badge" style="background: #f1f3f5; color: #333; border: 1px solid #ddd;">{{ $request->requested_quantity }}</span>
+                                <span class="badge" style="background: #f1f3f5; color: #333; border: 1px solid #ddd; padding: 2px 8px; border-radius: 4px;">
+                                    {{ $request->requested_quantity }}
+                                </span>
                             </td>
                             <td style="padding: 12px;">
                                 <div style="display: flex; flex-direction: column;">
@@ -41,16 +43,32 @@
                                 <div style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($request->created_at)->diffForHumans() }}</div>
                             </td>
                             <td style="padding: 12px;">
-                                <form action="{{ route('admin.logistics2.vendor.process', $request->id) }}" method="POST">
+                                <form action="{{ route('admin.logistics2.vendor.process', $request->id) }}" method="POST" style="display: flex; gap: 10px; align-items: center;">
                                     @csrf
-                                    {{-- HIDDEN INPUTS FOR VEHICLE DEFAULTS --}}
-                                    <input type="hidden" name="vehicle_type" value="Standard Logistics Truck">
-                                    <input type="hidden" name="plate_number" value="FOR-ASSIGNMENT">
                                     
-                                    <button type="submit" class="btn btn-sm" style="background: #28a745; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                    {{-- DYNAMIC VEHICLE SELECTION --}}
+                                    <select name="plate_number" required style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.85rem; outline: none; min-width: 180px;">
+                                        <option value="" disabled selected>-- Select Plate --</option>
+                                        @forelse($availableFleet as $fleet)
+                                            <option value="{{ $fleet->plate_number }}">
+                                                {{ $fleet->plate_number }} ({{ $fleet->vehicle_type }})
+                                            </option>
+                                        @empty
+                                            <option value="" disabled>No vehicles available</option>
+                                        @endforelse
+                                    </select>
+                                    
+                                    <button type="submit" class="btn btn-sm" 
+                                        {{ $availableFleet->isEmpty() ? 'disabled' : '' }}
+                                        style="background: #28a745; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;">
                                         <i class="bi bi-truck"></i> Create Shipment
                                     </button>
                                 </form>
+                                @if($availableFleet->isEmpty())
+                                    <small style="color: #dc3545; display: block; margin-top: 5px; font-size: 0.7rem;">
+                                        * No vehicles available in fleet.
+                                    </small>
+                                @endif
                             </td>
                         </tr>
                     @empty

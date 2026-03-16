@@ -42,13 +42,34 @@
                     <i class="bi bi-clipboard-check"></i>
                     <span>Procurement Requests</span>
                 </a>
-                </div>
+            </div>
         </div>
 
-        <a href="{{ route('admin.logistics2.vehicle.index') }}" 
-               class="sub-link {{ request()->routeIs('admin.logistics2.vehicle.index') ? 'active' : '' }}">
-                <i class="bi bi-calendar-check"></i>
-                <span>Vehicle Reservation</span>
+        <div class="nav-dropdown {{ (request()->is('admin/logistics2/vehicle*') || request()->is('admin/logistics2/fleet*')) ? 'open' : '' }}">
+            <a href="#" onclick="toggleDropdown(event)">
+                <i class="bi bi-speedometer2"></i>
+                <span>Fleet Management</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </a>
+            <div class="dropdown-container">
+                <a href="{{ route('admin.logistics2.vehicle.index') }}" 
+                   class="sub-link {{ request()->routeIs('admin.logistics2.vehicle.index') ? 'active' : '' }}">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Reservations</span>
+                </a>
+                
+                <a href="{{ route('admin.logistics2.fleet.index') }}" 
+                   class="sub-link {{ request()->routeIs('admin.logistics2.fleet.index') ? 'active' : '' }}">
+                    <i class="bi bi-bus-front"></i>
+                    <span>Vehicles</span>
+                </a>
+            </div>
+        </div>
+
+        <a href="{{ route('admin.logistics2.audit.index') }}"
+        class="{{ request()->routeIs('admin.logistics2.audit.*') ? 'active' : '' }}">
+            <i class="bi bi-journal-text"></i>
+            <span>Audit Logs</span>
         </a>
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
@@ -64,8 +85,14 @@
 <div class="dashboard-main main">
     <div class="main-inner">
         @if(session('success'))
-            <div class="alert alert-success" style="padding: 1rem; background: #d4edda; color: #155724; border-radius: 5px; margin-bottom: 1rem;">
+            <div class="alert alert-success" style="padding: 1rem; background: #d4edda; color: #155724; border-radius: 5px; margin-bottom: 1rem; border: 1px solid #c3e6cb;">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger" style="padding: 1rem; background: #f8d7da; color: #721c24; border-radius: 5px; margin-bottom: 1rem; border: 1px solid #f5c6cb;">
+                {{ session('error') }}
             </div>
         @endif
 
@@ -98,7 +125,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Dropdown Toggle Logic - Matches your working sample
 function toggleDropdown(event) {
     event.preventDefault();
     const parent = event.currentTarget.parentElement;
