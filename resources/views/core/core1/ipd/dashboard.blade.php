@@ -128,7 +128,7 @@
 <script>
 function openDischargeModal(admissionId, patientName) {
     document.getElementById('dischargePatientName').innerText = patientName;
-    document.getElementById('dischargeForm').action = "/core/admissions/" + admissionId + "/discharge";
+    document.getElementById('dischargeForm').action = "/core/admissions/" + admissionId + "/request-discharge";
     document.getElementById('dischargeModal').style.display = 'flex';
 }
 

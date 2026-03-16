@@ -57,50 +57,86 @@ class AdmissionService
     }
 
     /**
-     * Discharge a patient.
-     * follows Phase 4: Conclusion (Discharge & Ledger) of HIS Architect Rules.
+     * Initiate Clinical Discharge.
+     * Sets status to 'Ready for Discharge' and triggers billing aggregation.
      */
-    public function discharge(Admission $admission, array $data): bool
+    public function requestDischarge(Admission $admission, array $data): bool
     {
-        $result = DB::transaction(function () use ($admission, $data) {
-            // 1. Validate discharge summary and diagnosis are provided (as per rule)
+        return DB::transaction(function () use ($admission, $data) {
+            // 1. Validate discharge summary and diagnosis are provided
             if (empty($data['discharge_summary']) || empty($data['final_diagnosis'])) {
                 throw new \Exception('Discharge summary and final diagnosis are required.');
             }
 
-            // 2. Update Admission status
+            // 2. Update Admission status to 'Doctor Approved'
+            // Bed remains 'Occupied' until financial clearance
+            $admission->update([
+                'status' => 'Doctor Approved'
+            ]);
+
+            // 3. Update encounter status for billing
+            if ($admission->encounter) {
+                $admission->encounter->update(['status' => 'Pending Billing']);
+                
+                // 4. Aggregate final IPD charges for the billing office
+                $billingService = app(BillingService::class);
+                $billingService->aggregateCharges($admission->encounter);
+            }
+
+            // 5. Create Discharge Record (Clinical Documentation)
+            DB::table('discharges_core1')->updateOrInsert(
+                ['encounter_id' => $admission->encounter_id],
+                [
+                    'discharge_summary' => $data['discharge_summary'],
+                    'final_diagnosis' => $data['final_diagnosis'],
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]
+            );
+
+            return true;
+        });
+    }
+
+    /**
+     * Finalize Discharge & Release Bed.
+     * To be called after financial clearance.
+     */
+    public function finalizeDischarge(Admission $admission): bool
+    {
+        $result = DB::transaction(function () use ($admission) {
+            // 1. Validate clinical discharge was completed
+            if ($admission->status !== 'Doctor Approved') {
+                throw new \Exception('Patient must have doctor approval before final release.');
+            }
+
+            // 2. Release the Bed (Phase 4: Bed Release)
+            if ($admission->bed) {
+                $admission->bed->update(['status' => 'Available']);
+            }
+
+            // 3. Complete Admission
             $admission->update([
                 'discharge_date' => Carbon::now(),
                 'status' => 'Discharged'
             ]);
 
-            // 3. Release the Bed (Phase 4: Bed Release) - Safe update
-            if ($admission->bed) {
-                $admission->bed->update(['status' => 'Available']);
-            }
-
-            // 4. Update encounter status for billing (Phase 4: Encounter Closure - Pending Billing)
+            // 4. Close encounter if billing is fully paid (done in BillingService, but safety check here)
             if ($admission->encounter) {
-                $admission->encounter->update(['status' => 'Pending Billing']);
+                $bill = $admission->encounter->patient->bills()
+                    ->where('encounter_id', $admission->encounter_id)
+                    ->latest()
+                    ->first();
                 
-                // 5. Aggregate final IPD charges for the billing office
-                $billingService = app(BillingService::class);
-                $billingService->aggregateCharges($admission->encounter);
+                if ($bill && $bill->status === 'paid') {
+                    $admission->encounter->update(['status' => 'Closed']);
+                }
             }
-
-            // 6. Create Discharge Record
-            DB::table('discharges_core1')->insert([
-                'encounter_id' => $admission->encounter_id,
-                'discharge_summary' => $data['discharge_summary'],
-                'final_diagnosis' => $data['final_diagnosis'],
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
 
             return true;
         });
 
-        // 6. Sync discharge to Core 2 Bed & Linen (release bed)
+        // 5. Sync discharge to Core 2 Bed & Linen (release bed)
         $this->syncService->syncDischargeToCore2($admission);
 
         return $result;

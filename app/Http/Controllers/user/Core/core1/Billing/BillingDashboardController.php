@@ -29,20 +29,20 @@ class BillingDashboardController extends Controller
         ];
         
         // Recent bills
-        $recentBills = Bill::with(['patient'])
+        $recentBills = Bill::with(['patient', 'validator'])
             ->latest()
             ->take(10)
             ->get();
         
         // Pending bills
-        $pendingBills = Bill::with(['patient'])
+        $pendingBills = Bill::with(['patient', 'validator'])
             ->where('status', 'pending')
             ->orderBy('due_date', 'asc')
             ->take(10)
             ->get();
         
         // Overdue bills
-        $overdueBills = Bill::with(['patient'])
+        $overdueBills = Bill::with(['patient', 'validator'])
             ->where('status', 'overdue')
             ->orWhere(function($query) {
                 $query->where('status', 'pending')
@@ -77,18 +77,18 @@ class BillingDashboardController extends Controller
             'paid_bills' => Bill::where('status', 'paid')->count(),
         ];
         
-        $recentBills = Bill::with(['patient'])
+        $recentBills = Bill::with(['patient', 'validator'])
             ->latest()
             ->take(10)
             ->get();
         
-        $pendingBills = Bill::with(['patient'])
+        $pendingBills = Bill::with(['patient', 'validator'])
             ->where('status', 'pending')
             ->orderBy('due_date', 'asc')
             ->take(10)
             ->get();
         
-        $overdueBills = Bill::with(['patient'])
+        $overdueBills = Bill::with(['patient', 'validator'])
             ->where('status', 'overdue')
             ->orWhere(function($query) {
                 $query->where('status', 'pending')

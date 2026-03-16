@@ -1983,7 +1983,7 @@ tr:hover {
 /* Rooms */
 .fm-rooms {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap; /* Allow rooms to wrap if many exist (like in OR) */
     gap: 16px;
 }
 .fm-room {
@@ -2027,8 +2027,8 @@ tr:hover {
 
 /* Beds row */
 .fm-beds {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Force 5 columns for perfect alignment */
     gap: 12px;
 }
 

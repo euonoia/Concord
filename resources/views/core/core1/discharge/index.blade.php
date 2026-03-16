@@ -39,6 +39,7 @@
                         <th>Ward/Bed</th>
                         <th>Doctor</th>
                         <th>Admission Date</th>
+                        <th>Status</th>
                         <th>Billing Status</th>
                         <th>Action</th>
                     </tr>
@@ -84,6 +85,15 @@
                                 {{ $admission->admission_date->format('M d, Y') }}
                             </td>
                             <td>
+                                @if($admission->status === 'Admitted')
+                                    <span class="core1-status-tag tag-blue" style="font-size: 10px;">ADMITTED</span>
+                                @elseif($admission->status === 'Doctor Approved')
+                                    <span class="core1-status-tag core1-tag-stable" style="font-size: 10px;">DR-APPROVED</span>
+                                @else
+                                    <span class="core1-status-tag tag-gray" style="font-size: 10px;">{{ strtoupper($admission->status) }}</span>
+                                @endif
+                            </td>
+                            <td>
                                 @if($latestBill)
                                     <span class="core1-status-tag {{ $latestBill->status === 'paid' ? 'core1-tag-stable' : 'tag-red' }}">
                                         {{ strtoupper($latestBill->status) }}
@@ -93,17 +103,38 @@
                                 @endif
                             </td>
                             <td>
-                                <button type="button" 
-                                        onclick="openDischargeModal('{{ $admission->id }}', '{{ $patient->name }}', '{{ $patient->mrn }}')"
-                                        class="core1-btn-sm core1-btn-primary" 
-                                        style="font-size: 11px;">
-                                    <i class="bi bi-clipboard-check"></i> Process Clearance
-                                </button>
+                                @if($admission->status === 'Admitted')
+                                    <button type="button" 
+                                            onclick="openDischargeModal('{{ $admission->id }}', '{{ $patient->name }}', '{{ $patient->mrn }}')"
+                                            class="core1-btn-sm core1-btn-primary" 
+                                            style="font-size: 11px;">
+                                        <i class="bi bi-clipboard-check"></i> Doctor Approve
+                                    </button>
+                                @elseif($admission->status === 'Doctor Approved')
+                                    @if($latestBill && $latestBill->status === 'paid')
+                                        <form action="{{ route('core1.discharge.finalize') }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            <input type="hidden" name="admission_id" value="{{ $admission->id }}">
+                                            <button type="submit" 
+                                                    class="core1-btn-sm" 
+                                                    style="font-size: 11px; background: var(--success); color: white; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer;">
+                                                <i class="bi bi-door-open"></i> Finalize Release
+                                            </button>
+                                        </form>
+                                    @else
+                                        <button type="button" 
+                                                class="core1-btn-sm" 
+                                                style="font-size: 11px; background: var(--bg-dark); color: var(--text-gray); border: none; border-radius: 4px; padding: 4px 10px; cursor: not-allowed;"
+                                                disabled>
+                                            <i class="bi bi-lock"></i> Awaiting Payment
+                                        </button>
+                                    @endif
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center p-40">
+                            <td colspan="7" class="text-center p-40">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
                                 No active admissions found.
                             </td>
@@ -130,7 +161,7 @@
                     <i class="bi bi-shield-check"></i>
                 </div>
                 <div>
-                    <h3 style="margin:0; font-size: 16px; font-weight:700;">Clinical Discharge Clearance</h3>
+                    <h3 style="margin:0; font-size: 16px; font-weight:700;">Doctor Discharge Approval</h3>
                     <p id="modalPatientName" style="margin:0; font-size: 13px; color: var(--text-gray);"></p>
                 </div>
             </div>
@@ -163,7 +194,7 @@
             <div class="d-flex justify-end gap-3" style="padding-top: 10px;">
                 <button type="button" onclick="closeDischargeModal()" class="core1-btn core1-btn-outline">Cancel</button>
                 <button type="submit" class="core1-btn core1-btn-primary">
-                    <i class="bi bi-check-circle"></i> Complete Discharge
+                    <i class="bi bi-check-circle"></i> Approve Discharge
                 </button>
             </div>
         </form>

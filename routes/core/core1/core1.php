@@ -109,7 +109,8 @@ Route::middleware([])->group(function () {
         })->name('core1.ipd.dashboard');
         Route::get('/admissions/create', [AdmissionController::class, 'create'])->name('core1.admissions.create');
         Route::post('/admissions', [AdmissionController::class, 'store'])->name('core1.admissions.store');
-        Route::post('/admissions/{admission}/discharge', [AdmissionController::class, 'discharge'])->name('core1.admissions.discharge');
+        Route::post('/admissions/{admission}/request-discharge', [AdmissionController::class, 'requestDischarge'])->name('core1.admissions.request-discharge');
+        Route::post('/admissions/{admission}/finalize-discharge', [AdmissionController::class, 'finalizeDischarge'])->name('core1.admissions.finalize-discharge');
     });
 
 
@@ -117,6 +118,7 @@ Route::middleware([])->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
         Route::post('/discharge', [DischargeController::class, 'store'])->name('core1.discharge.store');
+        Route::post('/discharge/finalize', [DischargeController::class, 'finalize'])->name('core1.discharge.finalize');
         
         // OPD Encounters
         Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');

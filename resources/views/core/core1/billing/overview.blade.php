@@ -81,6 +81,7 @@
                             <th>Amount</th>
                             <th>Due Date</th>
                             <th>Status</th>
+                            <th>Validated By</th>
                             <th class="text-right">Action</th>
                         </tr>
                     </thead>
@@ -98,7 +99,15 @@
                             </td>
                             <td class="font-bold">₱{{ number_format($bill->total, 2) }}</td>
                             <td>{{ \Carbon\Carbon::parse($bill->due_date)->format('M d, Y') }}</td>
-                            <td><span class="core1-status-tag core1-tag-neutral">Pending</span></td>
+                             <td><span class="core1-status-tag core1-tag-neutral">Pending</span></td>
+                            <td class="text-xs">
+                                @if($bill->validator)
+                                    <span class="font-semibold">{{ $bill->validator->full_name }}</span>
+                                    <div class="text-gray">{{ $bill->validated_by }}</div>
+                                @else
+                                    <span class="text-gray italic">N/A</span>
+                                @endif
+                            </td>
                             <td class="text-right">
                                 <button type="button" 
                                         data-bill-id="{{ $bill->id }}"
@@ -116,7 +125,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center p-40">
+                            <td colspan="7" class="text-center p-40">
                                 <i class="bi bi-check2-circle" style="font-size: 1.8rem; color: var(--success); display: block; margin-bottom: 6px;"></i>
                                 No pending invoices.
                             </td>
@@ -146,6 +155,7 @@
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Validated By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,10 +181,18 @@
                                 @endphp
                                 <span class="core1-status-tag {{ $statusClass }}">{{ ucfirst($bill->status) }}</span>
                             </td>
+                            <td class="text-xs">
+                                @if($bill->validator)
+                                    <span class="font-semibold">{{ $bill->validator->full_name }}</span>
+                                    <div class="text-gray">{{ $bill->validated_by }}</div>
+                                @else
+                                    <span class="text-gray italic">N/A</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center p-40">No recent transactions.</td>
+                            <td colspan="6" class="text-center p-40">No recent transactions.</td>
                         </tr>
                         @endforelse
                     </tbody>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\core1\Admission;
 use App\Models\core1\Bed;
 use App\Models\core1\Ward;
+use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class InpatientController extends Controller
 
         // Fetch real active admissions following HIS Architect rules
         $activeAdmissions = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
-            ->where('status', 'Admitted')
+            ->whereIn('status', ['Admitted', 'Doctor Approved'])
             ->latest()
             ->get();
 
@@ -34,7 +35,7 @@ class InpatientController extends Controller
 
         // Flat bed list for legacy tab (kept for backward compatibility)
         $beds = Bed::with(['room.ward', 'admissions' => function ($q) {
-            $q->where('status', 'Admitted')->with('encounter.patient');
+            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with('encounter.patient');
         }])->get();
 
         $uiBeds = $beds->map(function ($bed) {
@@ -54,9 +55,45 @@ class InpatientController extends Controller
         });
 
         // ── 2D Floor Map: group wards by ward_type ────────────────────────────────
+        $floorMap = $this->getFloorMapData();
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // Nurses for dropdown (Head Nurse/Admin only)
+        $nurses = [];
+        if ($user->role_slug === 'admin' || $user->role_slug === 'head_nurse') {
+            $nurses = User::where('role_slug', 'nurse')->get();
+        }
+
+        return view('core.core1.inpatient.index', [
+            'inpatients' => $activeAdmissions,
+            'stats'      => $stats,
+            'beds'        => $uiBeds,
+            'nurses'     => $nurses,
+            'floorMap'   => $floorMap,
+        ]);
+    }
+
+    public function deactivate(Patient $patient)
+    {
+        $newStatus = $patient->status === 'inactive' ? 'active' : 'inactive';
+
+        $patient->update([
+            'status' => $newStatus,
+        ]);
+
+        return back()->with('success', 'Patient status updated successfully.');
+    }
+
+    /**
+     * Generate the 2D Floor Map data structure.
+     *
+     * @return array
+     */
+    protected function getFloorMapData(): array
+    {
         $zoneOrder = ['ICU', 'ER', 'WARD', 'OR'];
         $wards = Ward::with(['rooms.beds.admissions' => function ($q) {
-            $q->where('status', 'Admitted')->with('encounter.patient');
+            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with('encounter.patient');
         }])->get();
 
         $floorMap = [];
@@ -107,31 +144,7 @@ class InpatientController extends Controller
                 ];
             }
         }
-        // ─────────────────────────────────────────────────────────────────────────
 
-        // Nurses for dropdown (Head Nurse/Admin only)
-        $nurses = [];
-        if ($user->role_slug === 'admin' || $user->role_slug === 'head_nurse') {
-            $nurses = User::where('role_slug', 'nurse')->get();
-        }
-
-        return view('core.core1.inpatient.index', [
-            'inpatients' => $activeAdmissions,
-            'stats'      => $stats,
-            'beds'        => $uiBeds,
-            'nurses'     => $nurses,
-            'floorMap'   => $floorMap,
-        ]);
-    }
-
-    public function deactivate(\App\Models\core1\Patient $patient)
-    {
-        $newStatus = $patient->status === 'inactive' ? 'active' : 'inactive';
-
-        $patient->update([
-            'status' => $newStatus,
-        ]);
-
-        return back()->with('success', 'Patient status updated successfully.');
+        return $floorMap;
     }
 }
