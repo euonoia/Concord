@@ -295,12 +295,17 @@
                                 {{-- PRESCRIPTIONS --}}
                                 @if($encounter->prescriptions->count() > 0)
                                     <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
-                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
                                             <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-capsule" style="color: var(--primary);"></i> Inpatient Meds & History</div>
                                             <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->prescriptions->count() }} active item(s)</span>
                                         </div>
 
-                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        <button type="button" onclick="const content = this.nextElementSibling; const isHidden = content.style.display === 'none'; content.style.display = isHidden ? 'flex' : 'none'; this.querySelector('i').className = isHidden ? 'bi bi-chevron-up' : 'bi bi-chevron-down'; this.style.borderColor = isHidden ? 'var(--primary)' : 'var(--border-color)';" 
+                                                style="width: 100%; background: white; border: 1px solid var(--border-color); padding: 8px; border-radius: 8px; color: var(--primary); font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                            <i class="bi bi-chevron-down"></i> <span style="letter-spacing: 0.3px;">VIEW MEDICATION DETAILS</span>
+                                        </button>
+
+                                        <div style="display: none; flex-direction: column; gap: 10px;">
                                             @foreach($encounter->prescriptions as $rx)
                                                 <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
@@ -447,7 +452,22 @@
                     <tr><td class="font-medium py-2">Address</td><td>{{ $patient->address ?? 'N/A' }}</td></tr>
                     <tr><td class="font-medium py-2">Blood Type</td><td>{{ $patient->blood_type ?? 'N/A' }}</td></tr>
                     <tr><td class="font-medium py-2">Allergies</td><td>{{ $patient->allergies ?? 'N/A' }}</td></tr>
-                    <tr><td class="font-medium py-2">Medical History</td><td>{{ $patient->medical_history ?? 'N/A' }}</td></tr>
+                    <tr>
+                        <td class="font-medium py-2">Medical History</td>
+                        <td>
+                            @if(!empty($patient->medical_history) && strlen($patient->medical_history) > 100)
+                                <div class="relative">
+                                    <div id="med-history-content" class="text-gray-700" style="max-height: 3em; overflow: hidden; transition: max-height 0.3s ease-out;">
+                                        {{ $patient->medical_history }}
+                                    </div>
+                                    <button type="button" onclick="const content = document.getElementById('med-history-content'); const isExpanded = content.style.maxHeight !== '3em'; content.style.maxHeight = isExpanded ? '3em' : 'none'; this.innerText = isExpanded ? 'Read More' : 'Read Less';" 
+                                            class="text-primary hover:underline font-semibold text-xs mt-1">Read More</button>
+                                </div>
+                            @else
+                                {{ $patient->medical_history ?? 'N/A' }}
+                            @endif
+                        </td>
+                    </tr>
                     <tr><td class="font-medium py-2">Status</td><td>{{ $patient->status ?? 'N/A' }}</td></tr>
                     <tr><td class="font-medium py-2">Care Type</td><td>{{ $patient->care_type ?? 'N/A' }}</td></tr>
                     <tr><td class="font-medium py-2">Admission Date</td><td>{{ $patient->admission_date ?? 'N/A' }}</td></tr>
