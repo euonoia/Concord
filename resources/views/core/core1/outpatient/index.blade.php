@@ -359,7 +359,9 @@
                                         @elseif($rx->status === 'Administered')
                                             <span class="text-xs text-green font-bold"><i class="bi bi-check-all"></i> Given</span>
                                         @else
-                                            <span class="text-xs text-gray italic">Wait for Pharm...</span>
+                                            <div style="padding: 4px 8px; background: var(--warning-light); border: 1px dashed var(--warning); border-radius: 4px; color: var(--warning); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="bi bi-hourglass-split"></i> PENDING PHARMACY ({{ $rx->status }})
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>

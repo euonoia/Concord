@@ -313,11 +313,20 @@
                     let action = '';
                     if (rx.status === 'Administered') {
                         action = '<span style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;"><i class="bi bi-check-circle-fill"></i> Administered</span>';
-                    } else {
+                    } else if (rx.status === 'Dispensed') {
                         action = `
                             <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 4px 10px; font-size: 11px;">
                                 <i class="bi bi-check2"></i> Administer
                             </button>
+                        `;
+                    } else {
+                        action = `
+                            <span style="color: var(--warning); font-weight: 700; font-size: 11px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                                <span style="background: var(--warning-light); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--warning); display: flex; align-items: center; gap: 4px;">
+                                    <i class="bi bi-hourglass-split"></i> Pending Pharmacy
+                                </span>
+                                <span style="font-size: 9px; opacity: 0.8; font-style: italic;">Status: ${rx.status}</span>
+                            </span>
                         `;
                     }
 

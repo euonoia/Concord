@@ -176,7 +176,7 @@ class InpatientController extends Controller
                     'dosage' => $rx->dosage,
                     'instructions' => $rx->instructions,
                     'status' => $rx->status,
-                    'administer_url' => route('core1.outpatient.prescriptions.administer', $rx->id)
+                    'administer_url' => route('core1.outpatient.administerMedication', $rx->id)
                 ];
             });
 

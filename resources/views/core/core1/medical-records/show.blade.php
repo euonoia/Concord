@@ -338,12 +338,18 @@
                                                     @endif
 
                                                     @if($encounter->type === 'IPD' && in_array($encounter->admission->status ?? '', ['Admitted', 'Doctor Approved']))
-                                                        <form method="POST" action="{{ route('core1.outpatient.administerMedication', $rx->id) }}" style="margin-top: 10px;">
-                                                            @csrf
-                                                            <button type="submit" style="width: 100%; height: 32px; border: 1px solid var(--success); background: #f0fdf4; color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'" onmouseout="this.style.background='#f0fdf4'; this.style.color='var(--success)'">
-                                                                <i class="bi bi-plus-circle"></i> Mark as Administered
-                                                            </button>
-                                                        </form>
+                                                        @if($rx->status === 'Dispensed')
+                                                            <form method="POST" action="{{ route('core1.outpatient.administerMedication', $rx->id) }}" style="margin-top: 10px;">
+                                                                @csrf
+                                                                <button type="submit" style="width: 100%; height: 32px; border: 1px solid var(--success); background: #f0fdf4; color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'" onmouseout="this.style.background='#f0fdf4'; this.style.color='var(--success)'">
+                                                                    <i class="bi bi-plus-circle"></i> Mark as Administered
+                                                                </button>
+                                                            </form>
+                                                        @elseif($rx->status !== 'Administered')
+                                                            <div style="margin-top: 10px; padding: 10px; background: var(--bg-light); border: 1px dashed var(--warning); border-radius: 8px; color: var(--warning); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                                                <i class="bi bi-hourglass-split"></i> PENDING PHARMACY ({{ $rx->status }})
+                                                            </div>
+                                                        @endif
                                                     @endif
                                                 </div>
                                             @endforeach

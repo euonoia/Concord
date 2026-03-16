@@ -324,6 +324,13 @@
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openAdministrationModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
+                                                    title="Medication Administration"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--success); border-color: rgba(16, 185, 129, 0.1);">
+                                                <i class="bi bi-clipboard2-check"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openDischargeModal({{ $admission->id }}, '{{ $patient->name }}')" 
                                                     title="Discharge Patient"
                                                     style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.2);">
