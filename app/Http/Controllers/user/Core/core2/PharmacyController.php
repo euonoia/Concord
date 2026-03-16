@@ -102,31 +102,33 @@ class PharmacyController extends Controller
 
   public function dispense(Request $request, Prescription $prescription): RedirectResponse
 {
-    // 1. Find the drug using the drug_num from the prescription
-    $inventory = DrugInventory::where('drug_num', $prescription->drug_num)->first();
+    // 1. Change the query to search 'drug_name' since that is what is being passed
+    $inventory = DrugInventory::where('drug_name', trim($prescription->drug_id))->first();
 
-    // 2. Check if the drug exists and has stock
+    // 2. If it still fails, try a 'LIKE' search as a safety net for minor typos
     if (!$inventory) {
-        return back()->with('error', 'Drug record not found.');
+        $inventory = DrugInventory::where('drug_name', 'LIKE', '%' . trim($prescription->drug_id) . '%')->first();
+    }
+
+    // 3. Error Handling
+    if (!$inventory) {
+        return back()->with('error', "Drug record not found. Could not find '{$prescription->drug_id}' in the inventory drug_name column.");
     }
 
     if ($inventory->quantity <= 0) {
-        return back()->with('error', 'Out of stock! Cannot dispense ' . $inventory->drug_name);
+        return back()->with('error', "Insufficient stock for {$inventory->drug_name}.");
     }
 
-    // 3. Update everything in one go
+    // 4. Update the records
     \DB::transaction(function () use ($prescription, $inventory) {
-        // Reduce the inventory quantity by 1 (or $prescription->quantity if you have it)
         $inventory->decrement('quantity', 1);
 
-        // Mark prescription as Dispensed
         $prescription->update([
             'status'        => 'Dispensed',
             'dispensed_at'  => now(),
             'pharmacist_id' => auth()->id(),
         ]);
 
-        // 4. Sync to Core 1 if link exists
         if ($prescription->core1_prescription_id) {
             $core1 = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
             if ($core1) {
@@ -135,5 +137,5 @@ class PharmacyController extends Controller
         }
     });
 
-    return back()->with('success', 'Stock updated for ' . $inventory->drug_name);
+    return back()->with('success', "Medication dispensed. {$inventory->drug_name} stock reduced to {$inventory->quantity}.");
 }}
