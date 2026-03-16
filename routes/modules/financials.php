@@ -32,5 +32,7 @@ Route::prefix('apar')->group(function () {
 // Collections Module (Now only handles APPROVED bills)
 Route::prefix('bills')->group(function () {
     Route::get('/', [AdminBillsCollectionController::class, 'index'])->name('financials.bills.index');
+
+    Route::get('/{id}', [AdminBillsCollectionController::class, 'show'])->name('financials.bills.show');
     Route::post('/{id}/pay', [AdminBillsCollectionController::class, 'markAsPaid'])->name('financials.bills.pay');
 });
