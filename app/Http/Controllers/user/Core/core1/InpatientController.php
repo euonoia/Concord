@@ -19,7 +19,13 @@ class InpatientController extends Controller
         $user = Auth::user();
 
         // Fetch real active admissions following HIS Architect rules
-        $activeAdmissions = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
+        $activeAdmissions = Admission::with([
+            'encounter.patient.assignedNurse', 
+            'encounter.doctor', 
+            'encounter.triage', 
+            'encounter.prescriptions',
+            'bed.room.ward'
+        ])
             ->whereIn('status', ['Admitted', 'Doctor Approved'])
             ->latest()
             ->get();
@@ -119,10 +125,17 @@ class InpatientController extends Controller
                     $admission = $bed->admissions->first();
                     $status = strtolower($bed->status);
                     $roomBeds[] = [
-                        'bed_number' => $bed->bed_number,
-                        'status'     => $status,
-                        'patient'    => $admission ? optional($admission->encounter->patient)->name : null,
-                        'mrn'        => $admission ? optional($admission->encounter->patient)->mrn  : null,
+                        'bed_number'   => $bed->bed_number,
+                        'status'       => $status,
+                        'patient'      => $admission ? optional($admission->encounter->patient)->name : null,
+                        'mrn'          => $admission ? optional($admission->encounter->patient)->mrn  : null,
+                        'encounter_id' => $admission ? $admission->encounter_id : null,
+                        'triage'       => ($admission && $admission->encounter->triage) ? [
+                            'bp'   => $admission->encounter->triage->blood_pressure,
+                            'hr'   => $admission->encounter->triage->heart_rate,
+                            'temp' => $admission->encounter->triage->temperature,
+                            'spo2' => $admission->encounter->triage->oxygen_saturation,
+                        ] : null,
                     ];
                     $floorMap[$zoneKey]['total']++;
                     if ($status === 'occupied')  $floorMap[$zoneKey]['occ']++;

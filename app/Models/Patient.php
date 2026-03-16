@@ -56,6 +56,14 @@ class Patient extends Model
     }
 
     /**
+     * Get the nurse assigned to the patient.
+     */
+    public function assignedNurse()
+    {
+        return $this->belongsTo(User::class, 'assigned_nurse_id');
+    }
+
+    /**
      * Accessor for full name.
      */
     public function getNameAttribute()

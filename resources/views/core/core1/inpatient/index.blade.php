@@ -90,60 +90,174 @@
             <div id="inpatient-list" class="core1-tab-pane active">
                 <h3 class="mb-20 text-sm font-bold">Admitted Patients</h3>
                 <div class="core1-table-container shadow-none border">
-                    <table class="core1-table">
+                    <table class="core1-table" style="table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th>Inpatient ID</th>
-                                <th>Patient</th>
-                                <th>Bed</th>
-                                <th>Admission Date</th>
-                                <th>Doctor</th>
-                                <th>Nurse</th>
-                                <th>Reason</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
+                                <th style="width: 200px;">Patient & ID</th>
+                                <th style="width: 170px;">Location</th>
+                                <th style="width: 200px;">Latest Vitals</th>
+                                <th style="width: 240px;">Active Medications</th>
+                                <th style="width: 180px;">Attending Staff</th>
+                                <th style="width: 150px; text-align: center;">Status</th>
+                                <th class="text-right" style="width: 150px; padding-right: 32px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($inpatients as $admission)
+                                @php
+                                    $patient = $admission->encounter->patient;
+                                    $triage = $admission->encounter->triage;
+                                    $meds = $admission->encounter->prescriptions;
+                                    $nurse = $patient->assignedNurse;
+                                    $doctor = $admission->encounter->doctor;
+                                @endphp
                                 <tr>
-                                    <td>{{ $admission->id }}</td>
-                                    <td>
-                                        <div class="font-bold">{{ $admission->encounter->patient->name }}</div>
-                                        <div class="text-xs text-gray-500">MRN: {{ $admission->encounter->patient->mrn }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="core1-badge-teal">
-                                            {{ $admission->bed?->room?->ward?->name ?? 'N/A' }} - {{ $admission->bed?->bed_number ?? 'N/A' }}
+                                    <td style="vertical-align: middle;">
+                                        <div style="font-weight: 700; color: var(--text-dark); margin-bottom: 2px; font-size: 15px;">{{ $patient->name }}</div>
+                                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: monospace; color: var(--primary); margin-bottom: 4px;">
+                                            <i class="bi bi-person-vcard"></i> MRN: {{ $patient->mrn }}
                                         </div>
-                                        <div class="text-xs text-gray-500">Room {{ $admission->bed?->room?->room_number ?? 'N/A' }} ({{ $admission->bed?->room?->room_type ?? 'N/A' }})</div>
-                                    </td>
-                                    <td>
-                                        {{ $admission->admission_date->format('M d, Y') }}
-                                        <div class="text-xs text-gray-500">{{ $admission->admission_date->format('h:i A') }}</div>
-                                    </td>
-                                    <td>{{ $admission->encounter->doctor?->name ?? 'N/A' }}</td>
-                                    <td>
-                                        <div class="text-sm">
-                                            {{ $admission->encounter->patient->assignedNurse?->name ?? 'Unassigned' }}
+                                        @if($admission->encounter->chief_complaint)
+                                            <div style="font-size: 11px; color: var(--text-dark); background: #fffbeb; padding: 4px 8px; border-radius: 6px; display: inline-block; margin-bottom: 6px; border: 1px solid #fef3c7;">
+                                                <i class="bi bi-chat-left-text-fill" style="color: var(--warning); margin-right: 4px;"></i> {{ Str::limit($admission->encounter->chief_complaint, 40) }}
+                                            </div>
+                                        @endif
+                                        <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 4px;">
+                                            <i class="bi bi-hash"></i> Adm #: {{ $admission->id }}
                                         </div>
                                     </td>
-                                    <td>{{ $admission->encounter->chief_complaint ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="core1-status-tag core1-tag-occupied">
-                                            {{ $admission->status }}
-                                        </span>
+                                    <td style="vertical-align: middle;">
+                                        <div style="background: var(--bg-light); border-radius: 10px; padding: 10px 14px; border: 1px solid var(--border-color); display: inline-flex; flex-direction: column; gap: 4px; min-width: 140px;">
+                                            <div style="font-weight: 700; font-size: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
+                                                <i class="bi bi-hospital" style="color: var(--primary);"></i> {{ $admission->bed?->room?->ward?->name ?? 'N/A' }}
+                                            </div>
+                                            <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 6px;">
+                                                <i class="bi bi-door-closed" style="color: var(--info);"></i> Room {{ $admission->bed?->room?->room_number ?? 'N/A' }}
+                                            </div>
+                                            <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 6px;">
+                                                <i class="bi bi-bed" style="color: var(--success);"></i> Bed {{ $admission->bed?->bed_number ?? 'N/A' }}
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <td style="vertical-align: middle;">
+                                        @if($triage)
+                                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                                <div style="font-size: 11px; display: flex; flex-direction: column; align-items: center; background: #fff1f2; color: #be123c; padding: 6px 4px; border-radius: 8px; border: 1px solid #ffe4e6;" title="Blood Pressure">
+                                                    <span style="font-size: 9px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 2px;">BP</span>
+                                                    <span style="font-weight: 700; font-family: monospace;">{{ $triage->blood_pressure ?? '--' }}</span>
+                                                </div>
+                                                <div style="font-size: 11px; display: flex; flex-direction: column; align-items: center; background: #f0fdf4; color: #15803d; padding: 6px 4px; border-radius: 8px; border: 1px solid #dcfce7;" title="Heart Rate">
+                                                    <span style="font-size: 9px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 2px;">HR</span>
+                                                    <span style="font-weight: 700; font-family: monospace;">{{ $triage->heart_rate ?? '--' }}</span>
+                                                </div>
+                                                <div style="font-size: 11px; display: flex; flex-direction: column; align-items: center; background: #eff6ff; color: #1d4ed8; padding: 6px 4px; border-radius: 8px; border: 1px solid #dbeafe;" title="Temperature">
+                                                    <span style="font-size: 9px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 2px;">Temp</span>
+                                                    <span style="font-weight: 700; font-family: monospace;">{{ $triage->temperature ?? '--' }}°C</span>
+                                                </div>
+                                                <div style="font-size: 11px; display: flex; flex-direction: column; align-items: center; background: #fffbeb; color: #b45309; padding: 6px 4px; border-radius: 8px; border: 1px solid #fef3c7;" title="SpO2">
+                                                    <span style="font-size: 9px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 2px;">SpO2</span>
+                                                    <span style="font-weight: 700; font-family: monospace;">{{ $triage->spo2 ?? '--' }}%</span>
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; display: flex; align-items: center; gap: 4px; justify-content: center;">
+                                                <i class="bi bi-clock-history"></i> {{ $triage->created_at->diffForHumans() }}
+                                            </div>
+                                        @else
+                                            <div style="text-align: center; padding: 15px; background: var(--bg-light); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--text-gray); font-size: 11px; font-style: italic;">
+                                                Vitals not recorded
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        @forelse($meds as $rx)
+                                            <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
+                                                    <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
+                                                    <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                </div>
+                                                <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
+                                                    {{ $rx->instructions }}
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div style="color: var(--text-gray); font-size: 11px; font-style: italic; background: var(--bg-light); border: 1px dashed var(--border-color); border-radius: 8px; padding: 12px; text-align: center;">
+                                                <i class="bi bi-prescription2 mb-4"></i><br>No active prescriptions
+                                            </div>
+                                        @endforelse
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            <div style="display: flex; align-items: center; gap: 10px; background: var(--info-light); padding: 8px 12px; border-radius: 10px; border: 1px solid #dbeafe;">
+                                                <div style="width: 30px; height: 30px; border-radius: 50%; background: white; color: var(--info); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border: 2px solid #3b82f6; line-height: 1;">D</div>
+                                                <div style="display: flex; flex-direction: column; justify-content: center;">
+                                                    <span style="font-size: 10px; text-transform: uppercase; font-weight: 800; color: var(--info); line-height: 1.2; letter-spacing: 0.5px;">Doctor</span>
+                                                    <span style="font-weight: 700; font-size: 14px; color: var(--text-dark); line-height: 1.2;">{{ $doctor?->name ?? 'Unassigned' }}</span>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 10px; background: var(--success-light); padding: 8px 12px; border-radius: 10px; border: 1px solid #d1fae5;">
+                                                <div style="width: 30px; height: 30px; border-radius: 50%; background: white; color: var(--success); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border: 2px solid #10b981; line-height: 1;">N</div>
+                                                <div style="display: flex; flex-direction: column; justify-content: center;">
+                                                    <span style="font-size: 10px; text-transform: uppercase; font-weight: 800; color: var(--success); line-height: 1.2; letter-spacing: 0.5px;">Nurse</span>
+                                                    <span style="font-weight: 700; font-size: 14px; color: var(--text-dark); line-height: 1.2;">{{ $nurse?->name ?? 'Unassigned' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                            <span class="core1-status-tag" style="background: var(--primary); color: white; border: none; font-size: 10px; font-weight: 800; padding: 4px 12px; border-radius: 6px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 0.5px;">
+                                                {{ strtoupper($admission->status) }}
+                                            </span>
+                                            <div style="font-size: 12px; color: var(--text-dark); font-weight: 700; margin-top: 4px;">
+                                                Adm: {{ $admission->admission_date->format('M d, Y') }}
+                                            </div>
+                                            <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 4px;">
+                                                <i class="bi bi-clock" style="font-size: 12px;"></i> {{ $admission->admission_date->format('h:i A') }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="vertical-align: middle; padding-right: 32px;">
+                                        <div class="d-flex justify-content-end align-items-center gap-2">
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
-                                                    onclick="openRecordModal('{{ route('core1.medical-records.show', $admission->encounter->patient_id) }}')" 
-                                                    title="Clinical Overview">
+                                                    onclick="openRecordModal('{{ route('core1.medical-records.show', $patient->id) }}')" 
+                                                    title="Clinical Overview"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button type="button" class="core1-btn-sm core1-btn-primary"
-                                                    onclick="openDischargeModal({{ $admission->id }}, '{{ $admission->encounter->patient->name }}')"
-                                                    title="Discharge Patient">
+
+                                            {{-- NEW CLINICAL ACTIONS --}}
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openVitalsModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
+                                                    title="Record Vitals"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.1);">
+                                                <i class="bi bi-heart-pulse"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openNotesModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
+                                                    title="Clinical Notes"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openMedicationModal({{ $admission->encounter_id }})" 
+                                                    title="Issue Medication"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-capsule"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openLabOrderModal({{ $admission->encounter_id }})" 
+                                                    title="Order Lab Test"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-droplet-half"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openDischargeModal({{ $admission->id }}, '{{ $patient->name }}')" 
+                                                    title="Discharge Patient"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.2);">
                                                 <i class="bi bi-box-arrow-right"></i>
                                             </button>
                                         </div>
@@ -271,11 +385,31 @@
                                                                     </div>
                                                                     <div class="fm-bed-tip">
                                                                         <strong>{{ $bed['bed_number'] }}</strong>
-                                                                        @if($bed['status'] === 'occupied' && $bed['patient'])
-                                                                            <br>{{ $bed['patient'] }}
-                                                                            <br><span style="opacity:.7;font-size:10px;">MRN: {{ $bed['mrn'] }}</span>
+                                                                        @if($bed['patient'])
+                                                                            <br><span style="color: var(--primary); font-weight: 600;">{{ $bed['patient'] }}</span>
+                                                                            <br><span style="font-size: 10px; color: var(--text-gray);">MRN: {{ $bed['mrn'] }}</span>
+                                                                            
+                                                                            @if($bed['triage'])
+                                                                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 11px;">
+                                                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                                                                        <span>BP: <strong>{{ $bed['triage']['bp'] ?? '--' }}</strong></span>
+                                                                                        <span>HR: <strong>{{ $bed['triage']['hr'] ?? '--' }}</strong></span>
+                                                                                    </div>
+                                                                                    <div style="display: flex; justify-content: space-between;">
+                                                                                        <span>Temp: <strong>{{ $bed['triage']['temp'] ?? '--' }}°C</strong></span>
+                                                                                        <span>SpO2: <strong>{{ $bed['triage']['spo2'] ?? '--' }}%</strong></span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endif
+
+                                                                            <div style="margin-top: 12px; display: flex; gap: 6px; justify-content: center; background: rgba(255,255,255,0.5); padding: 6px; border-radius: 8px;">
+                                                                                <button type="button" onclick="openVitalsModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--danger);" title="Record Vitals"><i class="bi bi-heart-pulse"></i></button>
+                                                                                <button type="button" onclick="openNotesModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--info);" title="Clinical Notes"><i class="bi bi-pencil-square"></i></button>
+                                                                                <button type="button" onclick="openMedicationModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--primary);" title="Issue Medication"><i class="bi bi-capsule"></i></button>
+                                                                                <button type="button" onclick="openLabOrderModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--warning);" title="Order Lab"><i class="bi bi-droplet-half"></i></button>
+                                                                            </div>
                                                                         @else
-                                                                            <br><span style="opacity:.8;">{{ ucfirst($bed['status']) }}</span>
+                                                                            <br><span style="color: var(--success);">{{ ucfirst($bed['status']) }}</span>
                                                                         @endif
                                                                     </div>
                                                                 </div>
@@ -299,6 +433,8 @@
         </div>{{-- /tab-content --}}
     </div>{{-- /tabs card --}}
 </div>{{-- /core1-container --}}
+
+@include('core.core1.inpatient.modals.clinical_actions')
 
 {{-- Discharge Modal --}}
 <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
@@ -333,23 +469,12 @@ function switchTab(evt, tabId) {
     evt.currentTarget.classList.add('active');
 }
 
+// Discharge Modal Logic
 function openDischargeModal(admissionId, patientName) {
     document.getElementById('dischargePatientName').innerText = patientName;
     document.getElementById('dischargeForm').action = '/core/admissions/' + admissionId + '/request-discharge';
     document.getElementById('dischargeModal').style.display = 'flex';
 }
-
-function closeDischargeModal() {
-    document.getElementById('dischargeModal').style.display = 'none';
-}
-
-// Discharge Modal Logic
-document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('dischargeModal').style.display = 'none';
-    document.getElementById('dischargeModal').addEventListener('click', function (e) {
-        if (e.target === this) closeDischargeModal();
-    });
-});
 
 // Clinical Overview Modal Logic
 function openRecordModal(url) {
@@ -388,18 +513,8 @@ function openRecordModal(url) {
 }
 
 function closeRecordModal() {
-    document.getElementById('medicalRecordModal').style.display = 'none';
-    document.body.style.overflow = '';
+    closeModal('medicalRecordModal');
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const recordModal = document.getElementById('medicalRecordModal');
-    if (recordModal) {
-        recordModal.addEventListener('click', function(e) {
-            if (e.target === this) closeRecordModal();
-        });
-    }
-});
 </script>
 
 {{-- Medical Record / Clinical Overview Modal --}}

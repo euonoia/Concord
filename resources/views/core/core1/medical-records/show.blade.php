@@ -11,10 +11,40 @@
             <h1 class="text-3xl font-bold text-gray-900">Medical Record Details</h1>
             <p class="text-gray-600">Complete medical record information</p>
         </div>
-        <a href="{{ route('core1.medical-records.index') }}"
-           class="px-4 py-2 border rounded-lg hover:bg-gray-100">
-            Back
-        </a>
+        <div class="flex gap-2">
+            @if(isset($activeEncounter))
+                <div class="core1-flex-gap-2 mr-10" style="padding: 4px; background: var(--bg-light); border-radius: 12px; border: 1px solid var(--border-color);">
+                    <button type="button" class="core1-btn-sm core1-btn-outline" 
+                            onclick="openVitalsModal({{ $activeEncounter->id }}, '{{ $patient->name }}')" 
+                            title="Record Vitals"
+                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; color: var(--danger); border-color: rgba(220, 38, 38, 0.1);">
+                        <i class="bi bi-heart-pulse"></i> Vitals
+                    </button>
+                    <button type="button" class="core1-btn-sm core1-btn-outline" 
+                            onclick="openNotesModal({{ $activeEncounter->id }}, '{{ $patient->name }}')" 
+                            title="Add Clinical Note"
+                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px;">
+                        <i class="bi bi-pencil-square"></i> Notes
+                    </button>
+                    <button type="button" class="core1-btn-sm core1-btn-outline" 
+                            onclick="openMedicationModal({{ $activeEncounter->id }})" 
+                            title="Issue Medication"
+                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px;">
+                        <i class="bi bi-capsule"></i> Meds
+                    </button>
+                    <button type="button" class="core1-btn-sm core1-btn-outline" 
+                            onclick="openLabOrderModal({{ $activeEncounter->id }})" 
+                            title="Order Lab Test"
+                            style="display: flex; align-items: center; gap: 8px; padding: 6px 12px;">
+                        <i class="bi bi-droplet-half"></i> Labs
+                    </button>
+                </div>
+            @endif
+            <a href="{{ route('core1.medical-records.index') }}"
+               class="px-4 py-2 border rounded-lg hover:bg-gray-100 flex items-center gap-2">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
     </div>
 
     <div class="bg-white shadow-sm rounded-xl border p-6 space-y-8">
@@ -397,4 +427,8 @@
 
     </div>
 </div>
+@if(!request()->ajax())
+    {{-- Only include modals if it's NOT an AJAX request (standalone page) --}}
+    @include('core.core1.inpatient.modals.clinical_actions')
+@endif
 @endsection

@@ -101,6 +101,13 @@ class MedicalRecordController extends Controller
         'doctor'
     ]);
 
-    return view('core.core1.medical-records.show', compact('patient', 'encounters'));
+        // Detect active IPD encounter for quick clinical actions
+        $activeEncounter = $patient->encounters()
+            ->where('type', 'IPD')
+            ->where('status', '!=', 'Closed')
+            ->latest()
+            ->first();
+
+        return view('core.core1.medical-records.show', compact('patient', 'encounters', 'activeEncounter'));
 }
 }

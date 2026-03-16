@@ -215,7 +215,7 @@ body {
     background: var(--white);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 .core1-table {
