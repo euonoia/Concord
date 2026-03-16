@@ -15,7 +15,7 @@
         onclick="document.querySelector('.dashboard .sidebar').classList.toggle('show')">
         ☰
     </button>
-    <div class="title">Financials</div>
+    <div class="title">Logistics1</div>
 </div>
 
 <!-- SIDEBAR -->
@@ -32,6 +32,17 @@
             <span>Dashboard</span>
         </a>
 
+        <a href="{{ route('admin.logistics1.warehouse.index') }}"
+        class="{{ request()->routeIs('admin.logistics1.warehouse.*') ? 'active' : '' }}">
+            <i class="bi bi-archive"></i>
+            <span>Warehouse Inventory</span>
+        </a>
+
+        <a href="{{ route('admin.logistics1.procurement.index') }}"
+        class="{{ request()->routeIs('admin.logistics1.procurement.*') ? 'active' : '' }}">
+            <i class="bi bi-truck"></i>
+            <span>Procurement & Suppliers</span>
+        </a>
 
         <!-- LOGOUT -->
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
