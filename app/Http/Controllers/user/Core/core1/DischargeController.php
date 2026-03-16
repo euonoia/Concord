@@ -22,7 +22,12 @@ class DischargeController extends Controller
         $user = Auth::user();
 
         // Query active admissions and those approved for discharge
-        $query = Admission::with(['encounter.patient', 'encounter.doctor', 'bed.room.ward'])
+        $query = Admission::with([
+            'encounter.patient.bills.validator', 
+            'encounter.doctor', 
+            'bed.room.ward',
+            'discharge.clearingDoctor'
+        ])
             ->whereIn('status', ['Admitted', 'Doctor Approved']);
 
         // Doctor sees only their admitted patients
@@ -39,19 +44,20 @@ class DischargeController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'admission_id' => 'required|exists:admissions_core1,id',
-            'discharge_summary' => 'required|string',
-            'final_diagnosis' => 'required|string',
+        $validated = $request->validate([
+            'admission_id'           => 'required|exists:admissions_core1,id',
+            'discharge_summary'      => 'required|string',
+            'final_diagnosis'        => 'required|string',
+            'discharge_type'         => 'required|string',
+            'condition_on_discharge' => 'required|string',
+            'follow_up_instructions' => 'nullable|string',
+            'follow_up_date'         => 'nullable|date',
         ]);
 
         try {
-            $admission = Admission::findOrFail($request->admission_id);
+            $admission = Admission::findOrFail($validated['admission_id']);
             
-            $this->admissionService->requestDischarge($admission, [
-                'discharge_summary' => $request->discharge_summary,
-                'final_diagnosis' => $request->final_diagnosis,
-            ]);
+            $this->admissionService->requestDischarge($admission, $validated);
 
             return redirect()->back()->with('success', 'Discharge approved by doctor. Waiting for financial clearance.');
         } catch (\Exception $e) {

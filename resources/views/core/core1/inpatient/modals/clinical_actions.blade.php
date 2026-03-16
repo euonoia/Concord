@@ -154,8 +154,82 @@
     </div>
 </div>
 
+<!-- Discharge Clearance Modal -->
+<div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:600px; max-width:95%; max-height: 90vh; overflow-y: auto;">
+        <div class="core1-header border-bottom mb-20 pb-10">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="bi bi-box-arrow-right"></i>
+                </div>
+                <div>
+                    <h3 class="core1-title">Doctor's Discharge Clearance</h3>
+                    <p class="core1-subtitle">Finalizing care for <span id="dischargePatientName" class="font-bold text-dark"></span></p>
+                </div>
+            </div>
+        </div>
+        <form id="dischargeForm" method="POST">
+            @csrf
+            
+            <div class="core1-stats-grid mb-20" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label class="font-bold block mb-5">Condition on Discharge</label>
+                    <select name="condition_on_discharge" class="core1-input w-full" required>
+                        <option value="Recovered">Recovered</option>
+                        <option value="Improved" selected>Improved</option>
+                        <option value="Stable">Stable</option>
+                        <option value="Guarded">Guarded</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-bold block mb-5">Discharge Type</label>
+                    <select name="discharge_type" class="core1-input w-full" required>
+                        <option value="Routine">Routine Discharge</option>
+                        <option value="DAMA">DAMA (Against Medical Advice)</option>
+                        <option value="Transfer">Transfer to another Facility</option>
+                        <option value="Death">Expired</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-15">
+                <label class="font-bold block mb-5">Final Diagnosis</label>
+                <textarea name="final_diagnosis" class="core1-input w-full" rows="2" required placeholder="Enter final clinical diagnosis..."></textarea>
+            </div>
+
+            <div class="mb-15">
+                <label class="font-bold block mb-5">Discharge Summary & Treatment Given</label>
+                <textarea name="discharge_summary" class="core1-input w-full" rows="3" required placeholder="Brief summary of inpatient management..."></textarea>
+            </div>
+
+            <div class="core1-stats-grid mb-20" style="grid-template-columns: 2fr 1fr; gap: 20px; padding: 15px; background: var(--bg-light); border-radius: 10px; border: 1px dashed var(--border-color);">
+                <div>
+                    <label class="font-bold block mb-5">Follow-up Instructions</label>
+                    <textarea name="follow_up_instructions" class="core1-input w-full" rows="2" placeholder="Diet, activity, medications..."></textarea>
+                </div>
+                <div>
+                    <label class="font-bold block mb-5">Follow-up Date</label>
+                    <input type="date" name="follow_up_date" class="core1-input w-full">
+                </div>
+            </div>
+
+            <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('dischargeModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Approve Discharge</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     // Shared behavior for clinical modals
+    function openDischargeModal(admissionId, patientName) {
+        document.getElementById('dischargePatientName').innerText = patientName;
+        document.getElementById('dischargeForm').action = '/core/admissions/' + admissionId + '/request-discharge';
+        document.getElementById('dischargeModal').style.display = 'flex';
+    }
+
     function openVitalsModal(encounterId, patientName) {
         document.getElementById('vitalsPatientName').innerText = patientName;
         document.getElementById('vitalsForm').action = '/core/outpatient/' + encounterId + '/triage';

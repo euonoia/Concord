@@ -57,40 +57,40 @@ class AdmissionService
     }
 
     /**
-     * Initiate Clinical Discharge.
-     * Sets status to 'Ready for Discharge' and triggers billing aggregation.
+     * Initiate Clinical Discharge (Doctor's Clearance).
+     * Sets status to 'Doctor Approved' and captures all documentation required by HIS rules.
      */
     public function requestDischarge(Admission $admission, array $data): bool
     {
         return DB::transaction(function () use ($admission, $data) {
-            // 1. Validate discharge summary and diagnosis are provided
-            if (empty($data['discharge_summary']) || empty($data['final_diagnosis'])) {
-                throw new \Exception('Discharge summary and final diagnosis are required.');
-            }
-
-            // 2. Update Admission status to 'Doctor Approved'
-            // Bed remains 'Occupied' until financial clearance
+            // 1. Update Admission status to 'Doctor Approved'
+            // Bed remains 'Occupied' until final release
             $admission->update([
                 'status' => 'Doctor Approved'
             ]);
 
-            // 3. Update encounter status for billing
+            // 2. Update encounter status for billing context
             if ($admission->encounter) {
                 $admission->encounter->update(['status' => 'Pending Billing']);
                 
-                // 4. Aggregate final IPD charges for the billing office
+                // 3. Aggregate final IPD charges for the billing office
                 $billingService = app(BillingService::class);
                 $billingService->aggregateCharges($admission->encounter);
             }
 
-            // 5. Create Discharge Record (Clinical Documentation)
+            // 4. Create/Update Discharge Record (Phase 4: Doctor's Clearance)
             DB::table('discharges_core1')->updateOrInsert(
                 ['encounter_id' => $admission->encounter_id],
                 [
-                    'discharge_summary' => $data['discharge_summary'],
-                    'final_diagnosis' => $data['final_diagnosis'],
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
+                    'clearing_doctor_id'     => auth()->id(),
+                    'discharge_summary'      => $data['discharge_summary'] ?? '',
+                    'final_diagnosis'        => $data['final_diagnosis'] ?? '',
+                    'discharge_type'         => $data['discharge_type'] ?? 'Routine',
+                    'condition_on_discharge' => $data['condition_on_discharge'] ?? 'Improved',
+                    'follow_up_instructions' => $data['follow_up_instructions'] ?? null,
+                    'follow_up_date'         => $data['follow_up_date'] ?? null,
+                    'created_at'             => Carbon::now(),
+                    'updated_at'             => Carbon::now(),
                 ]
             );
 
@@ -99,44 +99,48 @@ class AdmissionService
     }
 
     /**
-     * Finalize Discharge & Release Bed.
-     * To be called after financial clearance.
+     * Finalize Discharge & Release Bed (Final Act).
+     * To be called after BOTH Clinical (Doctor) and Financial (Paid Bill) clearances.
      */
     public function finalizeDischarge(Admission $admission): bool
     {
         $result = DB::transaction(function () use ($admission) {
-            // 1. Validate clinical discharge was completed
+            // 1. Strict Validation: Clinical Clearance (Doctor's Approval)
             if ($admission->status !== 'Doctor Approved') {
-                throw new \Exception('Patient must have doctor approval before final release.');
+                throw new \Exception('Patient requires Clinical Clearance (Doctor Approval) before final release.');
             }
 
-            // 2. Release the Bed (Phase 4: Bed Release)
+            // 2. Strict Validation: Financial Clearance (Paid Bill)
+            if ($admission->encounter) {
+                $bill = \App\Models\user\Core\core1\Bill::where('encounter_id', $admission->encounter_id)
+                    ->latest()
+                    ->first();
+                
+                if (!$bill || $bill->status !== 'paid') {
+                    throw new \Exception('Patient requires Financial Clearance (Paid Bill) before final release.');
+                }
+            }
+
+            // 3. Release the Bed (Phase 4: Bed Release)
             if ($admission->bed) {
                 $admission->bed->update(['status' => 'Available']);
             }
 
-            // 3. Complete Admission
+            // 4. Update Admission record
             $admission->update([
                 'discharge_date' => Carbon::now(),
-                'status' => 'Discharged'
+                'status'         => 'Discharged'
             ]);
 
-            // 4. Close encounter if billing is fully paid (done in BillingService, but safety check here)
+            // 5. Permanently Close Encounter
             if ($admission->encounter) {
-                $bill = $admission->encounter->patient->bills()
-                    ->where('encounter_id', $admission->encounter_id)
-                    ->latest()
-                    ->first();
-                
-                if ($bill && $bill->status === 'paid') {
-                    $admission->encounter->update(['status' => 'Closed']);
-                }
+                $admission->encounter->update(['status' => 'Closed']);
             }
 
             return true;
         });
 
-        // 5. Sync discharge to Core 2 Bed & Linen (release bed)
+        // 6. Sync discharge to Core 2 Bed & Linen system
         $this->syncService->syncDischargeToCore2($admission);
 
         return $result;

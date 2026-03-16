@@ -436,31 +436,6 @@
 
 @include('core.core1.inpatient.modals.clinical_actions')
 
-{{-- Discharge Modal --}}
-<div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
-    <div class="core1-modal-content core1-card" style="width:500px; max-width:90%;">
-        <div class="core1-header border-bottom mb-20 pb-10">
-            <h3 class="core1-title">Patient Discharge</h3>
-            <p class="core1-subtitle">Complete discharge for <span id="dischargePatientName" class="font-bold text-dark"></span></p>
-        </div>
-        <form id="dischargeForm" method="POST">
-            @csrf
-            <div class="mb-15">
-                <label class="font-bold block mb-5">Final Diagnosis</label>
-                <textarea name="final_diagnosis" class="w-full p-10 border rounded" rows="3" required placeholder="Enter final clinical diagnosis..."></textarea>
-            </div>
-            <div class="mb-20">
-                <label class="font-bold block mb-5">Discharge Summary</label>
-                <textarea name="discharge_summary" class="w-full p-10 border rounded" rows="4" required placeholder="Enter brief summary of treatment and follow-up instructions..."></textarea>
-            </div>
-            <div class="core1-flex-gap-2 justify-end pt-10 border-top">
-                <button type="button" class="core1-btn core1-btn-outline" onclick="closeDischargeModal()">Cancel</button>
-                <button type="submit" class="core1-btn core1-btn-primary">Confirm Discharge</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 function switchTab(evt, tabId) {
     document.querySelectorAll('.core1-tab-pane').forEach(p => p.classList.remove('active'));
@@ -470,12 +445,6 @@ function switchTab(evt, tabId) {
 }
 
 // Discharge Modal Logic
-function openDischargeModal(admissionId, patientName) {
-    document.getElementById('dischargePatientName').innerText = patientName;
-    document.getElementById('dischargeForm').action = '/core/admissions/' + admissionId + '/request-discharge';
-    document.getElementById('dischargeModal').style.display = 'flex';
-}
-
 // Clinical Overview Modal Logic
 function openRecordModal(url) {
     const modal = document.getElementById('medicalRecordModal');

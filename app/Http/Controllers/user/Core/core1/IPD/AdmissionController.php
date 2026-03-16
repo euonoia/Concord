@@ -72,8 +72,12 @@ class AdmissionController extends Controller
     public function requestDischarge(Request $request, Admission $admission)
     {
         $validated = $request->validate([
-            'discharge_summary' => 'required|string',
-            'final_diagnosis' => 'required|string',
+            'discharge_summary'      => 'required|string',
+            'final_diagnosis'        => 'required|string',
+            'discharge_type'         => 'required|string',
+            'condition_on_discharge' => 'required|string',
+            'follow_up_instructions' => 'nullable|string',
+            'follow_up_date'         => 'nullable|date',
         ]);
 
         try {

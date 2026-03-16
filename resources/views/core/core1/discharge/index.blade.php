@@ -39,8 +39,7 @@
                         <th>Ward/Bed</th>
                         <th>Doctor</th>
                         <th>Admission Date</th>
-                        <th>Status</th>
-                        <th>Billing Status</th>
+                        <th style="width: 180px;">Clearance Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -85,22 +84,48 @@
                                 {{ $admission->admission_date->format('M d, Y') }}
                             </td>
                             <td>
-                                @if($admission->status === 'Admitted')
-                                    <span class="core1-status-tag tag-blue" style="font-size: 10px;">ADMITTED</span>
-                                @elseif($admission->status === 'Doctor Approved')
-                                    <span class="core1-status-tag core1-tag-stable" style="font-size: 10px;">DR-APPROVED</span>
-                                @else
-                                    <span class="core1-status-tag tag-gray" style="font-size: 10px;">{{ strtoupper($admission->status) }}</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($latestBill)
-                                    <span class="core1-status-tag {{ $latestBill->status === 'paid' ? 'core1-tag-stable' : 'tag-red' }}">
-                                        {{ strtoupper($latestBill->status) }}
-                                    </span>
-                                @else
-                                    <span class="core1-status-tag tag-gray">NO BILL</span>
-                                @endif
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    {{-- Clinical Clearance (Doctor) --}}
+                                    @php $discharge = $admission->discharge; @endphp
+                                    <div style="background: var(--bg-light); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); position: relative;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                            <span style="font-size: 9px; font-weight: 800; color: var(--text-gray); letter-spacing: 0.5px;">CLINICAL</span>
+                                            @if($admission->status === 'Doctor Approved' || $admission->status === 'Discharged')
+                                                <span style="color: var(--success); font-size: 12px;"><i class="bi bi-check-circle-fill"></i></span>
+                                            @else
+                                                <span style="color: var(--warning); font-size: 12px;"><i class="bi bi-clock-history"></i></span>
+                                            @endif
+                                        </div>
+                                        @if($discharge && $discharge->clearingDoctor)
+                                            <div style="font-size: 10px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                Dr. {{ $discharge->clearingDoctor->name }}
+                                            </div>
+                                        @else
+                                            <div style="font-size: 10px; color: var(--text-gray); font-style: italic;">Pending Doc</div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Financial Clearance (Billing) --}}
+                                    <div style="background: var(--bg-light); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                            <span style="font-size: 9px; font-weight: 800; color: var(--text-gray); letter-spacing: 0.5px;">FINANCIAL</span>
+                                            @if($latestBill && $latestBill->status === 'paid')
+                                                <span style="color: var(--success); font-size: 12px;"><i class="bi bi-check-circle-fill"></i></span>
+                                            @else
+                                                <span style="color: var(--danger); font-size: 12px;"><i class="bi bi-x-circle-fill"></i></span>
+                                            @endif
+                                        </div>
+                                        @if($latestBill && $latestBill->validator)
+                                            <div style="font-size: 10px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                {{ $latestBill->validator->name }}
+                                            </div>
+                                        @elseif($latestBill)
+                                            <div style="font-size: 10px; color: var(--text-gray); font-style: italic;">Pending Val</div>
+                                        @else
+                                            <div style="font-size: 10px; color: var(--text-gray); font-style: italic;">No Bill</div>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 @if($admission->status === 'Admitted')
@@ -172,14 +197,47 @@
             @csrf
             <input type="hidden" name="admission_id" id="modalAdmissionId">
             
-            <div class="core1-form-group mb-20">
+            <div class="core1-stats-grid mb-15" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="core1-form-group">
+                    <label class="core1-form-label">Condition on Discharge <span class="text-red">*</span></label>
+                    <select name="condition_on_discharge" class="core1-input" required>
+                        <option value="Recovered">Recovered</option>
+                        <option value="Improved" selected>Improved</option>
+                        <option value="Stable">Stable</option>
+                        <option value="Guarded">Guarded</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div class="core1-form-group">
+                    <label class="core1-form-label">Discharge Type <span class="text-red">*</span></label>
+                    <select name="discharge_type" class="core1-input" required>
+                        <option value="Routine">Routine Discharge</option>
+                        <option value="DAMA">DAMA (Against Medical Advice)</option>
+                        <option value="Transfer">Transfer</option>
+                        <option value="Death">Death</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="core1-form-group mb-15">
                 <label class="core1-form-label">Final Diagnosis <span class="text-red">*</span></label>
                 <input type="text" name="final_diagnosis" class="core1-input" required placeholder="e.g. Community-Acquired Pneumonia">
             </div>
 
-            <div class="core1-form-group mb-20">
+            <div class="core1-form-group mb-15">
                 <label class="core1-form-label">Discharge Summary <span class="text-red">*</span></label>
-                <textarea name="discharge_summary" class="core1-input" rows="4" required style="resize:none;" placeholder="Outline treatment course, medications, and follow-up instructions..."></textarea>
+                <textarea name="discharge_summary" class="core1-input" rows="3" required style="resize:none;" placeholder="Outline treatment course..."></textarea>
+            </div>
+
+            <div class="core1-stats-grid mb-20" style="grid-template-columns: 2fr 1fr; gap: 15px; padding: 12px; border-radius: 8px; border: 1px dashed var(--border-color);">
+                <div class="core1-form-group">
+                    <label class="core1-form-label">Follow-up Instructions</label>
+                    <input type="text" name="follow_up_instructions" class="core1-input" placeholder="Diet, activity, medications...">
+                </div>
+                <div class="core1-form-group">
+                    <label class="core1-form-label">Follow-up Date</label>
+                    <input type="date" name="follow_up_date" class="core1-input">
+                </div>
             </div>
 
             <div style="background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px;">
