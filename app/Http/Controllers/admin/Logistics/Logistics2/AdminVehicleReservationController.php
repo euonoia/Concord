@@ -14,8 +14,6 @@ class AdminVehicleReservationController extends Controller
      */
     public function index()
     {
-        // We now pull drug_name and quantity directly from vehicle_reservations 
-        // for better consistency and performance.
         $reservations = DB::table('vehicle_reservations')
             ->leftJoin('vendor_logistics2', 'vehicle_reservations.vendor_log_id', '=', 'vendor_logistics2.id')
             ->select(
@@ -34,7 +32,7 @@ class AdminVehicleReservationController extends Controller
     public function startTransit(Request $request, $id)
     {
         DB::transaction(function () use ($id) {
-            // 1. Update Vehicle Table
+            // 1. Update Vehicle Reservation status
             DB::table('vehicle_reservations')->where('id', $id)->update([
                 'delivery_status' => 'in_transit',
                 'updated_at' => now()
@@ -60,7 +58,7 @@ class AdminVehicleReservationController extends Controller
     }
 
     /**
-     * Mark the delivery as Complete
+     * Mark the delivery as Complete and Release the Vehicle
      */
     public function completeDelivery(Request $request, $id)
     {
@@ -68,24 +66,36 @@ class AdminVehicleReservationController extends Controller
         $handlerId = $employee ? $employee->employee_id : (string)Auth::id();
 
         DB::transaction(function () use ($id, $handlerId) {
-            // 1. Update Vehicle Reservation
+            // 1. Get reservation details before updating
+            $reservation = DB::table('vehicle_reservations')->where('id', $id)->first();
+
+            if (!$reservation) {
+                return;
+            }
+
+            // 2. Update Vehicle Reservation Table
             DB::table('vehicle_reservations')->where('id', $id)->update([
                 'delivery_status' => 'delivered',
                 'delivered_by' => $handlerId,
                 'updated_at' => now()
             ]);
 
-            $reservation = DB::table('vehicle_reservations')->where('id', $id)->first();
+            // 3. AUTOMATION: Mark the vehicle as 'available' in Fleet Management
+            DB::table('fleet_management_logistics2')
+                ->where('plate_number', $reservation->plate_number)
+                ->update([
+                    'status' => 'available',
+                    'updated_at' => now()
+                ]);
 
-            // 2. Update Vendor Logistics
+            // 4. Update Vendor Logistics status
             DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->update([
                 'status' => 'delivered',
                 'updated_at' => now()
             ]);
 
+            // 5. Final update to Procurement Log (L1)
             $vendorLog = DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->first();
-
-            // 3. Final update to Procurement Log
             DB::table('procurement_log_logistics2')
                 ->where('id', $vendorLog->procurement_id)
                 ->update([
@@ -95,6 +105,6 @@ class AdminVehicleReservationController extends Controller
                 ]);
         });
 
-        return redirect()->back()->with('success', 'Delivery completed and logs synced.');
+        return redirect()->back()->with('success', 'Delivery completed. Vehicle is now available for new assignments.');
     }
 }

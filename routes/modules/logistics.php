@@ -1,43 +1,56 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-// Import Controllers
 use App\Http\Controllers\admin\Logistics\Logistics1\AdminLogistics1WarehouseController;
 use App\Http\Controllers\admin\Logistics\Logistics1\AdminLogistics1ProcurementController;
+use App\Http\Controllers\admin\Logistics\Logistics1\AdminMaintenanceController;
+
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVehicleReservationController;
+use App\Http\Controllers\admin\Logistics\Logistics2\AdminFleetController;
+
 
 // --- General Dashboard ---
 Route::get('/dashboard', function () { 
-    return view('logistics.dashboard'); 
-})->name('logistics.dashboard');
+    return view('admin._logistics2.dashboard'); 
+})->name('admin.logistics2.dashboard');
 
-
-// --- Logistics 1 (Internal Warehouse & Procurement) ---
+// --- Logistics 1 Group ---
 Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
-    
-    // Warehouse
-    Route::get('/warehouse', [AdminLogistics1WarehouseController::class, 'index'])
-        ->name('warehouse.index');
-
-    // Procurement
+    Route::get('/warehouse', [AdminLogistics1WarehouseController::class, 'index'])->name('warehouse.index');
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', [AdminLogistics1ProcurementController::class, 'index'])->name('index');
         Route::post('/request', [AdminLogistics1ProcurementController::class, 'store'])->name('store');
     });
+
+Route::prefix('maintenance')->name('maintenance.')->group(function () {
+        Route::get('/', [AdminMaintenanceController::class, 'index'])->name('index');
+        Route::post('/repair', [AdminMaintenanceController::class, 'recordRepair'])->name('repair');
+    });
 });
 
-
+// --- Logistics 2 Group ---
 Route::prefix('logistics2')->name('admin.logistics2.')->group(function () {
     
+    // Vendor
     Route::prefix('vendor')->name('vendor.')->group(function () {
         Route::get('/index', [AdminVendorController::class, 'index'])->name('index');
         Route::post('/process/{id}', [AdminVendorController::class, 'processRequest'])->name('process');
     });
 
+    // Vehicle
     Route::prefix('vehicle')->name('vehicle.')->group(function () {
         Route::get('/index', [AdminVehicleReservationController::class, 'index'])->name('index');
         Route::post('/transit/{id}', [AdminVehicleReservationController::class, 'startTransit'])->name('transit');
         Route::post('/complete/{id}', [AdminVehicleReservationController::class, 'completeDelivery'])->name('complete');
     });
+
+    // Fleet (Correctly Nested Now)
+    Route::prefix('fleet')->name('fleet.')->group(function () {
+        Route::get('/', [AdminFleetController::class, 'index'])->name('index');
+        Route::post('/store', [AdminFleetController::class, 'store'])->name('store');
+        Route::post('/update-status/{id}', [AdminFleetController::class, 'updateStatus'])->name('update_status');
+    });
+
+    Route::get('/audit', [App\Http\Controllers\admin\Logistics\Logistics2\AdminAuditController::class, 'index'])->name('audit.index');
 });
