@@ -143,6 +143,10 @@
                     <input type="text" name="duration" class="core1-input w-full" placeholder="e.g. 7 days">
                 </div>
             </div>
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Quantity</label>
+                <input type="number" name="quantity" class="core1-input w-full" required placeholder="Number of units to dispense" min="1">
+            </div>
             <div class="mb-15">
                 <label class="font-bold block mb-5">Instructions</label>
                 <input type="text" name="instructions" class="core1-input w-full" placeholder="e.g. Administer via slow IV push">

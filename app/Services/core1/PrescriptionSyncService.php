@@ -28,6 +28,7 @@ class PrescriptionSyncService
                 'doctor_id'              => $prescription->encounter->doctor_id ?? null,
                 'date'                   => now()->toDateString(),
                 'drug_id'                => $prescription->medication, // Mapping name to drug_id for now if inventory not found
+                'quantity'               => $prescription->quantity,
                 'status'                 => 'Received',
             ]);
 

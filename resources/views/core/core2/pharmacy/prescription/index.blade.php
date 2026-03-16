@@ -22,6 +22,7 @@
                     <th class="px-8 py-6">Doctor ID</th>
                     <th class="px-8 py-6">Date</th>
                     <th class="px-8 py-6">Drug ID</th>
+                    <th class="px-8 py-6">Quantity</th>
                     <th class="px-8 py-6">Status</th>
                     <th class="px-8 py-6 text-right">Actions</th>
                 </tr>
@@ -34,6 +35,7 @@
                     <td class="px-8 py-5 text-xs font-semibold text-slate-700">{{ $r->doctor_id ?? '—' }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->date ?? '—' }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->drug_id ?? '—' }}</td>
+                    <td class="px-8 py-5 text-xs font-black text-indigo-600">{{ $r->quantity ?? '0' }}</td>
                     <td class="px-8 py-5">
                         <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
                             {{ $r->status === 'Dispensed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">

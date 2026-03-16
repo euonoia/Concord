@@ -94,6 +94,7 @@ class PharmacyController extends Controller
             'doctor_id'       => 'nullable|integer',
             'date'            => 'nullable|date',
             'drug_id'         => 'nullable|string|max:50',
+            'quantity'        => 'required|integer|min:1',
         ]);
 
         Prescription::create($validated);
@@ -104,6 +105,21 @@ class PharmacyController extends Controller
 
     public function dispense(Request $request, Prescription $prescription): RedirectResponse
     {
+        // Decrement Inventory
+        $inventory = \App\Models\core2\DrugInventory::where('drug_name', $prescription->drug_id)
+            ->orWhere('drug_num', $prescription->drug_id)
+            ->first();
+
+        if (!$inventory) {
+            return back()->with('error', 'Drug not found in inventory.');
+        }
+
+        if ($inventory->quantity < $prescription->quantity) {
+            return back()->with('error', 'Insufficient stock. Available: ' . $inventory->quantity);
+        }
+
+        $inventory->decrement('quantity', $prescription->quantity);
+
         $prescription->update([
             'status'        => 'Dispensed',
             'dispensed_at'  => now(),

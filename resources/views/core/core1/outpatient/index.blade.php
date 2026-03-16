@@ -320,6 +320,7 @@
                                 <th>DATE</th>
                                 <th>PATIENT</th>
                                 <th>MEDICATION</th>
+                                <th>QTY</th>
                                 <th>DOSAGE</th>
                                 <th>STATUS</th>
                                 <th>ACTIONS</th>
@@ -331,6 +332,7 @@
                                     <td>{{ $rx->created_at->format('Y-m-d') }}</td>
                                     <td class="font-bold text-blue">{{ $rx->encounter->patient->name ?? 'Unknown' }}</td>
                                     <td class="font-bold">{{ $rx->medication }}</td>
+                                    <td class="font-black text-indigo-600">{{ $rx->quantity }}</td>
                                     <td class="text-xs">
                                         <span class="font-bold">{{ $rx->dosage }}</span><br>
                                         <span class="text-gray italic">{{ $rx->instructions }}</span>
@@ -816,6 +818,10 @@
                         <label class="font-bold block mb-5">Duration</label>
                         <input type="text" name="duration" class="core1-input w-full" placeholder="e.g. 5 days">
                     </div>
+                </div>
+                <div class="mb-10">
+                    <label class="font-bold block mb-5">Quantity</label>
+                    <input type="number" name="quantity" class="core1-input w-full" required placeholder="Number of units" min="1">
                 </div>
                 <div class="mb-15">
                     <label class="font-bold block mb-5">Instructions</label>

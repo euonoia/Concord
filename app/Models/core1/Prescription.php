@@ -16,6 +16,7 @@ class Prescription extends Model
         'duration',
         'core2_pharmacy_id',
         'status',
+        'quantity',
     ];
 
     public function encounter()

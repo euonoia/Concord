@@ -206,6 +206,7 @@
                                             <div style="margin-bottom: 4px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                                                 <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
                                                     <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $firstMed->medication }} 
+                                                    <span style="font-weight: 800; color: var(--primary);">[x{{ $firstMed->quantity }}]</span>
                                                     <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $firstMed->dosage }})</span>
                                                 </div>
                                                 <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
@@ -224,6 +225,7 @@
                                                             <div style="font-weight: 700; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                                                                 <div style="display: flex; align-items: center; gap: 8px;">
                                                                     <i class="bi bi-capsule-pill" style="color: var(--primary); font-size: 14px;"></i> {{ $rx->medication }} 
+                                                                    <span style="font-weight: 800; color: var(--primary);">[x{{ $rx->quantity }}]</span>
                                                                     <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
                                                                 </div>
                                                                 @if($rx->status === 'Administered')

@@ -243,6 +243,7 @@ class OutpatientController extends Controller
             'dosage' => 'required|string',
             'instructions' => 'nullable|string',
             'duration' => 'nullable|string',
+            'quantity' => 'required|integer|min:1',
         ]);
 
         $prescription = Prescription::create($request->all());

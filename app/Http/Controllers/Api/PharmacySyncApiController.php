@@ -28,6 +28,22 @@ class PharmacySyncApiController extends Controller
         try {
             // Update Core 2 Order
             $pharmacyOrder = PharmacyOrder::findOrFail($validated['core2_pharmacy_id']);
+            // Decrement Inventory if status is Dispensed
+            if ($validated['status'] === 'Dispensed') {
+                $inventory = DrugInventory::where('drug_name', $pharmacyOrder->drug_id)
+                    ->orWhere('drug_num', $pharmacyOrder->drug_id)
+                    ->first();
+
+                if (!$inventory || $inventory->quantity < $pharmacyOrder->quantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient stock in inventory for dispensing.',
+                    ], 400);
+                }
+
+                $inventory->decrement('quantity', $pharmacyOrder->quantity);
+            }
+
             $pharmacyOrder->update([
                 'status'        => $validated['status'],
                 'pharmacist_id' => $validated['pharmacist_id'],
@@ -90,7 +106,8 @@ class PharmacySyncApiController extends Controller
         }
 
         $drugs = DrugInventory::where('drug_name', 'LIKE', "%{$query}%")
-            ->limit(10)
+            ->orWhere('drug_num', 'LIKE', "%{$query}%")
+            ->limit(15)
             ->get(['drug_name', 'drug_num', 'quantity']);
 
         return response()->json($drugs);

@@ -18,6 +18,7 @@ class Prescription extends Model
         'dispensed_at',
         'pharmacist_id',
         'status',
+        'quantity',
     ];
 
     protected $casts = [
