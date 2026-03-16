@@ -82,8 +82,16 @@ class LabSyncApiController extends Controller
         try {
             $labOrder = LabOrder::findOrFail($validated['core1_lab_order_id']);
 
+            $resultData = $validated['result_data'];
+            if (is_string($resultData)) {
+                $decoded = json_decode($resultData, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $resultData = $decoded;
+                }
+            }
+
             $labOrder->update([
-                'result_data' => $validated['result_data'],
+                'result_data' => $resultData,
                 'sync_status' => 'ResultReceived',
                 'result_received_at' => now(),
             ]);

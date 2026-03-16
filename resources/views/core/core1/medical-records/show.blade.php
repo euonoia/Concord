@@ -254,26 +254,36 @@
                                                                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--text-dark); font-weight: 700; font-size: 11px;">
                                                                     <i class="bi bi-clipboard2-pulse" style="color: var(--success);"></i> CLINICAL RESULTS
                                                                 </div>
+                                                                                                                                 @php
+                                                                    $resultData = $lab->result_data;
+                                                                    if (is_string($resultData)) {
+                                                                        $decoded = json_decode($resultData, true);
+                                                                        if (json_last_error() === JSON_ERROR_NONE) {
+                                                                            $resultData = $decoded;
+                                                                        }
+                                                                    }
+                                                                @endphp
                                                                 
-                                                                @if($lab->result_data && is_array($lab->result_data))
+                                                                @if(is_array($resultData))
                                                                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;">
-                                                                        @foreach($lab->result_data as $key => $value)
+                                                                        @foreach($resultData as $key => $value)
                                                                             <div style="padding: 8px; background: #f0fdf4; border-radius: 6px; border: 1px solid #dcfce7;">
                                                                                 <div style="font-size: 9px; text-transform: uppercase; color: #166534; font-weight: 700; margin-bottom: 2px;">{{ str_replace('_', ' ', $key) }}</div>
-                                                                                <div style="font-size: 12px; color: #064e3b; font-weight: 600; font-family: 'JetBrains Mono', monospace;">{{ $value }}</div>
+                                                                                <div style="font-size: 12px; color: #064e3b; font-weight: 600; font-family: 'JetBrains Mono', monospace;">{{ is_array($value) ? json_encode($value) : $value }}</div>
                                                                             </div>
                                                                         @endforeach
                                                                     </div>
-                                                                @elseif($lab->result_data)
+                                                                @elseif($resultData)
                                                                     {{-- Fallback if not an array but has content --}}
                                                                     <div style="padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid var(--success); font-family: monospace; font-size: 11px; color: #064e3b; line-height: 1.5;">
-                                                                        {{ $lab->result_data }}
+                                                                        {{ is_string($resultData) ? $resultData : json_encode($resultData) }}
                                                                     </div>
                                                                 @else
                                                                     <div style="padding: 10px; background: #fff7ed; border-radius: 6px; border-left: 3px solid var(--warning); color: #9a3412; font-size: 11px; font-style: italic;">
                                                                         <i class="bi bi-exclamation-triangle"></i> Result data is empty or pending final validation.
                                                                     </div>
                                                                 @endif
+
                                                             </div>
                                                         @else
                                                             <div style="margin-top: 8px; padding: 12px; background: #fffbeb; border-radius: 8px; border: 1px solid #fef3c7; color: #92400e; font-size: 11px; display: flex; align-items: center; gap: 8px;">
