@@ -18,7 +18,6 @@
     <div class="title">Financials</div>
 </div>
 
-<!-- Sidebar -->
 <!-- SIDEBAR -->
 <div class="dashboard-sidebar sidebar" id="sidebar">
     <div class="logo">
@@ -32,62 +31,7 @@
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
-        
-    <div class="nav-dropdown">
-    <a href="#" onclick="toggleDropdown(event)">
-        <i class="bi bi-calculator"></i>
-        <span>AP & AR</span>
-        <i class="bi bi-chevron-down arrow-icon"></i>
-    </a>
-    <div class="dropdown-container">
-        <a href="{{ route('financials.apar.index') }}" class="sub-link">
-            <i class="bi bi-arrow-down-left-circle"></i>
-            <span>Bills Receivable</span>
-        </a>
-        <a href="#" class="sub-link">
-            <i class="bi bi-arrow-up-right-circle"></i>
-            <span>Accounts Payable</span>
-        </a>
-        </div>
-    </div>
 
-        <!-- DISBURSEMENT DROPDOWN -->
-        <div class="nav-dropdown">
-            <a href="#" onclick="toggleDropdown(event)">
-                <i class="bi bi-cash-stack"></i>
-                <span>Disbursement</span>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="dropdown-container">
-                <a href="{{ route('financials.reimbursement.index') }}" class="sub-link">
-                    <i class="bi bi-receipt"></i>
-                    <span>Reimbursements</span>
-                </a>
-                <a href="#" class="sub-link">
-                    <i class="bi bi-journal-text"></i>
-                    <span>Disbursement Ledger</span>
-                </a>
-            </div>
-        </div>
-
-        <!-- COLLECTIONS DROPDOWN -->
-        <div class="nav-dropdown">
-            <a href="#" onclick="toggleDropdown(event)">
-                <i class="bi bi-collection"></i>
-                <span>Collections</span>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="dropdown-container">
-                <a href="{{ route('financials.bills.index') }}" class="sub-link">
-                    <i class="bi bi-receipt"></i>
-                    <span>Bills Collection</span>
-                </a>
-                <a href="#" class="sub-link">
-                    <i class="bi bi-journal-text"></i>
-                    <span>Collection Ledger</span>
-                </a>
-            </div>
-        </div>
 
         <!-- LOGOUT -->
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
