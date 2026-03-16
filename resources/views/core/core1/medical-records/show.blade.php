@@ -295,36 +295,47 @@
                                 {{-- PRESCRIPTIONS --}}
                                 @if($encounter->prescriptions->count() > 0)
                                     <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
-                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                                            <i class="bi bi-capsule" style="color: var(--primary);"></i> Inpatient Meds & History
+                                        <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                            <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-capsule" style="color: var(--primary);"></i> Inpatient Meds & History</div>
+                                            <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->prescriptions->count() }} active item(s)</span>
                                         </div>
+
                                         <div style="display: flex; flex-direction: column; gap: 10px;">
                                             @foreach($encounter->prescriptions as $rx)
-                                                <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
+                                                <div style="padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
                                                         <strong style="color: var(--text-dark); font-size: 13px;">{{ $rx->medication }}</strong>
                                                         <span style="font-size: 11px; font-weight: 600; color: var(--primary);">{{ $rx->dosage }}</span>
                                                     </div>
-                                                    <div style="font-size: 11px; color: var(--text-gray); margin-bottom: 6px; font-style: italic;">Sig: {{ $rx->instructions }}</div>
+                                                    <div style="font-size: 11px; color: var(--text-gray); margin-bottom: 8px; font-style: italic;">Sig: {{ $rx->instructions }}</div>
                                                     
-                                                    @if($rx->administrations->count() > 0)
+                                                    @php $adminCount = $rx->administrations->count(); @endphp
+                                                    
+                                                    @if($adminCount > 0)
                                                         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
-                                                            <div style="font-size: 10px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                                                                <i class="bi bi-check2-circle" style="color: var(--success);"></i> Administration Log
+                                                            <button type="button" onclick="const log = this.nextElementSibling; const isHidden = log.style.display === 'none'; log.style.display = isHidden ? 'flex' : 'none'; this.querySelector('i').className = isHidden ? 'bi bi-chevron-up' : 'bi bi-chevron-down';" 
+                                                                    style="width: 100%; height: 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; color: #64748b; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; transition: all 0.2s;">
+                                                                <i class="bi bi-chevron-down"></i> ADMINISTRATION LOG ({{ $adminCount }})
+                                                            </button>
+                                                            <div style="display: none; flex-direction: column; gap: 4px; margin-top: 6px;">
+                                                                @foreach($rx->administrations as $admin)
+                                                                    <div style="display: flex; justify-content: space-between; font-size: 10px; padding: 6px 8px; background: #f0fdf4; border-radius: 4px; border-left: 2px solid var(--success);">
+                                                                        <span style="color: var(--text-dark); font-weight: 600;">{{ $admin->administered_at->format('M d, Y h:i A') }}</span>
+                                                                        <span style="color: var(--primary); font-weight: 700;">{{ $admin->administrator->name ?? 'Staff' }}</span>
+                                                                    </div>
+                                                                @endforeach
                                                             </div>
-                                                            @foreach($rx->administrations as $admin)
-                                                                <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
-                                                                    <span style="color: var(--text-dark); font-weight: 600;">{{ $admin->administered_at->format('M d, Y h:i A') }}</span>
-                                                                    <span style="color: var(--primary); font-weight: 700;">{{ $admin->administrator->name ?? 'Staff' }}</span>
-                                                                </div>
-                                                            @endforeach
+                                                        </div>
+                                                    @else
+                                                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color); color: var(--text-gray); font-size: 10px; font-style: italic; text-align: center; opacity: 0.8;">
+                                                            <i class="bi bi-info-circle"></i> No administrations recorded.
                                                         </div>
                                                     @endif
 
-                                                    @if($encounter->type === 'IPD' && ($encounter->admission->status ?? '') === 'Admitted')
-                                                        <form method="POST" action="{{ route('core1.outpatient.prescriptions.administer', $rx->id) }}" style="margin-top: 8px;">
+                                                    @if($encounter->type === 'IPD' && in_array($encounter->admission->status ?? '', ['Admitted', 'Doctor Approved']))
+                                                        <form method="POST" action="{{ route('core1.outpatient.prescriptions.administer', $rx->id) }}" style="margin-top: 10px;">
                                                             @csrf
-                                                            <button type="submit" style="width: 100%; height: 28px; border: 1px solid var(--success); background: white; color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='var(--success)'">
+                                                            <button type="submit" style="width: 100%; height: 32px; border: 1px solid var(--success); background: #f0fdf4; color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'" onmouseout="this.style.background='#f0fdf4'; this.style.color='var(--success)'">
                                                                 <i class="bi bi-plus-circle"></i> Mark as Administered
                                                             </button>
                                                         </form>
@@ -334,6 +345,8 @@
                                         </div>
                                     </div>
                                 @endif
+
+
                             </td>
                             <td style="padding: 16px 20px; text-align: center;">
                                 @php
