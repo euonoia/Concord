@@ -44,14 +44,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($admissions as $admission)
+                    @forelse($items as $item)
                         @php
-                            $encounter = $admission->encounter;
-                            $patient = $encounter->patient;
-                            $latestBill = $patient->bills()
-                                ->where('encounter_id', $encounter->id)
-                                ->latest()
-                                ->first();
+                            $patient = $item['patient'];
+                            $latestBill = $item['clearance_financial']['bill'];
                         @endphp
                         <tr>
                             <td>
@@ -66,39 +62,35 @@
                                 </div>
                             </td>
                             <td>
-                                @if($admission->bed && $admission->bed->room && $admission->bed->room->ward)
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span class="core1-status-tag {{ $item['type'] === 'IPD' ? 'core1-tag-critical' : 'core1-tag-stable' }}" style="width: fit-content; font-size: 10px; padding: 1px 6px;">
+                                        {{ $item['type'] }}
+                                    </span>
                                     <div class="text-sm font-medium">
-                                        {{ $admission->bed->room->ward->name }}
+                                        {{ $item['location'] }}
                                     </div>
-                                    <div class="text-xs text-gray">
-                                        Room {{ $admission->bed->room->room_number }} - Bed {{ $admission->bed->bed_number }}
-                                    </div>
-                                @else
-                                    <div class="text-sm font-medium text-gray">N/A</div>
-                                    <div class="text-xs text-light">No Bed Assigned</div>
-                                @endif
+                                </div>
                             </td>
-                            <td>{{ optional($encounter->doctor)->name ?? 'N/A' }}</td>
+                            <td>{{ $item['doctor']->name ?? 'N/A' }}</td>
                             <td style="font-size: 12px; color: var(--text-gray);">
                                 <i class="bi bi-calendar3" style="margin-right: 4px;"></i>
-                                {{ $admission->admission_date->format('M d, Y') }}
+                                {{ $item['admission_date']->format('M d, Y') }}
                             </td>
                             <td>
                                 <div style="display: flex; flex-direction: column; gap: 6px;">
                                     {{-- Clinical Clearance (Doctor) --}}
-                                    @php $discharge = $admission->discharge; @endphp
                                     <div style="background: var(--bg-light); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); position: relative;">
                                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
                                             <span style="font-size: 9px; font-weight: 800; color: var(--text-gray); letter-spacing: 0.5px;">CLINICAL</span>
-                                            @if($admission->status === 'Doctor Approved' || $admission->status === 'Discharged')
+                                            @if($item['clearance_clinical']['approved'])
                                                 <span style="color: var(--success); font-size: 12px;"><i class="bi bi-check-circle-fill"></i></span>
                                             @else
                                                 <span style="color: var(--warning); font-size: 12px;"><i class="bi bi-clock-history"></i></span>
                                             @endif
                                         </div>
-                                        @if($discharge && $discharge->clearingDoctor)
+                                        @if($item['clearance_clinical']['doctor'])
                                             <div style="font-size: 10px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                Dr. {{ $discharge->clearingDoctor->name }}
+                                                Dr. {{ $item['clearance_clinical']['doctor'] }}
                                             </div>
                                         @else
                                             <div style="font-size: 10px; color: var(--text-gray); font-style: italic;">Pending Doc</div>
@@ -128,18 +120,42 @@
                                 </div>
                             </td>
                             <td>
-                                @if($admission->status === 'Admitted')
-                                    <button type="button" 
-                                            onclick="openDischargeModal('{{ $admission->id }}', '{{ $patient->name }}', '{{ $patient->mrn }}')"
-                                            class="core1-btn-sm core1-btn-primary" 
-                                            style="font-size: 11px;">
-                                        <i class="bi bi-clipboard-check"></i> Doctor Approve
-                                    </button>
-                                @elseif($admission->status === 'Doctor Approved')
+                                @if($item['type'] === 'IPD')
+                                    @if($item['status'] === 'Admitted')
+                                        <button type="button" 
+                                                onclick="openDischargeModal('{{ $item['id'] }}', '{{ $patient->name }}', '{{ $patient->mrn }}')"
+                                                class="core1-btn-sm core1-btn-primary" 
+                                                style="font-size: 11px;">
+                                            <i class="bi bi-clipboard-check"></i> Doctor Approve
+                                        </button>
+                                    @elseif($item['status'] === 'Doctor Approved')
+                                        @if($latestBill && $latestBill->status === 'paid')
+                                            <form action="{{ route('core1.discharge.finalize') }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                                <input type="hidden" name="type" value="IPD">
+                                                <button type="submit" 
+                                                        class="core1-btn-sm" 
+                                                        style="font-size: 11px; background: var(--success); color: white; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer;">
+                                                    <i class="bi bi-door-open"></i> Finalize Release
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button type="button" 
+                                                    class="core1-btn-sm" 
+                                                    style="font-size: 11px; background: var(--bg-dark); color: var(--text-gray); border: none; border-radius: 4px; padding: 4px 10px; cursor: not-allowed;"
+                                                    disabled>
+                                                <i class="bi bi-lock"></i> Awaiting Payment
+                                            </button>
+                                        @endif
+                                    @endif
+                                @else
+                                    {{-- OPD Encounter --}}
                                     @if($latestBill && $latestBill->status === 'paid')
                                         <form action="{{ route('core1.discharge.finalize') }}" method="POST" style="display:inline;">
                                             @csrf
-                                            <input type="hidden" name="admission_id" value="{{ $admission->id }}">
+                                            <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                            <input type="hidden" name="type" value="OPD">
                                             <button type="submit" 
                                                     class="core1-btn-sm" 
                                                     style="font-size: 11px; background: var(--success); color: white; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer;">
@@ -159,9 +175,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center p-40">
+                            <td colspan="6" class="text-center p-40">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
-                                No active admissions found.
+                                No active patients pending discharge.
                             </td>
                         </tr>
                     @endforelse
@@ -169,11 +185,6 @@
             </table>
         </div>
 
-        @if($admissions->hasPages())
-        <div style="padding: 16px 24px; border-top: 1px solid var(--border-color);">
-            {{ $admissions->links() }}
-        </div>
-        @endif
     </div>
 </div>
 

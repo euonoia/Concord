@@ -105,10 +105,13 @@ class BillingService
 
             $bill->save();
 
+            /* 
             // If the bill is fully paid, close the clinical encounter to remove it from "Billing Dept"
+            // REMOVED: In 3-stage discharge, encounter closure happens in Finalize Discharge action
             if ($bill->status === 'paid' && $bill->encounter && $bill->encounter->status === 'Pending Billing') {
                 $bill->encounter->update(['status' => 'Closed']);
             }
+            */
 
             return $payment;
         });
