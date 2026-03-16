@@ -413,6 +413,9 @@
                 }
 
                 debounceTimer = setTimeout(() => {
+                    resultsContainer.innerHTML = '<div style="padding: 10px; color: var(--text-gray); font-style: italic;"><i class="bi bi-arrow-repeat core1-spin"></i> Searching inventory...</div>';
+                    resultsContainer.style.display = 'block';
+
                     fetch(`/api/pharmacy-sync/search-drugs?q=${encodeURIComponent(query)}`)
                         .then(res => res.json())
                         .then(data => {
@@ -420,13 +423,18 @@
                             if (data.length > 0) {
                                 data.forEach(drug => {
                                     const div = document.createElement('div');
-                                    div.style.padding = '8px 12px';
+                                    div.style.padding = '10px 14px';
                                     div.style.cursor = 'pointer';
                                     div.style.borderBottom = '1px solid var(--border-color)';
                                     div.className = 'hover:bg-slate-50';
                                     div.innerHTML = `
-                                        <div class="font-bold text-sm">${drug.drug_name}</div>
-                                        <div class="text-xs text-gray">Stock: ${drug.quantity} | ${drug.drug_num}</div>
+                                        <div class="font-bold text-sm" style="color: var(--text-dark);">${drug.drug_name}</div>
+                                        <div style="font-size: 11px; color: var(--text-gray); margin-top: 2px;">
+                                            <span style="background: var(--info-light); color: var(--info); padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-right: 6px;">
+                                                Stock: ${drug.quantity}
+                                            </span>
+                                            <span style="opacity: 0.7;">Code: ${drug.drug_num}</span>
+                                        </div>
                                     `;
                                     div.onclick = () => {
                                         searchInput.value = drug.drug_name;
@@ -436,11 +444,14 @@
                                 });
                                 resultsContainer.style.display = 'block';
                             } else {
-                                resultsContainer.style.display = 'none';
+                                resultsContainer.innerHTML = '<div style="padding: 12px; color: var(--text-gray); font-style: italic; text-align: center;">No matching medicine found.</div>';
                             }
                         })
-                        .catch(err => console.error('Drug search failed:', err));
-                }, 300);
+                        .catch(err => {
+                            console.error('Drug search failed:', err);
+                            resultsContainer.innerHTML = '<div style="padding: 12px; color: var(--danger); font-size: 11px;">Search failed. Try again.</div>';
+                        });
+                }, 400);
             });
 
             // Close results when clicking outside
