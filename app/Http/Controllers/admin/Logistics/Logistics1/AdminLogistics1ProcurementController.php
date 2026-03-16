@@ -30,13 +30,20 @@ class AdminLogistics1ProcurementController extends Controller
             'selected_supplier' => 'required'
         ]);
 
+        // 1. Get the employee_id linked to the logged-in user
+        $employee = DB::table('employees')
+            ->where('user_id', Auth::id())
+            ->first();
+
+        $requestedBy = $employee ? $employee->employee_id : (Auth::id() ?? 1);
+
         DB::table('procurement_log_logistics2')->insert([
             'drug_num' => $request->drug_num,
             'drug_name' => $request->drug_name,
             'selected_supplier' => $request->selected_supplier,
             'requested_quantity' => $request->requested_quantity,
             'status' => 'pending',
-            'requested_by' => Auth::id() ?? 1, // Fallback for testing
+            'requested_by' => $requestedBy,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
