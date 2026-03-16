@@ -101,4 +101,23 @@ class PharmacyController extends Controller
         return redirect()->route('core2.pharmacy.prescription.index')
             ->with('success', 'Prescription record added successfully.');
     }
+
+    public function dispense(Request $request, Prescription $prescription): RedirectResponse
+    {
+        $prescription->update([
+            'status'        => 'Dispensed',
+            'dispensed_at'  => now(),
+            'pharmacist_id' => auth()->id(),
+        ]);
+
+        // Sync back to Core 1
+        if ($prescription->core1_prescription_id) {
+            $core1Prescription = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
+            if ($core1Prescription) {
+                $core1Prescription->update(['status' => 'Dispensed']);
+            }
+        }
+
+        return back()->with('success', 'Medication dispensed and clinical record updated.');
+    }
 }

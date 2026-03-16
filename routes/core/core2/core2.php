@@ -31,6 +31,7 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/prescription',        [PharmacyController::class, 'prescriptionIndex'])->name('prescription.index');
         Route::get('/prescription/create', [PharmacyController::class, 'prescriptionCreate'])->name('prescription.create');
         Route::post('/prescription',       [PharmacyController::class, 'prescriptionStore'])->name('prescription.store');
+        Route::post('/prescription/{prescription}/dispense', [PharmacyController::class, 'dispense'])->name('prescription.dispense');
     });
 
     // ── MEDICAL PACKAGES ──────────────────────────────────────────────────────────

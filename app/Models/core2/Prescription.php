@@ -14,5 +14,13 @@ class Prescription extends Model
         'doctor_id',
         'date',
         'drug_id',
+        'core1_prescription_id',
+        'dispensed_at',
+        'pharmacist_id',
+        'status',
+    ];
+
+    protected $casts = [
+        'dispensed_at' => 'datetime',
     ];
 }

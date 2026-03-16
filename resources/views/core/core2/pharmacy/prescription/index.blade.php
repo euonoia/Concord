@@ -22,6 +22,8 @@
                     <th class="px-8 py-6">Doctor ID</th>
                     <th class="px-8 py-6">Date</th>
                     <th class="px-8 py-6">Drug ID</th>
+                    <th class="px-8 py-6">Status</th>
+                    <th class="px-8 py-6 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,6 +34,24 @@
                     <td class="px-8 py-5 text-xs font-semibold text-slate-700">{{ $r->doctor_id ?? '—' }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->date ?? '—' }}</td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->drug_id ?? '—' }}</td>
+                    <td class="px-8 py-5">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
+                            {{ $r->status === 'Dispensed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
+                            {{ $r->status ?? 'Received' }}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        @if($r->status !== 'Dispensed')
+                            <form action="{{ route('core2.pharmacy.prescription.dispense', $r->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="text-indigo-600 hover:text-indigo-900 font-black text-[10px] uppercase tracking-widest">
+                                    Dispense
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest italic">Completed</span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="5" class="py-20 text-center text-slate-300 font-bold italic">No prescription records found.</td></tr>

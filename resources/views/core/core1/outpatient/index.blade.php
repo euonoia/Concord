@@ -321,7 +321,8 @@
                                 <th>PATIENT</th>
                                 <th>MEDICATION</th>
                                 <th>DOSAGE</th>
-                                <th>INSTRUCTIONS</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -330,8 +331,37 @@
                                     <td>{{ $rx->created_at->format('Y-m-d') }}</td>
                                     <td class="font-bold text-blue">{{ $rx->encounter->patient->name ?? 'Unknown' }}</td>
                                     <td class="font-bold">{{ $rx->medication }}</td>
-                                    <td>{{ $rx->dosage }}</td>
-                                    <td class="text-xs text-gray">{{ $rx->instructions }}</td>
+                                    <td class="text-xs">
+                                        <span class="font-bold">{{ $rx->dosage }}</span><br>
+                                        <span class="text-gray italic">{{ $rx->instructions }}</span>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $rxStatusClass = match($rx->status ?? 'Ordered') {
+                                                'Dispensed'    => 'core1-tag-stable',
+                                                'Administered' => 'core1-tag-neutral',
+                                                'Synced'       => 'core1-tag-recovering',
+                                                default        => 'core1-tag-cleaning',
+                                            };
+                                        @endphp
+                                        <span class="core1-status-tag {{ $rxStatusClass }}">
+                                            {{ $rx->status ?? 'Ordered' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($rx->status === 'Dispensed')
+                                            <form action="{{ route('core1.outpatient.administerMedication', $rx->id) }}" method="POST" class="m-0">
+                                                @csrf
+                                                <button type="submit" class="core1-btn-sm core1-btn-success" title="Mark as Administered">
+                                                    <i class="bi bi-check-circle"></i> Administer
+                                                </button>
+                                            </form>
+                                        @elseif($rx->status === 'Administered')
+                                            <span class="text-xs text-green font-bold"><i class="bi bi-check-all"></i> Given</span>
+                                        @else
+                                            <span class="text-xs text-gray italic">Wait for Pharm...</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -770,9 +800,10 @@
             <form method="POST" action="{{ route('core1.outpatient.storePrescription') }}">
                 @csrf
                 <input type="hidden" name="encounter_id" id="rxEncounterId">
-                <div class="mb-10">
+                <div class="mb-10" style="position: relative;">
                     <label class="font-bold block mb-5">Medication Name</label>
-                    <input type="text" name="medication" class="core1-input w-full" required placeholder="e.g. Amoxicillin 500mg">
+                    <input type="text" name="medication" id="medicationSearch" class="core1-input w-full" autocomplete="off" required placeholder="e.g. Amoxicillin 500mg">
+                    <div id="drugSearchResults" class="core1-card" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1100; max-height:200px; overflow-y:auto; padding:5px; margin-top:5px; box-shadow: var(--shadow-md);"></div>
                 </div>
                 <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                     <div>
@@ -1493,7 +1524,62 @@ document.addEventListener('DOMContentLoaded', function() {
     closeModal('prescriptionModal');
     closeModal('patientDetailsModal');
     closeModal('viewTriageModal');
-    closeModal('admissionModal');
+});
+
+// ── Medication Search (Autocomplete) ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('medicationSearch');
+    const resultsContainer = document.getElementById('drugSearchResults');
+    let debounceTimer;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(debounceTimer);
+
+            if (query.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/api/pharmacy-sync/search-drugs?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        resultsContainer.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(drug => {
+                                const div = document.createElement('div');
+                                div.style.padding = '8px 12px';
+                                div.style.cursor = 'pointer';
+                                div.style.borderBottom = '1px solid var(--border-color)';
+                                div.className = 'hover:bg-slate-50';
+                                div.innerHTML = `
+                                    <div class="font-bold text-sm">${drug.drug_name}</div>
+                                    <div class="text-xs text-gray">Stock: ${drug.quantity} | ${drug.drug_num}</div>
+                                `;
+                                div.onclick = () => {
+                                    searchInput.value = drug.drug_name;
+                                    resultsContainer.style.display = 'none';
+                                };
+                                resultsContainer.appendChild(div);
+                            });
+                            resultsContainer.style.display = 'block';
+                        } else {
+                            resultsContainer.style.display = 'none';
+                        }
+                    })
+                    .catch(err => console.error('Drug search failed:', err));
+            }, 300);
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                resultsContainer.style.display = 'none';
+            }
+        });
+    }
 });
 </script>
 

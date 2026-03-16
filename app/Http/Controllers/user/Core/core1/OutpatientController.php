@@ -245,9 +245,13 @@ class OutpatientController extends Controller
             'duration' => 'nullable|string',
         ]);
 
-        Prescription::create($request->all());
+        $prescription = Prescription::create($request->all());
 
-        return back()->with('success', 'Prescription issued successfully.');
+        // Sync to Core 2 Pharmacy
+        $syncService = app(\App\Services\core1\PrescriptionSyncService::class);
+        $syncService->syncToCore2($prescription);
+
+        return back()->with('success', 'Prescription issued and sent to pharmacy.');
     }
 
     public function storeLabOrder(Request $request)
@@ -341,9 +345,13 @@ class OutpatientController extends Controller
     {
         \App\Models\core1\MedicationAdministration::create([
             'prescription_id' => $prescription->id,
+            'encounter_id'    => $prescription->encounter_id,
             'administered_by' => auth()->id(),
             'administered_at' => now(),
+            'status'          => 'Administered',
         ]);
+
+        $prescription->update(['status' => 'Administered']);
 
         return back()->with('success', 'Medication marked as administered.');
     }

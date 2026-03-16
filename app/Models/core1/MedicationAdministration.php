@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class MedicationAdministration extends Model
 {
-    protected $table = 'medication_admin_core1';
+    protected $table = 'medication_administrations_core1';
 
     protected $fillable = [
         'prescription_id',
+        'encounter_id',
         'administered_by',
         'administered_at',
+        'dosage_given',
+        'notes',
     ];
 
     protected $casts = [
