@@ -171,18 +171,30 @@
                                     <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
                                         <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
                                             <div style="display: flex; align-items: center; gap: 6px;"><i class="bi bi-heart-pulse" style="color: var(--danger);"></i> Triage Vitals</div>
-                                            <span style="font-size: 10px; color: var(--text-gray);">{{ $encounter->triage->created_at->format('M d, Y h:i A') }}</span>
+                                            <div style="text-align: right;">
+                                                <span style="font-size: 10px; color: var(--text-gray); display: block;">{{ $encounter->triage->created_at->format('M d, Y h:i A') }}</span>
+                                                @if($encounter->triage->creator)
+                                                    <span style="font-size: 9px; color: var(--primary); font-weight: 700; text-transform: uppercase;">Taken by: {{ $encounter->triage->creator->name }}</span>
+                                                @endif
+                                            </div>
                                         </div>
-                                        <div style="color: var(--text-gray); display: flex; flex-wrap: wrap; gap: 12px; font-weight: 500;">
-                                            <span><strong>BP:</strong> {{ $encounter->triage->blood_pressure ?? '--' }}</span>
-                                            <span><strong>HR:</strong> {{ $encounter->triage->heart_rate ?? '--' }} bpm</span>
-                                            <span><strong>Temp:</strong> {{ $encounter->triage->temperature ?? '--' }} °C</span>
-                                            <span><strong>SpO2:</strong> {{ $encounter->triage->oxygen_saturation ?? '--' }} %</span>
-                                            <span><strong>Weight:</strong> {{ $encounter->triage->weight ?? '--' }} kg</span>
+                                        
+                                        <button type="button" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'block' : 'none'); this.querySelector('i').className = (this.nextElementSibling.style.display === 'none' ? 'bi bi-chevron-down' : 'bi bi-chevron-up')" style="width: 100%; background: white; border: 1px dashed var(--border-color); padding: 6px; border-radius: 6px; color: var(--primary); font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 8px; transition: all 0.2s;">
+                                            <i class="bi bi-chevron-down"></i> VIEW VITALS DETAILS
+                                        </button>
+                                        
+                                        <div style="display: none;">
+                                            <div style="color: var(--text-gray); display: flex; flex-wrap: wrap; gap: 12px; font-weight: 500; padding: 8px; background: white; border-radius: 6px; border: 1px solid var(--border-color);">
+                                                <span><strong>BP:</strong> {{ $encounter->triage->blood_pressure ?? '--' }}</span>
+                                                <span><strong>HR:</strong> {{ $encounter->triage->heart_rate ?? '--' }} bpm</span>
+                                                <span><strong>Temp:</strong> {{ $encounter->triage->temperature ?? '--' }} °C</span>
+                                                <span><strong>SpO2:</strong> {{ $encounter->triage->oxygen_saturation ?? '--' }} %</span>
+                                                <span><strong>Weight:</strong> {{ $encounter->triage->weight ?? '--' }} kg</span>
+                                            </div>
+                                            @if($encounter->triage->notes)
+                                                <div style="margin-top: 6px; font-size: 11px; color: var(--text-gray); font-style: italic;">"{{ $encounter->triage->notes }}"</div>
+                                            @endif
                                         </div>
-                                        @if($encounter->triage->notes)
-                                            <div style="margin-top: 6px; font-size: 11px; color: var(--text-gray); font-style: italic;">"{{ $encounter->triage->notes }}"</div>
-                                        @endif
                                     </div>
                                 @endif
 
@@ -208,14 +220,32 @@
                                         <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                                             <i class="bi bi-droplet-half" style="color: var(--warning);"></i> Laboratory Orders
                                         </div>
-                                        <ul style="margin: 0; padding-left: 20px; color: var(--text-gray); font-weight: 500;">
+                                        
+                                        <button type="button" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'); this.querySelector('i').className = (this.nextElementSibling.style.display === 'none' ? 'bi bi-chevron-down' : 'bi bi-chevron-up')" style="width: 100%; background: white; border: 1px dashed var(--border-color); padding: 6px; border-radius: 6px; color: var(--warning); font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 8px; transition: all 0.2s;">
+                                            <i class="bi bi-chevron-down"></i> VIEW LAB RESULTS
+                                        </button>
+
+                                        <div style="display: none; flex-direction: column; gap: 8px;">
                                             @foreach($encounter->labOrders as $lab)
-                                                <li style="margin-bottom: 2px;">
-                                                    {{ $lab->test_name }} 
-                                                    <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }};">{{ $lab->status }}</span>
-                                                </li>
+                                                <div style="padding: 8px; background: white; border-radius: 6px; border: 1px solid var(--border-color);">
+                                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                                        <span style="font-weight: 700; color: var(--text-dark);">{{ $lab->test_name }}</span>
+                                                        <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }}; font-weight: 700;">{{ strtoupper($lab->status) }}</span>
+                                                    </div>
+                                                    <div style="font-size: 11px; color: var(--text-gray); display: flex; gap: 12px;">
+                                                        <span><i class="bi bi-calendar-check"></i> Ordered: {{ $lab->created_at->format('M d, Y') }}</span>
+                                                        @if($lab->result_received_at)
+                                                            <span><i class="bi bi-clock-history"></i> Result: {{ $lab->result_received_at->format('M d, Y h:i A') }}</span>
+                                                        @endif
+                                                    </div>
+                                                    @if($lab->result_data)
+                                                        <div style="margin-top: 6px; padding: 6px; background: var(--bg-light); border-radius: 4px; font-family: monospace; font-size: 11px; color: var(--text-dark); border-left: 3px solid var(--success);">
+                                                            <strong>Results:</strong> {{ $lab->result_data }}
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             @endforeach
-                                        </ul>
+                                        </div>
                                     </div>
                                 @endif
 
@@ -223,16 +253,42 @@
                                 @if($encounter->prescriptions->count() > 0)
                                     <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; margin-top: 8px;">
                                         <div style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                                            <i class="bi bi-capsule" style="color: var(--primary);"></i> Prescriptions
+                                            <i class="bi bi-capsule" style="color: var(--primary);"></i> Inpatient Meds & History
                                         </div>
-                                        <ul style="margin: 0; padding-left: 20px; color: var(--text-gray); font-weight: 500;">
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
                                             @foreach($encounter->prescriptions as $rx)
-                                                <li style="margin-bottom: 4px;">
-                                                    <strong style="color: var(--text-dark);">{{ $rx->medication_name }}</strong> ({{ $rx->dosage }}) <br>
-                                                    <span style="font-size: 11px; font-style: italic;">Sig: {{ $rx->instructions }}</span>
-                                                </li>
+                                                <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
+                                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                                        <strong style="color: var(--text-dark); font-size: 13px;">{{ $rx->medication }}</strong>
+                                                        <span style="font-size: 11px; font-weight: 600; color: var(--primary);">{{ $rx->dosage }}</span>
+                                                    </div>
+                                                    <div style="font-size: 11px; color: var(--text-gray); margin-bottom: 6px; font-style: italic;">Sig: {{ $rx->instructions }}</div>
+                                                    
+                                                    @if($rx->administrations->count() > 0)
+                                                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+                                                            <div style="font-size: 10px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                                                <i class="bi bi-check2-circle" style="color: var(--success);"></i> Administration Log
+                                                            </div>
+                                                            @foreach($rx->administrations as $admin)
+                                                                <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
+                                                                    <span style="color: var(--text-dark); font-weight: 600;">{{ $admin->administered_at->format('M d, Y h:i A') }}</span>
+                                                                    <span style="color: var(--primary); font-weight: 700;">{{ $admin->administrator->name ?? 'Staff' }}</span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+
+                                                    @if($encounter->type === 'IPD' && ($encounter->admission->status ?? '') === 'Admitted')
+                                                        <form method="POST" action="{{ route('core1.outpatient.prescriptions.administer', $rx->id) }}" style="margin-top: 8px;">
+                                                            @csrf
+                                                            <button type="submit" style="width: 100%; height: 28px; border: 1px solid var(--success); background: white; color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--success)'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='var(--success)'">
+                                                                <i class="bi bi-plus-circle"></i> Mark as Administered
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             @endforeach
-                                        </ul>
+                                        </div>
                                     </div>
                                 @endif
                             </td>

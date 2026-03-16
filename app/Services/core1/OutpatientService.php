@@ -31,6 +31,7 @@ class OutpatientService
                 'spo2' => $vitals['spo2'] ?? null,
                 'triage_level' => $vitals['triage_level'] ?? null,
                 'notes' => $vitals['notes'] ?? null,
+                'created_by' => auth()->id(),
             ]);
 
             $triage->save();

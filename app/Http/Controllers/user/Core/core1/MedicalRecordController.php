@@ -87,9 +87,11 @@ class MedicalRecordController extends Controller
             'admission', 
             'admission.bed.room.ward',
             'triage',
+            'triage.creator',
             'consultation',
             'labOrders',
-            'prescriptions'
+            'prescriptions',
+            'prescriptions.administrations.administrator'
         ])
         ->orderByDesc('created_at')
         ->get();

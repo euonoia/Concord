@@ -333,5 +333,16 @@ class OutpatientController extends Controller
 
         return back()->with('success', $message);
     }
+
+    public function administerMedication(Request $request, Prescription $prescription)
+    {
+        \App\Models\core1\MedicationAdministration::create([
+            'prescription_id' => $prescription->id,
+            'administered_by' => auth()->id(),
+            'administered_at' => now(),
+        ]);
+
+        return back()->with('success', 'Medication marked as administered.');
+    }
 }
 
