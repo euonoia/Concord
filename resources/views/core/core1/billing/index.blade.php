@@ -322,8 +322,8 @@
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid var(--bg)';
                 tr.innerHTML = `
-                    <td style="padding: 12px 0; color: var(--text-dark);">${item.desc}</td>
-                    <td style="padding: 12px 0; text-align: right; font-weight: 500;">₱${parseFloat(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td style="padding: 12px 0; color: var(--text-dark);">${item.description}</td>
+                    <td style="padding: 12px 0; text-align: right; font-weight: 500;">₱${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                 `;
                 itemsList.appendChild(tr);
             });
@@ -388,8 +388,8 @@
                     const tr = document.createElement('tr');
                     tr.style.borderBottom = '1px solid var(--border-color)';
                     tr.innerHTML = `
-                        <td style="padding: 10px 14px; color: var(--text-dark);">${item.desc}</td>
-                        <td style="padding: 10px 14px; text-align: right; font-weight: 600;">₱${parseFloat(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="padding: 10px 14px; color: var(--text-dark);">${item.description}</td>
+                        <td style="padding: 10px 14px; text-align: right; font-weight: 600;">₱${parseFloat(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                     `;
                     breakdownItems.appendChild(tr);
                 });

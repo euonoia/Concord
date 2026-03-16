@@ -34,21 +34,21 @@ class BillingService
             // 1. Consultation Fees
             $consultation = Consultation::where('encounter_id', $encounter->id)->first();
             if ($consultation) {
-                $items[] = ['desc' => 'General Consultation', 'qty' => 1, 'price' => 500];
+                $items[] = ['description' => 'General Consultation', 'qty' => 1, 'amount' => 500];
                 $subtotal += 500;
             }
 
             // 2. Lab Orders
             $labs = LabOrder::where('encounter_id', $encounter->id)->get();
             foreach ($labs as $lab) {
-                $items[] = ['desc' => 'Lab: ' . $lab->test_name, 'qty' => 1, 'price' => 1200];
+                $items[] = ['description' => 'Lab: ' . $lab->test_name, 'qty' => 1, 'amount' => 1200];
                 $subtotal += 1200;
             }
 
             // 3. Prescriptions
             $rx = Prescription::where('encounter_id', $encounter->id)->get();
             foreach ($rx as $item) {
-                $items[] = ['desc' => 'RX: ' . $item->medication, 'qty' => 1, 'price' => 300];
+                $items[] = ['description' => 'RX: ' . $item->medication, 'qty' => 1, 'amount' => 300];
                 $subtotal += 300;
             }
 
@@ -63,9 +63,9 @@ class BillingService
                 $bedTotal = $days * $bedRate;
                 
                 $items[] = [
-                    'desc' => 'Room & Bed Charges (' . $days . ' day' . ($days > 1 ? 's' : '') . ')',
+                    'description' => 'Room & Bed Charges (' . $days . ' day' . ($days > 1 ? 's' : '') . ')',
                     'qty' => $days,
-                    'price' => $bedRate
+                    'amount' => $bedRate
                 ];
                 $subtotal += $bedTotal;
             }

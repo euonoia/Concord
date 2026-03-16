@@ -222,7 +222,10 @@ class OutpatientController extends Controller
         // Default: Discharge path - move to Pending Billing
         $encounter->update(['status' => 'Pending Billing']);
         
-        return redirect()->route('core1.billing.overview')
+        // Trigger charge aggregation for the new bill
+        app(\App\Services\core1\BillingService::class)->aggregateCharges($encounter);
+        
+        return redirect()->route('core1.billing.index')
             ->with('success', 'Consultation completed. Patient moved to billing for discharge settlement.');
     }
 
