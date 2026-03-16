@@ -36,7 +36,7 @@
 
         // Logistics Modular
         Route::get('/logistics1/dashboard', function () { return view('admin._logistics1.dashboard'); })->name('admin.logistics1.dashboard');
-        Route::get('/logistics2/dashboard', function () { return view('admin.logistics2.index'); })->name('admin.logistics2.dashboard');
+        Route::get('/logistics2/dashboard', function () { return view('admin._logistics2.dashboard'); })->name('admin.logistics2.dashboard');
 
         // Core Modular
         Route::get('/core1/dashboard', function () { return view('admin.core1.index'); })->name('admin.core1.dashboard');

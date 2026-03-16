@@ -35,7 +35,6 @@ class AdminLogistics1ProcurementController extends Controller
             ->where('user_id', Auth::id())
             ->first();
 
-        // 2. Use employee_id if found, otherwise fallback to Auth::id() or 1
         $requestedBy = $employee ? $employee->employee_id : (Auth::id() ?? 1);
 
         DB::table('procurement_log_logistics2')->insert([
