@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\core1\Admission;
 use App\Models\core1\Bed;
 use App\Models\core1\Ward;
+use App\Models\core1\Encounter;
+use App\Models\core1\Prescription;
+use App\Models\core1\MedicationAdministration;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -159,5 +162,49 @@ class InpatientController extends Controller
         }
 
         return $floorMap;
+    }
+
+    public function getPrescriptionsJson(Encounter $encounter)
+    {
+        $prescriptions = $encounter->prescriptions()
+            ->latest()
+            ->get()
+            ->map(function ($rx) {
+                return [
+                    'id' => $rx->id,
+                    'medication' => $rx->medication,
+                    'dosage' => $rx->dosage,
+                    'instructions' => $rx->instructions,
+                    'status' => $rx->status,
+                    'administer_url' => route('core1.outpatient.prescriptions.administer', $rx->id)
+                ];
+            });
+
+        return response()->json($prescriptions);
+    }
+
+    public function administerAll(Encounter $encounter)
+    {
+        $prescriptions = $encounter->prescriptions()->where('status', '!=', 'Administered')->get();
+
+        if ($prescriptions->isEmpty()) {
+            return back()->with('info', 'No pending medications to administer.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($prescriptions, $encounter) {
+            foreach ($prescriptions as $rx) {
+                MedicationAdministration::create([
+                    'prescription_id' => $rx->id,
+                    'encounter_id'    => $encounter->id,
+                    'administered_by' => auth()->id(),
+                    'administered_at' => now(),
+                    'status'          => 'Administered',
+                ]);
+
+                $rx->update(['status' => 'Administered']);
+            }
+        });
+
+        return back()->with('success', 'All pending medications have been marked as administered.');
     }
 }

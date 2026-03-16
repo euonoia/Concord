@@ -138,6 +138,8 @@ Route::middleware([])->group(function () {
     Route::post('/outpatient/prescription', [OutpatientController::class, 'storePrescription'])->name('core1.outpatient.storePrescription');
     Route::post('/outpatient/lab-order', [OutpatientController::class, 'storeLabOrder'])->name('core1.outpatient.storeLabOrder');
     Route::post('/outpatient/prescriptions/{prescription}/administer', [OutpatientController::class, 'administerMedication'])->name('core1.outpatient.prescriptions.administer');
+    Route::post('/inpatient/encounters/{encounter}/administer-all', [InpatientController::class, 'administerAll'])->name('core1.inpatient.administerAll');
+    Route::get('/inpatient/encounters/{encounter}/prescriptions', [InpatientController::class, 'getPrescriptionsJson'])->name('core1.inpatient.getPrescriptions');
     Route::get('/outpatient/diagnostic-orders/json', [OutpatientController::class, 'getDiagnosticOrdersJson'])->name('core1.outpatient.diagnosticOrders.json');
         
     Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,patient')->group(function () {

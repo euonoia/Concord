@@ -223,8 +223,30 @@
     </div>
 </div>
 
+<!-- Medication Administration (Selection) Modal -->
+<div id="administrationModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:550px; max-width:90%; max-height: 85vh; overflow-y: auto;">
+        <div class="core1-header border-bottom mb-20 pb-10">
+            <h3 class="core1-title">Medication Administration</h3>
+            <p class="core1-subtitle">Select medication to mark as administered for <span id="adminPatientName" class="font-bold text-dark"></span></p>
+        </div>
+        <div id="adminMedsList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Medications will be loaded here via AJAX -->
+            <div style="padding: 20px; text-align: center; color: var(--text-gray);">
+                <i class="bi bi-arrow-repeat spin" style="font-size: 1.5rem; display: block; margin-bottom: 10px;"></i>
+                Loading medications...
+            </div>
+        </div>
+        <div class="core1-flex-gap-2 justify-end pt-20 border-top mt-20">
+            <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('administrationModal')">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Shared behavior for clinical modals
+    let administrationNeedsReload = false;
+
     function openDischargeModal(admissionId, patientName) {
         document.getElementById('dischargePatientName').innerText = patientName;
         document.getElementById('dischargeForm').action = '/core/admissions/' + admissionId + '/request-discharge';
@@ -253,10 +275,101 @@
         document.getElementById('prescriptionModal').style.display = 'flex';
     }
 
+    function openAdministrationModal(encounterId, patientName) {
+        const modal = document.getElementById('administrationModal');
+        const list = document.getElementById('adminMedsList');
+        document.getElementById('adminPatientName').innerText = patientName;
+        
+        modal.style.display = 'flex';
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-gray);"><i class="bi bi-arrow-repeat core1-spin" style="font-size: 1.5rem; display: block; margin-bottom: 10px;"></i>Loading medications...</div>';
+
+        fetch(`/core/inpatient/encounters/${encounterId}/prescriptions`)
+            .then(res => res.json())
+            .then(data => {
+                list.innerHTML = '';
+                if (data.length === 0) {
+                    list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-gray); font-style: italic;">No medications found for this patient.</div>';
+                    return;
+                }
+
+                data.forEach(rx => {
+                    const item = document.createElement('div');
+                    item.style.padding = '12px';
+                    item.style.background = 'var(--bg-light)';
+                    item.style.borderRadius = '10px';
+                    item.style.border = '1px solid var(--border-color)';
+                    item.style.display = 'flex';
+                    item.style.justifyContent = 'space-between';
+                    item.style.alignItems = 'center';
+                    item.style.gap = '15px';
+
+                    const info = `
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: var(--text-dark);">${rx.medication}</div>
+                            <div style="font-size: 11px; color: var(--text-gray);">${rx.dosage} | ${rx.instructions || ''}</div>
+                        </div>
+                    `;
+
+                    let action = '';
+                    if (rx.status === 'Administered') {
+                        action = '<span style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;"><i class="bi bi-check-circle-fill"></i> Administered</span>';
+                    } else {
+                        action = `
+                            <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 4px 10px; font-size: 11px;">
+                                <i class="bi bi-check2"></i> Administer
+                            </button>
+                        `;
+                    }
+
+                    item.innerHTML = info + action;
+                    list.appendChild(item);
+                });
+            })
+            .catch(err => {
+                console.error('Failed to load prescriptions:', err);
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Failed to load medications.</div>';
+            });
+    }
+
+    function administerMedSingle(btn, rxId, url) {
+        if (!confirm('Mark this medication as administered?')) return;
+        
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat core1-spin"></i>';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                btn.parentElement.innerHTML = '<span style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;"><i class="bi bi-check-circle-fill"></i> Administered</span>';
+                administrationNeedsReload = true;
+            } else {
+                alert('Administration failed. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        })
+        .catch(err => {
+            console.error('Administration error:', err);
+            alert('An error occurred.');
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        });
+    }
+
     function closeModal(id) {
         document.getElementById(id).style.display = 'none';
         if (id === 'medicalRecordModal') {
             document.body.style.overflow = '';
+        }
+        if (id === 'administrationModal' && administrationNeedsReload) {
+            window.location.reload();
         }
     }
 

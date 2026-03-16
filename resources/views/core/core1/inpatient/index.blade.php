@@ -171,9 +171,14 @@
                                     <td style="vertical-align: middle;">
                                         @forelse($meds as $rx)
                                             <div style="margin-bottom: 8px; padding: 8px; background: white; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
-                                                    <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
-                                                    <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                <div style="font-weight: 700; font-size: 12px; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                        <i class="bi bi-capsule-pill" style="color: var(--primary);"></i> {{ $rx->medication }} 
+                                                        <span style="font-weight: normal; font-size: 11px; color: var(--text-gray);">({{ $rx->dosage }})</span>
+                                                    </div>
+                                                    @if($rx->status === 'Administered')
+                                                        <i class="bi bi-check-circle-fill" style="color: var(--success);" title="Administered"></i>
+                                                    @endif
                                                 </div>
                                                 <div style="font-size: 11px; color: var(--text-light); margin-top: 4px; padding-left: 18px; line-height: 1.4;">
                                                     {{ $rx->instructions }}
@@ -245,6 +250,13 @@
                                                     title="Issue Medication"
                                                     style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
                                                 <i class="bi bi-capsule"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openAdministrationModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
+                                                    title="Mark as Administered"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--success); border-color: rgba(16, 185, 129, 0.2);">
+                                                <i class="bi bi-clipboard2-check"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
@@ -522,5 +534,6 @@ function closeRecordModal() {
 
 <style>
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.core1-spin { animation: spin 1s linear infinite; display: inline-block; }
 </style>
 @endsection

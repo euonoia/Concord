@@ -353,6 +353,13 @@ class OutpatientController extends Controller
 
         $prescription->update(['status' => 'Administered']);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Medication marked as administered.'
+            ]);
+        }
+
         return back()->with('success', 'Medication marked as administered.');
     }
 }
