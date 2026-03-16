@@ -232,15 +232,26 @@
                                                         <span style="font-weight: 700; color: var(--text-dark);">{{ $lab->test_name }}</span>
                                                         <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: {{ $lab->status === 'Completed' ? 'var(--success-light)' : 'var(--warning-light-more)' }}; color: {{ $lab->status === 'Completed' ? 'var(--success)' : 'var(--warning)' }}; font-weight: 700;">{{ strtoupper($lab->status) }}</span>
                                                     </div>
-                                                    <div style="font-size: 11px; color: var(--text-gray); display: flex; gap: 12px;">
-                                                        <span><i class="bi bi-calendar-check"></i> Ordered: {{ $lab->created_at->format('M d, Y') }}</span>
-                                                        @if($lab->result_received_at)
-                                                            <span><i class="bi bi-clock-history"></i> Result: {{ $lab->result_received_at->format('M d, Y h:i A') }}</span>
+                                                    <div style="font-size: 11px; color: var(--text-gray); display: flex; flex-direction: column; gap: 4px;">
+                                                        <div style="display: flex; gap: 12px;">
+                                                            <span><i class="bi bi-calendar-check"></i> Ordered: {{ $lab->created_at->format('M d, Y') }}</span>
+                                                            @if($lab->result_received_at)
+                                                                <span><i class="bi bi-clock-history"></i> Result: {{ $lab->result_received_at->format('M d, Y h:i A') }}</span>
+                                                            @endif
+                                                        </div>
+                                                        @if($lab->clinical_note)
+                                                            <div style="font-style: italic; color: var(--text-dark);">
+                                                                <strong>Note:</strong> {{ $lab->clinical_note }}
+                                                            </div>
                                                         @endif
                                                     </div>
                                                     @if($lab->result_data)
                                                         <div style="margin-top: 6px; padding: 6px; background: var(--bg-light); border-radius: 4px; font-family: monospace; font-size: 11px; color: var(--text-dark); border-left: 3px solid var(--success);">
-                                                            <strong>Results:</strong> {{ $lab->result_data }}
+                                                            <strong>Results:</strong> {!! nl2br(e($lab->result_data)) !!}
+                                                        </div>
+                                                    @else
+                                                        <div style="margin-top: 6px; font-size: 10px; color: var(--text-light); font-style: italic;">
+                                                            <i class="bi bi-hourglass-split"></i> Results currently pending...
                                                         </div>
                                                     @endif
                                                 </div>
