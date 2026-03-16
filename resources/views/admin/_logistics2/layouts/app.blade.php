@@ -22,64 +22,53 @@
         <img src="{{ asset('images/logo.png') }}" alt="Logo">
         <div class="logo-text">HRMS</div>
     </div>
+<nav>
+    <a href="{{ route('admin.logistics2.dashboard') }}"
+       class="{{ request()->routeIs('admin.logistics2.dashboard') ? 'active' : '' }}">
+        <i class="bi bi-house-door"></i>
+        <span>Dashboard</span>
+    </a>
 
-    <nav>
-        <a href="{{ route('admin.logistics2.dashboard') }}"
-           class="{{ request()->routeIs('admin.logistics2.dashboard') ? 'active' : '' }}">
-            <i class="bi bi-house-door"></i>
-            <span>Dashboard</span>
+    <div class="nav-dropdown {{ request()->is('admin/logistics2/vendor*') ? 'open' : '' }}">
+        <a href="#" onclick="toggleDropdown(event)">
+            <i class="bi bi-truck-flatbed"></i>
+            <span>Vendor Portal</span>
+            <i class="bi bi-chevron-down arrow-icon"></i>
         </a>
-
-        <div class="nav-dropdown {{ request()->is('admin/logistics2/vendor*') ? 'open' : '' }}">
-            <a href="#" onclick="toggleDropdown(event)">
-                <i class="bi bi-truck-flatbed"></i>
-                <span>Vendor Portal</span>
-                <i class="bi bi-chevron-down arrow-icon"></i>
+        <div class="dropdown-container">
+            <a href="{{ route('admin.logistics2.vendor.index') }}" 
+               class="sub-link {{ request()->routeIs('admin.logistics2.vendor.index') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check"></i>
+                <span>Procurement Requests</span>
             </a>
-            <div class="dropdown-container">
-                <a href="{{ route('admin.logistics2.vendor.index') }}" 
-                   class="sub-link {{ request()->routeIs('admin.logistics2.vendor.index') ? 'active' : '' }}">
-                    <i class="bi bi-clipboard-check"></i>
-                    <span>Procurement Requests</span>
-                </a>
-            </div>
         </div>
+    </div>
 
-        <div class="nav-dropdown {{ (request()->is('admin/logistics2/vehicle*') || request()->is('admin/logistics2/fleet*')) ? 'open' : '' }}">
-            <a href="#" onclick="toggleDropdown(event)">
-                <i class="bi bi-speedometer2"></i>
-                <span>Fleet Management</span>
-                <i class="bi bi-chevron-down arrow-icon"></i>
-            </a>
-            <div class="dropdown-container">
-                <a href="{{ route('admin.logistics2.vehicle.index') }}" 
-                   class="sub-link {{ request()->routeIs('admin.logistics2.vehicle.index') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-check"></i>
-                    <span>Reservations</span>
-                </a>
-                
-                <a href="{{ route('admin.logistics2.fleet.index') }}" 
-                   class="sub-link {{ request()->routeIs('admin.logistics2.fleet.index') ? 'active' : '' }}">
-                    <i class="bi bi-bus-front"></i>
-                    <span>Vehicles</span>
-                </a>
-            </div>
-        </div>
+    <a href="{{ route('admin.logistics2.vehicle.index') }}" 
+       class="{{ request()->routeIs('admin.logistics2.vehicle.index') ? 'active' : '' }}">
+        <i class="bi bi-calendar-check"></i>
+        <span>Reservations</span>
+    </a>
 
-        <a href="{{ route('admin.logistics2.audit.index') }}"
-        class="{{ request()->routeIs('admin.logistics2.audit.*') ? 'active' : '' }}">
-            <i class="bi bi-journal-text"></i>
-            <span>Audit Logs</span>
-        </a>
+    <a href="{{ route('admin.logistics2.fleet.index') }}" 
+       class="{{ request()->is('admin/logistics2/fleet*') ? 'active' : '' }}">
+        <i class="bi bi-bus-front"></i>
+        <span>Fleet Management</span>
+    </a>
 
-        <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
-            @csrf
-        </form>
-        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-    </nav>
+    <a href="{{ route('admin.logistics2.audit.index') }}"
+       class="{{ request()->routeIs('admin.logistics2.audit.*') ? 'active' : '' }}">
+        <i class="bi bi-journal-text"></i>
+        <span>Audit Logs</span>
+    </a>
+    <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
+        @csrf
+    </form>
+    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
+    </a>
+</nav>
 </div>
 
 <div class="dashboard-main main">

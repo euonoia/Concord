@@ -31,7 +31,7 @@ class AdminBillARController extends Controller
     public function approveForCollection($id)
     {
         DB::table('bills_core1')->where('id', $id)->update([
-            'status' => 'approved_for_collection',
+            'status' => 'approved',
             'updated_at' => Carbon::now()
         ]);
 

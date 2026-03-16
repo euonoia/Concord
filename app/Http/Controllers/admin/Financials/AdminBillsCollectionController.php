@@ -23,7 +23,7 @@ class AdminBillsCollectionController extends Controller
                 'patients_core1.last_name as patient_last_name'
             )
             // CRITICAL: Only show bills approved by the AR department
-            ->where('bills_core1.status', 'approved_for_collection') 
+            ->where('bills_core1.status', 'approved') 
             ->orderBy('bill_date', 'desc')
             ->get();
 
@@ -63,7 +63,7 @@ class AdminBillsCollectionController extends Controller
         // Ensure the bill exists AND is in the correct status to be paid
         $bill = DB::table('bills_core1')
             ->where('id', $id)
-            ->where('status', 'approved_for_collection') // Safety check
+            ->where('status', 'approved') // Safety check
             ->first();
 
         if (!$bill) {
