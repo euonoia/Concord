@@ -137,7 +137,7 @@
                                         </span>
                                     </td>
                             <td>
-                                <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: start;">
+                                <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center;">
                                     <button type="button" class="core1-btn-sm core1-btn-outline" 
                                             onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-eye"></i>
@@ -183,7 +183,7 @@
                                 <th>PATIENT</th>
                                 <th>VITALS</th>
                                 <th>STATUS</th>
-                                <th style="width: 220px;">ACTION</th>
+                                <th class="text-center" style="width: 220px;">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -203,7 +203,7 @@
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: start; border: none;">
+                                    <td style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center; border: none;">
                                         <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                 onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-eye"></i>

@@ -131,7 +131,7 @@
                                 <th style="width: 240px;">Active Medications</th>
                                 <th style="width: 180px;">Attending Staff</th>
                                 <th style="width: 150px; text-align: center;">Status</th>
-                                <th class="text-right" style="width: 170px; padding-right: 32px;">Actions</th>
+                                <th class="text-center" style="width: 170px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -285,8 +285,8 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td style="vertical-align: middle; padding-right: 32px;">
-                                        <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: end;">
+                                    <td style="vertical-align: middle;">
+                                        <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center;">
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openRecordModal('{{ route('core1.medical-records.show', $patient->id) }}')" 
                                                     title="Clinical Overview"
