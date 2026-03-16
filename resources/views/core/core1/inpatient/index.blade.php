@@ -131,7 +131,7 @@
                                 <th style="width: 240px;">Active Medications</th>
                                 <th style="width: 180px;">Attending Staff</th>
                                 <th style="width: 150px; text-align: center;">Status</th>
-                                <th class="text-right" style="width: 150px; padding-right: 32px;">Actions</th>
+                                <th class="text-right" style="width: 170px; padding-right: 32px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -286,11 +286,11 @@
                                         </div>
                                     </td>
                                     <td style="vertical-align: middle; padding-right: 32px;">
-                                        <div class="d-flex justify-content-end align-items-center gap-2">
+                                        <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: end;">
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openRecordModal('{{ route('core1.medical-records.show', $patient->id) }}')" 
                                                     title="Clinical Overview"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0;">
                                                 <i class="bi bi-eye"></i>
                                             </button>
 
@@ -298,42 +298,42 @@
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openVitalsModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
                                                     title="Record Vitals"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.1);">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.1); flex-shrink: 0;">
                                                 <i class="bi bi-heart-pulse"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openNotesModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
                                                     title="Clinical Notes"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0;">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openMedicationModal({{ $admission->encounter_id }})" 
                                                     title="Issue Medication"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0;">
                                                 <i class="bi bi-capsule"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openLabOrderModal({{ $admission->encounter_id }})" 
                                                     title="Order Lab Test"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0;">
                                                 <i class="bi bi-droplet-half"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openAdministrationModal({{ $admission->encounter_id }}, '{{ $patient->name }}')" 
                                                     title="Medication Administration"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--success); border-color: rgba(16, 185, 129, 0.1);">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--success); border-color: rgba(16, 185, 129, 0.1); flex-shrink: 0;">
                                                 <i class="bi bi-clipboard2-check"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openDischargeModal({{ $admission->id }}, '{{ $patient->name }}')" 
                                                     title="Discharge Patient"
-                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.2);">
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.2); flex-shrink: 0;">
                                                 <i class="bi bi-box-arrow-right"></i>
                                             </button>
                                         </div>
@@ -479,10 +479,10 @@
                                                                             @endif
 
                                                                             <div style="margin-top: 12px; display: flex; gap: 6px; justify-content: center; background: rgba(255,255,255,0.5); padding: 6px; border-radius: 8px;">
-                                                                                <button type="button" onclick="openVitalsModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--danger);" title="Record Vitals"><i class="bi bi-heart-pulse"></i></button>
-                                                                                <button type="button" onclick="openNotesModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--info);" title="Clinical Notes"><i class="bi bi-pencil-square"></i></button>
-                                                                                <button type="button" onclick="openMedicationModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--primary);" title="Issue Medication"><i class="bi bi-capsule"></i></button>
-                                                                                <button type="button" onclick="openLabOrderModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--warning);" title="Order Lab"><i class="bi bi-droplet-half"></i></button>
+                                                                                <button type="button" onclick="openVitalsModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--danger); flex-shrink: 0;" title="Record Vitals"><i class="bi bi-heart-pulse"></i></button>
+                                                                                <button type="button" onclick="openNotesModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--info); flex-shrink: 0;" title="Clinical Notes"><i class="bi bi-pencil-square"></i></button>
+                                                                                <button type="button" onclick="openMedicationModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--primary); flex-shrink: 0;" title="Issue Medication"><i class="bi bi-capsule"></i></button>
+                                                                                <button type="button" onclick="openLabOrderModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--warning); flex-shrink: 0;" title="Order Lab"><i class="bi bi-droplet-half"></i></button>
                                                                             </div>
                                                                         @else
                                                                             <br><span style="color: var(--success);">{{ ucfirst($bed['status']) }}</span>

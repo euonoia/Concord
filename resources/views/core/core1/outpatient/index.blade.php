@@ -137,9 +137,9 @@
                                         </span>
                                     </td>
                             <td>
-                                <div class="core1-flex-gap-2">
+                                <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: start;">
                                     <button type="button" class="core1-btn-sm core1-btn-outline" 
-                                            onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details">
+                                            onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-eye"></i>
                                     </button>
                                     @if($apt['triage'])
@@ -151,13 +151,13 @@
                                                 data-spo2="{{ $apt['triage']['spo2'] }}"
                                                 data-level="{{ $apt['triage']['triage_level'] }}"
                                                 data-notes="{{ $apt['triage']['notes'] }}"
-                                                title="View Nurse Triage Assessment">
+                                                title="View Nurse Triage Assessment" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-clipboard2-pulse"></i>
                                         </button>
                                     @endif
                                     @if($apt['status'] === 'Triaged' || $apt['status'] === 'In consultation')
                                         <button class="core1-btn-sm core1-btn-primary" 
-                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')">
+                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')" style="flex-shrink: 0; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 12px; grid-column: span 2;">
                                             <i class="bi bi-chat-left-dots"></i> Consult
                                         </button>
                                     @endif
@@ -183,7 +183,7 @@
                                 <th>PATIENT</th>
                                 <th>VITALS</th>
                                 <th>STATUS</th>
-                                <th>ACTION</th>
+                                <th style="width: 220px;">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -203,30 +203,30 @@
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td class="d-flex gap-2">
+                                    <td style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: start; border: none;">
                                         <button type="button" class="core1-btn-sm core1-btn-outline" 
-                                                onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details">
+                                                onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         <button class="core1-btn-sm core1-btn-outline" 
-                                                onclick="openTriageModal({{ $reg['id'] }})">
-                                            <i class="bi bi-heart-pulse"></i> Triage
+                                                onclick="openTriageModal({{ $reg['id'] }})" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-heart-pulse"></i>
                                         </button>
 
                                         @if($reg['status'] === 'Triaged' && $reg['type'] === 'Pending')
-                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0">
+                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0" style="flex-shrink: 0; width: 32px; height: 32px;">
                                                 @csrf
                                                 <input type="hidden" name="type" value="OPD">
-                                                <button type="submit" class="core1-btn-sm core1-btn-primary" title="Send to Outpatient">
-                                                    <i class="bi bi-person-walking"></i> OPD
+                                                <button type="submit" class="core1-btn-sm core1-btn-primary" title="Send to Outpatient" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-person-walking"></i>
                                                 </button>
                                             </form>
 
-                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0">
+                                            <form action="{{ route('core1.outpatient.disposition', $reg['id']) }}" method="POST" class="m-0" style="flex-shrink: 0; width: 32px; height: 32px;">
                                                 @csrf
                                                 <input type="hidden" name="type" value="IPD">
-                                                <button type="submit" class="core1-btn-sm core1-btn-outline" title="Admit to Inpatient">
-                                                    <i class="bi bi-hospital"></i> IPD
+                                                <button type="submit" class="core1-btn-sm core1-btn-outline" title="Admit to Inpatient" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-hospital"></i>
                                                 </button>
                                             </form>
                                         @endif
