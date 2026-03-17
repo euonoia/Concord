@@ -42,25 +42,22 @@ class AdminFinancialsReimbursementController extends Controller
 
 
 
-   public function reimburse($id)
+public function reimburse($id)
 {
     $this->authorizeFinancialAdmin();
 
     try {
-
         DB::transaction(function () use ($id) {
-
             $claim = ClaimsHr3::findOrFail($id);
 
             if ($claim->status !== 'approved') {
-                abort(400,'Claim not eligible for reimbursement.');
+                abort(400, 'Claim not eligible for reimbursement.');
             }
 
-            // Get logged in admin employee record
             $handler = \App\Models\Employee::where('user_id', Auth::id())->first();
 
             if (!$handler) {
-                abort(500,'Employee profile for this admin was not found.');
+                abort(500, 'Employee profile for this admin was not found.');
             }
 
             ReimburseFinancial::create([
@@ -73,25 +70,31 @@ class AdminFinancialsReimbursementController extends Controller
                 'validated_by' => $handler->employee_id
             ]);
 
+            DB::table('reimbursed_ledger_financials')->insert([
+                'claim_id'     => $claim->claim_id,
+                'employee_id'  => $claim->employee_id,
+                'claim_type'   => $claim->claim_type,
+                'amount'       => $claim->amount,
+                'description'  => $claim->description,
+                'receipt_path' => $claim->receipt_path,
+                'validated_by' => $handler->employee_id,
+                'payment_method' => 'cash', 
+                'reimbursed_at'  => now(),
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            // 3. Update the original HR record
             $claim->update([
                 'status' => 'reimbursed'
             ]);
-
         });
 
-        return redirect()->back()->with(
-            'success',
-            'Reimbursement completed successfully.'
-        );
+        return redirect()->back()->with('success', 'Reimbursement completed and recorded in Ledger.');
 
     } catch (\Exception $e) {
-
-        Log::error("Financial Reimbursement Error: ".$e->getMessage());
-
-        return redirect()->back()->with(
-            'error',
-            'Reimbursement failed: '.$e->getMessage()
-        );
+        Log::error("Financial Reimbursement Error: " . $e->getMessage());
+        return redirect()->back()->with('error', 'Reimbursement failed: ' . $e->getMessage());
     }
 }
 }
