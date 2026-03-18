@@ -26,23 +26,50 @@
         <form @submit.prevent="showNotification = true; setTimeout(() => showNotification = false, 4000)" class="space-y-6">
             
             {{-- Drug Number (Matches the Table) --}}
-            <<div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drug Number and Name</label>
-                <select name="supplier" class="w-full bg-slate-50 border-none rounded-2xl p-5 font-bold outline-none focus:ring-4 ring-indigo-500/10 appearance-none">
-                    <option value="" disabled {{ old('supplier') ? '' : 'selected' }}>Select a Drug and Name</option>
-                    @foreach([
-                        'DRG - 001 - Propofol', 'DRG - 002 - Fentanyl', 'DRG - 003 - Ceftriaxone', 'DRG - 004 - Vancomycin', 'DRG - 005 - Epinephrine', 
-                        'DRG - 006 - Heparin', 'DRG - 007 - Ondansetron', 'DRG - 008 - Midazolam', 'DRG - 009 - Normal Saline', 'DRG - 010 -Dopamine',
-                        'DRG - 011 - Insulin Regular', 'DRG - 012 - Ketamine', 'DRG - 013 - Enoxaparin', 'DRG - 014 - Pantoprazole (IV)', 'DRG - 015 - Norepinephrine',
-                        'DRG - 016 - Lidocaine', 'DRG - 017 - Piperacillin/Tazo', 'DRG - 018 - Magnesium Sulfate', 'DRG - 019 - Morphine', 'DRG - 020 - Metronidazole'
-                    ] as $supplier)
-                        <option value="{{ $supplier }}" {{ old('supplier') == $supplier ? 'selected' : '' }}>
-                            {{ $supplier }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('supplier')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
-            </div>
+            <div class="space-y-2">
+    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drug Num and Name</label>
+
+    <select name="drug_id" class="w-full bg-slate-50 border-none rounded-2xl p-5 font-bold outline-none focus:ring-4 ring-indigo-500/10 appearance-none">
+        
+        <option value="" disabled {{ old('drug_id') ? '' : 'selected' }}>
+            Select a Drug Num and Name
+        </option>
+
+        @foreach([
+            'DRG-001 - Propofol',
+            'DRG-002 - Fentanyl',
+            'DRG-003 - Ceftriaxone',
+            'DRG-004 - Vancomycin',
+            'DRG-005 - Epinephrine',
+            'DRG-006 - Heparin',
+            'DRG-007 - Ondansetron',
+            'DRG-008 - Midazolam',
+            'DRG-009 - Normal Saline',
+            'DRG-010 - Dopamine',
+            'DRG-011 - Insulin Regular',
+            'DRG-012 - Ketamine',
+            'DRG-013 - Enoxaparin',
+            'DRG-014 - Pantoprazole (IV)',
+            'DRG-015 - Norepinephrine',
+            'DRG-016 - Lidocaine',
+            'DRG-017 - Piperacillin/Tazo',
+            'DRG-018 - Magnesium Sulfate',
+            'DRG-019 - Morphine',
+            'DRG-020 - Metronidazole'
+        ] as $drug)
+
+        <option value="{{ $drug }}" {{ old('drug_id') == $drug ? 'selected' : '' }}>
+            {{ $drug }}
+        </option>
+
+        @endforeach
+
+    </select>
+
+    @error('drug_id')
+        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+    @enderror
+</div>
 
             <div class="grid grid-cols-2 gap-4">
                 {{-- Requested Quantity --}}
