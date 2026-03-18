@@ -31,6 +31,9 @@
                                 <div style="font-weight: bold; color: #007bff;">{{ $row->drug_name }}</div>
                                 <div style="font-size: 0.85rem; color: #666;">SKU: {{ $row->drug_num }}</div>
                                 <small class="text-muted">Quantity: <strong>{{ $row->quantity }}</strong> units</small>
+                                <div style="font-size: 0.85rem; color: #555; margin-top: 3px;">
+                                    Supplier: <strong>{{ $row->supplier ?? '—' }}</strong>
+                                </div>
                                 
                                 @if(isset($row->original_status) && ($row->original_status == 'approved' || $row->original_status == 'received'))
                                     <div style="margin-top: 5px;">
