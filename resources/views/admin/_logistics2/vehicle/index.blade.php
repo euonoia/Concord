@@ -21,6 +21,7 @@
                         <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Vehicle Info</th>
                         <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Status</th>
                         <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Handler/Delivered By</th>
+                        <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Delivery Cost</th>
                         <th style="padding: 15px; border-bottom: 2px solid #dee2e6; text-align: center;">Actions</th>
                     </tr>
                 </thead>
@@ -34,14 +35,6 @@
                                 <div style="font-size: 0.85rem; color: #555; margin-top: 3px;">
                                     Supplier: <strong>{{ $row->supplier ?? '—' }}</strong>
                                 </div>
-                                
-                                @if(isset($row->original_status) && ($row->original_status == 'approved' || $row->original_status == 'received'))
-                                    <div style="margin-top: 5px;">
-                                        <span style="font-size: 0.7rem; background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb;">
-                                            <i class="bi bi-shield-check"></i> L1 CONSISTENT
-                                        </span>
-                                    </div>
-                                @endif
                             </td>
 
                             <td style="padding: 15px;">
@@ -83,15 +76,28 @@
                                 @endif
                             </td>
 
+                            <td style="padding: 15px;">
+                                <!-- Show the delivery cost if it exists -->
+                                @if($row->delivery_cost)
+                                    <span style="font-weight: bold;">₱ {{ number_format($row->delivery_cost, 2) }}</span>
+                                @else
+                                    <span style="color: #888; font-style: italic;">—</span>
+                                @endif
+                            </td>
+
                             <td style="padding: 15px; text-align: center;">
                                 @if($row->delivery_status == 'pending')
-                                    <form action="{{ route('admin.logistics2.vehicle.transit', $row->id) }}" method="POST">
+                                    <!-- Ready for Pickup: input cost and dispatch -->
+                                    <form action="{{ route('admin.logistics2.vehicle.transit', $row->id) }}" method="POST" style="display: flex; gap: 8px; align-items: center; justify-content: center;">
                                         @csrf
+                                        <input type="number" name="cost" step="0.01" placeholder="Cost" required
+                                            style="width: 100px; padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
                                         <button type="submit" class="btn-action" style="background: #17a2b8; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
                                             <i class="bi bi-truck"></i> Dispatch
                                         </button>
                                     </form>
                                 @elseif($row->delivery_status == 'in_transit')
+                                    <!-- In Transit: just complete, cost is remembered -->
                                     <form action="{{ route('admin.logistics2.vehicle.complete', $row->id) }}" method="POST" onsubmit="return confirm('Mark as Delivered?')">
                                         @csrf
                                         <button type="submit" class="btn-action" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
@@ -107,7 +113,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="padding: 40px; text-align: center; color: #999;">No active fleet shipments.</td>
+                            <td colspan="6" style="padding: 40px; text-align: center; color: #999;">No active fleet shipments.</td>
                         </tr>
                     @endforelse
                 </tbody>

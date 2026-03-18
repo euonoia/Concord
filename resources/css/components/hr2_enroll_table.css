@@ -1,0 +1,135 @@
+  /* ---------- Modular Scoped UI: hr2_enroll_table ---------- */
+    .hr2_enroll_table_wrapper {
+        padding: var(--space-lg);
+        background-color: var(--bg);
+        min-height: 100vh;
+    }
+
+    /* Page Header */
+    .hr2_enroll_table_page_header {
+        margin-bottom: var(--space-xl);
+        border-bottom: 2px solid var(--neutral-200);
+        padding-bottom: var(--space-md);
+    }
+
+    .hr2_enroll_table_page_header h1 {
+        color: var(--primary-base);
+        margin-bottom: var(--space-xs);
+    }
+
+    .hr2_enroll_table_page_header p {
+        color: var(--text-light);
+        font-size: 18px;
+    }
+
+    /* Card Styling */
+    .hr2_enroll_table_card {
+        background: #ffffff;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--neutral-200);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    /* Search Bar Styling */
+    .hr2_enroll_table_controls {
+        padding: var(--space-md) var(--space-lg);
+        background: white;
+        border-bottom: 1px solid var(--neutral-200);
+        display: flex;
+        align-items: center;
+    }
+
+    .hr2_enroll_table_search_input {
+        border: 1px solid var(--neutral-300);
+        border-radius: var(--radius-md);
+        padding: var(--space-sm) var(--space-md);
+        padding-left: 40px;
+        width: 100%;
+        max-width: 400px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .hr2_enroll_table_search_input:focus {
+        outline: none;
+        border-color: var(--accent-base);
+        box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    /* Table Styling */
+    .hr2_enroll_table_main {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .hr2_enroll_table_main thead th {
+        background-color: var(--neutral-100);
+        color: var(--primary-base);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 0.05em;
+        padding: var(--space-md) var(--space-lg);
+        text-align: left;
+    }
+
+    .hr2_enroll_table_main tbody tr {
+        transition: background 0.2s;
+    }
+
+    .hr2_enroll_table_main tbody tr:hover {
+        background-color: var(--accent-light);
+    }
+
+    .hr2_enroll_table_main td {
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid var(--neutral-100);
+        vertical-align: middle;
+    }
+
+    /* Component Styling */
+    .hr2_enroll_table_emp_id {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 700;
+        color: var(--accent-dark);
+        background: var(--neutral-100);
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+    }
+
+    .hr2_enroll_table_spec_badge {
+        display: inline-block;
+        background-color: var(--highlight);
+        color: var(--neutral-800);
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* Action Button */
+    .hr2_enroll_table_btn_action {
+        background-color: var(--primary-base);
+        color: white !important;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s;
+        border: none;
+        text-decoration: none !important;
+    }
+
+    .hr2_enroll_table_btn_action:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hr2_enroll_table_btn_action i {
+        margin-right: 8px;
+    }
