@@ -22,6 +22,8 @@ class SurgeryOrder extends Model
         'clinical_indication',
         'status',
         'core2_order_id',
+        'proposed_date',
+        'proposed_time',
     ];
 
     public function encounter()

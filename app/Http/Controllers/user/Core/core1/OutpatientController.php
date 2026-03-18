@@ -295,6 +295,8 @@ class OutpatientController extends Controller
             'procedure_name' => 'required|string',
             'priority' => 'nullable|in:Routine,Urgent,STAT',
             'clinical_indication' => 'nullable|string',
+            'proposed_date' => 'required|date|after_or_equal:today',
+            'proposed_time' => 'required',
         ]);
 
         $encounter = Encounter::findOrFail($request->encounter_id);

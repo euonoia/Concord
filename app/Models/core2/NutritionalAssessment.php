@@ -16,4 +16,14 @@ class NutritionalAssessment extends Model
         'core1_diet_order_id',
         'encounter_id',
     ];
+
+    public function dietOrder()
+    {
+        return $this->belongsTo(\App\Models\core1\DietOrder::class, 'core1_diet_order_id');
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(\App\Models\Patient::class, 'patient_id');
+    }
 }

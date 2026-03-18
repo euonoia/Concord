@@ -177,11 +177,19 @@
                 <select name="priority" class="core1-input w-full">
                     <option value="Routine">Routine</option>
                     <option value="Urgent">Urgent</option>
-                    <option value="STAT">STAT (Emergency)</option>
                 </select>
             </div>
+            <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div>
+                    <label class="font-bold block mb-5">Proposed Date</label>
+                    <input type="date" name="proposed_date" class="core1-input w-full" required min="{{ date('Y-m-d') }}">
+                </div>
+                <div>
+                    <label class="font-bold block mb-5">Proposed Time</label>
+                    <input type="time" name="proposed_time" class="core1-input w-full" required>
+                </div>
+            </div>
             <div class="mb-15">
-                <label class="font-bold block mb-5">Clinical Indication / Diagnosis</label>
                 <textarea name="clinical_indication" class="core1-input w-full" rows="3" placeholder="Reason for surgery..."></textarea>
             </div>
             <div class="core1-flex-gap-2 justify-end">

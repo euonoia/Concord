@@ -23,7 +23,8 @@ class SurgeryDietSyncService
                 return false;
             }
 
-            $response = Http::post(config('app.url') . '/api/surgery-diet-sync/result', [
+            $baseUrl = rtrim(config('app.url'), '/');
+            $response = Http::timeout(3)->post($baseUrl . '/api/surgery-diet-sync/result', [
                 'type' => 'surgery',
                 'core1_order_id' => $booking->core1_surgery_order_id,
                 'core2_fulfillment_id' => $record->id,
@@ -51,7 +52,8 @@ class SurgeryDietSyncService
     public function syncMealLog(MealLog $log): bool
     {
         try {
-            $response = Http::post(config('app.url') . '/api/surgery-diet-sync/result', [
+            $baseUrl = rtrim(config('app.url'), '/');
+            $response = Http::timeout(3)->post($baseUrl . '/api/surgery-diet-sync/result', [
                 'type' => 'diet',
                 'core1_order_id' => $log->diet_order_id,
                 'core2_fulfillment_id' => $log->id,

@@ -22,6 +22,8 @@ class SurgeryDietService
             'procedure_name' => $data['procedure_name'],
             'priority' => $data['priority'] ?? 'Routine',
             'clinical_indication' => $data['clinical_indication'] ?? null,
+            'proposed_date' => $data['proposed_date'] ?? null,
+            'proposed_time' => $data['proposed_time'] ?? null,
             'status' => 'Ordered',
         ]);
 
@@ -55,7 +57,8 @@ class SurgeryDietService
     protected function syncOrderToCore2(string $type, $order, array $details): void
     {
         try {
-            $response = Http::post(config('app.url') . '/api/surgery-diet-sync/order', [
+            $baseUrl = rtrim(config('app.url'), '/');
+            $response = Http::timeout(3)->post($baseUrl . '/api/surgery-diet-sync/order', [
                 'type' => $type,
                 'core1_order_id' => $order->id,
                 'encounter_id' => $order->encounter_id,

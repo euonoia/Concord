@@ -37,6 +37,8 @@ class SurgeryDietSyncApiController extends Controller
                     'surgeon_id' => $validated['details']['surgeon_id'] ?? null,
                     'core1_surgery_order_id' => $validated['core1_order_id'],
                     'encounter_id' => $validated['encounter_id'],
+                    'proposed_date' => $validated['details']['proposed_date'] ?? null,
+                    'proposed_time' => $validated['details']['proposed_time'] ?? null,
                     'status' => 'Received',
                 ]);
             } else {

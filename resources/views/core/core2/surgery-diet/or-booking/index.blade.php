@@ -17,19 +17,50 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                    <th class="px-8 py-6">Booking ID</th>
-                    <th class="px-8 py-6">Patient ID</th>
-                    <th class="px-8 py-6">Booking Date</th>
-                    <th class="px-8 py-6">Surgeon ID</th>
+                    <th class="px-8 py-6">Patient</th>
+                    <th class="px-8 py-6">Procedure / Order</th>
+                    <th class="px-8 py-6 text-center">Schedule</th>
+                    <th class="px-8 py-6 text-center">Priority</th>
+                    <th class="px-8 py-6">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($records as $r)
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                    <td class="px-8 py-5 text-xs font-black text-slate-900">{{ $r->operating_booking_id }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-700">{{ $r->patient_id ?? '—' }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->booking_date ?? '—' }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->surgeon_id ?? '—' }}</td>
+                    <td class="px-8 py-5 text-xs font-black text-slate-900 border-l-4 border-rose-500">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-rose-600 font-black">{{ $r->surgeryOrder->patient->name ?? $r->patient->name ?? 'Unknown' }}</span>
+                            <span class="text-[9px] text-slate-400 uppercase">MRN: {{ $r->surgeryOrder->patient->mrn ?? 'N/A' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-xs font-bold text-slate-700">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-slate-900">{{ $r->surgeryOrder->procedure_name ?? 'Pending Session Details' }}</span>
+                            <span class="text-[9px] text-slate-400 italic">Ref: {{ $r->operating_booking_id }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        <div class="flex flex-col gap-1 items-center">
+                            <span class="text-slate-700 font-bold px-3 py-1 bg-slate-50 rounded-lg">{{ $r->proposed_date ? \Carbon\Carbon::parse($r->proposed_date)->format('M d, Y') : 'TBD' }}</span>
+                            <span class="text-[10px] text-slate-400 font-black tracking-widest uppercase">{{ $r->proposed_time ? \Carbon\Carbon::parse($r->proposed_time)->format('h:i A') : '--:--' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        @php
+                            $priority = $r->surgeryOrder->priority ?? 'Routine';
+                            $pColor = match($priority) {
+                                'STAT' => 'bg-rose-100 text-rose-700',
+                                'Urgent' => 'bg-amber-100 text-amber-700',
+                                default => 'bg-slate-100 text-slate-600'
+                            };
+                        @endphp
+                        <span class="px-3 py-1 {{ $pColor }} rounded-lg font-black text-[9px] uppercase tracking-wider">{{ $priority }}</span>
+                    </td>
+                    <td class="px-8 py-5 text-xs">
+                        <span class="px-3 py-1 {{ $r->status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700' }} rounded-full font-black text-[10px] uppercase tracking-tighter">
+                            {{ $r->status ?? 'Received' }}
+                        </span>
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="4" class="py-20 text-center text-slate-300 font-bold italic">No OR booking records found.</td></tr>
