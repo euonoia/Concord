@@ -333,6 +333,20 @@
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openSurgeryOrderModal({{ $admission->encounter_id }})" 
+                                                    title="Order Surgery"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0; color: var(--primary);">
+                                                <i class="bi bi-scissors"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openDietOrderModal({{ $admission->encounter_id }})" 
+                                                    title="Set Diet"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0; color: var(--warning);">
+                                                <i class="bi bi-egg-fried"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                     onclick="openDischargeModal({{ $admission->id }}, '{{ $patient->name }}')" 
                                                     title="Discharge Patient"
                                                     style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--danger); border-color: rgba(220, 38, 38, 0.2); flex-shrink: 0;">

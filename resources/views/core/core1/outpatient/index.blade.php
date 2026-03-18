@@ -529,6 +529,12 @@
                         <button type="button" class="core1-btn-sm core1-btn-outline" onclick="openPrescriptionModal()">
                             <i class="bi bi-capsule"></i> Prescribe Medication
                         </button>
+                        <button type="button" class="core1-btn-sm core1-btn-outline" onclick="openSurgeryOrderModal(currentEncounterId)">
+                            <i class="bi bi-scissors"></i> Order Surgery
+                        </button>
+                        <button type="button" class="core1-btn-sm core1-btn-outline" onclick="openDietOrderModal(currentEncounterId)">
+                            <i class="bi bi-egg-fried"></i> Set Diet
+                        </button>
                     </div>
                 </div>
 

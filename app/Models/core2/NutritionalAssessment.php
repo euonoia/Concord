@@ -13,5 +13,7 @@ class NutritionalAssessment extends Model
         'patient_id',
         'package_id',
         'enrollment_status',
+        'core1_diet_order_id',
+        'encounter_id',
     ];
 }

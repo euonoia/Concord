@@ -288,6 +288,37 @@ class OutpatientController extends Controller
         return back()->with('success', 'Lab order created and synced to laboratory.');
     }
 
+    public function storeSurgeryOrder(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'procedure_name' => 'required|string',
+            'priority' => 'nullable|in:Routine,Urgent,STAT',
+            'clinical_indication' => 'nullable|string',
+        ]);
+
+        $encounter = Encounter::findOrFail($request->encounter_id);
+        $service = app(\App\Services\core1\SurgeryDietService::class);
+        $service->orderSurgery($encounter, $request->all());
+
+        return back()->with('success', 'Surgery order created and synced to OR.');
+    }
+
+    public function storeDietOrder(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'diet_type' => 'required|string',
+            'instructions' => 'nullable|string',
+        ]);
+
+        $encounter = Encounter::findOrFail($request->encounter_id);
+        $service = app(\App\Services\core1\SurgeryDietService::class);
+        $service->orderDiet($encounter, $request->all());
+
+        return back()->with('success', 'Diet order created and synced to Nutrition.');
+    }
+
     public function getDiagnosticOrdersJson()
     {
         $user = auth()->user();

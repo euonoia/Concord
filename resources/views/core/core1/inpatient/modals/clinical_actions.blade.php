@@ -159,6 +159,72 @@
     </div>
 </div>
 
+<!-- Surgery Order Modal -->
+<div id="surgeryModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:450px; max-width:90%;">
+        <div class="core1-header border-bottom mb-15">
+            <h4 class="font-bold">Order Surgical Procedure</h4>
+        </div>
+        <form method="POST" action="{{ route('core1.outpatient.storeSurgeryOrder') }}">
+            @csrf
+            <input type="hidden" name="encounter_id" id="surgeryEncounterId">
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Procedure Name</label>
+                <input type="text" name="procedure_name" class="core1-input w-full" required placeholder="e.g. Appendectomy, Hernia Repair">
+            </div>
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Priority</label>
+                <select name="priority" class="core1-input w-full">
+                    <option value="Routine">Routine</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="STAT">STAT (Emergency)</option>
+                </select>
+            </div>
+            <div class="mb-15">
+                <label class="font-bold block mb-5">Clinical Indication / Diagnosis</label>
+                <textarea name="clinical_indication" class="core1-input w-full" rows="3" placeholder="Reason for surgery..."></textarea>
+            </div>
+            <div class="core1-flex-gap-2 justify-end">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('surgeryModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Order Surgery</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Diet Order Modal -->
+<div id="dietModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
+        <div class="core1-header border-bottom mb-15">
+            <h4 class="font-bold">Nutrition & Diet Order</h4>
+        </div>
+        <form method="POST" action="{{ route('core1.outpatient.storeDietOrder') }}">
+            @csrf
+            <input type="hidden" name="encounter_id" id="dietEncounterId">
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Diet Type</label>
+                <select name="diet_type" class="core1-input w-full" required>
+                    <option value="Regular">Regular Diet</option>
+                    <option value="NPO">NPO (Nothing by Mouth)</option>
+                    <option value="Soft">Soft / Low Residue</option>
+                    <option value="Liquid">Clear Liquid</option>
+                    <option value="Diabetic">Diabetic (Low Sugar)</option>
+                    <option value="Renal">Renal Diet</option>
+                    <option value="High Protein">High Protein</option>
+                </select>
+            </div>
+            <div class="mb-15">
+                <label class="font-bold block mb-5">Special Instructions</label>
+                <textarea name="instructions" class="core1-input w-full" rows="2" placeholder="e.g. No seafood, allergy to nuts..."></textarea>
+            </div>
+            <div class="core1-flex-gap-2 justify-end">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('dietModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Set Diet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Discharge Clearance Modal -->
 <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
     <div class="core1-modal-content core1-card" style="width:600px; max-width:95%; max-height: 90vh; overflow-y: auto;">
@@ -277,6 +343,16 @@
     function openMedicationModal(encounterId) {
         document.getElementById('rxEncounterId').value = encounterId;
         document.getElementById('prescriptionModal').style.display = 'flex';
+    }
+
+    function openSurgeryOrderModal(encounterId) {
+        document.getElementById('surgeryEncounterId').value = encounterId;
+        document.getElementById('surgeryModal').style.display = 'flex';
+    }
+
+    function openDietOrderModal(encounterId) {
+        document.getElementById('dietEncounterId').value = encounterId;
+        document.getElementById('dietModal').style.display = 'flex';
     }
 
     function openAdministrationModal(encounterId, patientName) {
