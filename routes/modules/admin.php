@@ -138,4 +138,11 @@
             Route::delete('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'archiveJobPosting'])
                 ->name('hr4.job_postings.destroy');
 
+            // Training Rewards Management
+            Route::get('/training-rewards', [AdminDirectCompensationController::class, 'trainingRewardsIndex'])
+                ->name('hr4.training_rewards.index');
+
+            Route::get('/training-rewards/{employee}', [AdminDirectCompensationController::class, 'showEmployeeTrainingRewards'])
+                ->name('hr4.training_rewards.show');
+
         });

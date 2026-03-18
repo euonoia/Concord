@@ -37,10 +37,13 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Salary</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Allowance</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Reward</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Average</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                         </tr>
@@ -49,16 +52,27 @@
                         @forelse($compensations as $comp)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $comp->employee_id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $comp->employee->first_name }} {{ $comp->employee->last_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{{ $comp->user ? $comp->user->username : 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $comp->employee ? $comp->employee->first_name . ' ' . $comp->employee->last_name : 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ number_format($comp->base_salary, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ number_format($comp->shift_allowance, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ number_format($comp->overtime_pay, 2) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">{{ number_format($comp->training_reward, 2) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @php
+                                        $latestTraining = \App\Models\admin\Hr\hr4\TrainingPerformance::where('employee_id', $comp->employee_id)
+                                            ->where('status', 'completed')
+                                            ->orderBy('evaluated_at', 'desc')
+                                            ->first();
+                                    @endphp
+                                    {{ $latestTraining ? number_format($latestTraining->weighted_average, 2) : 'N/A' }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ number_format($comp->bonus, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ number_format($comp->total_compensation, 2) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">No compensation records found for this month.</td>
+                                <td colspan="9" class="px-6 py-4 text-center text-gray-500">No compensation records found for this month.</td>
                             </tr>
                         @endforelse
                     </tbody>

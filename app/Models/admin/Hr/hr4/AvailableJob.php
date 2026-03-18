@@ -20,6 +20,7 @@ class AvailableJob extends Model
         'description',
         'requirements',
         'salary_range',
+        'positions_available',
         'status',
         'posted_by',
         'posted_at',

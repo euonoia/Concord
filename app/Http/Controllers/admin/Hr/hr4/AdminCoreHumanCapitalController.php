@@ -45,8 +45,25 @@ class AdminCoreHumanCapitalController extends Controller
             ->orderBy('available_jobs_hr4.created_at', 'desc')
             ->get();
 
+        // Get count of available (open) jobs
+        $availableJobsCount = AvailableJob::where('status', 'open')->count();
+
         // Fetch HR1 employees dynamically
         $hr1_employees = DB::table('new_hires_hr1')->select('id', 'first_name', 'last_name')->get();
+
+        // Needed positions logic
+        $needed_positions = [];
+        foreach ($positions as $pos) {
+            $current_count = $employees->where('position_id', $pos->id)->count();
+            $needed = max(0, ($pos->required_count ?? 0) - $current_count);
+            $needed_positions[] = [
+                'department' => $pos->department->name ?? 'N/A',
+                'position' => $pos->position_title,
+                'required' => $pos->required_count ?? 0,
+                'current' => $current_count,
+                'needed' => $needed
+            ];
+        }
 
         // Return view (compact fully closed)
         return view('admin.hr4.core_human_capital', compact(
@@ -55,7 +72,9 @@ class AdminCoreHumanCapitalController extends Controller
             'positions',
             'hr1_employees',
             'users',
-            'jobPostings'
+            'jobPostings',
+            'availableJobsCount',
+            'needed_positions'
         ));
     }
 }

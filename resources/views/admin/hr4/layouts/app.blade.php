@@ -83,6 +83,10 @@
                     <i class="bi bi-briefcase"></i>
                     <span>Positions</span>
                 </a>
+                <a href="{{ route('hr4.core') }}#neededpositions" class="dropdown-item">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span>Needed Positions</span>
+                </a>
                 <a href="{{ route('hr4.core') }}#availablejobs" class="dropdown-item">
                     <i class="bi bi-briefcase"></i>
                     <span>Available Jobs</span>

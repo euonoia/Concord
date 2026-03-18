@@ -61,6 +61,16 @@
                 </div>
 
                 <div>
+                    <label for="positions_available" class="block text-sm font-medium text-gray-700">Number of Positions Available *</label>
+                    <input type="number" name="positions_available" id="positions_available" value="{{ old('positions_available', $jobPosting->positions_available) }}" min="1" required
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Enter number of available positions">
+                    @error('positions_available')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Status *</label>
                     <select name="status" id="status" required
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">

@@ -36,6 +36,10 @@
                         <p class="mt-1 text-sm text-gray-900">{{ $jobPosting->salary_range ?? 'Not specified' }}</p>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Positions Available</label>
+                        <p class="mt-1 text-sm text-gray-900 font-semibold">{{ $jobPosting->positions_available }}</p>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Posted By</label>
                         <p class="mt-1 text-sm text-gray-900">{{ $jobPosting->poster->username ?? 'Unknown' }}</p>
                     </div>

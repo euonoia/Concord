@@ -9,6 +9,61 @@
 
 <h2>Core Human Capital</h2>
 
+<!-- Needed Positions Recommendation Section (moved to top, visible by default) -->
+
+<div style="margin-bottom:20px; display:flex; gap:10px;">
+    <a href="#employees" onclick="window.location.hash='employees'; return false;" class="tab-link">Employees</a>
+    <a href="#departments" onclick="window.location.hash='departments'; return false;" class="tab-link">Departments</a>
+    <a href="#positions" onclick="window.location.hash='positions'; return false;" class="tab-link">Positions</a>
+    <a href="#neededpositions" onclick="window.location.hash='neededpositions'; return false;" class="tab-link">Needed Positions</a>
+    <a href="#userlogs" onclick="window.location.hash='userlogs'; return false;" class="tab-link">User Logs</a>
+    <a href="#availablejobs" onclick="window.location.hash='availablejobs'; return false;" class="tab-link">Available Jobs ({{ $availableJobsCount }})</a>
+</div>
+
+{{-- NEEDED POSITIONS RECOMMENDATION (now in its own tab, hidden by default) --}}
+<div id="neededpositions" class="tab-section" style="display:none; margin-bottom: 30px;">
+    <h2 style="margin-top: 30px; color:#1d4ed8;">Needed Positions Recommendation</h2>
+    <p style="margin-bottom:15px; color:#374151; font-size:15px;">
+        <strong>Note:</strong> This table shows all positions and departments for monitoring. Use the filter to view by department.
+    </p>
+    <div style="margin-bottom: 15px;">
+        <label for="neededDeptFilter" style="font-weight:500; margin-right:8px;">Filter by Department:</label>
+        <select id="neededDeptFilter" style="padding:5px 10px; border-radius:4px; border:1px solid #d1d5db;">
+            <option value="">All Departments</option>
+            @foreach(array_unique(array_map(fn($np) => $np['department'], $needed_positions)) as $dept)
+                <option value="{{ $dept }}">{{ $dept }}</option>
+            @endforeach
+        </select>
+    </div>
+    <table border="1" style="width:100%;border-collapse:collapse; margin-bottom: 20px;" id="neededPositionsTable">
+        <thead>
+            <tr>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Required</th>
+                <th>Current</th>
+                <th style="color:#d97706">Needed</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($needed_positions as $np)
+                <tr data-department="{{ $np['department'] }}" style="background:{{ $np['needed'] > 0 ? '#fffbe6' : '#f3f4f6' }}">
+                    <td>{{ $np['department'] }}</td>
+                    <td>{{ $np['position'] }}</td>
+                    <td style="text-align:center">{{ $np['required'] }}</td>
+                    <td style="text-align:center">{{ $np['current'] }}</td>
+                    <td style="text-align:center; color:#d97706; font-weight:bold;">
+                        {{ $np['needed'] }}
+                    </td>
+                </tr>
+            @endforeach
+            @if(count($needed_positions) === 0)
+                <tr><td colspan="5" style="text-align:center; color:#10b981;">No positions found.</td></tr>
+            @endif
+        </tbody>
+    </table>
+</div>
+
 <style>
 .tab-link {
     padding: 8px 16px;
@@ -24,16 +79,10 @@
 }
 </style>
 
-<div style="margin-bottom:20px; display:flex; gap:10px;">
-    <a href="#employees" onclick="showTab('employees'); return false;" class="tab-link">Employees</a>
-    <a href="#departments" onclick="showTab('departments'); return false;" class="tab-link">Departments</a>
-    <a href="#positions" onclick="showTab('positions'); return false;" class="tab-link">Positions</a>
-    <a href="#userlogs" onclick="showTab('userlogs'); return false;" class="tab-link">User Logs</a>
-    <a href="#availablejobs" onclick="showTab('availablejobs'); return false;" class="tab-link">Available Jobs</a>
-</div>
+
 
 {{-- EMPLOYEES --}}
-<div id="employees" class="tab-section">
+<div id="employees" class="tab-section" style="display:none">
 
 <h3>Employees</h3>
 
@@ -177,7 +226,43 @@
 
 
 
-{{-- AVAILABLE JOBS --}}
+
+{{-- NEEDED POSITIONS RECOMMENDATION --}}
+<div id="neededpositions" class="tab-section" style="display:block; margin-bottom: 30px;">
+    <h2 style="margin-top: 30px; color:#1d4ed8;">Needed Positions Recommendation</h2>
+    <p style="margin-bottom:15px; color:#374151; font-size:15px;">
+        <strong>Note:</strong> This table shows only the positions and departments that are lacking staff. Use this as your basis before posting new available jobs to HR1. No employee details are shown here—focus is on what is needed only.
+    </p>
+    <table border="1" style="width:100%;border-collapse:collapse; margin-bottom: 20px;">
+        <thead>
+            <tr>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Required</th>
+                <th>Current</th>
+                <th style="color:#d97706">Needed</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($needed_positions as $np)
+                @if($np['needed'] > 0)
+                <tr style="background:#fffbe6">
+                    <td>{{ $np['department'] }}</td>
+                    <td>{{ $np['position'] }}</td>
+                    <td style="text-align:center">{{ $np['required'] }}</td>
+                    <td style="text-align:center">{{ $np['current'] }}</td>
+                    <td style="text-align:center; color:#d97706; font-weight:bold;">
+                        {{ $np['needed'] }}
+                    </td>
+                </tr>
+                @endif
+            @endforeach
+            @if(!collect($needed_positions)->where('needed','>',0)->count())
+                <tr><td colspan="5" style="text-align:center; color:#10b981;">All positions are sufficiently filled.</td></tr>
+            @endif
+        </tbody>
+    </table>
+</div>
 <div id="availablejobs" class="tab-section" style="display:none">
 
 <h3>Available Jobs</h3>
@@ -195,6 +280,7 @@
     <tr>
     <th>Job Title</th>
     <th>Department</th>
+    <th>Positions Available</th>
     <th>Status</th>
     <th>Added By</th>
     <th>Added At</th>
@@ -207,6 +293,7 @@
     <tr>
     <td>{{ $posting->title }}</td>
     <td>{{ $posting->department_name ?? $posting->department }}</td>
+    <td class="text-center font-semibold">{{ $posting->positions_available }}</td>
     <td>
         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $posting->status == 'open' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
             {{ ucfirst($posting->status) }}
@@ -260,13 +347,19 @@ function showTab(tab)
 }
 
 // Show tab based on URL hash on page load
-document.addEventListener('DOMContentLoaded', function() {
+function handleTabFromHash() {
     const hash = window.location.hash.substring(1); // Remove #
-    if (hash && ['employees', 'departments', 'positions', 'userlogs', 'availablejobs'].includes(hash)) {
+    if (hash && ['employees', 'departments', 'positions', 'neededpositions', 'userlogs', 'availablejobs'].includes(hash)) {
         showTab(hash);
     } else {
         showTab('employees'); // Default to employees
     }
+}
+
+document.addEventListener('DOMContentLoaded', handleTabFromHash);
+window.addEventListener('hashchange', function() {
+    // Small delay to ensure DOM is ready
+    setTimeout(handleTabFromHash, 10);
 });
 
 // --- Employee Filtering ---
@@ -282,26 +375,30 @@ function filterEmployees()
     let search = employeeSearch.value.toLowerCase()
 
     document.querySelectorAll('#employeeTable tbody tr').forEach(row => {
-
         let rowDepartment = row.dataset.department
         let rowName = row.dataset.name
         let rowEmpID = row.dataset.empid
-
         // match if department matches AND (name OR ID contains search)
-        let matchDepartment = !department || rowDepartment === department
-        let matchSearch = !search || rowName.includes(search) || rowEmpID.includes(search)
-
-        if(matchDepartment && matchSearch)
-        {
-            row.style.display = ''
-        }
-        else
-        {
-            row.style.display = 'none'
-        }
-
-    })
+        // ...existing code...
+    });
 }
+
+// --- Needed Positions Filtering ---
+const neededDeptFilter = document.getElementById('neededDeptFilter');
+if (neededDeptFilter) {
+    neededDeptFilter.addEventListener('change', function() {
+        let dept = this.value;
+        document.querySelectorAll('#neededPositionsTable tbody tr').forEach(row => {
+            if (!dept || row.dataset.department === dept) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+// (Stray code removed)
+
 
 </script>
 

@@ -14,7 +14,8 @@ class DepartmentPositionTitle extends Model
         'rank_level',
         'employee_type',
         'base_salary',
-        'is_active'
+        'is_active',
+        'required_count'
     ];
 
     public function department()
