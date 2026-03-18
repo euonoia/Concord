@@ -103,8 +103,33 @@ class AdminVehicleReservationController extends Controller
                     'delivered_by' => $handlerId,
                     'updated_at' => now()
                 ]);
+
+            // 6. UPDATE DRUG INVENTORY BASED ON DELIVERED QUANTITY
+            $inventory = DB::table('drug_inventory_core2')
+                ->where('drug_num', $reservation->drug_num)
+                ->first();
+
+            if ($inventory) {
+                $newQuantity = $inventory->quantity + $reservation->quantity;
+
+                // Determine new status based on quantity
+                $status = match(true) {
+                    $newQuantity == 0 => 'Out of Stock',
+                    $newQuantity <= 10 => 'Low Stock',
+                    $newQuantity <= 20 => 'Critical',
+                    default => 'Stable'
+                };
+
+                DB::table('drug_inventory_core2')
+                    ->where('drug_num', $reservation->drug_num)
+                    ->update([
+                        'quantity' => $newQuantity,
+                        'status' => $status,
+                        'updated_at' => now()
+                    ]);
+            }
         });
 
-        return redirect()->back()->with('success', 'Delivery completed. Vehicle is now available for new assignments.');
+        return redirect()->back()->with('success', 'Delivery completed, inventory updated, vehicle is now available.');
     }
 }
