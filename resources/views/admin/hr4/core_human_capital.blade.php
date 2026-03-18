@@ -29,6 +29,7 @@
     <a href="#departments" onclick="showTab('departments'); return false;" class="tab-link">Departments</a>
     <a href="#positions" onclick="showTab('positions'); return false;" class="tab-link">Positions</a>
     <a href="#userlogs" onclick="showTab('userlogs'); return false;" class="tab-link">User Logs</a>
+    <a href="#availablejobs" onclick="showTab('availablejobs'); return false;" class="tab-link">Available Jobs</a>
 </div>
 
 {{-- EMPLOYEES --}}
@@ -176,6 +177,77 @@
 
 
 
+{{-- AVAILABLE JOBS --}}
+<div id="availablejobs" class="tab-section" style="display:none">
+
+<h3>Available Jobs</h3>
+
+<div style="margin-bottom:15px; display:flex; gap:10px;">
+    <a href="{{ route('hr4.job_postings.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center">
+        <i class="bi bi-plus-circle mr-2"></i>
+        Add New Job
+    </a>
+</div>
+
+@if($jobPostings->count() > 0)
+    <table border="1" style="width:100%;border-collapse:collapse">
+    <thead>
+    <tr>
+    <th>Job Title</th>
+    <th>Department</th>
+    <th>Status</th>
+    <th>Added By</th>
+    <th>Added At</th>
+    <th>Actions</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @foreach($jobPostings as $posting)
+    <tr>
+    <td>{{ $posting->title }}</td>
+    <td>{{ $posting->department_name ?? $posting->department }}</td>
+    <td>
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $posting->status == 'open' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+            {{ ucfirst($posting->status) }}
+        </span>
+    </td>
+    <td>{{ $posting->poster->username ?? 'Unknown' }}</td>
+    <td>{{ $posting->posted_at->format('M d, Y') }}</td>
+    <td>
+        <a href="{{ route('hr4.job_postings.show', $posting) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+            <i class="bi bi-eye"></i> View
+        </a>
+        <a href="{{ route('hr4.job_postings.edit', $posting) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <form method="POST" action="{{ route('hr4.job_postings.destroy', $posting) }}" class="inline" onsubmit="return confirm('Are you sure you want to archive this job posting?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="text-orange-600 hover:text-orange-900">
+                <i class="bi bi-archive"></i> Archive
+            </button>
+        </form>
+    </td>
+    </tr>
+    @endforeach
+    </tbody>
+    </table>
+@else
+    <div class="text-center py-12">
+        <i class="bi bi-briefcase text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Available Jobs</h3>
+        <p class="text-gray-500 mb-4">Get started by adding your first available job.</p>
+        <a href="{{ route('hr4.job_postings.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200">
+            Add New Available Job
+        </a>
+    </div>
+@endif
+
+</div>
+
+
+
 <script>
 
 // --- Tab Switching ---
@@ -190,7 +262,7 @@ function showTab(tab)
 // Show tab based on URL hash on page load
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash.substring(1); // Remove #
-    if (hash && ['employees', 'departments', 'positions', 'userlogs'].includes(hash)) {
+    if (hash && ['employees', 'departments', 'positions', 'userlogs', 'availablejobs'].includes(hash)) {
         showTab(hash);
     } else {
         showTab('employees'); // Default to employees

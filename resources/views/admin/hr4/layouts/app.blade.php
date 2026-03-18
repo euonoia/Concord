@@ -83,17 +83,16 @@
                     <i class="bi bi-briefcase"></i>
                     <span>Positions</span>
                 </a>
+                <a href="{{ route('hr4.core') }}#availablejobs" class="dropdown-item">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Available Jobs</span>
+                </a>
             </div>
         </div>
 
         <a href="{{ route('hr4.direct_compensation.index') }}" class="{{ request()->routeIs('hr4.direct_compensation.*') ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i>
             <span>Direct Compensation</span>
-        </a>
-
-        <a href="{{ route('hr4.job_postings.index') }}" class="{{ request()->routeIs('hr4.job_postings.*') ? 'active' : '' }}">
-            <i class="bi bi-briefcase"></i>
-            <span>Available Jobs</span>
         </a>
 
         <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">

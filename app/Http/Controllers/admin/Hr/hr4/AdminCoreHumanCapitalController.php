@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\User;
+use App\Models\admin\Hr\hr4\AvailableJob;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -37,6 +38,13 @@ class AdminCoreHumanCapitalController extends Controller
         $positions = DepartmentPositionTitle::with('department')->get();
         $users = User::all();
 
+        // Fetch job postings
+        $jobPostings = AvailableJob::with('poster')
+            ->leftJoin('departments_hr2', 'available_jobs_hr4.department', '=', 'departments_hr2.department_id')
+            ->select('available_jobs_hr4.*', 'departments_hr2.name as department_name')
+            ->orderBy('available_jobs_hr4.created_at', 'desc')
+            ->get();
+
         // Fetch HR1 employees dynamically
         $hr1_employees = DB::table('new_hires_hr1')->select('id', 'first_name', 'last_name')->get();
 
@@ -46,7 +54,8 @@ class AdminCoreHumanCapitalController extends Controller
             'departments',
             'positions',
             'hr1_employees',
-            'users'
+            'users',
+            'jobPostings'
         ));
     }
 }
