@@ -27,7 +27,7 @@ class InpatientController extends Controller
             'encounter.doctor', 
             'encounter.triage', 
             'encounter.triages.creator',
-            'encounter.prescriptions',
+            'encounter.prescriptions.administrations.administrator',
             'bed.room.ward'
         ])
             ->whereIn('status', ['Admitted', 'Doctor Approved'])
@@ -169,15 +169,19 @@ class InpatientController extends Controller
     public function getPrescriptionsJson(Encounter $encounter)
     {
         $prescriptions = $encounter->prescriptions()
+            ->with('administrations.administrator')
             ->latest()
             ->get()
             ->map(function ($rx) {
+                $lastAdmin = $rx->administrations->last();
                 return [
                     'id' => $rx->id,
                     'medication' => $rx->medication,
                     'dosage' => $rx->dosage,
                     'instructions' => $rx->instructions,
                     'status' => $rx->status,
+                    'administered_by' => $lastAdmin ? $lastAdmin->administrator->name : null,
+                    'administered_at' => $lastAdmin ? $lastAdmin->administered_at->format('M d, H:i') : null,
                     'administer_url' => route('core1.outpatient.administerMedication', $rx->id)
                 ];
             });
@@ -200,7 +204,6 @@ class InpatientController extends Controller
                     'encounter_id'    => $encounter->id,
                     'administered_by' => auth()->id(),
                     'administered_at' => now(),
-                    'status'          => 'Administered',
                 ]);
 
                 $rx->update(['status' => 'Administered']);

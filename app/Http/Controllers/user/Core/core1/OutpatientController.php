@@ -382,7 +382,6 @@ class OutpatientController extends Controller
             'encounter_id'    => $prescription->encounter_id,
             'administered_by' => auth()->id(),
             'administered_at' => now(),
-            'status'          => 'Administered',
         ]);
 
         $prescription->update(['status' => 'Administered']);

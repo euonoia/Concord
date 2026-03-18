@@ -393,28 +393,43 @@
 
                     const info = `
                         <div style="flex: 1;">
-                            <div style="font-weight: 700; color: var(--text-dark);">${rx.medication}</div>
-                            <div style="font-size: 11px; color: var(--text-gray);">${rx.dosage} | ${rx.instructions || ''}</div>
+                            <div style="font-weight: 700; color: var(--text-dark); font-size: 14px; margin-bottom: 2px;">${rx.medication}</div>
+                            <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <span style="background: var(--primary-light); color: var(--primary); padding: 1px 6px; border-radius: 4px; font-weight: 800;">Dosage: ${rx.dosage}</span>
+                                ${rx.instructions ? `<span style="opacity: 0.8;"><i class="bi bi-info-circle"></i> ${rx.instructions}</span>` : ''}
+                            </div>
                         </div>
                     `;
 
                     let action = '';
                     if (rx.status === 'Administered') {
-                        action = '<span style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;"><i class="bi bi-check-circle-fill"></i> Administered</span>';
+                        action = `
+                            <div style="text-align: right; min-width: 140px;">
+                                <div style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 2px;">
+                                    <i class="bi bi-check-circle-fill"></i> Administered
+                                </div>
+                                <div style="font-size: 10px; color: var(--text-gray); line-height: 1.2;">
+                                    <div style="font-weight: 600;">By: ${rx.administered_by || 'Unknown'}</div>
+                                    <div style="opacity: 0.8;">${rx.administered_at || 'N/A'}</div>
+                                </div>
+                            </div>
+                        `;
                     } else if (rx.status === 'Dispensed') {
                         action = `
-                            <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 4px 10px; font-size: 11px;">
-                                <i class="bi bi-check2"></i> Administer
+                            <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px;">
+                                <i class="bi bi-check2-circle"></i> Administer
                             </button>
                         `;
                     } else {
                         action = `
-                            <span style="color: var(--warning); font-weight: 700; font-size: 11px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-                                <span style="background: var(--warning-light); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--warning); display: flex; align-items: center; gap: 4px;">
-                                    <i class="bi bi-hourglass-split"></i> Pending Pharmacy
+                            <div style="text-align: right;">
+                                <span style="color: var(--warning); font-weight: 700; font-size: 11px; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                                    <span style="background: var(--warning-light); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--warning); display: flex; align-items: center; gap: 4px;">
+                                        <i class="bi bi-hourglass-split"></i> Pending Pharmacy
+                                    </span>
+                                    <span style="font-size: 9px; opacity: 0.7; font-style: italic;">Dispensing Status: ${rx.status}</span>
                                 </span>
-                                <span style="font-size: 9px; opacity: 0.8; font-style: italic;">Status: ${rx.status}</span>
-                            </span>
+                            </div>
                         `;
                     }
 
