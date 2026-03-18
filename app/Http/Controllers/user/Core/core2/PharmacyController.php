@@ -45,32 +45,34 @@ class PharmacyController extends Controller
 
     // ── Formula Management ─────────────────────────────────────────────────────
 
-    public function formulaManagementIndex(Request $request)
-    {
-        $records = FormulaManagement::latest()->paginate(15);
-        return view('core.core2.pharmacy.formula-management.index', compact('records'));
-    }
+public function formulaManagementIndex(Request $request)
+{
+    $records = FormulaManagement::latest()->paginate(15);
+    return view('core.core2.pharmacy.formula-management.index', compact('records'));
+}
 
-    public function formulaManagementCreate()
-    {
-        return view('core.core2.pharmacy.formula-management.create');
-    }
+public function formulaManagementCreate()
+{
+    return view('core.core2.pharmacy.formula-management.create');
+}
 
-    public function formulaManagementStore(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'formula_id'       => 'required|string|max:50',
-            'formula_name'     => 'required|string|max:100',
-            'ingredients_list' => 'nullable|string',
-            'drug_id'          => 'nullable|string|max:50',
-        ]);
+public function formulaManagementStore(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'formula_id' => 'required|string|max:50',
+        'formula_name' => 'required|string|max:100',
+        'ingredients_list' => 'nullable|string',
+        'drug_id' => 'nullable|string|max:50',
+        'dosage' => 'nullable|string|max:100',
+        'preparation_method' => 'nullable|string',
+        'status' => 'nullable|string|max:20',
+    ]);
 
-        FormulaManagement::create($validated);
+    FormulaManagement::create($validated);
 
-        return redirect()->route('core2.pharmacy.formula-management.index')
-            ->with('success', 'Formula management record added successfully.');
-    }
-
+    return redirect()->route('core2.pharmacy.formula-management.index')
+        ->with('success', 'Formula management record added successfully.');
+}
     // ── Prescriptions ──────────────────────────────────────────────────────────
 
     public function prescriptionIndex(Request $request)
