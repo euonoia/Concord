@@ -36,7 +36,7 @@ class AdminTrainingScheduleController extends Controller
                 'e.last_name',
                 'e.specialization'
             )
-            ->where('ce.status', 'enrolled') // Only those synced in HR2
+            ->where('ce.status', 'completed') 
             ->distinct()
             ->orderBy('e.first_name')
             ->get();
@@ -76,7 +76,7 @@ class AdminTrainingScheduleController extends Controller
         // 2. Get ONLY the competencies assigned via HR2 Sync
         $competencies = DB::table('competency_enroll_hr2')
             ->where('employee_id', $emp_id)
-            ->where('status', 'enrolled')
+            ->where('status', 'completed')
             ->get(['competency_code']);
 
         return response()->json([
