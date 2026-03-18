@@ -15,7 +15,7 @@ class SurgeryDietController extends Controller
 
     public function orBookingIndex(Request $request)
     {
-        $records = OperatingRoomBooking::latest()->paginate(15);
+        $records = OperatingRoomBooking::with(['surgeryOrder.patient', 'patient', 'surgeryOrder.doctor'])->latest()->paginate(15);
         return view('core.core2.surgery-diet.or-booking.index', compact('records'));
     }
 
@@ -43,7 +43,7 @@ class SurgeryDietController extends Controller
 
     public function nutritionalIndex(Request $request)
     {
-        $records = NutritionalAssessment::latest()->paginate(15);
+        $records = NutritionalAssessment::with(['dietOrder.patient', 'patient', 'dietOrder.doctor'])->latest()->paginate(15);
         return view('core.core2.surgery-diet.nutritional.index', compact('records'));
     }
 

@@ -61,24 +61,26 @@
                                     <span class="text-gray italic">N/A</span>
                                 @endif
                             </td>
-                            <td style="display: flex; gap: 8px;">
-                                <button type="button" onclick="viewBillDetails({{ $bill->id }})" class="core1-btn-sm core1-btn-outline" style="padding: 4px 10px; font-size: 11px;">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                @if($bill->status !== 'paid')
-                                <button type="button" 
-                                        data-bill-id="{{ $bill->id }}"
-                                        data-bill-number="{{ $bill->bill_number }}"
-                                        data-patient-name="{{ $bill->patient->name ?? 'N/A' }}"
-                                        data-total="{{ $bill->total }}"
-                                        data-subtotal="{{ $bill->subtotal }}"
-                                        data-tax="{{ $bill->tax }}"
-                                        onclick="initPayment(this)"
-                                        class="core1-btn-sm core1-btn-primary" 
-                                        style="font-size: 11px; padding: 4px 12px;">
-                                    <i class="bi bi-wallet2"></i> Pay Now
-                                </button>
-                                @endif
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" onclick="viewBillDetails({{ $bill->id }})" class="core1-btn-sm core1-btn-outline" style="padding: 4px 10px; font-size: 11px;">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    @if($bill->status !== 'paid')
+                                    <button type="button" 
+                                            data-bill-id="{{ $bill->id }}"
+                                            data-bill-number="{{ $bill->bill_number }}"
+                                            data-patient-name="{{ $bill->patient->name ?? 'N/A' }}"
+                                            data-total="{{ $bill->total }}"
+                                            data-subtotal="{{ $bill->subtotal }}"
+                                            data-tax="{{ $bill->tax }}"
+                                            onclick="initPayment(this)"
+                                            class="core1-btn-sm core1-btn-primary" 
+                                            style="font-size: 11px; padding: 4px 12px;">
+                                        <i class="bi bi-wallet2"></i> Pay Now
+                                    </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

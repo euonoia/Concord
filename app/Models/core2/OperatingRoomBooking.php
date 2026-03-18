@@ -13,5 +13,20 @@ class OperatingRoomBooking extends Model
         'patient_id',
         'booking_date',
         'surgeon_id',
+        'core1_surgery_order_id',
+        'encounter_id',
+        'status',
+        'proposed_date',
+        'proposed_time',
     ];
+
+    public function surgeryOrder()
+    {
+        return $this->belongsTo(\App\Models\core1\SurgeryOrder::class, 'core1_surgery_order_id');
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(\App\Models\Patient::class, 'patient_id');
+    }
 }

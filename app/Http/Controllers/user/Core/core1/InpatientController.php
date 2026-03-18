@@ -26,7 +26,8 @@ class InpatientController extends Controller
             'encounter.patient.assignedNurse', 
             'encounter.doctor', 
             'encounter.triage', 
-            'encounter.prescriptions',
+            'encounter.triages.creator',
+            'encounter.prescriptions.administrations.administrator',
             'bed.room.ward'
         ])
             ->whereIn('status', ['Admitted', 'Doctor Approved'])
@@ -102,7 +103,7 @@ class InpatientController extends Controller
     {
         $zoneOrder = ['ICU', 'ER', 'WARD', 'OR'];
         $wards = Ward::with(['rooms.beds.admissions' => function ($q) {
-            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with('encounter.patient');
+            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with(['encounter.patient', 'encounter.triages.creator']);
         }])->get();
 
         $floorMap = [];
@@ -137,7 +138,8 @@ class InpatientController extends Controller
                             'bp'   => $admission->encounter->triage->blood_pressure,
                             'hr'   => $admission->encounter->triage->heart_rate,
                             'temp' => $admission->encounter->triage->temperature,
-                            'spo2' => $admission->encounter->triage->oxygen_saturation,
+                            'spo2' => $admission->encounter->triage->spo2,
+                            'history' => $admission->encounter->triages,
                         ] : null,
                     ];
                     $floorMap[$zoneKey]['total']++;
@@ -167,15 +169,19 @@ class InpatientController extends Controller
     public function getPrescriptionsJson(Encounter $encounter)
     {
         $prescriptions = $encounter->prescriptions()
+            ->with('administrations.administrator')
             ->latest()
             ->get()
             ->map(function ($rx) {
+                $lastAdmin = $rx->administrations->last();
                 return [
                     'id' => $rx->id,
                     'medication' => $rx->medication,
                     'dosage' => $rx->dosage,
                     'instructions' => $rx->instructions,
                     'status' => $rx->status,
+                    'administered_by' => $lastAdmin ? $lastAdmin->administrator->name : null,
+                    'administered_at' => $lastAdmin ? $lastAdmin->administered_at->format('M d, H:i') : null,
                     'administer_url' => route('core1.outpatient.administerMedication', $rx->id)
                 ];
             });
@@ -198,7 +204,6 @@ class InpatientController extends Controller
                     'encounter_id'    => $encounter->id,
                     'administered_by' => auth()->id(),
                     'administered_at' => now(),
-                    'status'          => 'Administered',
                 ]);
 
                 $rx->update(['status' => 'Administered']);

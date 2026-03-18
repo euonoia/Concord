@@ -24,7 +24,7 @@
                 </div>
                 <div class="mb-10">
                     <label class="font-bold block mb-5">SpO2 (%)</label>
-                    <input type="number" name="oxygen_saturation" class="core1-input w-full" placeholder="e.g. 98">
+                    <input type="number" name="spo2" class="core1-input w-full" placeholder="e.g. 98">
                 </div>
             </div>
             <div class="mb-20">
@@ -159,6 +159,80 @@
     </div>
 </div>
 
+<!-- Surgery Order Modal -->
+<div id="surgeryModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:450px; max-width:90%;">
+        <div class="core1-header border-bottom mb-15">
+            <h4 class="font-bold">Order Surgical Procedure</h4>
+        </div>
+        <form method="POST" action="{{ route('core1.outpatient.storeSurgeryOrder') }}">
+            @csrf
+            <input type="hidden" name="encounter_id" id="surgeryEncounterId">
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Procedure Name</label>
+                <input type="text" name="procedure_name" class="core1-input w-full" required placeholder="e.g. Appendectomy, Hernia Repair">
+            </div>
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Priority</label>
+                <select name="priority" class="core1-input w-full">
+                    <option value="Routine">Routine</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="core1-stats-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div>
+                    <label class="font-bold block mb-5">Proposed Date</label>
+                    <input type="date" name="proposed_date" class="core1-input w-full" required min="{{ date('Y-m-d') }}">
+                </div>
+                <div>
+                    <label class="font-bold block mb-5">Proposed Time</label>
+                    <input type="time" name="proposed_time" class="core1-input w-full" required>
+                </div>
+            </div>
+            <div class="mb-15">
+                <textarea name="clinical_indication" class="core1-input w-full" rows="3" placeholder="Reason for surgery..."></textarea>
+            </div>
+            <div class="core1-flex-gap-2 justify-end">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('surgeryModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Order Surgery</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Diet Order Modal -->
+<div id="dietModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:400px; max-width:90%;">
+        <div class="core1-header border-bottom mb-15">
+            <h4 class="font-bold">Nutrition & Diet Order</h4>
+        </div>
+        <form method="POST" action="{{ route('core1.outpatient.storeDietOrder') }}">
+            @csrf
+            <input type="hidden" name="encounter_id" id="dietEncounterId">
+            <div class="mb-10">
+                <label class="font-bold block mb-5">Diet Type</label>
+                <select name="diet_type" class="core1-input w-full" required>
+                    <option value="Regular">Regular Diet</option>
+                    <option value="NPO">NPO (Nothing by Mouth)</option>
+                    <option value="Soft">Soft / Low Residue</option>
+                    <option value="Liquid">Clear Liquid</option>
+                    <option value="Diabetic">Diabetic (Low Sugar)</option>
+                    <option value="Renal">Renal Diet</option>
+                    <option value="High Protein">High Protein</option>
+                </select>
+            </div>
+            <div class="mb-15">
+                <label class="font-bold block mb-5">Special Instructions</label>
+                <textarea name="instructions" class="core1-input w-full" rows="2" placeholder="e.g. No seafood, allergy to nuts..."></textarea>
+            </div>
+            <div class="core1-flex-gap-2 justify-end">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('dietModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Set Diet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Discharge Clearance Modal -->
 <div id="dischargeModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
     <div class="core1-modal-content core1-card" style="width:600px; max-width:95%; max-height: 90vh; overflow-y: auto;">
@@ -279,6 +353,16 @@
         document.getElementById('prescriptionModal').style.display = 'flex';
     }
 
+    function openSurgeryOrderModal(encounterId) {
+        document.getElementById('surgeryEncounterId').value = encounterId;
+        document.getElementById('surgeryModal').style.display = 'flex';
+    }
+
+    function openDietOrderModal(encounterId) {
+        document.getElementById('dietEncounterId').value = encounterId;
+        document.getElementById('dietModal').style.display = 'flex';
+    }
+
     function openAdministrationModal(encounterId, patientName) {
         const modal = document.getElementById('administrationModal');
         const list = document.getElementById('adminMedsList');
@@ -309,28 +393,43 @@
 
                     const info = `
                         <div style="flex: 1;">
-                            <div style="font-weight: 700; color: var(--text-dark);">${rx.medication}</div>
-                            <div style="font-size: 11px; color: var(--text-gray);">${rx.dosage} | ${rx.instructions || ''}</div>
+                            <div style="font-weight: 700; color: var(--text-dark); font-size: 14px; margin-bottom: 2px;">${rx.medication}</div>
+                            <div style="font-size: 11px; color: var(--text-gray); display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <span style="background: var(--primary-light); color: var(--primary); padding: 1px 6px; border-radius: 4px; font-weight: 800;">Dosage: ${rx.dosage}</span>
+                                ${rx.instructions ? `<span style="opacity: 0.8;"><i class="bi bi-info-circle"></i> ${rx.instructions}</span>` : ''}
+                            </div>
                         </div>
                     `;
 
                     let action = '';
                     if (rx.status === 'Administered') {
-                        action = '<span style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px;"><i class="bi bi-check-circle-fill"></i> Administered</span>';
+                        action = `
+                            <div style="text-align: right; min-width: 140px;">
+                                <div style="color: var(--success); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 2px;">
+                                    <i class="bi bi-check-circle-fill"></i> Administered
+                                </div>
+                                <div style="font-size: 10px; color: var(--text-gray); line-height: 1.2;">
+                                    <div style="font-weight: 600;">By: ${rx.administered_by || 'Unknown'}</div>
+                                    <div style="opacity: 0.8;">${rx.administered_at || 'N/A'}</div>
+                                </div>
+                            </div>
+                        `;
                     } else if (rx.status === 'Dispensed') {
                         action = `
-                            <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 4px 10px; font-size: 11px;">
-                                <i class="bi bi-check2"></i> Administer
+                            <button onclick="administerMedSingle(this, ${rx.id}, '${rx.administer_url}')" class="core1-btn-sm core1-btn-primary" style="padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px;">
+                                <i class="bi bi-check2-circle"></i> Administer
                             </button>
                         `;
                     } else {
                         action = `
-                            <span style="color: var(--warning); font-weight: 700; font-size: 11px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-                                <span style="background: var(--warning-light); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--warning); display: flex; align-items: center; gap: 4px;">
-                                    <i class="bi bi-hourglass-split"></i> Pending Pharmacy
+                            <div style="text-align: right;">
+                                <span style="color: var(--warning); font-weight: 700; font-size: 11px; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                                    <span style="background: var(--warning-light); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--warning); display: flex; align-items: center; gap: 4px;">
+                                        <i class="bi bi-hourglass-split"></i> Pending Pharmacy
+                                    </span>
+                                    <span style="font-size: 9px; opacity: 0.7; font-style: italic;">Dispensing Status: ${rx.status}</span>
                                 </span>
-                                <span style="font-size: 9px; opacity: 0.8; font-style: italic;">Status: ${rx.status}</span>
-                            </span>
+                            </div>
                         `;
                     }
 

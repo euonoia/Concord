@@ -17,19 +17,36 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                    <th class="px-8 py-6">Enrollment ID</th>
-                    <th class="px-8 py-6">Patient ID</th>
-                    <th class="px-8 py-6">Package ID</th>
+                    <th class="px-8 py-6">Patient</th>
+                    <th class="px-8 py-6">Diet Type</th>
+                    <th class="px-8 py-6">Instructions</th>
                     <th class="px-8 py-6">Status</th>
+                    <th class="px-8 py-6 text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($records as $r)
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                    <td class="px-8 py-5 text-xs font-black text-slate-900">{{ $r->enrollment_id }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-700">{{ $r->patient_id ?? '—' }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->package_id ?? '—' }}</td>
-                    <td class="px-8 py-5 text-xs"><span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full font-semibold">{{ $r->enrollment_status ?? '—' }}</span></td>
+                    <td class="px-8 py-5 text-xs font-black text-slate-900 border-l-4 border-indigo-500">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-indigo-600 font-black">{{ $r->dietOrder->patient->name ?? $r->patient->name ?? 'Unknown' }}</span>
+                            <span class="text-[9px] text-slate-400 uppercase">MRN: {{ $r->dietOrder->patient->mrn ?? 'N/A' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-xs font-bold text-slate-700">
+                        <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg">{{ $r->dietOrder->diet_type ?? 'Standard' }}</span>
+                    </td>
+                    <td class="px-8 py-5 text-xs font-semibold text-slate-500 max-w-[200px] truncate">
+                        {{ $r->dietOrder->instructions ?? '—' }}
+                    </td>
+                    <td class="px-8 py-5 text-xs">
+                        <span class="px-3 py-1 {{ $r->enrollment_status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} rounded-full font-black text-[10px] uppercase tracking-tighter">
+                            {{ $r->enrollment_status ?? 'Pending' }}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        <button class="text-indigo-600 hover:text-indigo-900 font-black text-[10px] uppercase">Process</button>
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="4" class="py-20 text-center text-slate-300 font-bold italic">No nutritional assessment records found.</td></tr>

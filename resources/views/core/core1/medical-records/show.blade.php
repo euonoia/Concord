@@ -188,7 +188,7 @@
                                                 <span><strong>BP:</strong> {{ $encounter->triage->blood_pressure ?? '--' }}</span>
                                                 <span><strong>HR:</strong> {{ $encounter->triage->heart_rate ?? '--' }} bpm</span>
                                                 <span><strong>Temp:</strong> {{ $encounter->triage->temperature ?? '--' }} °C</span>
-                                                <span><strong>SpO2:</strong> {{ $encounter->triage->oxygen_saturation ?? '--' }} %</span>
+                                                <span><strong>SpO2:</strong> {{ $encounter->triage->spo2 ?? '--' }} %</span>
                                                 <span><strong>Weight:</strong> {{ $encounter->triage->weight ?? '--' }} kg</span>
                                             </div>
                                             @if($encounter->triage->notes)
