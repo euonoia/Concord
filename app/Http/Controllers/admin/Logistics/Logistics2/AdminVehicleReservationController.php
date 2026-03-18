@@ -27,38 +27,50 @@ class AdminVehicleReservationController extends Controller
     }
 
     /**
-     * Start the Transit process
+     * Dispatch vehicle and store cost temporarily
      */
     public function startTransit(Request $request, $id)
     {
-        DB::transaction(function () use ($id) {
-            // 1. Update Vehicle Reservation status
+        $request->validate([
+            'cost' => 'required|numeric|min:0'
+        ]);
+
+        $cost = $request->input('cost');
+
+        $employee = DB::table('employees')->where('user_id', Auth::id())->first();
+        $handlerId = $employee ? $employee->employee_id : (string)Auth::id();
+
+        DB::transaction(function () use ($id, $cost, $handlerId) {
+            // 1. Update Vehicle Reservation to in_transit and store cost
             DB::table('vehicle_reservations')->where('id', $id)->update([
                 'delivery_status' => 'in_transit',
+                'delivery_cost' => $cost, // store cost in reservation
                 'updated_at' => now()
             ]);
 
             $reservation = DB::table('vehicle_reservations')->where('id', $id)->first();
 
-            // 2. Sync with Vendor Log
+            // 2. Update Vendor Logistics
             DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->update([
                 'status' => 'shipped',
                 'updated_at' => now()
             ]);
 
-            // 3. Sync with original Procurement Log
+            // 3. Update Procurement Log
             $vendorLog = DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->first();
             DB::table('procurement_log_logistics2')->where('id', $vendorLog->procurement_id)->update([
                 'status' => 'shipped',
                 'updated_at' => now()
             ]);
+
+            // No audit log yet; will create it on delivery
         });
 
-        return redirect()->back()->with('success', 'Shipment is now In Transit.');
+        return redirect()->back()->with('success', 'Shipment dispatched with cost recorded.');
     }
 
     /**
-     * Mark the delivery as Complete and Release the Vehicle
+     * Complete Delivery and store in Audit + update inventory
      */
     public function completeDelivery(Request $request, $id)
     {
@@ -66,21 +78,17 @@ class AdminVehicleReservationController extends Controller
         $handlerId = $employee ? $employee->employee_id : (string)Auth::id();
 
         DB::transaction(function () use ($id, $handlerId) {
-            // 1. Get reservation details before updating
             $reservation = DB::table('vehicle_reservations')->where('id', $id)->first();
+            if (!$reservation) return;
 
-            if (!$reservation) {
-                return;
-            }
-
-            // 2. Update Vehicle Reservation Table
+            // 1. Update Vehicle Reservation Table
             DB::table('vehicle_reservations')->where('id', $id)->update([
                 'delivery_status' => 'delivered',
                 'delivered_by' => $handlerId,
                 'updated_at' => now()
             ]);
 
-            // 3. AUTOMATION: Mark the vehicle as 'available' in Fleet Management
+            // 2. Mark the vehicle as 'available'
             DB::table('fleet_management_logistics2')
                 ->where('plate_number', $reservation->plate_number)
                 ->update([
@@ -88,48 +96,48 @@ class AdminVehicleReservationController extends Controller
                     'updated_at' => now()
                 ]);
 
-            // 4. Update Vendor Logistics status
+            // 3. Update Vendor Logistics status
             DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->update([
                 'status' => 'delivered',
                 'updated_at' => now()
             ]);
 
-            // 5. Final update to Procurement Log (L1)
+            // 4. Update Procurement Log (L1)
             $vendorLog = DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->first();
-            DB::table('procurement_log_logistics2')
-                ->where('id', $vendorLog->procurement_id)
-                ->update([
-                    'status' => 'received', 
-                    'delivered_by' => $handlerId,
-                    'updated_at' => now()
-                ]);
+            DB::table('procurement_log_logistics2')->where('id', $vendorLog->procurement_id)->update([
+                'status' => 'received', 
+                'delivered_by' => $handlerId,
+                'updated_at' => now()
+            ]);
 
-            // 6. UPDATE DRUG INVENTORY BASED ON DELIVERED QUANTITY
-            $inventory = DB::table('drug_inventory_core2')
-                ->where('drug_num', $reservation->drug_num)
-                ->first();
-
+            // 5. Update Drug Inventory
+            $inventory = DB::table('drug_inventory_core2')->where('drug_num', $reservation->drug_num)->first();
             if ($inventory) {
                 $newQuantity = $inventory->quantity + $reservation->quantity;
-
-                // Determine new status based on quantity
                 $status = match(true) {
                     $newQuantity == 0 => 'Out of Stock',
                     $newQuantity <= 10 => 'Low Stock',
                     $newQuantity <= 20 => 'Critical',
                     default => 'Stable'
                 };
-
-                DB::table('drug_inventory_core2')
-                    ->where('drug_num', $reservation->drug_num)
-                    ->update([
-                        'quantity' => $newQuantity,
-                        'status' => $status,
-                        'updated_at' => now()
-                    ]);
+                DB::table('drug_inventory_core2')->where('drug_num', $reservation->drug_num)->update([
+                    'quantity' => $newQuantity,
+                    'status' => $status,
+                    'updated_at' => now()
+                ]);
             }
+
+            // 6. Insert into Audit Log for delivery WITH stored cost
+            DB::table('audit_logistics2')->insert([
+                'reference_id' => $reservation->id,
+                'category' => 'Delivery',
+                'action' => 'Vehicle Delivery Completed',
+                'details' => "Delivered {$reservation->quantity} units of {$reservation->drug_name} (SKU: {$reservation->drug_num}) via vehicle {$reservation->plate_number}",
+                'performed_by' => $handlerId,
+                'cost' => $reservation->delivery_cost ?? 0.00,
+            ]);
         });
 
-        return redirect()->back()->with('success', 'Delivery completed, inventory updated, vehicle is now available.');
+        return redirect()->back()->with('success', 'Delivery completed, inventory updated, vehicle is now available, and audit logged with cost.');
     }
 }
