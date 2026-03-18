@@ -41,7 +41,12 @@ class Encounter extends Model
 
     public function triage()
     {
-        return $this->hasOne(Triage::class, 'encounter_id');
+        return $this->hasOne(Triage::class, 'encounter_id')->latestOfMany();
+    }
+
+    public function triages()
+    {
+        return $this->hasMany(Triage::class, 'encounter_id')->latest();
     }
 
     public function consultation()

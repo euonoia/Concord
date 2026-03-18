@@ -19,8 +19,8 @@ class OutpatientService
     public function recordTriage(Encounter $encounter, array $vitals): Triage
     {
         return DB::transaction(function () use ($encounter, $vitals) {
-            // Check if triage already exists for this encounter
-            $triage = Triage::where('encounter_id', $encounter->id)->first() ?: new Triage();
+            // HIS Architect Rules: Triage history is required. Always create a new record.
+            $triage = new Triage();
             
             $triage->fill([
                 'encounter_id' => $encounter->id,
@@ -28,7 +28,7 @@ class OutpatientService
                 'heart_rate' => $vitals['heart_rate'] ?? null,
                 'respiratory_rate' => $vitals['respiratory_rate'] ?? null,
                 'temperature' => $vitals['temperature'] ?? null,
-                'spo2' => $vitals['spo2'] ?? null,
+                'spo2' => $vitals['spo2'] ?? $vitals['oxygen_saturation'] ?? null,
                 'triage_level' => $vitals['triage_level'] ?? null,
                 'notes' => $vitals['notes'] ?? null,
                 'created_by' => auth()->id(),

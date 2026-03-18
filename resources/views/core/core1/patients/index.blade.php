@@ -346,7 +346,7 @@
                                     </form>
                                 @endif
 
-                                @if(!$patient->care_type)
+                                @if(!$latestEncounter || $latestEncounter->status === 'Closed')
                                     <form method="POST" action="{{ route('core1.encounters.store') }}" class="d-flex gap-1" style="margin: 0;">
                                         @csrf
                                         <input type="hidden" name="patient_id" value="{{ $patient->id }}">
@@ -356,9 +356,9 @@
                                             <i class="fas fa-hospital-user mr-5"></i> Send to Triage
                                         </button>
                                     </form>
-                                @elseif($patient->care_type)
-                                    <span class="core1-badge {{ $patient->care_type === 'inpatient' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
-                                        {{ strtoupper($patient->care_type) }}
+                                @else
+                                    <span class="core1-badge {{ $latestEncounter->type === 'IPD' ? 'core1-badge-active' : 'core1-badge-inactive' }}">
+                                        {{ strtoupper($latestEncounter->type) }}
                                     </span>
                                 @endif
                             </div>

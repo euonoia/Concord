@@ -24,7 +24,7 @@
                 </div>
                 <div class="mb-10">
                     <label class="font-bold block mb-5">SpO2 (%)</label>
-                    <input type="number" name="oxygen_saturation" class="core1-input w-full" placeholder="e.g. 98">
+                    <input type="number" name="spo2" class="core1-input w-full" placeholder="e.g. 98">
                 </div>
             </div>
             <div class="mb-20">

@@ -191,8 +191,15 @@
                                                     <span style="font-weight: 700; font-family: monospace;">{{ $triage->spo2 ?? '--' }}%</span>
                                                 </div>
                                             </div>
-                                            <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; display: flex; align-items: center; gap: 4px; justify-content: center;">
-                                                <i class="bi bi-clock-history"></i> {{ $triage->created_at->diffForHumans() }}
+                                            <div style="font-size: 10px; color: var(--text-gray); margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; justify-content: center;">
+                                                <div style="display: flex; align-items: center; gap: 4px;">
+                                                    <i class="bi bi-clock-history"></i> {{ $triage->created_at->diffForHumans() }}
+                                                </div>
+                                                <button type="button" 
+                                                        onclick="openVitalsHistoryModal({{ $admission->encounter_id }}, '{{ $patient->name }}', '{{ json_encode($admission->encounter->triages) }}')"
+                                                        style="background: none; border: none; color: var(--primary); font-size: 10px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">
+                                                    View History
+                                                </button>
                                             </div>
                                         @else
                                             <div style="text-align: center; padding: 15px; background: var(--bg-light); border-radius: 8px; border: 1px dashed var(--border-color); color: var(--text-gray); font-size: 11px; font-style: italic;">
@@ -496,6 +503,9 @@
 
                                                                             <div style="margin-top: 12px; display: flex; gap: 6px; justify-content: center; background: rgba(255,255,255,0.5); padding: 6px; border-radius: 8px;">
                                                                                 <button type="button" onclick="openVitalsModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--danger); flex-shrink: 0;" title="Record Vitals"><i class="bi bi-heart-pulse"></i></button>
+                                                                                @if($bed['triage'])
+                                                                                    <button type="button" onclick="openVitalsHistoryModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}', '{{ json_encode($bed['triage']['history'] ?? []) }}')" class="fm-tip-btn" style="color: var(--primary); flex-shrink: 0;" title="Vitals History"><i class="bi bi-clock-history"></i></button>
+                                                                                @endif
                                                                                 <button type="button" onclick="openNotesModal({{ $bed['encounter_id'] }}, '{{ $bed['patient'] }}')" class="fm-tip-btn" style="color: var(--info); flex-shrink: 0;" title="Clinical Notes"><i class="bi bi-pencil-square"></i></button>
                                                                                 <button type="button" onclick="openMedicationModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--primary); flex-shrink: 0;" title="Issue Medication"><i class="bi bi-capsule"></i></button>
                                                                                 <button type="button" onclick="openLabOrderModal({{ $bed['encounter_id'] }})" class="fm-tip-btn" style="color: var(--warning); flex-shrink: 0;" title="Order Lab"><i class="bi bi-droplet-half"></i></button>
@@ -633,4 +643,88 @@ function closeRecordModal() {
 <style>
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
+{{-- Vitals History Modal --}}
+<div id="vitalsHistoryModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index:1200; align-items:center; justify-content:center; padding: 20px;" role="dialog" aria-modal="true">
+    <div class="core1-modal-content core1-card" style="width: 100%; max-width: 650px; padding:0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+        <div style="padding: 20px 28px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: #ffffff;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--danger-light); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-dark);">Vitals History</h3>
+                    <p id="vh-patient-name" style="margin: 0; font-size: 12px; color: var(--text-gray); font-weight: 500;"></p>
+                </div>
+            </div>
+            <button type="button" onclick="closeModal('vitalsHistoryModal')" style="background: var(--bg-hover); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-gray);">
+                <i class="bi bi-x-lg" style="font-size: 12px;"></i>
+            </button>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 24px; background: var(--bg-light);">
+            <div id="vh-content" style="display: flex; flex-direction: column; gap: 16px;">
+                {{-- Content will be injected via JS --}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openVitalsHistoryModal(encounterId, patientName, triagesJson) {
+    const modal = document.getElementById('vitalsHistoryModal');
+    const nameEl = document.getElementById('vh-patient-name');
+    const contentEl = document.getElementById('vh-content');
+    
+    nameEl.innerText = patientName;
+    contentEl.innerHTML = '';
+    
+    const triages = JSON.parse(triagesJson);
+    
+    if (triages.length === 0) {
+        contentEl.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-gray); font-style:italic;">No vital records found for this encounter.</div>`;
+    } else {
+        triages.forEach(t => {
+            const date = new Date(t.created_at).toLocaleString('en-US', { 
+                month: 'short', day: 'numeric', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+            
+            const card = document.createElement('div');
+            card.style.background = 'white';
+            card.style.borderRadius = '12px';
+            card.style.border = '1px solid var(--border-color)';
+            card.style.padding = '16px';
+            card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+            
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--primary);"><i class="bi bi-calendar-check mr-5"></i>${date}</span>
+                    <span style="font-size: 10px; background: var(--bg-light); padding: 2px 8px; border-radius: 4px; color: var(--text-gray); font-weight: 600;">#${t.id}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; text-transform: uppercase; color: var(--text-gray); font-weight: 700; margin-bottom: 4px;">BP</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #be123c;">${t.blood_pressure || '--'}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; text-transform: uppercase; color: var(--text-gray); font-weight: 700; margin-bottom: 4px;">HR</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #15803d;">${t.heart_rate || '--'} <small style="font-size: 10px; font-weight: normal;">bpm</small></div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; text-transform: uppercase; color: var(--text-gray); font-weight: 700; margin-bottom: 4px;">Temp</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #1d4ed8;">${t.temperature || '--'}°C</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; text-transform: uppercase; color: var(--text-gray); font-weight: 700; margin-bottom: 4px;">SpO2</div>
+                        <div style="font-size: 13px; font-weight: 700; color: #b45309;">${t.spo2 || '--'}%</div>
+                    </div>
+                </div>
+                ${t.notes ? `<div style="margin-top: 12px; font-size: 11px; color: var(--text-gray); font-style: italic; background: var(--bg-light); padding: 8px; border-radius: 6px;">"${t.notes}"</div>` : ''}
+            `;
+            contentEl.appendChild(card);
+        });
+    }
+    
+    modal.style.display = 'flex';
+}
+</script>
 @endsection

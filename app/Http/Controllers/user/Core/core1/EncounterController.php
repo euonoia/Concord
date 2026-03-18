@@ -20,6 +20,15 @@ class EncounterController extends Controller
         $validated['doctor_id'] = auth()->id();
         $validated['status'] = 'Active';
 
+        // Prevent double triage / duplicate active encounters
+        $existingActive = Encounter::where('patient_id', $validated['patient_id'])
+            ->where('status', '!=', 'Closed')
+            ->exists();
+
+        if ($existingActive) {
+            return redirect()->back()->with('error', 'Patient already has an active encounter.');
+        }
+
         $encounter = Encounter::create($validated);
 
         if ($encounter->type === 'IPD') {
