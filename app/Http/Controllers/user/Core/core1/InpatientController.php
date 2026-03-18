@@ -26,7 +26,7 @@ class InpatientController extends Controller
             'encounter.patient.assignedNurse', 
             'encounter.doctor', 
             'encounter.triage', 
-            'encounter.triages',
+            'encounter.triages.creator',
             'encounter.prescriptions',
             'bed.room.ward'
         ])
@@ -103,7 +103,7 @@ class InpatientController extends Controller
     {
         $zoneOrder = ['ICU', 'ER', 'WARD', 'OR'];
         $wards = Ward::with(['rooms.beds.admissions' => function ($q) {
-            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with(['encounter.patient', 'encounter.triages']);
+            $q->whereIn('status', ['Admitted', 'Doctor Approved'])->with(['encounter.patient', 'encounter.triages.creator']);
         }])->get();
 
         $floorMap = [];

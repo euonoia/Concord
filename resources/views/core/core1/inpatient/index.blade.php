@@ -697,7 +697,12 @@ function openVitalsHistoryModal(encounterId, patientName, triagesJson) {
             
             card.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
-                    <span style="font-size: 12px; font-weight: 700; color: var(--primary);"><i class="bi bi-calendar-check mr-5"></i>${date}</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 12px; font-weight: 700; color: var(--primary);"><i class="bi bi-calendar-check mr-5"></i>${date}</span>
+                        <span style="font-size: 10px; color: var(--success); font-weight: 700; text-transform: uppercase; margin-top: 2px;">
+                            <i class="bi bi-person-badge mr-5"></i>By: ${t.creator ? t.creator.name : 'System'}
+                        </span>
+                    </div>
                     <span style="font-size: 10px; background: var(--bg-light); padding: 2px 8px; border-radius: 4px; color: var(--text-gray); font-weight: 600;">#${t.id}</span>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
