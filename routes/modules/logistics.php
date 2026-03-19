@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\Logistics\Logistics1\AdminLogistics1WarehouseController;
 use App\Http\Controllers\admin\Logistics\Logistics1\AdminLogistics1ProcurementController;
 use App\Http\Controllers\admin\Logistics\Logistics1\AdminMaintenanceController;
+use App\Http\Controllers\admin\Logistics\Logistics1\AdminProjectManagementController;
+use App\Http\Controllers\admin\Logistics\Logistics1\AdminAssetManagementController;
 
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVehicleReservationController;
@@ -24,9 +26,23 @@ Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
         Route::post('/request', [AdminLogistics1ProcurementController::class, 'store'])->name('store');
     });
 
-Route::prefix('maintenance')->name('maintenance.')->group(function () {
+    Route::prefix('maintenance')->name('maintenance.')->group(function () {
         Route::get('/', [AdminMaintenanceController::class, 'index'])->name('index');
         Route::post('/repair', [AdminMaintenanceController::class, 'recordRepair'])->name('repair');
+    });
+
+    Route::prefix('project-management')->name('project_management.')->group(function () {
+        Route::get('/', [AdminProjectManagementController::class, 'index'])->name('index');
+        Route::post('/store', [AdminProjectManagementController::class, 'store'])->name('store');
+        Route::post('/update/{id}', [AdminProjectManagementController::class, 'update'])->name('update');
+        Route::delete('/destroy/{id}', [AdminProjectManagementController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('asset-management')->name('asset_management.')->group(function () {
+        Route::get('/', [AdminAssetManagementController::class, 'index'])->name('index');
+        Route::post('/store', [AdminAssetManagementController::class, 'store'])->name('store');
+        Route::post('/update/{id}', [AdminAssetManagementController::class, 'update'])->name('update');
+        Route::delete('/destroy/{id}', [AdminAssetManagementController::class, 'destroy'])->name('destroy');
     });
 });
 

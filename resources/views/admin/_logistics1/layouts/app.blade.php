@@ -50,7 +50,19 @@
         <a href="{{ route('admin.logistics1.maintenance.index') }}"
            class="{{ request()->routeIs('admin.logistics1.maintenance.*') ? 'active' : '' }}">
             <i class="bi bi-tools"></i>
-            <span>Maintenance </span>
+            <span>Maintenance</span>
+        </a>
+
+        <a href="{{ route('admin.logistics1.project_management.index') }}"
+           class="{{ request()->routeIs('admin.logistics1.project_management.*') ? 'active' : '' }}">
+            <i class="bi bi-kanban"></i>
+            <span>Project Management</span>
+        </a>
+
+        <a href="{{ route('admin.logistics1.asset_management.index') }}"
+           class="{{ request()->routeIs('admin.logistics1.asset_management.*') ? 'active' : '' }}">
+            <i class="bi bi-boxes"></i>
+            <span>Asset Management</span>
         </a>
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
