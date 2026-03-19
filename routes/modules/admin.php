@@ -92,6 +92,7 @@
         // --- HR3 Department ---
         Route::prefix('hr3')->group(function () {
             Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+            Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
 
             Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
             Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');

@@ -9,6 +9,7 @@ class AttendanceLog extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
     protected $table = 'attendance_logs_hr3';
 
     // Fillable fields for mass assignment

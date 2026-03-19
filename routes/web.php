@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\authentication\AuthController;
 use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Controllers\user\Hr\hr1\ApplicantController;
@@ -36,6 +37,11 @@ Route::prefix('careers')->group(function () {
 // --- Attendance Station (Public QR display) ---
 Route::get('/attendance/station', [AdminAttendanceController::class, 'showStation'])
      ->name('hr3.attendance.station');
+
+
+// --- Payroll Management ---
+Route::resource('payroll', PayrollController::class);
+Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('payroll.getAttendance');
 
 // --- Employee QR Verification (requires auth) ---
 Route::middleware(['auth'])->group(function () {

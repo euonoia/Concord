@@ -99,6 +99,11 @@
             <span>Direct Compensation</span>
         </a>
 
+        <a href="{{ route('payroll.index') }}" class="{{ request()->routeIs('payroll.*') ? 'active' : '' }}">
+            <i class="bi bi-receipt"></i>
+            <span>Payroll</span>
+        </a>
+
         <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">

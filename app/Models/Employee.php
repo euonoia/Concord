@@ -12,6 +12,13 @@ class Employee extends Model
 {
     use HasFactory;
 
+    // Payroll records
+    public function payrolls()
+    {
+        return $this->hasMany(\App\Models\Payroll::class, 'employee_id', 'id');
+    }
+    use HasFactory;
+
     protected $table = 'employees';
 
     protected $fillable = [

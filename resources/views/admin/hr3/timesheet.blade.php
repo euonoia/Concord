@@ -21,7 +21,9 @@
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="padding: 10px;">{{ $log->employee_id }}</td> 
                     <td style="padding: 10px;">
-                        <strong>{{ $log->employee->first_name ?? 'N/A' }} {{ $log->employee->last_name ?? '' }}</strong>
+                        <a href="{{ route('timesheet.show', $log->employee_id) }}" class="text-blue-600 hover:text-blue-800 underline">
+                            <strong>{{ $log->employee->first_name ?? 'N/A' }} {{ $log->employee->last_name ?? '' }}</strong>
+                        </a>
                     </td>
                     <td style="padding: 10px;">{{ $log->department->department_name ?? $log->department_id }}</td> 
                     <td style="padding: 10px;">
