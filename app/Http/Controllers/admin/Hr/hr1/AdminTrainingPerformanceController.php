@@ -121,6 +121,16 @@ class AdminTrainingPerformanceController extends Controller
                 'updated_at'       => now(),
             ]
         );
-        return redirect()->back()->with('success', "Grade " . round($finalGrade, 2) . "% stored successfully.");
+
+        // Connection 2: HR1 -> HR2 Grade Validation Sync
+        DB::table('employee_training_scores_hr2')
+            ->where('employee_id', $employee_id)
+            ->update([
+                'status'     => 'validated',
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->back()->with('success', "Grade " . round($finalGrade, 2) . "% stored and validated to HR2 successfully.");
+
     }
 }

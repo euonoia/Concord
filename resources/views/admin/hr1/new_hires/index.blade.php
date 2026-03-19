@@ -18,7 +18,46 @@
         </div>
     @endif
 
-    <div class="card mb-4 shadow-sm">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h4 class="mb-1 text-primary"><i class="fas fa-exchange-alt me-2"></i>Core Human Capital Handover</h4>
+                        <p class="text-muted mb-0">Monitor and synchronize your hired employees with the HR4 module for payroll and core records.</p>
+                    </div>
+                    <form action="{{ route('hr1.newhires.syncHr4') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fas fa-sync me-2"></i>Handover to Core Capital
+                        </button>
+                    </form>
+                </div>
+                @if($recentSyncs->count() > 0)
+                <div class="card-footer bg-white border-0 px-4 pb-4">
+                    <label class="small text-uppercase fw-bold text-muted mb-2">Recently Synchronized</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach($recentSyncs as $sync)
+                            <div class="badge bg-white text-dark border p-2 shadow-sm d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span>{{ $sync->full_name }} ({{ $sync->employee_id }})</span>
+                                <span class="ms-2 text-muted small border-start ps-2">{{ \Carbon\Carbon::parse($sync->hired_at)->format('M d, H:i') }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
         <div class="card-body">
             <form method="GET" class="row g-3">
                 <div class="col-md-4">

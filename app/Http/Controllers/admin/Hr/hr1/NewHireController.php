@@ -65,11 +65,18 @@ class NewHireController extends Controller
 
         $newHires = $query->orderByDesc('new_hires_hr1.id')->paginate(10);
 
+        // Fetch recent syncs to HR4
+        $recentSyncs = DB::table('hired_users_hr4')
+            ->orderByDesc('hired_at')
+            ->limit(5)
+            ->get();
+
         return view('admin.hr1.new_hires.index', compact(
             'newHires',
             'departments',
             'specializations',
-            'filters'
+            'filters',
+            'recentSyncs'
         ));
     }
 
@@ -207,13 +214,50 @@ class NewHireController extends Controller
                     if ($applicant && $applicant->job_posting_id) {
                         /** @var object $jobPosting */
                         $jobPosting = DB::table('job_postings_hr1')->where('id', $applicant->job_posting_id)->first();
+                        // Reworked HR4 Sync: Insert into hired_users_hr4
                         if ($jobPosting && $jobPosting->hr4_job_id) {
+                            $hr4_job_id = $jobPosting->hr4_job_id;
+                            $emp_data = [
+                                'first_name' => $newHire->first_name,
+                                'last_name' => $newHire->last_name,
+                            ];
+
+                            DB::table('hired_users_hr4')->insert([
+                                'hr4_job_id' => $hr4_job_id,
+                                'employee_id' => $employeeId,
+                                'full_name' => $emp_data['first_name'] . ' ' . $emp_data['last_name'],
+                                'hired_at' => now(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+
+                            // Decrement positions in HR4
                             DB::table('available_jobs_hr4')
-                                ->where('id', $jobPosting->hr4_job_id)
-                                ->where('positions_available', '>', 0)
+                                ->where('id', $hr4_job_id)
                                 ->decrement('positions_available');
+
+                            // Auto-close job if no positions remaining
+                            /** @var object $job */
+                            $job = DB::table('available_jobs_hr4')->where('id', $hr4_job_id)->first();
+                            if ($job && $job->positions_available <= 0) {
+
+                                DB::table('available_jobs_hr4')
+                                    ->where('id', $hr4_job_id)
+                                    ->update(['status' => 'closed']);
+                            }
                         }
                     }
+
+                    // Connection 4: Payroll/Compensation Initialization
+                    DB::table('direct_compensations_hr4')->insert([
+                        'employee_id' => $employeeId,
+                        'month' => date('Y-m'),
+                        'base_salary' => 0, // Should be updated by HR4
+                        'shift_allowance' => 0,
+                        'bonus' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 } else {
                     $message = "Status updated. Account already exists.";
                 }
@@ -227,5 +271,64 @@ class NewHireController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+    /**
+     * Manual Sync to HR4 (Handover)
+     */
+    public function syncToHr4(Request $request)
+    {
+        $this->authorizeHr1Admin();
+
+        // Find active employees not yet in hired_users_hr4
+        $activeEmployees = DB::table('employees')
+            ->join('users', 'employees.user_id', '=', 'users.id')
+            ->whereNotIn('employees.employee_id', function ($query) {
+                $query->select('employee_id')->from('hired_users_hr4');
+            })
+            ->select('employees.*', 'users.email')
+            ->get();
+
+
+        if ($activeEmployees->isEmpty()) {
+            return redirect()->back()->with('info', 'All active employees are already synchronized with HR4.');
+        }
+
+        $syncedCount = 0;
+        foreach ($activeEmployees as $emp) {
+            /** @var object $emp */
+            // Find the corresponding new hire to get the hr4_job_id if possible
+            $newHire = DB::table('new_hires_hr1')
+                ->where('email', $emp->email) // Assuming email is unique
+                ->first();
+
+            $hr4_job_id = null;
+            if ($newHire) {
+                /** @var object $newHire */
+                $applicant = DB::table('applicants_hr1')->where('id', $newHire->applicant_id)->first();
+                if ($applicant) {
+                    /** @var object $applicant */
+                    if ($applicant->job_posting_id) {
+                        $jobPosting = DB::table('job_postings_hr1')->where('id', $applicant->job_posting_id)->first();
+                        if ($jobPosting) {
+                            /** @var object $jobPosting */
+                            $hr4_job_id = $jobPosting->hr4_job_id;
+                        }
+                    }
+                }
+            }
+
+            DB::table('hired_users_hr4')->insert([
+                'hr4_job_id' => $hr4_job_id,
+                'employee_id' => $emp->employee_id,
+                'full_name' => $emp->first_name . ' ' . $emp->last_name,
+                'hired_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $syncedCount++;
+        }
+
+
+        return redirect()->back()->with('success', "Successfully handed over {$syncedCount} employees to Core Human Capital (HR4).");
     }
 }

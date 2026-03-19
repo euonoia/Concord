@@ -62,6 +62,8 @@
             Route::get('/newhires/{id}', [NewHireController::class, 'show'])->name('hr1.newhires.show');
             Route::get('/newhires/{id}/resume', [NewHireController::class, 'downloadResume'])->name('hr1.newhires.download');
             Route::post('/newhires/{id}/status', [NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
+            Route::post('/newhires/sync-hr4', [NewHireController::class, 'syncToHr4'])->name('hr1.newhires.syncHr4');
+
 
            Route::get('/training-performance', [AdminTrainingPerformanceController::class, 'index'])
                  ->name('hr1.training.performance.index');
