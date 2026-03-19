@@ -8,6 +8,7 @@
 
     <div class="row">
         <div class="col-lg-8">
+            <!-- Pending Maintenance Card -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Pending Maintenance</h6>
@@ -40,7 +41,7 @@
                                             <option value="Electrical">Electrical</option>
                                         </select>
                                         <div class="input-group input-group-sm" style="width: 130px;">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text">₱</span>
                                             <input type="number" name="cost" class="form-control" placeholder="0.00" step="0.01">
                                         </div>
                                     </form>
@@ -52,13 +53,16 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="3" class="text-center py-5 text-muted">All vehicles are operational.</td></tr>
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">All vehicles are operational.</td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- Financial Ledger -->
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 font-weight-bold text-success">Recent Financial Impact</h6>
@@ -79,7 +83,9 @@
                                 <td class="ps-3 text-muted">{{ $fin->transaction_date }}</td>
                                 <td>{{ $fin->vehicle_plate }}</td>
                                 <td>{{ $fin->repair_type }}</td>
-                                <td class="text-end pe-3 fw-bold text-danger">-${{ number_format($fin->amount, 2) }}</td>
+                                <td class="text-end pe-3 fw-bold text-danger">
+                                    -₱{{ number_format($fin->amount, 2, '.', ',') }}
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -88,6 +94,7 @@
             </div>
         </div>
 
+        <!-- Maintenance History -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3 font-weight-bold">Maintenance History</div>

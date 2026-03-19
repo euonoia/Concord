@@ -8,86 +8,51 @@ use App\Models\user\Hr\hr2\Competency;
 use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 use App\Models\user\Hr\hr2\CompetencyEnroll;
 use App\Models\admin\Hr\hr2\EmployeeTrainingScore;
+use Illuminate\Support\Facades\DB;
 use App\Models\Employee;
 use Carbon\Carbon;
 
 class UserCompetencyController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
+ public function index()
+{
+    $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->route('portal.login');
-        }
+    if (!$user) {
+        return redirect()->route('portal.login');
+    }
 
-        $employee = Employee::where('user_id', $user->id)->first();
+    $employee = Employee::where('user_id', $user->id)->first();
 
-        if (!$employee) {
-            return view('hr.hr2.competencies', [
-                'competencies' => collect(),
-                'error' => 'Employee record not found.'
-            ]);
-        }
-
-        $competencies = Competency::where('department_id', $employee->department_id)
-            ->where('specialization_name', $employee->specialization)
-            ->where('is_active', 1)
-            ->orderBy('rotation_order')
-            ->get();
-
-        $completed = EmployeeCompetencyCompletion::where('employee_id', $employee->employee_id)
-            ->pluck('competency_code')
-            ->toArray();
-
-        $enrolled = CompetencyEnroll::where('employee_id', $employee->employee_id)
-            ->pluck('competency_code')
-            ->toArray();
-
-        $scores = EmployeeTrainingScore::where('employee_id', $employee->employee_id)
-            ->get()
-            ->keyBy('competency_code');
-
+    if (!$employee) {
         return view('hr.hr2.competencies', [
-            'competencies' => $competencies,
-            'completed' => $completed,
-            'enrolled' => $enrolled,
-            'scores' => $scores
+            'competencies' => collect(),
+            'error' => 'Employee record not found.'
         ]);
     }
 
-    public function enroll($competency_code)
-    {
-        $user = Auth::user();
+    $competencies = Competency::join('employee_training_scores_hr2 as s', function($join) use ($employee) {
+            $join->on('competency_hr2.competency_code', '=', 's.competency_code')
+                 ->where('s.employee_id', '=', $employee->employee_id);
+        })
+        // This Join finds the Evaluator's Name
+        ->leftJoin('employees as evaluator', 's.evaluated_by', '=', 'evaluator.employee_id') 
+        ->where('competency_hr2.department_id', $employee->department_id)
+        ->where('competency_hr2.specialization_name', $employee->specialization)
+        ->where('competency_hr2.is_active', 1)
+        ->select(
+            'competency_hr2.name',
+            'competency_hr2.description',
+            's.total_score',
+            's.evaluated_by',
+            // Concatenate the evaluator's name into a single field
+            DB::raw("CONCAT(evaluator.first_name, ' ', evaluator.last_name) as evaluator_name")
+        )
+        ->orderBy('competency_hr2.rotation_order')
+        ->get();
 
-        if (!$user) {
-            return redirect()->route('portal.login');
-        }
-
-        $employee = Employee::where('user_id', $user->id)->first();
-
-        if (!$employee) {
-            return back()->with('error', 'Employee not found');
-        }
-
-        $exists = CompetencyEnroll::where('employee_id', $employee->employee_id)
-            ->where('competency_code', $competency_code)
-            ->exists();
-
-        if ($exists) {
-            return back()->with('error', 'Already enrolled in this competency.');
-        }
-
-        CompetencyEnroll::create([
-            'employee_id' => $employee->employee_id,
-            'competency_code' => $competency_code,
-            'status' => 'enrolled',
-            'enrolled_at' => Carbon::now()
-        ]);
-
-        return back()->with('success', 'Competency enrolled successfully.');
-    }
-
+    return view('hr.hr2.competencies', compact('competencies'));
+}
     public function complete($competency_code)
     {
         $user = Auth::user();
