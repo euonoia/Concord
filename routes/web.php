@@ -41,6 +41,7 @@ Route::get('/attendance/station', [AdminAttendanceController::class, 'showStatio
 
 // --- Payroll Management ---
 Route::resource('payroll', PayrollController::class);
+Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('payroll.reports');
 Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('payroll.getAttendance');
 
 // --- Employee QR Verification (requires auth) ---

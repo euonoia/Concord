@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class PayrollController extends Controller
 {
     /**
-     * AJAX: Get latest compensation for employee, prorated based on attendance
+     * AJAX: Get fixed compensation for employee
      */
     public function getSalary($employeeId)
     {
@@ -19,28 +19,10 @@ class PayrollController extends Controller
             ->orderByDesc('month')
             ->first();
         if ($comp) {
-            // Get attendance for current month
-            $attendances = AttendanceLog::where('employee_id', $employeeId)
-                ->whereMonth('clock_in', now()->month)
-                ->whereYear('clock_in', now()->year)
-                ->get();
-
-            $totalHours = 0;
-            foreach ($attendances as $att) {
-                if ($att->clock_in && $att->clock_out) {
-                    $totalHours += $att->clock_in->diffInHours($att->clock_out);
-                }
-            }
-
-            // Assume 160 hours per month (20 days * 8 hours)
-            $expectedHours = 160;
-            $proratedBase = $totalHours > 0 ? ($comp->base_salary / $expectedHours) * $totalHours : 0;
-
-            $salary = $proratedBase + $comp->shift_allowance + $comp->overtime_pay + $comp->bonus;
-
+            $salary = $comp->base_salary + $comp->shift_allowance + $comp->overtime_pay + $comp->bonus;
             return response()->json([
-                'salary' => round($salary, 2),
-                'info' => 'Prorated Base: ₱' . number_format($proratedBase, 2) . ' (' . $totalHours . 'h), Allowance: ₱' . number_format($comp->shift_allowance, 2) . ', OT: ₱' . number_format($comp->overtime_pay, 2) . ', Bonus: ₱' . number_format($comp->bonus, 2)
+                'salary' => $salary,
+                'info' => 'Base: ₱' . number_format($comp->base_salary,2) . ', Allowance: ₱' . number_format($comp->shift_allowance,2) . ', OT: ₱' . number_format($comp->overtime_pay,2) . ', Bonus: ₱' . number_format($comp->bonus,2)
             ]);
         }
         return response()->json(['salary' => null, 'info' => null]);
@@ -155,5 +137,37 @@ class PayrollController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Payroll Reports
+     */
+    public function reports(Request $request)
+    {
+        $query = Payroll::with('employee');
+
+        // Filter by employee
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+
+        // Filter by date range
+        if ($request->filled('start_date')) {
+            $query->where('pay_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->where('pay_date', '<=', $request->end_date);
+        }
+
+        $payrolls = $query->orderBy('pay_date', 'desc')->get();
+
+        // Calculate totals
+        $totalSalary = $payrolls->sum('salary');
+        $totalDeductions = $payrolls->sum('deductions');
+        $totalNetPay = $payrolls->sum('net_pay');
+
+        $employees = Employee::all();
+
+        return view('payroll.reports', compact('payrolls', 'employees', 'totalSalary', 'totalDeductions', 'totalNetPay'));
     }
 }
