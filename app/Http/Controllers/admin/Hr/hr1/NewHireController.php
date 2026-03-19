@@ -279,14 +279,17 @@ class NewHireController extends Controller
     {
         $this->authorizeHr1Admin();
 
-        // Find active employees not yet in hired_users_hr4
+        // Find active employees from HR1 who are not yet in hired_users_hr4
         $activeEmployees = DB::table('employees')
             ->join('users', 'employees.user_id', '=', 'users.id')
+            ->join('new_hires_hr1', 'users.email', '=', 'new_hires_hr1.email')
+            ->where('new_hires_hr1.status', 'active')
             ->whereNotIn('employees.employee_id', function ($query) {
                 $query->select('employee_id')->from('hired_users_hr4');
             })
             ->select('employees.*', 'users.email')
             ->get();
+
 
 
         if ($activeEmployees->isEmpty()) {

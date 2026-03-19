@@ -112,25 +112,8 @@ class ApplicantManagementController extends Controller
                 'updated_at' => now(),
             ]);
 
-        // Connection 1: HR1 -> HR3 Interview Scheduling
-        if ($request->application_status === 'interview') {
-            $existingSchedule = DB::table('interview_schedule_hr3')->where('applicant_id', $id)->first();
-            if (!$existingSchedule) {
-                DB::table('interview_schedule_hr3')->insert([
-                    'applicant_id'  => $id,
-                    'schedule_date' => now()->addDays(3)->toDateString(), // Default to 3 days from now
-                    'schedule_time' => '09:00:00',
-                    'location'      => 'HR Conference Room',
-                    'notes'         => 'Auto-scheduled from HR1 Recruitment',
-                    'validated_by'  => 'SYSTEM',
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
-            }
-        }
-
-
         if ($request->application_status === 'accepted') {
+
             $applicant = DB::table('applicants_hr1')->where('id', $id)->first();
             $existingHire = DB::table('new_hires_hr1')->where('applicant_id', $id)->first();
 
