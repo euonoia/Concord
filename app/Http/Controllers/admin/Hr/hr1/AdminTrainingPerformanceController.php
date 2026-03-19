@@ -19,17 +19,19 @@ class AdminTrainingPerformanceController extends Controller
     {
         $departments = \App\Models\admin\Hr\hr2\Department::all();
 
-        $query = Employee::query();
+        $query = Employee::query()
+            ->join('users', 'employees.user_id', '=', 'users.id')
+            ->where('users.role_slug', 'employee');
 
         if ($request->filled('department')) {
-            $query->where('department_id', $request->department);
+            $query->where('employees.department_id', $request->department);
         }
 
         if ($request->filled('specialization')) {
-            $query->where('specialization', $request->specialization);
+            $query->where('employees.specialization', $request->specialization);
         }
 
-        $employees = $query->select('employee_id', 'first_name', 'last_name', 'department_id', 'specialization')
+        $employees = $query->select('employees.employee_id', 'employees.first_name', 'employees.last_name', 'employees.department_id', 'employees.specialization')
                            ->paginate(15)
                            ->withQueryString();
 

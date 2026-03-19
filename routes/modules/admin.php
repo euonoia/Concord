@@ -77,6 +77,7 @@
             Route::get('/recruitment', [AdminRecruitmentController::class, 'index'])->name('hr1.recruitment.index');
             Route::get('/recruitment/{id}', [AdminRecruitmentController::class, 'show'])->name('hr1.recruitment.show');
             Route::post('/recruitment/{id}/toggle', [AdminRecruitmentController::class, 'toggle'])->name('hr1.recruitment.toggle');
+            Route::post('/recruitment/publish-hr4/{id}', [AdminRecruitmentController::class, 'publishFromHr4'])->name('hr1.recruitment.publishHr4');
 
             // Social Recognition (CRUD)
             Route::resource('recognition', AdminSocialRecognitionController::class)->names([

@@ -144,6 +144,7 @@ class NewHireController extends Controller
 
             // Create employee account if status becomes active
             if ($request->status === 'active') {
+                /** @var object $newHire */
                 $newHire = DB::table('new_hires_hr1')->where('id', $id)->first();
                 if (!$newHire) throw new \Exception("New hire not found.");
 
@@ -151,6 +152,7 @@ class NewHireController extends Controller
 
                 if (!$existingUser) {
                     // Generate department-based Employee ID
+                    /** @var object $department */
                     $department = DB::table('departments_hr2')
                         ->where('department_id', $newHire->department_id)
                         ->first();
@@ -159,6 +161,7 @@ class NewHireController extends Controller
 
                     $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $department->name), 0, 3));
 
+                    /** @var object $lastEmployee */
                     $lastEmployee = DB::table('employees')
                         ->where('employee_id', 'LIKE', $prefix . '-%')
                         ->orderByDesc('employee_id')
@@ -197,6 +200,20 @@ class NewHireController extends Controller
                     ]);
 
                     $message = "Employee account created successfully. Username: {$employeeId} | Password: 123456789";
+
+                    // Decrement HR4 positions if linked
+                    /** @var object $applicant */
+                    $applicant = DB::table('applicants_hr1')->where('id', $newHire->applicant_id)->first();
+                    if ($applicant && $applicant->job_posting_id) {
+                        /** @var object $jobPosting */
+                        $jobPosting = DB::table('job_postings_hr1')->where('id', $applicant->job_posting_id)->first();
+                        if ($jobPosting && $jobPosting->hr4_job_id) {
+                            DB::table('available_jobs_hr4')
+                                ->where('id', $jobPosting->hr4_job_id)
+                                ->where('positions_available', '>', 0)
+                                ->decrement('positions_available');
+                        }
+                    }
                 } else {
                     $message = "Status updated. Account already exists.";
                 }

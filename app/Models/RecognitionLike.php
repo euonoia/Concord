@@ -9,7 +9,7 @@ class RecognitionLike extends Model
 {
     use HasFactory;
 
-    protected $table = 'recognition_likes';
+    protected $table = 'recognition_likes_hr1';
 
     public $timestamps = false;
 

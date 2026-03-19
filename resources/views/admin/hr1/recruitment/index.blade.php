@@ -186,6 +186,63 @@
 
     </div>
 
+    {{-- HR4 Job Requests Card --}}
+    <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-briefcase me-2"></i>Job Requests from HR4 (Core Human Capital)</h6>
+            <span class="badge bg-primary rounded-pill">{{ $hr4Jobs->count() }} Pending Requests</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <th class="ps-4">Job Title</th>
+                            <th>Department</th>
+                            <th class="text-center">Positions</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($hr4Jobs as $job)
+                            @php
+                                $isPublished = $postings->where('hr4_job_id', $job->id)->isNotEmpty();
+                            @endphp
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ $job->title }}</div>
+                                    <div class="text-muted small text-truncate" style="max-width: 300px;">{{ $job->description }}</div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ $job->department }}</span></td>
+                                <td class="text-center fw-bold">{{ $job->positions_available }}</td>
+                                <td class="text-end pe-4">
+                                    @if($isPublished)
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="bi bi-check-circle-fill me-1"></i>Published
+                                        </button>
+                                    @else
+                                        <form action="{{ route('hr1.recruitment.publishHr4', $job->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary shadow-sm px-3">
+                                                <i class="bi bi-megaphone-fill me-1"></i>Publish to HR1
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-2"></i>No pending job requests from HR4.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {{-- Table Panel --}}
     <div class="table-panel">
         <div class="table-panel-header">

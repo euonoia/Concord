@@ -85,6 +85,7 @@
                 <input type="file" name="resume" class="form-control" required>
             </div>
 
+            <input type="hidden" name="job_posting_id" value="{{ $jobId }}">
             <input type="hidden" name="post_grad_status" value="residency">
 
             <div class="col-md-12">

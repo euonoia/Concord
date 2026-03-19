@@ -56,7 +56,7 @@
                         <span class="badge bg-light text-primary border">{{ $p->needed_applicants }} Vacancies</span>
                     </div>
                     <p class="text-muted small mb-4">{{ $p->description }}</p>
-                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code, 'job_id' => $p->id]) }}"
                        class="mt-auto text-decoration-none fw-bold small">
                         Apply for Track <i class="bi bi-arrow-right"></i>
                     </a>
@@ -85,7 +85,7 @@
                         <span class="badge bg-primary">Fellowship</span>
                     </div>
                     <p class="text-muted small">{{ $p->description }}</p>
-                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                    <a href="{{ route('careers.apply', ['dept' => $p->dept_code, 'job_id' => $p->id]) }}"
                        class="mt-auto text-decoration-none fw-bold">
                         Apply for Fellowship <i class="bi bi-arrow-right"></i>
                     </a>
@@ -108,7 +108,7 @@
                             <p class="text-muted small mb-0">{{ $p->description }}</p>
                         </div>
                         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                            <a href="{{ route('careers.apply', ['dept' => $p->dept_code]) }}"
+                            <a href="{{ route('careers.apply', ['dept' => $p->dept_code, 'job_id' => $p->id]) }}"
                                class="btn btn-primary px-4">Apply as Specialist Nurse</a>
                         </div>
                     </div>

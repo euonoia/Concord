@@ -9,7 +9,7 @@ class RecognitionPost extends Model
 {
     use HasFactory;
 
-    protected $table = 'recognition_posts';
+    protected $table = 'recognition_posts_hr1';
 
     protected $fillable = [
         'admin_id',

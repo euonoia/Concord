@@ -9,7 +9,7 @@ class RecognitionComment extends Model
 {
     use HasFactory;
 
-    protected $table = 'recognition_comments';
+    protected $table = 'recognition_comments_hr1';
 
     protected $fillable = [
         'post_id',
