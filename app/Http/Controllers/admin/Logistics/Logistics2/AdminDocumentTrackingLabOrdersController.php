@@ -14,7 +14,7 @@ class AdminDocumentTrackingLabOrdersController extends Controller
     public function index()
     {
         $labOrders = DB::table('lab_orders_core1 as lab')
-            ->leftJoin('patients_core1 as p', 'lab.patient_id', '=', 'p.patient_id')
+            ->leftJoin('patients_core1 as p', 'lab.patient_id', '=', 'p.id')
             ->select(
                 'lab.*',
                 'p.first_name',
@@ -31,10 +31,10 @@ class AdminDocumentTrackingLabOrdersController extends Controller
      */
     public function viewResult($id)
     {
-        $order = DB::table('lab_orders_core1')
-            ->leftJoin('patients_core1 as p', 'lab_orders_core1.patient_id', '=', 'p.patient_id')
-            ->select('lab_orders_core1.*', 'p.first_name', 'p.last_name')
-            ->where('lab_orders_core1.id', $id)
+        $order = DB::table('lab_orders_core1 as lab')
+            ->leftJoin('patients_core1 as p', 'lab.patient_id', '=', 'p.id')
+            ->select('lab.*', 'p.first_name', 'p.last_name')
+            ->where('lab.id', $id)
             ->first();
 
         if (!$order) {
@@ -67,7 +67,7 @@ class AdminDocumentTrackingLabOrdersController extends Controller
     public function dietIndex()
     {
         $dietOrders = DB::table('diet_orders_core1 as diet')
-            ->leftJoin('patients_core1 as p', 'diet.patient_id', '=', 'p.patient_id')
+            ->leftJoin('patients_core1 as p', 'diet.patient_id', '=', 'p.id')
             ->select(
                 'diet.*',
                 'p.first_name',
@@ -85,7 +85,7 @@ class AdminDocumentTrackingLabOrdersController extends Controller
     public function surgeryIndex()
     {
         $surgeryOrders = DB::table('surgery_orders_core1 as s')
-            ->leftJoin('patients_core1 as p', 's.patient_id', '=', 'p.patient_id')
+            ->leftJoin('patients_core1 as p', 's.patient_id', '=', 'p.id')
             ->select(
                 's.*',
                 'p.first_name',
