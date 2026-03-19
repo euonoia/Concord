@@ -38,12 +38,6 @@ Route::prefix('careers')->group(function () {
 Route::get('/attendance/station', [AdminAttendanceController::class, 'showStation'])
      ->name('hr3.attendance.station');
 
-
-// --- Payroll Management ---
-Route::resource('payroll', PayrollController::class);
-Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('payroll.reports');
-Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('payroll.getAttendance');
-
 // --- Employee QR Verification (requires auth) ---
 Route::middleware(['auth'])->group(function () {
     Route::post('/hr/hr3/attendance/verify', [AdminAttendanceController::class, 'verifyScan'])

@@ -104,7 +104,7 @@ class PayrollController extends Controller
             'pay_date' => $validated['pay_date'],
         ]);
 
-        return redirect()->route('payroll.index')->with('success', 'Payroll created successfully.');
+        return redirect()->route('hr4.payroll.index')->with('success', 'Payroll created successfully.');
     }
 
     /**

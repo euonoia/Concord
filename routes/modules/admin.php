@@ -16,6 +16,7 @@
 
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
+        use App\Http\Controllers\PayrollController;
 
 
         // --- Admin Dashboard ---
@@ -145,5 +146,11 @@
 
             Route::get('/training-rewards/{employee}', [AdminDirectCompensationController::class, 'showEmployeeTrainingRewards'])
                 ->name('hr4.training_rewards.show');
+
+            // Payroll Management
+            Route::resource('payroll', PayrollController::class, ['as' => 'hr4']);
+            Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('hr4.payroll.reports');
+            Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('hr4.payroll.getAttendance');
+            Route::get('/payroll/get-salary/{employeeId}', [PayrollController::class, 'getSalary'])->name('hr4.payroll.getSalary');
 
         });

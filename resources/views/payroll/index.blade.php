@@ -5,8 +5,8 @@
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-slate-800">Payroll List</h1>
         <div class="flex gap-2">
-            <a href="{{ route('payroll.reports') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow transition">Reports</a>
-            <a href="{{ route('payroll.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Add Payroll</a>
+            <a href="{{ route('hr4.payroll.reports') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow transition">Reports</a>
+            <a href="{{ route('hr4.payroll.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Add Payroll</a>
         </div>
     </div>
     @if(session('success'))

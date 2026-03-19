@@ -12,7 +12,7 @@
             </ul>
         </div>
     @endif
-    <form action="{{ route('payroll.store') }}" method="POST" class="space-y-5">
+    <form action="{{ route('hr4.payroll.store') }}" method="POST" class="space-y-5">
         @csrf
         <div>
             <label for="employee_id" class="block font-medium mb-1">Employee</label>
@@ -47,7 +47,7 @@
         </div>
         <div class="flex gap-3">
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded shadow">Save Payroll</button>
-            <a href="{{ route('payroll.index') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2 rounded shadow">Back</a>
+            <a href="{{ route('hr4.payroll.index') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2 rounded shadow">Back</a>
         </div>
 
     </form>
@@ -73,7 +73,7 @@
             }
 
             // Fetch salary
-            fetch(`/payroll/get-salary/${empId}`)
+            fetch(`{{ url('/admin/hr4/payroll/get-salary') }}/${empId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.salary) {
@@ -86,7 +86,7 @@
                 });
 
             // Fetch attendance
-            fetch(`/payroll/get-attendance/${empId}`)
+            fetch(`{{ url('/admin/hr4/payroll/get-attendance') }}/${empId}`)
                 .then(res => res.json())
                 .then(data => {
                     totalDays.textContent = data.total_days;

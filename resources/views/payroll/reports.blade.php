@@ -4,13 +4,13 @@
 <div class="max-w-6xl mx-auto mt-8">
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-slate-800">Payroll Reports</h1>
-        <a href="{{ route('payroll.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition">Back to Payroll List</a>
+        <a href="{{ route('hr4.payroll.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow transition">Back to Payroll List</a>
     </div>
 
     <!-- Filters -->
     <div class="bg-white p-6 rounded shadow mb-6">
         <h2 class="text-lg font-semibold mb-4">Filters</h2>
-        <form method="GET" action="{{ route('payroll.reports') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('hr4.payroll.reports') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label for="employee_id" class="block text-sm font-medium text-gray-700">Employee</label>
                 <select name="employee_id" id="employee_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
@@ -32,7 +32,7 @@
             </div>
             <div class="flex items-end">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">Filter</button>
-                <a href="{{ route('payroll.reports') }}" class="ml-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition">Clear</a>
+                <a href="{{ route('hr4.payroll.reports') }}" class="ml-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow transition">Clear</a>
             </div>
         </form>
     </div>
