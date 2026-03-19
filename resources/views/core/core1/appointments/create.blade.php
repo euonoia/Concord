@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Book Appointment')
 
@@ -25,7 +25,7 @@
                 {{ old('patient_id') == $patient->id ? 'selected' : '' }}
                 @if($patient->hasUpcomingAppointment) disabled @endif
             >
-                {{ $patient->name }} ({{ $patient->patient_id }})
+                {{ $patient->name }} ({{ $patient->mrn }})
                 @if($patient->hasUpcomingAppointment) - Already Booked @endif
             </option>
         @endforeach

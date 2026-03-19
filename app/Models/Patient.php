@@ -12,7 +12,6 @@ class Patient extends Model
     protected $table = 'patients_core1';
 
     protected $fillable = [
-        'patient_id',
         'mrn',
         'first_name',
         'middle_name',

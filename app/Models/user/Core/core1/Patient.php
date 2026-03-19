@@ -13,7 +13,6 @@ class Patient extends Model
 
     // <--- Replace this $fillable with the updated version
     protected $fillable = [
-        'patient_id',
         'mrn',
         'first_name',
         'middle_name',
@@ -76,7 +75,7 @@ class Patient extends Model
 
     public function getAgeAttribute()
     {
-        return $this->date_of_birth ? $this->date_of_birth->age : null;
+        return $this->date_of_birth ? \Illuminate\Support\Carbon::parse($this->date_of_birth)->age : null;
     }
 
     public function getNameAttribute()

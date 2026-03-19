@@ -1,4 +1,4 @@
-﻿<div class="core1-container">
+<div class="core1-container">
 
     {{-- Page Header --}}
     <div class="core1-flex-between core1-header">
@@ -158,7 +158,7 @@
                     <tbody>
                         @forelse($recentRegistrations as $patient)
                         <tr>
-                            <td class="text-xs text-gray font-mono">{{ $patient->patient_id ?? $patient->id }}</td>
+                            <td class="text-xs text-gray font-mono">{{ $patient->mrn ?? $patient->id }}</td>
                             <td class="font-bold text-blue">{{ $patient->name }}</td>
                             <td>{{ ucfirst($patient->gender) }}</td>
                             <td>{{ $patient->created_at->format('M d, Y') }}</td>
