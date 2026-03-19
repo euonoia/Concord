@@ -56,12 +56,12 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#d1fae5; color:#065f46; border-left:4px solid #10b981; display:flex; align-items:center; gap:10px;">
+        <div class="alert alert-success session-alert" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#d1fae5; color:#065f46; border-left:4px solid #10b981; display:flex; align-items:center; gap:10px;">
             <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-error" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444; display:flex; align-items:center; gap:10px;">
+        <div class="alert alert-error session-alert" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444; display:flex; align-items:center; gap:10px;">
             <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
         </div>
     @endif
