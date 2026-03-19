@@ -39,7 +39,14 @@ class AdminDirectCompensationController extends Controller
             ->orderBy('employee_id')
             ->get();
 
+            // Alert logic: find records with base_salary = 0
+            $zeroSalaryCount = DirectCompensation::where('month', $month)
+                ->where('base_salary', 0)
+                ->count();
+            $zeroSalaryAlert = $zeroSalaryCount > 0 ? "There are $zeroSalaryCount employees with base_salary = 0. Please assign salaries." : null;
+
         return view('admin.hr4.compensations', compact('compensations', 'month'));
+            return view('admin.hr4.compensations', compact('compensations', 'zeroSalaryAlert'));
     }
 
     /**
@@ -195,10 +202,10 @@ class AdminDirectCompensationController extends Controller
     {
         $this->authorizeHrAdmin();
 
-        $departments = DB::table('departments_hr2')->where('is_active', 1)->orderBy('name')->get();
+        $departments = DB::table('department_specializations_hr2')->orderBy('dept_code')->get();
         $positions = DB::table('department_position_titles_hr2')->where('is_active', 1)->orderBy('position_title')->get();
-
-        return view('admin.hr4.create_job_posting', compact('departments', 'positions'));
+        $specializations = DB::table('department_specializations_hr2')->orderBy('specialization_name')->get();
+        return view('admin.hr4.create_job_posting', compact('departments', 'positions', 'specializations'));
     }
 
     /**
@@ -209,17 +216,22 @@ class AdminDirectCompensationController extends Controller
         $this->authorizeHrAdmin();
 
         $request->validate([
-            'title' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
+            'dept_code' => 'required|string|max:255',
+            'specialization_name' => 'required|string|max:255',
+            'position_id' => 'required|integer',
             'description' => 'required|string',
             'requirements' => 'required|string',
             'salary_range' => 'nullable|string|max:255',
             'positions_available' => 'required|integer|min:1',
         ]);
 
+        $position = DB::table('department_position_titles_hr2')->where('id', $request->position_id)->first();
+
         AvailableJob::create([
-            'title' => $request->title,
-            'department' => $request->department,
+            'department' => $request->dept_code,
+            'specialization_name' => $request->specialization_name,
+            'position_id' => $request->position_id,
+            'title' => $position ? $position->position_title : '',
             'description' => $request->description,
             'requirements' => $request->requirements,
             'salary_range' => $request->salary_range,

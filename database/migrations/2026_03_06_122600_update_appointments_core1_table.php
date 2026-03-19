@@ -12,30 +12,31 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Disabled for safe payroll migration
         // 1. Update ENUM for status (TiDB compatible statement)
-        DB::statement("ALTER TABLE appointments_core1 MODIFY COLUMN status ENUM(
-            'pending',
-            'scheduled',
-            'confirmed',
-            'approved',
-            'rejected',
-            'completed',
-            'cancelled',
-            'no-show'
-        ) NOT NULL DEFAULT 'scheduled'");
+        // DB::statement("ALTER TABLE appointments_core1 MODIFY COLUMN status ENUM(
+        //     'pending',
+        //     'scheduled',
+        //     'confirmed',
+        //     'approved',
+        //     'rejected',
+        //     'completed',
+        //     'cancelled',
+        //     'no-show'
+        // ) NOT NULL DEFAULT 'scheduled'");
 
         // 2. Add missing columns for tracking
-        Schema::table('appointments_core1', function (Blueprint $table) {
-            if (!Schema::hasColumn('appointments_core1', 'approved_by')) {
-                $table->bigInteger('approved_by')->unsigned()->nullable()->after('status');
-            }
-            if (!Schema::hasColumn('appointments_core1', 'approved_at')) {
-                $table->timestamp('approved_at')->nullable()->after('approved_by');
-            }
-            if (!Schema::hasColumn('appointments_core1', 'rejection_reason')) {
-                $table->text('rejection_reason')->nullable()->after('approved_at');
-            }
-        });
+        // Schema::table('appointments_core1', function (Blueprint $table) {
+        //     if (!Schema::hasColumn('appointments_core1', 'approved_by')) {
+        //         $table->bigInteger('approved_by')->unsigned()->nullable()->after('status');
+        //     }
+        //     if (!Schema::hasColumn('appointments_core1', 'approved_at')) {
+        //         $table->timestamp('approved_at')->nullable()->after('approved_by');
+        //     }
+        //     if (!Schema::hasColumn('appointments_core1', 'rejection_reason')) {
+        //         $table->text('rejection_reason')->nullable()->after('approved_at');
+        //     }
+        // });
     }
 
     /**

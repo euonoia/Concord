@@ -19,8 +19,7 @@ return new class extends Migration
             $table->decimal('net_pay', 12, 2);
             $table->date('pay_date');
             $table->timestamps();
-
-            $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
+            // Foreign key constraint removed for TiDB compatibility
         });
     }
 

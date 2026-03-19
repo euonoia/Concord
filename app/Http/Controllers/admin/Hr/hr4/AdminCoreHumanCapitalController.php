@@ -8,9 +8,10 @@ use App\Models\Employee;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\User;
-use App\Models\admin\Hr\hr4\AvailableJob;
+use App\Models\admin\Hr\hr4\HiredUser;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\admin\Hr\hr4\AvailableJob;
 
 class AdminCoreHumanCapitalController extends Controller
 {
@@ -76,5 +77,48 @@ class AdminCoreHumanCapitalController extends Controller
             'availableJobsCount',
             'needed_positions'
         ));
+    }
+
+    /**
+     * Process hired users from HR1 and create employee records
+     */
+    public function processHiredUsers()
+    {
+        $this->authorizeHrAdmin();
+
+        // Get hired users that don't have employee records yet
+        $hiredUsers = HiredUser::whereDoesntHave('employee')->get();
+
+        $processed = 0;
+        foreach ($hiredUsers as $hired) {
+            // Parse full_name into first and last name (assuming "First Last" format)
+            $nameParts = explode(' ', $hired->full_name, 2);
+            $firstName = $nameParts[0] ?? '';
+            $lastName = $nameParts[1] ?? '';
+
+            // Get job details for department and position
+            $job = $hired->job;
+            if ($job) {
+                // Find department by name
+                $department = Department::where('name', $job->department)->first();
+                // Find position by title
+                $position = DepartmentPositionTitle::where('position_title', $job->title)->first();
+
+                // Create employee record
+                Employee::create([
+                    'employee_id' => $hired->employee_id,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'department_id' => $department ? $department->department_id : null,
+                    'position_id' => $position ? $position->id : null,
+                    'hire_date' => $hired->hired_at->toDateString(),
+                    'status' => 'active',
+                ]);
+
+                $processed++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Processed $processed new hires and created employee records.");
     }
 }

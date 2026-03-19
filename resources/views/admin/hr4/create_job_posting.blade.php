@@ -11,37 +11,72 @@
         </div>
 
         <form method="POST" action="{{ route('hr4.job_postings.store') }}" class="space-y-6">
+                        @if ($errors->any())
+                            <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
             @csrf
 
             <div>
-                <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
-                <select name="title" id="title" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                    <option value="">Select Job Title</option>
+                <label for="dept_code" class="block text-sm font-medium text-gray-700 mb-2">Department Code</label>
+                <select name="dept_code" id="dept_code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                    <option value="">Select Department Code</option>
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->dept_code }}" {{ old('dept_code') == $dept->dept_code ? 'selected' : '' }}>
+                            {{ $dept->dept_code }} - {{ $dept->specialization_name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('dept_code')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label for="specialization_name" class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
+                <select name="specialization_name" id="specialization_name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                    <option value="">Select Specialization</option>
+                    @foreach($specializations as $spec)
+                        <option value="{{ $spec->specialization_name }}" {{ old('specialization_name') == $spec->specialization_name ? 'selected' : '' }}>
+                            {{ $spec->specialization_name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('specialization_name')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label for="position_id" class="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                <select name="position_id" id="position_id" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+                    <option value="">Select Position</option>
                     @foreach($positions as $pos)
-                        <option value="{{ $pos->position_title }}" {{ old('title') == $pos->position_title ? 'selected' : '' }}>
+                        <option value="{{ $pos->id }}" data-salary="{{ $pos->base_salary }}" {{ old('position_id') == $pos->id ? 'selected' : '' }}>
                             {{ $pos->position_title }}
                         </option>
                     @endforeach
                 </select>
-                @error('title')
+                @error('position_id')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-
             <div>
-                <label for="department" class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                <select name="department" id="department" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                    <option value="">Select Department</option>
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->department_id }}" {{ old('department') == $dept->department_id ? 'selected' : '' }}>
-                            {{ $dept->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('department')
+                <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-2">Base Salary</label>
+                <input type="text" name="salary_range" id="salary_range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="{{ old('salary_range') }}" readonly>
+                @error('salary_range')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
+            <script>
+            document.getElementById('position_id').addEventListener('change', function() {
+                var selected = this.options[this.selectedIndex];
+                document.getElementById('salary_range').value = selected.getAttribute('data-salary');
+            });
+            </script>
 
             <div>
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>

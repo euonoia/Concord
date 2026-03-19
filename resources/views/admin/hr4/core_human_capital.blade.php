@@ -9,6 +9,21 @@
 
 <h2>Core Human Capital</h2>
 
+{{-- Process Hired Users Button --}}
+<form method="POST" action="{{ route('hr4.core.process_hired') }}" style="display:inline; margin-left:20px;">
+    @csrf
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200">
+        Process New Hires
+    </button>
+</form>
+
+@if(session('success'))
+    <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
+        <i class="bi bi-check-circle mr-2"></i>
+        {{ session('success') }}
+    </div>
+@endif
+
 <!-- Needed Positions Recommendation Section (moved to top, visible by default) -->
 
 <div style="margin-bottom:20px; display:flex; gap:10px;">
@@ -23,6 +38,34 @@
 {{-- NEEDED POSITIONS RECOMMENDATION (now in its own tab, hidden by default) --}}
 <div id="neededpositions" class="tab-section" style="display:none; margin-bottom: 30px;">
     <h2 style="margin-top: 30px; color:#1d4ed8;">Needed Positions Recommendation</h2>
+
+    {{-- Summary Section --}}
+    <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #e2e8f0;">
+        <h3 style="margin:0 0 10px 0; color:#1e293b; font-size:16px;">Summary</h3>
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+            @php
+                $totalNeeded = array_sum(array_column($needed_positions, 'needed'));
+                $departmentsWithNeeds = array_filter($needed_positions, fn($np) => $np['needed'] > 0);
+                $deptSummary = [];
+                foreach ($departmentsWithNeeds as $np) {
+                    $dept = $np['department'];
+                    if (!isset($deptSummary[$dept])) $deptSummary[$dept] = 0;
+                    $deptSummary[$dept] += $np['needed'];
+                }
+            @endphp
+            <div style="background:white; padding:10px; border-radius:6px; border:1px solid #cbd5e1; min-width:120px;">
+                <strong style="color:#dc2626;">{{ $totalNeeded }}</strong><br>
+                <small style="color:#64748b;">Total Needed</small>
+            </div>
+            @foreach($deptSummary as $dept => $count)
+                <div style="background:white; padding:10px; border-radius:6px; border:1px solid #cbd5e1; min-width:120px;">
+                    <strong style="color:#2563eb;">{{ $count }}</strong><br>
+                    <small style="color:#64748b;">{{ $dept }}</small>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     <p style="margin-bottom:15px; color:#374151; font-size:15px;">
         <strong>Note:</strong> This table shows all positions and departments for monitoring. Use the filter to view by department.
     </p>

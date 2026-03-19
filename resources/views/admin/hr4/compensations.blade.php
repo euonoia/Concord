@@ -5,6 +5,12 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white shadow-lg rounded-lg p-6">
+                @if(isset($zeroSalaryAlert) && $zeroSalaryAlert)
+                    <div class="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+                        <i class="bi bi-exclamation-triangle mr-2"></i>
+                        {{ $zeroSalaryAlert }}
+                    </div>
+                @endif
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">Direct & Indirect Compensation - {{ date('F Y', strtotime($month . '-01')) }}</h2>
         </div>

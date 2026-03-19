@@ -99,7 +99,7 @@
             <span>Direct Compensation</span>
         </a>
 
-        <a href="{{ route('payroll.index') }}" class="{{ request()->routeIs('payroll.*') ? 'active' : '' }}">
+            <a href="{{ route('hr4.payroll.index') }}" class="{{ request()->routeIs('hr4.payroll.*') ? 'active' : '' }}">
             <i class="bi bi-receipt"></i>
             <span>Payroll</span>
         </a>

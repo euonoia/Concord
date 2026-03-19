@@ -24,6 +24,15 @@
             </select>
         </div>
         <div>
+            <label for="position_id" class="block font-medium mb-1">Position</label>
+            <select name="position_id" id="position_id" class="w-full border rounded px-3 py-2" required>
+                <option value="">Select Position</option>
+                @foreach(App\Models\admin\Hr\hr2\DepartmentPositionTitle::all() as $position)
+                    <option value="{{ $position->id }}">{{ $position->position_title }} (₱{{ number_format($position->base_salary,2) }})</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
             <label for="salary" class="block font-medium mb-1">Salary</label>
             <input type="number" step="0.01" name="salary" id="salary" class="w-full border rounded px-3 py-2" required readonly>
             <span id="salary-info" class="text-xs text-slate-500"></span>
@@ -69,19 +78,18 @@
                 totalDays.textContent = '0';
                 totalHours.textContent = '0';
                 attendanceLogs.innerHTML = '<p class="text-slate-500">Select an employee to view attendance logs.</p>';
+                document.getElementById('position_id').value = '';
                 return;
             }
 
-            // Fetch salary
-            fetch(`{{ url('/admin/hr4/payroll/get-salary') }}/${empId}`)
+            // Fetch employee's position
+            fetch(`/admin/hr4/payroll/get-employee-position/${empId}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.salary) {
-                        salaryInput.value = data.salary;
-                        salaryInfo.textContent = data.info || '';
-                    } else {
-                        salaryInput.value = '';
-                        salaryInfo.textContent = 'No compensation record found.';
+                    if (data.position_id) {
+                        document.getElementById('position_id').value = data.position_id;
+                        // Trigger position change to update salary
+                        document.getElementById('position_id').dispatchEvent(new Event('change'));
                     }
                 });
 
@@ -101,6 +109,22 @@
                     } else {
                         attendanceLogs.innerHTML = '<p class="text-slate-500">No attendance records found for this month.</p>';
                     }
+                });
+        });
+
+        // When position changes, update salary
+        document.getElementById('position_id').addEventListener('change', function() {
+            const posId = this.value;
+            if (!posId) {
+                salaryInput.value = '';
+                salaryInfo.textContent = '';
+                return;
+            }
+            fetch(`/admin/hr4/payroll/get-position-salary/${posId}`)
+                .then(res => res.json())
+                .then(data => {
+                    salaryInput.value = data.salary || '';
+                    salaryInfo.textContent = data.info || '';
                 });
         });
     });

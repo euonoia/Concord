@@ -64,6 +64,29 @@ class PayrollController extends Controller
     }
 
     /**
+     * AJAX: Get employee's position
+     */
+    public function getEmployeePosition($employeeId)
+    {
+        $employee = Employee::find($employeeId);
+        return response()->json([
+            'position_id' => $employee ? $employee->position_id : null
+        ]);
+    }
+
+    /**
+     * AJAX: Get position salary
+     */
+    public function getPositionSalary($positionId)
+    {
+        $position = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::find($positionId);
+        return response()->json([
+            'salary' => $position ? $position->base_salary : null,
+            'info' => $position ? $position->position_title . ' (₱' . number_format($position->base_salary,2) . ')' : null
+        ]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -104,7 +127,16 @@ class PayrollController extends Controller
             'pay_date' => $validated['pay_date'],
         ]);
 
-        return redirect()->route('hr4.payroll.index')->with('success', 'Payroll created successfully.');
+        // Update DirectCompensation for this employee
+        $comp = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $validated['employee_id'])
+            ->orderByDesc('month')
+            ->first();
+        if ($comp) {
+            $comp->base_salary = $validated['salary'];
+            $comp->save();
+        }
+
+        return redirect()->route('hr4.payroll.index')->with('success', 'Payroll created and compensation updated.');
     }
 
     /**
@@ -144,11 +176,25 @@ class PayrollController extends Controller
      */
     public function reports(Request $request)
     {
-        $query = Payroll::with('employee');
+        $query = Payroll::with(['employee.position', 'employee.department']);
 
         // Filter by employee
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->employee_id);
+        }
+
+        // Filter by position
+        if ($request->filled('position_id')) {
+            $query->whereHas('employee', function ($q) use ($request) {
+                $q->where('position_id', $request->position_id);
+            });
+        }
+
+        // Filter by department
+        if ($request->filled('department_id')) {
+            $query->whereHas('employee', function ($q) use ($request) {
+                $q->where('department_id', $request->department_id);
+            });
         }
 
         // Filter by date range
@@ -167,7 +213,9 @@ class PayrollController extends Controller
         $totalNetPay = $payrolls->sum('net_pay');
 
         $employees = Employee::all();
+        $positions = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::all();
+        $departments = \App\Models\admin\Hr\hr2\Department::all();
 
-        return view('payroll.reports', compact('payrolls', 'employees', 'totalSalary', 'totalDeductions', 'totalNetPay'));
+        return view('payroll.reports', compact('payrolls', 'employees', 'positions', 'departments', 'totalSalary', 'totalDeductions', 'totalNetPay'));
     }
 }

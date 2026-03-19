@@ -12,26 +12,27 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Disabled for safe payroll migration
         // Add new columns idompotent for TiDB
-        DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS first_name VARCHAR(255) NULL;');
-        DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS middle_name VARCHAR(255) NULL;');
-        DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS last_name VARCHAR(255) NULL;');
+        // DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS first_name VARCHAR(255) NULL;');
+        // DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS middle_name VARCHAR(255) NULL;');
+        // DB::statement('ALTER TABLE patients_core1 ADD COLUMN IF NOT EXISTS last_name VARCHAR(255) NULL;');
 
         // Migrate existing names safely
-        $records = DB::table('patients_core1')->whereNotNull('name')->get();
-        foreach ($records as $record) {
-            $parts = explode(' ', $record->name, 2);
-            $firstName = $parts[0];
-            $lastName = count($parts) > 1 ? $parts[1] : '';
-            DB::table('patients_core1')->where('id', $record->id)->update([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'middle_name' => null
-            ]);
-        }
+        // $records = DB::table('patients_core1')->whereNotNull('name')->get();
+        // foreach ($records as $record) {
+        //     $parts = explode(' ', $record->name, 2);
+        //     $firstName = $parts[0];
+        //     $lastName = count($parts) > 1 ? $parts[1] : '';
+        //     DB::table('patients_core1')->where('id', $record->id)->update([
+        //         'first_name' => $firstName,
+        //         'last_name' => $lastName,
+        //         'middle_name' => null
+        //     ]);
+        // }
 
         // Drop original name column
-        DB::statement('ALTER TABLE patients_core1 DROP COLUMN IF EXISTS name;');
+        // DB::statement('ALTER TABLE patients_core1 DROP COLUMN IF EXISTS name;');
     }
 
     /**

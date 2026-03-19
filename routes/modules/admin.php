@@ -1,4 +1,4 @@
-        <?php
+<?php
         // routes/modules/admin.php
 
         use Illuminate\Support\Facades\Route;
@@ -17,6 +17,7 @@
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
         use App\Http\Controllers\PayrollController;
+        use App\Http\Controllers\PayrollReportController;
 
 
         // --- Admin Dashboard ---
@@ -111,6 +112,9 @@
             Route::get('/core-human-capital', [AdminCoreHumanCapitalController::class, 'index'])
                 ->name('hr4.core');
 
+            Route::post('/core-human-capital/process-hired', [AdminCoreHumanCapitalController::class, 'processHiredUsers'])
+                ->name('hr4.core.process_hired');
+
             // Direct Compensation
             Route::get('/direct-compensation', [AdminDirectCompensationController::class, 'index'])
                 ->name('hr4.direct_compensation.index');
@@ -152,5 +156,13 @@
             Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('hr4.payroll.reports');
             Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('hr4.payroll.getAttendance');
             Route::get('/payroll/get-salary/{employeeId}', [PayrollController::class, 'getSalary'])->name('hr4.payroll.getSalary');
+            Route::get('/payroll/get-employee-position/{employeeId}', [PayrollController::class, 'getEmployeePosition'])->name('hr4.payroll.getEmployeePosition');
+            Route::get('/payroll/get-position-salary/{positionId}', [PayrollController::class, 'getPositionSalary'])->name('hr4.payroll.getPositionSalary');
+
+            // Payroll Reports
+            Route::get('/payroll-reports', [PayrollReportController::class, 'index'])->name('hr4.payroll_reports.index');
+            Route::get('/payroll-reports/detailed', [PayrollReportController::class, 'detailed'])->name('hr4.payroll_reports.detailed');
+            Route::get('/payroll-reports/export', [PayrollReportController::class, 'export'])->name('hr4.payroll_reports.export');
+            Route::get('/payroll-reports/employee/{employeeId}', [PayrollReportController::class, 'employeeHistory'])->name('hr4.payroll_reports.employee');
 
         });
