@@ -61,6 +61,36 @@
         <i class="bi bi-journal-text"></i>
         <span>Audit Logs</span>
     </a>
+
+    <div class="nav-dropdown {{ request()->is('admin/logistics2/document*') ? 'open' : '' }}">
+    <a href="#" onclick="toggleDropdown(event)">
+        <i class="bi bi-folder2-open"></i>
+        <span>Document Tracking</span>
+        <i class="bi bi-chevron-down arrow-icon"></i>
+    </a>
+
+    <div class="dropdown-container">
+        <a href="{{ route('admin.logistics2.document.index') }}" 
+           class="sub-link {{ request()->routeIs('admin.logistics2.document.index') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-medical"></i>
+            <span>Lab Documents</span>
+        </a>
+         <!-- Diet Orders -->
+        <a href="{{ route('admin.logistics2.document.diet') }}" 
+           class="sub-link {{ request()->routeIs('admin.logistics2.document.diet') ? 'active' : '' }}">
+            <i class="bi bi-cup-hot"></i>
+            <span>Diet Documents</span>
+        </a>
+         <a href="{{ route('admin.logistics2.document.surgery') }}" 
+           class="sub-link {{ request()->routeIs('admin.logistics2.document.surgery') ? 'active' : '' }}">
+            <i class="bi bi-heart-pulse"></i>
+            <span>Surgery Documents</span>
+        </a>
+
+    </div>
+    
+    </div>
+
     <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
         @csrf
     </form>
