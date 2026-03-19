@@ -5,7 +5,7 @@ namespace App\Models\core2;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PatientPackageEnrollment extends Model
+class PatientEnrollment extends Model
 {
     use SoftDeletes;
 

@@ -7,7 +7,7 @@ use App\Models\core2\PackageDefinitionPricing;
 use App\Models\core2\PatientEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use App\Models\core2\PatientPackageEnrollment; // This solves your error
+
 use App\Models\core2\MedicalPackage;
 
 
@@ -59,25 +59,33 @@ class MedicalPackagesController extends Controller
             ->with('success', 'Package node successfully committed to the database.');
     
 }
-    // ── Patient Package Enrollment ──────────────────────────────────────────────
+// ── Patient Package Enrollment ──────────────────────────────────────────────
 
-   public function enrollmentStore(Request $request)
+public function enrollmentIndex(Request $request)
+{
+    $records = PatientEnrollment::latest()->paginate(12);
+    return view('core.core2.medical-packages.enrollment.index', compact('records'));
+}
+public function enrollmentCreate()
+    {
+        return view('core.core2.medical-packages.enrollment.create');
+    }
+
+public function enrollmentStore(Request $request): RedirectResponse
 {
     $validated = $request->validate([
-        'patient_id'      => 'required|string',
-        'package_id'      => 'required|exists:package_definition_pricing_core2,id',
-        'enrollment_date' => 'required|date',
+        'patient_id'         => 'required|string',
+        'package_identifier' => 'required|string',
+        'total_price'        => 'required|numeric',
+        'enrollment_date'    => 'required|date',
     ]);
 
-    // Fetch the package definition to "snapshot" the data
-    $package = \App\Models\core2\MedicalPackage::findOrFail($validated['package_id']);
-
-    \App\Models\core2\PatientPackageEnrollment::create([
+    PatientEnrollment::create([
         'patient_id'          => $validated['patient_id'],
-        'package_id'          => $package->id,
-        'package_identifier'  => $package->package_identifier, // From DB image
-        'package_description' => $package->package_description,
-        'total_price'         => $package->price_list_node,    // From DB image
+        'package_id'          => 0, // Placeholder since we are typing manually
+        'package_identifier'  => $validated['package_identifier'],
+        'package_description' => 'Manually Enrolled',
+        'total_price'         => $validated['total_price'],
         'amount_paid'         => 0.00,
         'payment_status'      => 'Partial',
         'progress_percent'    => 0,
@@ -86,14 +94,7 @@ class MedicalPackagesController extends Controller
         'expires_at'          => \Carbon\Carbon::parse($validated['enrollment_date'])->addDays(30),
     ]);
 
-    return view('core.core2.medical-packages.enrollment.index', compact('records'));
-    }
-
-    // Also double-check your other methods follow the same naming pattern
-    public function enrollmentCreate()
-    {
-        $packages = MedicalPackage::all();
-        return view('core.core2.medical-packages.enrollment.create', compact('packages'));
-    }
-
+    return redirect()->route('core2.medical-packages.enrollment.index')
+                     ->with('success', 'Manual enrollment successful!');
+}
 }
