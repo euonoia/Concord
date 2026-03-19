@@ -11,6 +11,7 @@ require base_path('routes/landing/landing.php');
 
 // Home or onboarding (optional)
 // Route::get('/', function () { return view('onboarding'); });
+Route::get('/ping', fn() => 'pong');
 
 // Residency & Fellowship page
 Route::get('/careers/residency-fellowship', function () {

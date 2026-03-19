@@ -21,6 +21,8 @@ class MedicalRecord extends Model
         'notes',
         'record_date',
         'attachments',
+        'reference_id',
+        'reference_type',
     ];
 
     protected $casts = [
