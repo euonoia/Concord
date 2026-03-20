@@ -207,7 +207,7 @@
                             <td>
                                 <div>
                                     <div class="font-bold text-blue" style="font-size: 13px;">{{ $appointment->patient->name ?? 'Unknown' }}</div>
-                                    <div class="text-xs text-gray">{{ $appointment->patient->patient_id ?? 'N/A' }}</div>
+                                    <div class="text-xs text-gray">{{ $appointment->patient->mrn ?? 'N/A' }}</div>
                                 </div>
                             </td>
                             @if(auth()->user()->role !== 'doctor')

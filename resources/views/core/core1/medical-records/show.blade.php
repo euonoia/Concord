@@ -66,7 +66,7 @@
                         </tr>
                         <tr style="border-bottom: 1px dashed var(--border-color);">
                             <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">MRN (Patient ID)</td>
-                            <td style="padding: 14px 20px; font-family: monospace; font-weight: 600; color: var(--primary);">{{ $patient->mrn ?? $patient->patient_id ?? 'N/A' }}</td>
+                            <td style="padding: 14px 20px; font-family: monospace; font-weight: 600; color: var(--primary);">{{ $patient->mrn ?? 'N/A' }}</td>
                         </tr>
                         <tr style="border-bottom: 1px dashed var(--border-color);">
                             <td style="padding: 14px 20px; color: var(--text-gray); font-weight: 500;">Primary Doctor</td>

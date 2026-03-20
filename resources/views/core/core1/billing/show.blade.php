@@ -37,7 +37,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Patient</label>
                     <p class="text-gray-900 font-semibold">{{ $bill->patient->name }}</p>
-                    <p class="text-sm text-gray-500">{{ $bill->patient->patient_id }}</p>
+                    <p class="text-sm text-gray-500">{{ $bill->patient->mrn }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Bill Date</label>

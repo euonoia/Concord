@@ -23,7 +23,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; color: var(--text-dark); font-size: 14px;">{{ $patient->name }}</div>
-                                <div style="font-size: 12px; color: var(--text-gray); font-family: monospace; margin-top: 2px;">{{ $patient->patient_id }}</div>
+                                <div style="font-size: 12px; color: var(--text-gray); font-family: monospace; margin-top: 2px;">{{ $patient->mrn }}</div>
                             </div>
                         </div>
                     </td>

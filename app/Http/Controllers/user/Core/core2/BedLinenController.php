@@ -25,6 +25,16 @@ class BedLinenController extends Controller
             ->latest()
             ->paginate(15);
 
+        // Load bed labels for source and target beds in a single query
+        $bedIds = $records->flatMap(fn($r) => array_filter([$r->source_bed_id, $r->bed_id_core1]))->unique()->filter()->values();
+        $bedLabels = Bed::whereIn('id', $bedIds)->pluck('bed_number', 'id');
+
+        // Attach bed labels to each record as dynamic properties
+        foreach ($records as $r) {
+            $r->source_bed_label = $r->source_bed_id ? ($bedLabels[$r->source_bed_id] ?? 'Bed #' . $r->source_bed_id) : null;
+            $r->target_bed_label = $r->bed_id_core1  ? ($bedLabels[$r->bed_id_core1]  ?? 'Bed #' . $r->bed_id_core1)  : null;
+        }
+
         // Also show assigned (recent) for context
         $assigned = RoomAssignment::where('status', 'Assigned')
             ->latest()
@@ -40,7 +50,7 @@ class BedLinenController extends Controller
     public function floorMapData(Request $request)
     {
         $wards = Ward::with(['rooms.beds.admissions' => function($query) {
-            $query->where('status', 'Admitted')->with('encounter.patient');
+            $query->whereIn('status', ['Admitted', 'Doctor Approved'])->with('encounter.patient');
         }])->get();
 
         $floors = [];
@@ -113,21 +123,92 @@ class BedLinenController extends Controller
                 ], 400);
             }
 
-            $encounter = Encounter::findOrFail($roomAssignment->encounter_id);
+            $encounter = Encounter::with('activeAdmission')->findOrFail($roomAssignment->encounter_id);
             $bed = Bed::findOrFail($validated['bed_id']);
-
-            // Use AdmissionService to perform the admission (which also syncs to Core 2)
             $admissionService = app(AdmissionService::class);
-            $admissionService->admit($encounter, $bed);
+
+            if ($roomAssignment->request_type === 'Transfer') {
+                $admission = $encounter->activeAdmission;
+                if (!$admission) {
+                    throw new \Exception('No active admission found for this transfer request.');
+                }
+                $admissionService->transfer($admission, $bed);
+                $message = 'Patient successfully transferred and bed allocated.';
+            } else {
+                $admissionService->admit($encounter, $bed);
+                $message = 'Patient successfully admitted and bed allocated.';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Patient successfully admitted and bed allocated.'
+                'message' => $message
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bed allocation failed: ' . $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * Process a Transfer request from Core 1 where the target bed was already pre-selected.
+     * Core 2 simply confirms and executes the transfer.
+     */
+    public function processTransferRequest(Request $request)
+    {
+        $validated = $request->validate([
+            'room_assignment_id' => 'required|exists:room_assignments_core2,id',
+        ]);
+
+        try {
+            $roomAssignment = RoomAssignment::findOrFail($validated['room_assignment_id']);
+
+            if ($roomAssignment->request_type !== 'Transfer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This request is not a transfer request.'
+                ], 400);
+            }
+
+            if ($roomAssignment->status !== 'Pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This transfer request has already been processed.'
+                ], 400);
+            }
+
+            if (!$roomAssignment->bed_id_core1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No target bed was pre-selected by Core 1 for this transfer. Please use the floor map to assign a bed manually.'
+                ], 400);
+            }
+
+            $encounter = Encounter::with('activeAdmission')->findOrFail($roomAssignment->encounter_id);
+            $admission = $encounter->activeAdmission;
+
+            if (!$admission) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active admission found for this transfer request.'
+                ], 404);
+            }
+
+            $targetBed = Bed::findOrFail($roomAssignment->bed_id_core1);
+            $admissionService = app(AdmissionService::class);
+            $admissionService->transfer($admission, $targetBed);
+
+            $roomAssignment->update(['status' => 'Assigned']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transfer processed. Patient moved to Bed ' . $targetBed->bed_number . '.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
             ], 400);
         }
     }
@@ -271,6 +352,41 @@ class BedLinenController extends Controller
 
         return redirect()->route('core2.bed-linen.patient-transfer.index')
             ->with('success', 'Patient transfer record added successfully.');
+    }
+
+    public function transferPatient(Request $request)
+    {
+        $validated = $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'new_bed_id'   => 'required|exists:beds_core1,id',
+        ]);
+
+        try {
+            $encounter = Encounter::with('activeAdmission')->findOrFail($validated['encounter_id']);
+            $admission = $encounter->activeAdmission;
+
+            if (!$admission) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active admission found for this encounter.'
+                ], 404);
+            }
+
+            $newBed = Bed::findOrFail($validated['new_bed_id']);
+
+            $admissionService = app(AdmissionService::class);
+            $admissionService->transfer($admission, $newBed);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient successfully transferred to ' . $newBed->bed_number
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
+            ], 400);
+        }
     }
 
     // ── House Keeping & Cleaning Status ────────────────────────────────────────

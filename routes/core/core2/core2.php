@@ -93,6 +93,7 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/pending-admissions', [BedLinenController::class, 'pendingAdmissionsIndex'])->name('pending-admissions.index');
         Route::get('/floor-map-data', [BedLinenController::class, 'floorMapData'])->name('floor-map-data');
         Route::post('/allocate-bed', [BedLinenController::class, 'allocateBed'])->name('allocate-bed');
+        Route::post('/process-transfer-request', [BedLinenController::class, 'processTransferRequest'])->name('process-transfer-request');
 
         // Room Assignment
         Route::get('/room-assignment',        [BedLinenController::class, 'roomAssignmentIndex'])->name('room-assignment.index');
@@ -109,6 +110,7 @@ Route::prefix('core2')->name('core2.')->group(function () {
         Route::get('/patient-transfer',        [BedLinenController::class, 'patientTransferIndex'])->name('patient-transfer.index');
         Route::get('/patient-transfer/create', [BedLinenController::class, 'patientTransferCreate'])->name('patient-transfer.create');
         Route::post('/patient-transfer',       [BedLinenController::class, 'patientTransferStore'])->name('patient-transfer.store');
+        Route::post('/patient-transfer/execute', [BedLinenController::class, 'transferPatient'])->name('patient-transfer.execute');
 
         // House Keeping & Cleaning Status
         Route::get('/house-keeping',        [BedLinenController::class, 'houseKeepingIndex'])->name('house-keeping.index');

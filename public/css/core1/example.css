@@ -784,6 +784,11 @@ tr:hover {
     color: var(--text-light);
 }
 
+.text-center {
+    text-align: center;
+}
+
+
 /* Spacing & Flex */
 .d-flex {
     display: flex;
@@ -1014,6 +1019,11 @@ tr:hover {
 .core1-tag-cleaning {
     background: #feebc8;
     color: #744210;
+}
+
+.core1-tag-consulting {
+    background: #e0e7ff;
+    color: #4338ca;
 }
 
 .core1-tag-administered {

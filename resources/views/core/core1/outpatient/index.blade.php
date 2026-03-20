@@ -99,7 +99,7 @@
                                 <th>PATIENT</th>
                                 <th>TYPE</th>
                                 <th>STATUS</th>
-                                <th>ACTIONS</th>
+                                <th class="text-center" style="width: 220px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,7 +120,7 @@
     $statusClass = 'core1-tag-recovering';
 
     if($apt['status'] == 'In consultation') {
-        $statusClass = 'core1-tag-critical';
+        $statusClass = 'core1-tag-consulting';
     }
 
     if($apt['status'] == 'Waiting') {
@@ -137,7 +137,7 @@
                                         </span>
                                     </td>
                             <td>
-                                <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center;">
+                                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
                                     <button type="button" class="core1-btn-sm core1-btn-outline" 
                                             onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-eye"></i>
@@ -157,7 +157,7 @@
                                     @endif
                                     @if($apt['status'] === 'Triaged' || $apt['status'] === 'In consultation')
                                         <button class="core1-btn-sm core1-btn-primary" 
-                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')" style="flex-shrink: 0; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 12px; grid-column: span 2;">
+                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')" style="flex-shrink: 0; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 12px;">
                                             <i class="bi bi-chat-left-dots"></i> Consult
                                         </button>
                                     @endif
@@ -199,11 +199,19 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="core1-status-tag {{ $reg['status'] === 'Triaged' ? 'core1-tag-stable' : 'core1-tag-cleaning' }}">
+                                        @php
+                                            $regStatusClass = match($reg['status']) {
+                                                'In consultation' => 'core1-tag-consulting',
+                                                'Triaged'         => 'core1-tag-stable',
+                                                'Waiting'         => 'core1-tag-cleaning',
+                                                default           => 'core1-tag-neutral',
+                                            };
+                                        @endphp
+                                        <span class="core1-status-tag {{ $regStatusClass }}">
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center; border: none;">
+                                    <td style="display: flex; gap: 8px; justify-content: center; align-items: center; border: none;">
                                         <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                 onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-eye"></i>
@@ -390,7 +398,7 @@
                                     <option value="">Select Patient</option>
                                     @foreach($patients as $p)
                                         <option value="{{ $p->id }}" {{ old('patient_id') == $p->id ? 'selected' : '' }}>
-                                            {{ $p->name }} ({{ $p->patient_id ?? $p->mrn }})
+                                            {{ $p->name }} ({{ $p->mrn }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -908,8 +916,22 @@
             .catch(err => console.error("Failed to fetch diagnostic orders", err));
     }
 
-    // Auto refresh every 5 seconds
-    setInterval(fetchDiagnosticOrders, 5000);
+    let diagnosticInterval = null;
+    
+    function startDiagnosticPolling() {
+        if (diagnosticInterval) return; // Already running
+        fetchDiagnosticOrders(); // Run once immediately
+        diagnosticInterval = setInterval(fetchDiagnosticOrders, 5000);
+        console.log("Diagnostic polling started.");
+    }
+
+    function stopDiagnosticPolling() {
+        if (diagnosticInterval) {
+            clearInterval(diagnosticInterval);
+            diagnosticInterval = null;
+            console.log("Diagnostic polling stopped.");
+        }
+    }
 </script>
         <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
             <!-- Modal Header -->
@@ -1154,6 +1176,13 @@ function switchTab(evt, tabId) {
     }
     document.getElementById(tabId).classList.add('active');
     evt.currentTarget.classList.add('active');
+
+    // Intelligent Polling logic
+    if (tabId === 'diagnostic-orders') {
+        startDiagnosticPolling();
+    } else {
+        stopDiagnosticPolling();
+    }
 }
 
 function toggleSendToAdmissionBtn() {
@@ -1360,6 +1389,17 @@ function openTriageModal(id) {
 }
 
 function openConsultationModal(id, name) {
+    // HIS rules: Once patient is in consultation room, status should be 'In consultation'.
+    // Trigger backend update via AJAX.
+    fetch('/core/outpatient/' + id + '/start-consultation', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    });
+
     currentEncounterId = id;
     const form = document.getElementById('consultationForm');
     form.action = `/core/outpatient/${id}/consultation`;

@@ -56,12 +56,12 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#d1fae5; color:#065f46; border-left:4px solid #10b981; display:flex; align-items:center; gap:10px;">
+        <div class="alert alert-success session-alert" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#d1fae5; color:#065f46; border-left:4px solid #10b981; display:flex; align-items:center; gap:10px;">
             <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-error" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444; display:flex; align-items:center; gap:10px;">
+        <div class="alert alert-error session-alert" style="padding:12px 16px; margin-bottom:20px; border-radius:8px; background:#fee2e2; color:#991b1b; border-left:4px solid #ef4444; display:flex; align-items:center; gap:10px;">
             <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
         </div>
     @endif
@@ -322,6 +322,13 @@
                                                     title="Set Diet"
                                                     style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0; color: var(--warning);">
                                                 <i class="bi bi-egg-fried"></i>
+                                            </button>
+
+                                            <button type="button" class="core1-btn-sm core1-btn-outline" 
+                                                    onclick="openTransferRequestModal({{ $admission->id }}, {{ json_encode($patient->name) }}, '{{ $admission->bed->room->ward->name ?? 'Ward' }} - R{{ $admission->bed->room->room_number ?? '0' }} - B{{ $admission->bed->bed_number ?? '0' }}')"
+                                                    title="Transfer Patient Request"
+                                                    style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--info); border-color: rgba(59, 130, 246, 0.2); flex-shrink: 0;">
+                                                <i class="bi bi-arrow-left-right"></i>
                                             </button>
 
                                             <button type="button" class="core1-btn-sm core1-btn-outline" 
@@ -816,4 +823,310 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+    @include('core.core1.inpatient.modals.clinical_actions')
+
+    {{-- 2D Floor Map Modal for Patient Allocation/Transfer --}}
+    <div id="floorMapModal" style="display:none; position:fixed; inset:0; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; background:rgba(15,23,42,0.6); z-index:100001; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;">
+        <div style="background:#fff; width:100%; max-width:900px; height:85vh; border-radius:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; border:1px solid #e2e8f0;">
+            
+            {{-- Modal Header --}}
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid #e2e8f0; background:#fff; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="background:#f1f5f9; padding:10px; border-radius:12px; color:#475569;">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:17px; font-weight:900; color:#0f172a; font-family:'Inter', sans-serif;" id="floorMapModalTitle">Transfer Patient</h3>
+                        <p style="margin:0; font-size:12px; color:#64748b; font-family:'Inter', sans-serif;" id="floorMapPatientInfo">Select an available bed from the floor plan below</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeFloorMap()" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; line-height:1; padding:0;">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+                
+                {{-- Zone Tab Strip Container (Injected by JS) --}}
+                <div id="bpZoneTabsContainer" style="display:flex; gap:0; background:#f8f9fb; border-bottom:1px solid #e2e8f0; flex-shrink:0;">
+                    <!-- Tabs will be rendered here -->
+                </div>
+
+                {{-- Floor Plan Body --}}
+                <div id="floorMapContent" style="flex:1; overflow-y:auto; padding:20px 24px; background:#f8f9fb;">
+                    <div style="display:flex; align-items:center; justify-content:center; height:120px; color:#94a3b8; font-weight:700; font-family:'Inter',sans-serif; gap:8px;">
+                        Loading floor map…
+                    </div>
+                </div>
+
+                {{-- Legend + Selection Bar + Actions --}}
+                <div style="flex-shrink:0; border-top:1px solid #e2e8f0; background:#fff; padding:14px 24px;">
+                    {{-- Legend --}}
+                    <div style="display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap; font-family:'Inter', sans-serif;">
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b;">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#f0fff4; border:2px solid #86efac; display:inline-block;"></span> Available
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b;">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#fff5f5; border:2px solid #fca5a5; display:inline-block;"></span> Occupied
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b;">
+                            <span style="width:12px; height:12px; border-radius:3px; background:#fffbeb; border:2px solid #fcd34d; display:inline-block;"></span> Cleaning
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b;">
+                            <span style="width:12px; height:12px; border-radius:3px; background:rgba(37,99,235,0.12); border:2px solid #2563eb; display:inline-block;"></span> Selected
+                        </div>
+                    </div>
+                    {{-- Selection indicator + actions --}}
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; font-family:'Inter', sans-serif;">
+                        <div id="bpSelectionBar" style="font-size:13px; color:#64748b; font-style:italic;">
+                            No bed selected — click an available bed above
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" tabindex="-1" onclick="closeFloorMap()" style="padding:10px 18px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; color:#475569; font-weight:700; font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">Cancel</button>
+                            <button type="button" id="confirmAllocationBtn" onclick="confirmAllocation()" disabled style="padding:10px 18px; border-radius:8px; border:none; background:#94a3b8; color:#fff; font-weight:700; font-size:13px; cursor:not-allowed; display:flex; align-items:center; gap:8px; transition:all 0.2s;">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <span id="confirmBtnText">Execute Transfer</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+@push('scripts')
+<style>
+.bp-zone-tab.active { background: #fff !important; }
+</style>
+<script>
+    let currentAdmissionId = null;
+    let selectedBedId = null;
+    let selectedBedLabel = '';
+    let currentEncounterId = null;
+    
+    const bpZones = {
+        'ICU': { icon: '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>', color: '#dc2626' },
+        'ER': { icon: '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg>', color: '#ea580c' },
+        'WARD': { icon: '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" /></svg>', color: '#2563eb' },
+        'OR': { icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>', color: '#7c3aed' }
+    };
+
+    let floorMapIsSelector = false;
+
+    function openFloorMap(admissionId, patientName, mrn, encounterId, isAdmission = false, isSelector = false) {
+        console.log('openFloorMap called', {admissionId, patientName, isSelector});
+        const modal = document.getElementById('floorMapModal');
+        if (!modal) {
+            alert('Critical Error: floorMapModal element not found in the page.');
+            return;
+        }
+
+        // Move modal to body to escape any parent transform/overflow stacking context
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        currentAdmissionId = admissionId;
+        currentEncounterId = encounterId;
+        floorMapIsSelector = isSelector;
+        selectedBedId = null;
+        selectedBedLabel = '';
+        
+        const btn = document.getElementById('confirmAllocationBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.style.background = '#94a3b8';
+            btn.style.cursor = 'not-allowed';
+        }
+        
+        document.getElementById('floorMapModalTitle').textContent = isSelector ? 'Select Target Bed' : 'Transfer Patient (Select New Bed)';
+        document.getElementById('confirmBtnText').textContent = isSelector ? 'Confirm Selection' : 'Execute Transfer';
+        document.getElementById('bpSelectionBar').innerHTML = 'No bed selected &mdash; click an available bed above';
+        document.getElementById('floorMapPatientInfo').textContent = isSelector ? 'Picking target bed for transfer request' : `${patientName} ${mrn ? '(MRN: ' + mrn + ')' : ''} — Encounter #${encounterId}`;
+        
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '100001', 'important');
+        modal.style.setProperty('position', 'fixed', 'important');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        loadFloorMap();
+    }
+
+    function closeFloorMap() {
+        console.log('Closing floor map modal');
+        const modal = document.getElementById('floorMapModal');
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+            modal.classList.add('hidden');
+        }
+        document.body.style.overflow = '';
+    }
+
+    function switchBpZone(zoneKey) {
+        document.querySelectorAll('.bp-zone-tab').forEach(t => {
+            t.classList.remove('active');
+            t.style.borderBottomColor = 'transparent';
+            t.style.color = '#64748b';
+            t.style.background = 'none';
+        });
+        document.querySelectorAll('.bp-zone-panel').forEach(p => p.style.display = 'none');
+        
+        const tab = document.querySelector(`.bp-zone-tab[data-zone="${zoneKey}"]`);
+        if(tab) {
+            tab.classList.add('active');
+            tab.style.borderBottomColor = bpZones[zoneKey].color;
+            tab.style.color = bpZones[zoneKey].color;
+            tab.style.background = '#fff';
+        }
+        
+        const panel = document.getElementById(`bp-zone-${zoneKey}`);
+        if(panel) panel.style.display = 'block';
+    }
+
+    function loadFloorMap() {
+        const container = document.getElementById('floorMapContent');
+        const tabsContainer = document.getElementById('bpZoneTabsContainer');
+        
+        container.innerHTML = `<div class="flex items-center justify-center h-40 text-slate-400 font-bold font-sans">Loading floor map…</div>`;
+        tabsContainer.innerHTML = '';
+
+        fetch('{{ route("core2.bed-linen.floor-map-data") }}')
+            .then(r => r.json())
+            .then(wards => {
+                const grouped = { 'ICU': [], 'ER': [], 'WARD': [], 'OR': [] };
+                wards.forEach(w => {
+                    const z = (w.type || 'WARD').toUpperCase();
+                    if(grouped[z]) grouped[z].push(w); else grouped['WARD'].push(w);
+                });
+                
+                let firstZone = null;
+                Object.keys(grouped).forEach(zk => {
+                    const bedsCount = grouped[zk].reduce((acc, ward) => acc + ward.rooms.reduce((acc2, room) => acc2 + room.beds.length, 0), 0);
+                    if(bedsCount > 0 && !firstZone) firstZone = zk;
+                    
+                    tabsContainer.innerHTML += `
+                        <button type="button" class="bp-zone-tab" data-zone="${zk}" onclick="switchBpZone('${zk}')"
+                            style="padding:12px 20px; border:none; outline:none; font-family:'Inter', sans-serif; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; display:flex; align-items:center; gap:7px; transition:all 0.15s; white-space:nowrap; color:#64748b; background:none;">
+                            ${bpZones[zk].icon} ${zk} <span style="font-size:11px; font-weight:500; background:#eef2ff; color:#4f46e5; padding:2px 8px; border-radius:20px; margin-left:2px;">${bedsCount}</span>
+                        </button>`;
+                });
+                
+                if(!firstZone) firstZone = 'WARD';
+
+                let html = '';
+                Object.keys(grouped).forEach(zk => {
+                    html += `<div id="bp-zone-${zk}" class="bp-zone-panel" style="display:none; font-family:'Inter', sans-serif;">`;
+                    if(grouped[zk].length === 0) {
+                        html += `<div style="text-align:center; padding:50px 0; color:#cbd5e1;"><p class="font-bold">No wards configured for ${zk}</p></div>`;
+                    } else {
+                        grouped[zk].forEach(ward => {
+                            html += `<div style="font-size:13px; font-weight:800; text-transform:uppercase; color:#1e293b; margin-bottom:12px;">${ward.name}</div>`;
+                            ward.rooms.forEach(room => {
+                                html += `<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:12px;">
+                                    <div style="font-size:12px; font-weight:800; background:#f1f5f9; color:#334155; padding:3px 12px; border-radius:20px; display:inline-block; margin-bottom:12px;">Room ${room.room_number}</div>
+                                    <div style="display:flex; flex-wrap:wrap; gap:12px;">`;
+                                room.beds.forEach(bed => {
+                                    const bedStatus = bed.status.toLowerCase();
+                                    const isAvailable = bedStatus === 'available';
+                                    const isOccupied = bedStatus === 'occupied';
+                                    const firstName = bed.patient_name ? bed.patient_name.split(' ')[0] : null;
+                                    const borderColor = isAvailable ? '#86efac' : (isOccupied ? '#fca5a5' : '#fcd34d');
+                                    const bgColor = isAvailable ? '#f0fff4' : (isOccupied ? '#fff5f5' : '#fffbeb');
+                                    const textColor = isAvailable ? '#166534' : (isOccupied ? '#991b1b' : '#92400e');
+                                    
+                                    html += `
+                                        <div class="bp-bed bp-bed-${bedStatus}" data-bed-id="${bed.id}" data-bed-label="${ward.name} - R${room.room_number} - B${bed.bed_number}"
+                                             ${isAvailable ? 'onclick="selectBed(this)"' : ''}
+                                             style="width:72px; height:84px; border-radius:10px; border:2px solid ${borderColor}; background:${bgColor}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:${isAvailable ? 'pointer' : 'not-allowed'}; opacity:${isAvailable ? '1' : '0.65'}; transition:all 0.15s; position:relative; overflow:hidden;">
+                                            <span style="font-size:10px; font-weight:800; color:${textColor};">${bed.bed_number}</span>
+                                            ${isOccupied && firstName ? `<span style="font-size:9px; font-weight:700; color:#991b1b;">${firstName}</span>` : ''}
+                                            <div class="bp-bed-check" style="display:none; position:absolute; inset:0; background:rgba(37,99,235,0.1); align-items:center; justify-content:center;">
+                                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                                            </div>
+                                        </div>`;
+                                });
+                                html += `</div></div>`;
+                            });
+                        });
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+                switchBpZone(firstZone);
+            });
+    }
+
+    function selectBed(el) {
+        document.querySelectorAll('.bp-bed').forEach(c => {
+            c.style.borderColor = c.classList.contains('bp-bed-available') ? '#86efac' : c.style.borderColor;
+            c.querySelector('.bp-bed-check').style.display = 'none';
+        });
+        el.style.borderColor = '#2563eb';
+        el.querySelector('.bp-bed-check').style.display = 'flex';
+        selectedBedId = el.getAttribute('data-bed-id');
+        selectedBedLabel = el.getAttribute('data-bed-label');
+        document.getElementById('bpSelectionBar').innerHTML = `<span style="font-weight:700;">Selected:</span> <span style="color:#2563eb;">${selectedBedLabel}</span>`;
+        const btn = document.getElementById('confirmAllocationBtn');
+        btn.disabled = false;
+        btn.style.background = '#4f46e5';
+        btn.style.cursor = 'pointer';
+    }
+
+    function confirmAllocation() {
+        if (!selectedBedId) return;
+
+        if (floorMapIsSelector) {
+            // Update the Transfer Request Modal fields
+            const targetDisplay = document.getElementById('trSelectedBedDisplay');
+            if (targetDisplay) {
+                targetDisplay.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px; color: var(--primary); font-weight: 600;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        ${selectedBedLabel}
+                    </div>`;
+            }
+            const targetInput = document.getElementById('trTargetBedId');
+            if (targetInput) targetInput.value = selectedBedId;
+            
+            closeFloorMap();
+            // Restore the transfer request modal after floor map closes
+            const transferModal = document.getElementById('transferRequestModal');
+            if (transferModal) transferModal.style.display = 'flex';
+            return;
+        }
+
+        const btn = document.getElementById('confirmAllocationBtn');
+        btn.disabled = true;
+        btn.innerHTML = `Processing…`;
+        const route = '{{ route("core1.admissions.execute-transfer", ":id") }}'.replace(':id', currentAdmissionId);
+        fetch(route, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: JSON.stringify({ new_bed_id: selectedBedId })
+        }).then(r => r.json()).then(data => {
+            if (data.success) { location.reload(); } else { alert(data.message); btn.disabled = false; btn.innerHTML = `Execute Transfer`; }
+        });
+    }
+
+    // Modal helpers for existing Core1 modals
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if(modal) modal.style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashes = document.querySelectorAll('.core1-flash-success, .core1-flash-error');
+        flashes.forEach(flash => {
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.5s ease';
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 500);
+            }, 5000);
+        });
+    });
+</script>
+@endpush
 @endsection
+

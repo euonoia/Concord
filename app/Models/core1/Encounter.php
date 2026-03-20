@@ -36,7 +36,13 @@ class Encounter extends Model
 
     public function admission()
     {
-        return $this->hasOne(Admission::class);
+        return $this->hasOne(Admission::class, 'encounter_id');
+    }
+
+    public function activeAdmission()
+    {
+        return $this->hasOne(Admission::class, 'encounter_id')
+            ->whereIn('status', ['Admitted', 'Doctor Approved']);
     }
 
     public function triage()

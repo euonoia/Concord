@@ -21,7 +21,7 @@
     </div>
 
     @if (session('success'))
-        <div class="core1-alert core1-alert-success">{{ session('success') }}</div>
+        <div class="core1-alert core1-alert-success session-alert">{{ session('success') }}</div>
     @endif
 
     {{-- Admitted Patients Card --}}

@@ -125,7 +125,7 @@
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-dark">{{ $patient->name }}</div>
-                                    <div class="text-xs text-gray font-mono">{{ $patient->patient_id }}</div>
+                                    <div class="text-xs text-gray font-mono">{{ $patient->mrn }}</div>
                                     @if($patient->mrn)
                                         <div class="text-xs font-mono font-bold mt-1" style="color:#1a3a5a;">
                                             <i class="fas fa-id-card text-xxs"></i> {{ $patient->mrn }}
@@ -261,9 +261,9 @@
                                     } elseif ($latestEncounter->status === 'Pending Billing') {
                                         $location = 'Billing Dept';
                                         $locationColor = 'var(--info)';
-                                    } elseif ($latestEncounter->consultation) {
-                                        $location = 'Consultation Room';
-                                        $locationColor = 'var(--success)';
+                                    } elseif ($latestEncounter->status === 'In consultation' || $latestEncounter->consultation) {
+                                        $location = 'In Consultation';
+                                        $locationColor = '#4338ca';
                                     } elseif ($latestEncounter->triage) {
                                         $location = 'Triage Station';
                                         $locationColor = 'var(--warning)';
@@ -992,7 +992,7 @@
                         <option value="">— Select Primary Patient —</option>
                         @foreach($patients as $p)
                             @if(($p->registration_status ?? '') === 'REGISTERED')
-                                <option value="{{ $p->id }}">{{ $p->name }} • {{ $p->mrn ?? $p->patient_id }}</option>
+                                <option value="{{ $p->id }}">{{ $p->name }} • {{ $p->mrn }}</option>
                             @endif
                         @endforeach
                     </select>

@@ -11,6 +11,7 @@ class PatientTransferManagement extends Model
     protected $fillable = [
         'transfer_id',
         'patient_id',
+        'encounter_id',
         'from_location',
         'to_location',
         'transfer_date',

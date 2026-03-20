@@ -270,14 +270,14 @@
 
         {{-- Flash Messages --}}
         @if(session('success'))
-            <div class="core2-flash-success mx-10 mt-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-6 py-4 text-sm font-semibold flex items-center gap-3">
+            <div class="core2-flash-success session-alert mx-10 mt-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-6 py-4 text-sm font-semibold flex items-center gap-3">
                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 {{ session('success') }}
             </div>
         @endif
 
         @if(session('error'))
-            <div class="mx-10 mt-6 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-6 py-4 text-sm font-semibold flex items-center gap-3">
+            <div class="session-alert mx-10 mt-6 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-6 py-4 text-sm font-semibold flex items-center gap-3">
                 <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 {{ session('error') }}
             </div>
@@ -319,6 +319,23 @@
         document.querySelectorAll('.core2-submenu').forEach(s => s.classList.remove('show'));
         if (!open) el.classList.add('show');
     }
+
+    // Auto-hide session alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', () => {
+        const alerts = document.querySelectorAll('.session-alert');
+        alerts.forEach(alert => {
+            // Apply initial transition styles if not in CSS
+            alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 500); // Wait for transition
+            }, 5000);
+        });
+    });
 </script>
 @stack('scripts')
 

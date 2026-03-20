@@ -145,4 +145,56 @@ class AdmissionService
 
         return $result;
     }
+
+    /**
+     * Transfer a patient to a new bed.
+     * Releases old bed and occupies new bed within the same admission record.
+     */
+    public function transfer(Admission $admission, Bed $newBed): bool
+    {
+        $oldBedId = $admission->bed_id;
+        $oldBed = Bed::findOrFail($oldBedId);
+
+        $result = DB::transaction(function () use ($admission, $newBed, $oldBed) {
+            // 1. Lock new bed 
+            $newBed = Bed::where('id', $newBed->id)->lockForUpdate()->firstOrFail();
+
+            if ($newBed->status !== 'Available') {
+                throw new \Exception('The selected bed is no longer available.');
+            }
+
+            // 2. Release Old Bed (Set to Available, or Cleaning if per hospital flow)
+            $oldBed->update(['status' => 'Available']);
+
+            // 3. Update Admission with New Bed
+            $admission->update([
+                'bed_id' => $newBed->id
+            ]);
+
+            // 4. Occupy New Bed
+            $newBed->update(['status' => 'Occupied']);
+
+            return true;
+        });
+
+        // 5. Sync transfer to Core 2
+        $this->syncService->syncTransferToCore2($admission, $oldBed, $newBed);
+
+        return $result;
+    }
+
+    /**
+     * Request a patient transfer (Clinician side).
+     * Queues a request for Bed & Linen (Core 2) to fulfill.
+     */
+    public function requestTransfer(Admission $admission, ?int $targetBedId = null): bool
+    {
+        // 1. Queue for room assignment as a 'Transfer' type
+        $this->syncService->queueTransferRequest($admission, $targetBedId);
+
+        // 2. Optional: update encounter status or something
+        // For now, just queuing is enough as per HIS flow.
+        
+        return true;
+    }
 }

@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Patient Details')
 
@@ -35,7 +35,7 @@
         <div class="core1-info-grid">
             <div class="core1-info-item">
                 <h3>Patient ID</h3>
-                <p>{{ $patient->patient_id ?? 'Not assigned' }}</p>
+                <p>{{ $patient->mrn ?? 'Not assigned' }}</p>
             </div>
             <div class="core1-info-item">
                 <h3>MRN</h3>
