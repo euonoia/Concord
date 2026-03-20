@@ -3,44 +3,34 @@
 namespace App\Http\Controllers\user\Hr\hr2;
 
 use App\Http\Controllers\Controller;
-use App\Models\user\Hr\hr2\EssRequest;
 use App\Models\admin\Hr\hr3\Shift;
+use App\Models\user\Hr\hr2\EssRequest;
 use App\Models\user\Hr\hr3\ClaimsHr3;
 use App\Models\Employee; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class UserEssController extends Controller
 {
-  public function index()
+    public function index()
     {
-        // Get the logged-in employee
         $employee = Employee::where('user_id', Auth::id())->first();
         if (!$employee) {
             return redirect()->back()->with('error', 'Employee not found.');
         }
 
-        // Get all active shifts for the dropdown
+        // Get active shifts assigned to employee
         $allShifts = Shift::where('employee_id', $employee->employee_id)
             ->where('is_active', 1)
-            ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+            ->orderByRaw("FIELD(day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
             ->get();
 
-        // Get ESS request history
-        $essRequests = EssRequest::where('employee_id', $employee->employee_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Get Claim history
-        $claims = ClaimsHr3::where('employee_id', $employee->employee_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Merge ESS requests and Claims into a single collection, sorted by created_at descending
+        // ESS requests & claims history
+        $essRequests = EssRequest::where('employee_id', $employee->employee_id)->orderBy('created_at','desc')->get();
+        $claims = ClaimsHr3::where('employee_id', $employee->employee_id)->orderBy('created_at','desc')->get();
         $history = $essRequests->merge($claims)->sortByDesc('created_at');
 
-        return view('hr.hr2.ess', compact('employee', 'allShifts', 'history'));
+        return view('hr.hr2.ess', compact('employee','allShifts','history'));
     }
 
     public function store(Request $request)
@@ -48,42 +38,43 @@ class UserEssController extends Controller
         $employee = Employee::where('user_id', Auth::id())->first();
 
         $request->validate([
-            'type'       => 'required|string',
-            'details'    => 'required|string|max:2000',
-            'shift_id'   => 'required_if:type,Leave',
-            'leave_date' => 'required_if:type,Leave|nullable|date',
-            'end_date'   => 'nullable|date|after_or_equal:leave_date',
+            'type' => 'required|string',
+            'details' => 'required|string|max:2000',
         ]);
 
-        // Robust Check: Prevent duplicate leave for the same date
-        if ($request->type === 'Leave') {
-            $exists = EssRequest::where('employee_id', $employee->employee_id)
-                ->where('leave_date', $request->leave_date)
-                ->whereIn('status', ['pending', 'approved'])
-                ->exists();
-            
-            if ($exists) {
-                return redirect()->back()->with('error', 'A leave request already exists for this date.');
+        // Handle Shift Request
+        if ($request->type === 'Request Shift') {
+            $shift = Shift::where('employee_id', $employee->employee_id)
+                ->where('is_active', 1)
+                ->first();
+
+            if (!$shift) {
+                return redirect()->back()->with('error', 'No active shift found to request.');
             }
+
+            Shift::create([
+                'employee_id' => $shift->employee_id,
+                'shift_name' => $shift->shift_name,
+                'day_of_week' => $shift->day_of_week,
+                'start_time' => $shift->start_time,
+                'end_time' => $shift->end_time,
+                'is_active' => 1,
+                'requested_by' => $employee->employee_id,
+                'status' => 'pending',
+            ]);
+
+            return redirect()->back()->with('success', "Shift request submitted successfully.");
         }
 
-        // Generate custom ESS ID
-        $lastEss = EssRequest::orderBy('created_at', 'desc')->first();
-        $lastNumber = $lastEss ? (int) preg_replace('/\D/', '', $lastEss->ess_id) : 0;
-        $ess_id = 'ESS' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-
-        // Save to Database
+        // Other ESS types: Leave, Profile Update, Document
         EssRequest::create([
-            'ess_id'      => $ess_id,
+            'ess_id' => 'ESS' . str_pad(EssRequest::count() + 1, 4, '0', STR_PAD_LEFT),
             'employee_id' => $employee->employee_id,
-            'shift_id'    => $request->shift_id, 
-            'type'        => $request->type,
-            'details'     => $request->details,
-            'leave_date'  => $request->leave_date, // Now saving to dedicated column
-            'end_date'    => $request->end_date ?? $request->leave_date,
-            'status'      => 'pending',
+            'type' => $request->type,
+            'details' => $request->details,
+            'status' => 'pending',
         ]);
 
-        return redirect()->back()->with('success', "Request $ess_id submitted successfully.");
+        return redirect()->back()->with('success', "Request submitted successfully.");
     }
 }
