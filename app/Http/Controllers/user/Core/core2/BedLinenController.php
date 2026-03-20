@@ -40,7 +40,7 @@ class BedLinenController extends Controller
     public function floorMapData(Request $request)
     {
         $wards = Ward::with(['rooms.beds.admissions' => function($query) {
-            $query->where('status', 'Admitted')->with('encounter.patient');
+            $query->whereIn('status', ['Admitted', 'Doctor Approved'])->with('encounter.patient');
         }])->get();
 
         $floors = [];
