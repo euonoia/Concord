@@ -17,10 +17,12 @@
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
             <div>
                 <label style="font-weight: bold;">Select Trainee (Completed Only):</label>
-                <select name="employee_id" id="trainee_select" class="form-control" style="width: 100%; padding: 8px;" required>
+              <select name="employee_id" id="trainee_select" class="form-control" style="width: 100%; padding: 8px;" required>
                     <option value="">-- Select Employee --</option>
                     @foreach($eligibleEmployees as $emp)
-                        <option value="{{ $emp->employee_id }}">{{ $emp->employee_id }}</option>
+                        <option value="{{ $emp->employee_id }}">
+                            {{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->employee_id }})
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -94,23 +96,39 @@
             <th style="padding: 12px; text-align: left;">Presented By</th>
         </tr>
     </thead>
-    <tbody>
-        @foreach($schedules as $s)
-        <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 12px;">{{ $s->employee_id }}</td>
-            <td style="padding: 12px;">{{ $s->competency_code }}</td>
-            <td style="padding: 12px;">
-                {{ date('M d', strtotime($s->training_date)) }} | {{ date('h:i A', strtotime($s->training_time)) }}
-            </td>
-            <td style="padding: 12px; color: #007bff;">
-                <strong>{{ $s->trainer ? $s->trainer->first_name . ' ' . $s->trainer->last_name : $s->trainer_id }}</strong>
-            </td>
-            <td style="padding: 12px; color: #28a745;">
-                {{ $s->presenter ? $s->presenter->first_name . ' ' . $s->presenter->last_name : $s->presented_by }}
-            </td>
-        </tr>
-        @endforeach
-    </tbody>
+   <tbody>
+@foreach($schedules as $s)
+<tr style="border-bottom: 1px solid #eee;">
+
+<td style="padding: 12px;">
+<strong>
+{{ $s->employee ? $s->employee->first_name.' '.$s->employee->last_name : $s->employee_id }}
+</strong>
+</td>
+
+<td style="padding: 12px;">
+{{ $s->competency_code }}
+</td>
+
+<td style="padding: 12px;">
+{{ date('M d', strtotime($s->training_date)) }}
+|
+{{ date('h:i A', strtotime($s->training_time)) }}
+</td>
+
+<td style="padding: 12px; color:#007bff;">
+<strong>
+{{ $s->trainer ? $s->trainer->first_name.' '.$s->trainer->last_name : $s->trainer_id }}
+</strong>
+</td>
+
+<td style="padding: 12px; color:#28a745;">
+{{ $s->presenter ? $s->presenter->first_name.' '.$s->presenter->last_name : $s->presented_by }}
+</td>
+
+</tr>
+@endforeach
+</tbody>
 </table>
 </div>
 

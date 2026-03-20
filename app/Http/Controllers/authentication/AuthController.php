@@ -36,8 +36,7 @@ class AuthController extends Controller
             'user_type' => $userType,
             'role_slug' => $validated['role_slug'],
             'is_active' => 1,
-            // UUID is usually handled by a boot method in the Model, 
-            // but you can also use: 'uuid' => (string) \Illuminate\Support\Str::uuid(),
+
         ]);
 
         if ($userType === 'staff') {

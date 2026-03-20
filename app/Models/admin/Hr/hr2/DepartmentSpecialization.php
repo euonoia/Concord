@@ -17,8 +17,7 @@ class DepartmentSpecialization extends Model
 
     public function department(): BelongsTo
     {
-        // 'dept_code' is the foreign key on this table
-        // 'department_id' is the owner key on the Departments table
+       
         return $this->belongsTo(Department::class, 'dept_code', 'department_id');
     }
 }

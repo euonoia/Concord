@@ -64,6 +64,11 @@
             <i class="bi bi-calendar2-check"></i>
             <span>Leave Management</span>
         </a>
+
+         <a href="{{ route('admin.hr3.claims.index') }}" class="{{ request()->routeIs('admin.hr3.claims.*') ? 'active' : '' }}">
+            <i class="bi bi-wallet2"></i>
+            <span>Claims & Reimbursement</span>
+        </a>
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">
             @csrf
         </form>

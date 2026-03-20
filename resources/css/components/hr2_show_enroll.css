@@ -1,0 +1,28 @@
+/* Using your theme variables */
+    .hr2_show_enroll_container { padding: var(--space-lg); background-color: var(--bg); }
+    .hr2_show_enroll_card { 
+        background: #ffffff; 
+        border-radius: var(--radius-lg); 
+        border: 1px solid var(--neutral-200); 
+        box-shadow: var(--shadow-md); 
+        margin-bottom: var(--space-lg); 
+        overflow: hidden; 
+    }
+    .hr2_show_enroll_header_profile { background-color: var(--primary-base); color: #ffffff; padding: var(--space-lg); }
+    .hr2_show_enroll_table thead th { 
+        background-color: var(--neutral-100); 
+        color: var(--primary-base); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        padding: var(--space-md); 
+    }
+    .hr2_show_enroll_row_enrolled { background-color: var(--primary-light); opacity: 0.8; }
+    .hr2_show_enroll_btn_sync { 
+        background-color: var(--primary-base); 
+        color: white !important; 
+        padding: var(--space-sm) var(--space-xl); 
+        border-radius: 50px; 
+        font-weight: 600; 
+        border: none; 
+    }
+    .hr2_show_enroll_btn_sync:hover { background-color: var(--primary-dark); transform: translateY(-1px); }

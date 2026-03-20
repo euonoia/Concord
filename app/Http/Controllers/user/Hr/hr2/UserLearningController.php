@@ -27,7 +27,7 @@ class UserLearningController extends Controller
         |--------------------------------------------------------------------------
         */
         $activeCompetencies = CompetencyEnroll::where('employee_id', $employee->employee_id)
-            ->where('status', 'enrolled')
+            ->where('status', 'completed')
             ->pluck('competency_code')
             ->toArray();
 
@@ -48,7 +48,7 @@ class UserLearningController extends Controller
         |--------------------------------------------------------------------------
         */
         $enrolledModuleCodes = CourseEnroll::where('employee_id', $employee->employee_id)
-            ->where('status', 'enrolled')
+            ->where('status', 'completed')
             ->pluck('module_code')
             ->toArray();
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user\Hr\hr2;
 use App\Http\Controllers\Controller;
 use App\Models\user\Hr\hr2\EssRequest;
 use App\Models\admin\Hr\hr3\Shift;
+use App\Models\user\Hr\hr3\ClaimsHr3;
 use App\Models\Employee; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,10 +13,13 @@ use Carbon\Carbon;
 
 class UserEssController extends Controller
 {
-    public function index()
+  public function index()
     {
+        // Get the logged-in employee
         $employee = Employee::where('user_id', Auth::id())->first();
-        if (!$employee) return redirect()->back()->with('error', 'Employee not found.');
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee not found.');
+        }
 
         // Get all active shifts for the dropdown
         $allShifts = Shift::where('employee_id', $employee->employee_id)
@@ -23,12 +27,20 @@ class UserEssController extends Controller
             ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
             ->get();
 
-        // Get request history
-        $requests = EssRequest::where('employee_id', $employee->employee_id)
+        // Get ESS request history
+        $essRequests = EssRequest::where('employee_id', $employee->employee_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('hr.hr2.ess', compact('requests', 'employee', 'allShifts'));
+        // Get Claim history
+        $claims = ClaimsHr3::where('employee_id', $employee->employee_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Merge ESS requests and Claims into a single collection, sorted by created_at descending
+        $history = $essRequests->merge($claims)->sortByDesc('created_at');
+
+        return view('hr.hr2.ess', compact('employee', 'allShifts', 'history'));
     }
 
     public function store(Request $request)

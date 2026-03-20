@@ -19,13 +19,9 @@ class Competency extends Model
     ];
 
 
-    public function department()
-    {
-        return $this->belongsTo(
-            Department::class,
-            'department_id',
-            'department_id'
-        );
-    }
+public function department()
+{
+    return $this->belongsTo(\App\Models\admin\Hr\hr2\Department::class, 'department_id', 'department_id');
+}
 
 }
