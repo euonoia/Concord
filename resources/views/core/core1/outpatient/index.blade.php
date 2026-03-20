@@ -99,7 +99,7 @@
                                 <th>PATIENT</th>
                                 <th>TYPE</th>
                                 <th>STATUS</th>
-                                <th>ACTIONS</th>
+                                <th class="text-center" style="width: 220px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +137,7 @@
                                         </span>
                                     </td>
                             <td>
-                                <div style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center;">
+                                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
                                     <button type="button" class="core1-btn-sm core1-btn-outline" 
                                             onclick="openPatientModal({{ $apt['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                         <i class="bi bi-eye"></i>
@@ -157,7 +157,7 @@
                                     @endif
                                     @if($apt['status'] === 'Triaged' || $apt['status'] === 'In consultation')
                                         <button class="core1-btn-sm core1-btn-primary" 
-                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')" style="flex-shrink: 0; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 12px; grid-column: span 2;">
+                                                onclick="openConsultationModal({{ $apt['id'] }}, '{{ $apt['patient'] }}')" style="flex-shrink: 0; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 12px;">
                                             <i class="bi bi-chat-left-dots"></i> Consult
                                         </button>
                                     @endif
@@ -203,7 +203,7 @@
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
-                                    <td style="display: grid; grid-template-columns: repeat(4, 32px); gap: 6px; justify-content: center; border: none;">
+                                    <td style="display: flex; gap: 8px; justify-content: center; align-items: center; border: none;">
                                         <button type="button" class="core1-btn-sm core1-btn-outline" 
                                                 onclick="openPatientModal({{ $reg['patient_id'] }})" title="View Patient Details" style="flex-shrink: 0; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-eye"></i>

@@ -784,6 +784,11 @@ tr:hover {
     color: var(--text-light);
 }
 
+.text-center {
+    text-align: center;
+}
+
+
 /* Spacing & Flex */
 .d-flex {
     display: flex;
