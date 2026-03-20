@@ -916,8 +916,22 @@
             .catch(err => console.error("Failed to fetch diagnostic orders", err));
     }
 
-    // Auto refresh every 5 seconds
-    setInterval(fetchDiagnosticOrders, 5000);
+    let diagnosticInterval = null;
+    
+    function startDiagnosticPolling() {
+        if (diagnosticInterval) return; // Already running
+        fetchDiagnosticOrders(); // Run once immediately
+        diagnosticInterval = setInterval(fetchDiagnosticOrders, 5000);
+        console.log("Diagnostic polling started.");
+    }
+
+    function stopDiagnosticPolling() {
+        if (diagnosticInterval) {
+            clearInterval(diagnosticInterval);
+            diagnosticInterval = null;
+            console.log("Diagnostic polling stopped.");
+        }
+    }
 </script>
         <div class="core1-modal-content core1-card" style="width:750px; max-width:90%; max-height: 85vh; overflow-y: auto; padding:0; border-top:none; border-radius:12px;">
             <!-- Modal Header -->
@@ -1162,6 +1176,13 @@ function switchTab(evt, tabId) {
     }
     document.getElementById(tabId).classList.add('active');
     evt.currentTarget.classList.add('active');
+
+    // Intelligent Polling logic
+    if (tabId === 'diagnostic-orders') {
+        startDiagnosticPolling();
+    } else {
+        stopDiagnosticPolling();
+    }
 }
 
 function toggleSendToAdmissionBtn() {
