@@ -10,6 +10,10 @@ use App\Models\user\Core\core1\WaitingList;
 use App\Http\Requests\core1\Appointments\StoreAppointmentRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\admin\Hr\hr2\Department;
+use App\Models\admin\Hr\hr3\Shift;
+use App\Models\Employee;
+
 
 class AppointmentController extends Controller
 {
@@ -70,9 +74,10 @@ public function create()
             ->exists();
     });
 
-    $doctors = User::where('role_slug', 'doctor')->get();
+    $doctors = User::where('role_slug', 'doctor')->with('employee.department')->get();
+    $departments = Department::where('is_active', true)->get();
 
-    return view('core.core1.appointments.create', compact('patients', 'doctors'));
+    return view('core.core1.appointments.create', compact('patients', 'doctors', 'departments'));
 }
 
 
@@ -186,9 +191,24 @@ public function decline(Appointment $appointment)
             return response()->json(['error' => 'Missing date or doctor'], 400);
         }
 
-        // Assume 09:00 to 17:00
-        $start = Carbon::parse($date . ' 09:00:00');
-        $end = Carbon::parse($date . ' 17:00:00');
+        $dayOfWeek = Carbon::parse($date)->format('l');
+        
+        $employee = Employee::where('user_id', $doctorId)->first();
+        if (!$employee) {
+            return response()->json(['error' => 'Doctor profile not found'], 404);
+        }
+
+        $shift = Shift::where('employee_id', $employee->employee_id)
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$shift) {
+            return response()->json(['slots' => [], 'message' => 'Doctor has no active shift on this day.']);
+        }
+
+        $start = Carbon::parse($date . ' ' . $shift->start_time);
+        $end = Carbon::parse($date . ' ' . $shift->end_time);
         $interval = 30; // minutes
 
         $bookedSlots = Appointment::where('doctor_id', $doctorId)

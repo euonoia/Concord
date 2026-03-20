@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Appointment Details')
 
@@ -38,6 +38,11 @@
                     <option value="{{ $d->id }}" {{ $appointment->doctor_id == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
                 @endforeach
             </select>
+        </div>
+
+        <div>
+            <label>Department</label>
+            <input type="text" value="{{ $appointment->doctor->employee->department->name ?? 'N/A' }}" class="core1-input" disabled>
         </div>
 
         <div class="grid grid-cols-2 gap-4">

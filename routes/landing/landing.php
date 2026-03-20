@@ -11,6 +11,7 @@ Route::get('/', [LandingPageController::class, 'index'])->name('landing.index');
 
 Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 Route::get('/api/doctors/by-service-type', [DoctorController::class, 'getByServiceType'])->name('api.doctors.byServiceType');
+Route::get('/api/appointments/check-availability', [DoctorController::class, 'checkAvailability'])->name('api.appointments.checkAvailability');
 
 Route::post('/appointments/lookup', [AppointmentLookupController::class, 'lookup'])->name('appointments.lookup');
 Route::post('/appointments/track/{appointmentNo}/cancel', [AppointmentLookupController::class, 'cancel'])->name('appointments.cancel');

@@ -186,6 +186,7 @@
                         @if(auth()->user()->role !== 'doctor')
                             <th>Doctor</th>
                         @endif
+                        <th>Department</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th class="text-center">Actions</th>
@@ -213,6 +214,7 @@
                             @if(auth()->user()->role !== 'doctor')
                             <td>{{ $appointment->doctor->name ?? 'No Doctor Assigned' }}</td>
                             @endif
+                            <td>{{ $appointment->doctor->employee->department->name ?? 'N/A' }}</td>
                             <td>{{ $appointment->type }}</td>
 
                             @php

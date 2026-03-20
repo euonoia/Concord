@@ -35,6 +35,7 @@
     lookupUrl: '{{ route('appointments.lookup') }}',
     cancelUrlFormat: '{{ route('appointments.cancel', ':id') }}',
     doctorsUrl: '{{ route('api.doctors.byServiceType') }}',
+    checkAvailabilityUrl: '{{ route('api.appointments.checkAvailability') }}',
     csrfToken: '{{ csrf_token() }}'
 })" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
     :class="{ 'overflow-hidden': open }">
@@ -286,7 +287,7 @@
                                             <option value="" selected>Select available doctor (Optional)</option>
                                         </template>
                                         <template x-for="doctor in doctors" :key="doctor.id">
-                                            <option :value="doctor.name" :data-specialization="doctor.specialization" x-text="doctor.name + ' - ' + doctor.specialization"></option>
+                                            <option :value="doctor.id" :data-specialization="doctor.specialization" x-text="doctor.name + ' - ' + doctor.specialization"></option>
                                         </template>
                                     </select>
                                     <!-- Hidden field for specialization -->
@@ -306,15 +307,26 @@
 
                                 <!-- Date -->
                                 <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="date" name="appointment_date" id="appointment_date" value="{{ old('appointment_date') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date" required>
+                                    <input type="date" name="appointment_date" id="appointment_date" value="{{ old('appointment_date') }}" 
+                                        @change="fetchSlots()"
+                                        class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date" required>
                                     <label for="appointment_date" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Appointment Date</label>
                                     @error('appointment_date') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 <!-- Time -->
                                 <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="time" name="appointment_time" id="appointment_time" value="{{ old('appointment_time') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Time" required>
-                                    <label for="appointment_time" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Preferred Time</label>
+                                    <select name="appointment_time" id="appointment_time" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
+                                        <option value="" disabled selected x-text="slots.length === 0 ? 'Select Date & Doctor First' : 'Select Time Slot'"></option>
+                                        <template x-for="slot in slots" :key="slot.time">
+                                            <option :value="slot.time" :disabled="slot.status === 'booked'" x-text="slot.time + ' (' + slot.status + ')'"></option>
+                                        </template>
+                                    </select>
+                                    <label for="appointment_time" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">
+                                        <span x-show="!loadingSlots">Preferred Time</span>
+                                        <span x-show="loadingSlots" class="flex items-center gap-1">Checking...</span>
+                                    </label>
+                                    <p x-show="slotsMsg" x-text="slotsMsg" class="mt-1 text-xs text-blue-600"></p>
                                     @error('appointment_time') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
