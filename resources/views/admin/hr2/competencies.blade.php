@@ -15,9 +15,6 @@
             <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#createFormCollapse">
                 <i class="bi bi-plus-lg"></i> New Competency
             </button>
-            <a href="{{ route('admin.hr2.competency.verification.index') }}" class="btn btn-primary">
-                <i class="bi bi-check2-all"></i> Verify Completion
-            </a>
         </div>
     </div>
 
