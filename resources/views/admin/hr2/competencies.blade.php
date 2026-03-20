@@ -12,12 +12,9 @@
             <p class="text-muted small">Manage and define organizational skill standards</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#createFormCollapse">
+            <button class="btn btn-outline-primary" type="button" id="customToggleBtn">
                 <i class="bi bi-plus-lg"></i> New Competency
             </button>
-            <a href="{{ route('admin.hr2.competency.verification.index') }}" class="btn btn-primary">
-                <i class="bi bi-check2-all"></i> Verify Completion
-            </a>
         </div>
     </div>
 
@@ -44,8 +41,8 @@
         </div>
     @endif
 
-    {{-- CREATE COMPETENCY (Collapsible for cleaner UI) --}}
-    <div class="collapse {{ $errors->any() ? 'show' : '' }} mb-4" id="createFormCollapse">
+    {{-- CREATE COMPETENCY --}}
+    <div class="{{ $errors->any() ? '' : 'd-none' }} mb-4" id="formWrapper">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-primary text-white py-3">
                 <h6 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Define New Competency</h6>
@@ -81,14 +78,14 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-bold text-uppercase">Title</label>
-                            <input type="text" name="title" class="form-control border-2" placeholder="e.g. Critical Care Nursing" required>
+                            <input type="text" name="title" class="form-control border-2" placeholder="e.g. Critical Care" required>
                         </div>
                         <div class="col-md-10">
                             <label class="form-label small fw-bold text-uppercase">Description</label>
-                            <textarea name="description" class="form-control border-2" rows="1" placeholder="Brief summary of the competency..."></textarea>
+                            <textarea name="description" class="form-control border-2" rows="1"></textarea>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-success w-100 py-2 fw-bold">Save</button>
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Save</button>
                         </div>
                     </div>
                 </form>
@@ -96,13 +93,10 @@
         </div>
     </div>
 
-    {{-- FILTER & TABLE SECTION --}}
+    {{-- TABLE SECTION --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 border-bottom">
             <form method="GET" class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <h6 class="mb-0 me-3 fw-bold">Filter By:</h6>
-                </div>
                 <div class="col-md-3">
                     <select name="dept_code" id="deptFilter" class="form-select form-select-sm">
                         <option value="">All Departments</option>
@@ -132,8 +126,6 @@
                         <th class="ps-4">Competency</th>
                         <th>Hierarchy</th>
                         <th>Group</th>
-                        <th class="text-center">New Hires</th>
-                        <th>Created</th>
                         <th class="text-end pe-4">Action</th>
                     </tr>
                 </thead>
@@ -141,39 +133,26 @@
                 @forelse($competencies as $item)
                     <tr>
                         <td class="ps-4">
-                            <div class="d-flex align-items-center">
-                                <div class="badge bg-light text-primary border me-3 p-2">{{ $item->competency_code }}</div>
-                                <div>
-                                    <div class="fw-bold text-dark">{{ $item->name }}</div>
-                                    <div class="text-muted extra-small" style="font-size: 0.75rem;">{{ Str::limit($item->description, 50) }}</div>
-                                </div>
-                            </div>
+                             <div class="fw-bold text-dark">{{ $item->name }}</div>
+                             <small class="text-muted">{{ $item->competency_code }}</small>
                         </td>
                         <td>
-                            <div class="small"><strong>Dept:</strong> {{ $item->department_name ?? $item->department_id }}</div>
-                            <div class="text-muted small"><strong>Spec:</strong> {{ $item->specialization_name }}</div>
+                            <div class="small">{{ $item->department_name }}</div>
+                            <div class="text-muted extra-small">{{ $item->specialization_name }}</div>
                         </td>
-                        <td>
-                            <span class="badge rounded-pill bg-info text-dark fw-normal">{{ $item->competency_group }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="fw-bold">{{ $item->new_hire_count }}</span>
-                        </td>
-                        <td class="small text-muted">
-                            {{ \Carbon\Carbon::parse($item->created_at)->diffForHumans() }}
-                        </td>
+                        <td><span class="badge bg-info text-dark fw-normal">{{ $item->competency_group }}</span></td>
                         <td class="text-end pe-4">
                             <div class="dropdown">
                                 <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i> Edit</a></li>
+                                    <li><a class="dropdown-item" href="#">Edit</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form action="{{ route('competencies.destroy',$item->id) }}" method="POST" onsubmit="return confirm('Delete this competency?')">
+                                        <form action="{{ route('competencies.destroy', $item->id) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Delete</button>
+                                            <button class="dropdown-item text-danger">Delete</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -181,12 +160,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <img src="https://illustrations.popsy.co/gray/box-opened.svg" alt="Empty" style="width: 120px;" class="mb-3 opacity-50">
-                            <p class="text-muted">No competencies found matching your criteria.</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="4" class="text-center py-4 text-muted">No competencies found.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -196,42 +170,77 @@
 
 <style>
     .extra-small { font-size: 0.75rem; }
-    .table thead th { font-weight: 600; letter-spacing: 0.5px; border-bottom: none; }
     .card { border-radius: 12px; }
     .btn { border-radius: 8px; }
 </style>
 
 <script>
-// Existing JS logic remains the same - ensure your routes and selectors are correct
+/**
+ * Logic for Dynamic Dropdowns
+ */
 function loadSpecs(dept, target, selected = null){
     if(!dept){
         target.innerHTML = '<option value="">All Specializations</option>';
         return;
     }
+
     fetch(`/admin/hr2/get-specializations/${dept}`)
     .then(res => res.json())
     .then(data => {
+        console.log("Debug Data:", data); // Check your F12 console to see exactly what this looks like
         target.innerHTML = '<option value="">All Specializations</option>';
+        
         data.forEach(spec => {
             let opt = document.createElement('option');
-            opt.value = spec;
-            opt.textContent = spec;
-            if(selected && selected === spec) opt.selected = true;
+            
+            // Logic to handle both Strings and Objects
+            if (typeof spec === 'object' && spec !== null) {
+                // If it's an object, get the 'specialization_name' property
+                opt.value = spec.specialization_name; 
+                opt.textContent = spec.specialization_name;
+            } else {
+                // If it's just a string, use it directly
+                opt.value = spec;
+                opt.textContent = spec;
+            }
+            
+            // Match selection
+            if(selected && (selected == opt.value)) opt.selected = true;
+            
             target.appendChild(opt);
         });
+    })
+    .catch(err => {
+        console.error("Fetch Error:", err);
+        target.innerHTML = '<option value="">Error loading</option>';
     });
 }
 
 document.addEventListener("DOMContentLoaded", function(){
+    const btn = document.getElementById('customToggleBtn');
+    const wrapper = document.getElementById('formWrapper');
+
+    /**
+     * TOGGLE FIX: Uses e.stopPropagation() to ignore the 
+     * sidebar click-away listener in your app.blade.php
+     */
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation(); 
+        wrapper.classList.toggle('d-none');
+    });
+
     const deptFilter = document.getElementById("deptFilter");
     const specFilter = document.getElementById("specFilter");
     const deptCreate = document.getElementById("deptCreate");
     const specCreate = document.getElementById("specCreate");
 
-    @if($deptCode)
-        loadSpecs("{{ $deptCode }}", specFilter, "{{ $specialization }}");
+    // Initial load for filters if deptCode is set
+    @if(isset($deptCode) && $deptCode)
+        loadSpecs("{{ $deptCode }}", specFilter, "{{ $specialization ?? '' }}");
     @endif
 
+    // Event Listeners
     deptFilter.addEventListener("change", function(){ loadSpecs(this.value, specFilter); });
     deptCreate.addEventListener("change", function(){ loadSpecs(this.value, specCreate); });
 });

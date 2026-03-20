@@ -8,6 +8,7 @@ use App\Http\Controllers\admin\Logistics\Logistics1\AdminMaintenanceController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVehicleReservationController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminFleetController;
+use App\Http\Controllers\admin\Logistics\Logistics2\AdminDocumentTrackingLabOrdersController;
 
 
 // --- General Dashboard ---
@@ -53,4 +54,13 @@ Route::prefix('logistics2')->name('admin.logistics2.')->group(function () {
     });
 
     Route::get('/audit', [App\Http\Controllers\admin\Logistics\Logistics2\AdminAuditController::class, 'index'])->name('audit.index');
+    // --- Document Tracking (Lab Orders from CORE1) ---
+    Route::prefix('document')->name('document.')->group(function () {
+        Route::get('/', [AdminDocumentTrackingLabOrdersController::class, 'index'])->name('index');
+        Route::get('/result/{id}', [AdminDocumentTrackingLabOrdersController::class, 'viewResult'])->name('result');
+    });
+    Route::get('/diet-orders', [AdminDocumentTrackingLabOrdersController::class, 'dietIndex'])
+    ->name('document.diet');
+    Route::get('/surgery-orders', [AdminDocumentTrackingLabOrdersController::class, 'surgeryIndex'])
+    ->name('document.surgery');
 });
