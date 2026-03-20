@@ -17,8 +17,11 @@ class AvailableJob extends Model
     protected $fillable = [
         'title',
         'department',
+        'specialization_name',
+        'position_id',
         'description',
         'requirements',
+        'competency_id',
         'salary_range',
         'positions_available',
         'status',

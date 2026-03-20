@@ -7,6 +7,7 @@ use App\Models\Payroll;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr3\AttendanceLog;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PayrollController extends Controller
 {
@@ -39,6 +40,11 @@ class PayrollController extends Controller
             ->orderBy('clock_in', 'desc')
             ->get();
 
+        // Get compensation data with hours summary
+        $comp = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $employeeId)
+            ->where('month', now()->format('Y-m'))
+            ->first();
+
         $totalDays = $attendances->count();
         $totalHours = 0;
 
@@ -56,10 +62,16 @@ class PayrollController extends Controller
                     'clock_in' => $att->clock_in ? $att->clock_in->format('H:i') : null,
                     'clock_out' => $att->clock_out ? $att->clock_out->format('H:i') : null,
                     'hours' => $att->clock_in && $att->clock_out ? $att->clock_in->diffInHours($att->clock_out) : 0,
+                    'worked_hours' => $att->worked_hours ?? 0,
+                    'overtime_hours' => $att->overtime_hours ?? 0,
+                    'night_diff_hours' => $att->night_diff_hours ?? 0,
                 ];
             }),
             'total_days' => $totalDays,
             'total_hours' => $totalHours,
+            'worked_hours' => $comp->worked_hours ?? 0,
+            'overtime_hours' => $comp->overtime_hours ?? 0,
+            'night_diff_hours' => $comp->night_diff_hours ?? 0,
         ]);
     }
 
@@ -68,9 +80,22 @@ class PayrollController extends Controller
      */
     public function getEmployeePosition($employeeId)
     {
-        $employee = Employee::find($employeeId);
+        // Find employee by employee_id (custom ID like "EMP001"), not database id
+        $employee = Employee::where('employee_id', $employeeId)->first();
+        if (!$employee) {
+            return response()->json([
+                'position_id' => null,
+                'position_title' => 'N/A',
+                'salary' => 0
+            ]);
+        }
+
+        $position = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::find($employee->position_id);
+        
         return response()->json([
-            'position_id' => $employee ? $employee->position_id : null
+            'position_id' => $employee->position_id,
+            'position_title' => $position ? $position->position_title : 'N/A',
+            'salary' => $position ? $position->base_salary : 0
         ]);
     }
 
@@ -110,31 +135,48 @@ class PayrollController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'salary' => 'required|numeric',
-            'deductions' => 'nullable|numeric',
+            'employee_id' => 'required|exists:employees,employee_id',
+            'salary' => 'required|numeric|min:0',
+            'deductions' => 'nullable|numeric|min:0',
             'pay_date' => 'required|date',
+            'worked_hours' => 'nullable|numeric',
+            'overtime_hours' => 'nullable|numeric',
+            'night_diff_hours' => 'nullable|numeric',
         ]);
+
+        // Find employee by custom employee_id to get database id
+        $employee = Employee::where('employee_id', $validated['employee_id'])->first();
+        if (!$employee) {
+            return redirect()->back()->withError('Employee not found');
+        }
 
         $deductions = $validated['deductions'] ?? 0;
         $net_pay = $validated['salary'] - $deductions;
 
+        // Create Payroll record using employee database id
         Payroll::create([
-            'employee_id' => $validated['employee_id'],
+            'employee_id' => $employee->id,
             'salary' => $validated['salary'],
             'deductions' => $deductions,
             'net_pay' => $net_pay,
             'pay_date' => $validated['pay_date'],
         ]);
 
-        // Update DirectCompensation for this employee
-        $comp = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $validated['employee_id'])
-            ->orderByDesc('month')
-            ->first();
-        if ($comp) {
-            $comp->base_salary = $validated['salary'];
-            $comp->save();
-        }
+        // Update or create DirectCompensation record for this month
+        // Use the custom employee_id for the FK constraint
+        $month = Carbon::parse($validated['pay_date'])->format('Y-m');
+        \App\Models\admin\Hr\hr4\DirectCompensation::updateOrCreate(
+            [
+                'employee_id' => $validated['employee_id'],
+                'month' => $month,
+            ],
+            [
+                'base_salary' => $validated['salary'],
+                'worked_hours' => $validated['worked_hours'] ?? 0,
+                'overtime_hours' => $validated['overtime_hours'] ?? 0,
+                'night_diff_hours' => $validated['night_diff_hours'] ?? 0,
+            ]
+        );
 
         return redirect()->route('hr4.payroll.index')->with('success', 'Payroll created and compensation updated.');
     }

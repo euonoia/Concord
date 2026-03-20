@@ -129,6 +129,12 @@
             Route::get('/job-postings/create', [AdminDirectCompensationController::class, 'createJobPosting'])
                 ->name('hr4.job_postings.create');
 
+            Route::get('/job-postings/{positionId}/specializations', [AdminDirectCompensationController::class, 'getSpecializationsByPosition'])
+                ->name('hr4.job_postings.specializations');
+
+            Route::get('/job-postings/competencies', [AdminDirectCompensationController::class, 'getCompetenciesBySpecializationAndPosition'])
+                ->name('hr4.job_postings.competencies');
+
             Route::post('/job-postings', [AdminDirectCompensationController::class, 'storeJobPosting'])
                 ->name('hr4.job_postings.store');
 

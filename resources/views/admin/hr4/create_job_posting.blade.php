@@ -39,7 +39,7 @@
             <div>
                 <label for="specialization_name" class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
                 <select name="specialization_name" id="specialization_name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
-                    <option value="">Select Specialization</option>
+                    <option value="">Select Position First</option>
                     @foreach($specializations as $spec)
                         <option value="{{ $spec->specialization_name }}" {{ old('specialization_name') == $spec->specialization_name ? 'selected' : '' }}>
                             {{ $spec->specialization_name }}
@@ -64,19 +64,83 @@
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
+
+            <script>
+            document.getElementById('position_id').addEventListener('change', function() {
+                const positionId = this.value;
+                const specSelect = document.getElementById('specialization_name');
+                
+                if (!positionId) {
+                    specSelect.innerHTML = '<option value="">Select Position First</option>';
+                    return;
+                }
+
+                specSelect.innerHTML = '<option value="">Loading specializations...</option>';
+
+                fetch(`/admin/hr4/job-postings/${positionId}/specializations`)
+                    .then(res => res.json())
+                    .then(data => {
+                        specSelect.innerHTML = '<option value="">Select Specialization</option>';
+                        if (data.length === 0) {
+                            specSelect.innerHTML += '<option value="" disabled>No specializations available</option>';
+                        } else {
+                            data.forEach(spec => {
+                                const opt = document.createElement('option');
+                                opt.value = spec.specialization_name;
+                                opt.textContent = spec.specialization_name;
+                                specSelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error loading specializations:', err);
+                        specSelect.innerHTML = '<option value="">Error loading specializations</option>';
+                    });
+            });
+
+            document.getElementById('specialization_name').addEventListener('change', function() {
+                const specName = this.value;
+                const positionId = document.getElementById('position_id').value;
+                const competencySelect = document.getElementById('competency_code');
+
+                if (!specName || !positionId) {
+                    competencySelect.innerHTML = '<option value="">Select Specialization & Position First</option>';
+                    competencySelect.disabled = true;
+                    return;
+                }
+
+                competencySelect.innerHTML = '<option value="">Loading competencies...</option>';
+                competencySelect.disabled = false;
+                
+                fetch(`/admin/hr4/job-postings/competencies?specialization=${encodeURIComponent(specName)}&position_id=${positionId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        competencySelect.innerHTML = '<option value="">Select Competency</option>';
+                        if (data.length === 0) {
+                            competencySelect.innerHTML += '<option value="" disabled>No competencies available</option>';
+                        } else {
+                            data.forEach(comp => {
+                                const opt = document.createElement('option');
+                                opt.value = comp.competency_code;
+                                opt.textContent = comp.competency_code + ' - ' + comp.description;
+                                competencySelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error loading competencies:', err);
+                        competencySelect.innerHTML = '<option value="">Error loading competencies</option>';
+                    });
+            });
+            </script>
+
             <div>
-                <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-2">Base Salary</label>
-                <input type="text" name="salary_range" id="salary_range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" value="{{ old('salary_range') }}" readonly>
+                <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-2">Salary Range</label>
+                <input type="text" name="salary_range" id="salary_range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="{{ old('salary_range') }}" placeholder="e.g., $50,000 - $70,000">
                 @error('salary_range')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            <script>
-            document.getElementById('position_id').addEventListener('change', function() {
-                var selected = this.options[this.selectedIndex];
-                document.getElementById('salary_range').value = selected.getAttribute('data-salary');
-            });
-            </script>
 
             <div>
                 <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
@@ -87,9 +151,11 @@
             </div>
 
             <div>
-                <label for="requirements" class="block text-sm font-medium text-gray-700 mb-2">Requirements</label>
-                <textarea name="requirements" id="requirements" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="List the job requirements..." required>{{ old('requirements') }}</textarea>
-                @error('requirements')
+                <label for="competency_code" class="block text-sm font-medium text-gray-700 mb-2">Requirements (Competency)</label>
+                <select name="competency_code" id="competency_code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
+                    <option value="">Select Specialization & Position First</option>
+                </select>
+                @error('competency_code')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>

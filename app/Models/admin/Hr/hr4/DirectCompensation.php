@@ -20,6 +20,9 @@ class DirectCompensation extends Model
         'shift_allowance',
         'overtime_pay',
         'bonus',
+        'worked_hours',
+        'overtime_hours',
+        'night_diff_hours',
     ];
 
     protected $casts = [
@@ -27,6 +30,9 @@ class DirectCompensation extends Model
         'shift_allowance' => 'decimal:2',
         'overtime_pay' => 'decimal:2',
         'bonus' => 'decimal:2',
+        'worked_hours' => 'decimal:2',
+        'overtime_hours' => 'decimal:2',
+        'night_diff_hours' => 'decimal:2',
     ];
 
     // Relationship to employee

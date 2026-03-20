@@ -39,14 +39,13 @@ class AdminDirectCompensationController extends Controller
             ->orderBy('employee_id')
             ->get();
 
-            // Alert logic: find records with base_salary = 0
-            $zeroSalaryCount = DirectCompensation::where('month', $month)
-                ->where('base_salary', 0)
-                ->count();
-            $zeroSalaryAlert = $zeroSalaryCount > 0 ? "There are $zeroSalaryCount employees with base_salary = 0. Please assign salaries." : null;
+        // Alert logic: find records with base_salary = 0
+        $zeroSalaryCount = DirectCompensation::where('month', $month)
+            ->where('base_salary', 0)
+            ->count();
+        $zeroSalaryAlert = $zeroSalaryCount > 0 ? "There are $zeroSalaryCount employees with base_salary = 0. Please assign salaries." : null;
 
-        return view('admin.hr4.compensations', compact('compensations', 'month'));
-            return view('admin.hr4.compensations', compact('compensations', 'zeroSalaryAlert'));
+        return view('admin.hr4.compensations', compact('compensations', 'month', 'zeroSalaryAlert'));
     }
 
     /**
@@ -54,17 +53,25 @@ class AdminDirectCompensationController extends Controller
      */
     public function generate(Request $request)
     {
-        $this->authorizeHrAdmin(); 
+        $this->authorizeHrAdmin();
 
-        $month = $request->input('month', date('Y-m'));
+        // Ensure month is always set to a proper format
+        $month = $request->input('month') ?? now()->format('Y-m');
+        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $month = now()->format('Y-m');
+        }
+
         $employees = Employee::all();
 
         foreach ($employees as $emp) {
             $position = DepartmentPositionTitle::find($emp->position_id);
 
             $base_salary = $position->base_salary ?? 0;
-            $shift_allowance = Shift::calculateMonthlyShiftAllowance($emp->employee_id, $month);
+            $shift_allowance = Shift::calculateMonthlyShiftAllowance((int)$emp->employee_id, $month);
             $bonus = 0;
+
+            // Calculate attendance hours for the month
+            $hoursSummary = \App\Helpers\AttendanceHelper::getMonthlyHoursSummary((int)$emp->employee_id, $month);
 
             // Training reward is now calculated dynamically in the model
             // based on latest HR1 training performance data
@@ -75,6 +82,9 @@ class AdminDirectCompensationController extends Controller
                     'base_salary' => $base_salary,
                     'shift_allowance' => $shift_allowance,
                     'bonus' => $bonus,
+                    'worked_hours' => $hoursSummary['worked_hours'],
+                    'overtime_hours' => $hoursSummary['overtime_hours'],
+                    'night_diff_hours' => $hoursSummary['night_diff_hours'],
                 ]
             );
         }
@@ -83,15 +93,47 @@ class AdminDirectCompensationController extends Controller
     }
 
     /**
-     * Calculate training reward based on HR1 performance data
-     * Note: Training rewards are now calculated dynamically in the DirectCompensation model
+     * Calculate total attendance hours from attendance logs for the month
      */
-    private function calculateTrainingReward($employee_id, $month)
+    private function calculateAttendanceHours($employeeId, $month)
     {
-        // This method is kept for backward compatibility but training rewards
-        // are now calculated dynamically in the DirectCompensation model
-        // based on the latest HR1 training performance data
-        return 0;
+        $attendances = \App\Models\admin\Hr\hr3\AttendanceLog::where('employee_id', $employeeId)
+            ->whereMonth('clock_in', date('m', strtotime($month)))
+            ->whereYear('clock_in', date('Y', strtotime($month)))
+            ->get();
+
+        $totalWorked = 0;
+        $totalOvertime = 0;
+        $totalND = 0;
+
+        foreach ($attendances as $att) {
+            if ($att->clock_in && $att->clock_out) {
+                // Calculate hours
+                $diffMinutes = $att->clock_in->diffInMinutes($att->clock_out);
+                $workedHours = $diffMinutes / 60;
+
+                $totalWorked += $workedHours;
+                $totalOvertime += max(0, $workedHours - 8);
+
+                // Calculate night differential hours (10 PM - 6 AM)
+                $clockIn = $att->clock_in;
+                $clockOut = $att->clock_out;
+                $ndHours = 0;
+                $current = $clockIn->copy();
+
+                while ($current < $clockOut) {
+                    $hour = $current->hour;
+                    if ($hour >= 22 || $hour < 6) {
+                        $ndHours += 1;
+                    }
+                    $current->addHour();
+                }
+
+                $totalND += $ndHours;
+            }
+        }
+
+        return [round($totalWorked, 2), round($totalOvertime, 2), round($totalND, 2)];
     }
 
     /**
@@ -205,7 +247,59 @@ class AdminDirectCompensationController extends Controller
         $departments = DB::table('department_specializations_hr2')->orderBy('dept_code')->get();
         $positions = DB::table('department_position_titles_hr2')->where('is_active', 1)->orderBy('position_title')->get();
         $specializations = DB::table('department_specializations_hr2')->orderBy('specialization_name')->get();
+        
         return view('admin.hr4.create_job_posting', compact('departments', 'positions', 'specializations'));
+    }
+
+    /**
+     * Get competencies by specialization and position
+     */
+    public function getCompetenciesBySpecializationAndPosition(Request $request)
+    {
+        $this->authorizeHrAdmin();
+
+        $specialization = $request->query('specialization');
+        $positionId = $request->query('position_id');
+
+        if (!$specialization || !$positionId) {
+            return response()->json([]);
+        }
+
+        try {
+            $competencies = DB::table('competency_hr2')
+                ->where('specialization_name', $specialization)
+                ->where('position_id', $positionId)
+                ->orderBy('competency_code')
+                ->get();
+
+            return response()->json($competencies);
+        } catch (\Exception $e) {
+            return response()->json([]);
+        }
+    }
+
+    /**
+     * Get specializations by position
+     */
+    public function getSpecializationsByPosition($positionId)
+    {
+        $this->authorizeHrAdmin();
+
+        $position = DB::table('department_position_titles_hr2')
+            ->where('id', $positionId)
+            ->first();
+
+        if (!$position) {
+            return response()->json([], 404);
+        }
+
+        $specializations = DB::table('department_specializations_hr2')
+            ->where('dept_code', $position->department_id)
+            ->where('is_active', 1)
+            ->orderBy('specialization_name')
+            ->get(['specialization_name']);
+
+        return response()->json($specializations);
     }
 
     /**
@@ -220,12 +314,22 @@ class AdminDirectCompensationController extends Controller
             'specialization_name' => 'required|string|max:255',
             'position_id' => 'required|integer',
             'description' => 'required|string',
-            'requirements' => 'required|string',
+            'competency_code' => 'nullable|string',
             'salary_range' => 'nullable|string|max:255',
             'positions_available' => 'required|integer|min:1',
         ]);
 
         $position = DB::table('department_position_titles_hr2')->where('id', $request->position_id)->first();
+        
+        // Safely fetch competency
+        $competency = null;
+        try {
+            if ($request->competency_code) {
+                $competency = DB::table('competency_hr2')->where('competency_code', $request->competency_code)->first();
+            }
+        } catch (\Exception $e) {
+            // Table doesn't exist, continue without it
+        }
 
         AvailableJob::create([
             'department' => $request->dept_code,
@@ -233,7 +337,8 @@ class AdminDirectCompensationController extends Controller
             'position_id' => $request->position_id,
             'title' => $position ? $position->position_title : '',
             'description' => $request->description,
-            'requirements' => $request->requirements,
+            'requirements' => $competency ? $competency->description : '',
+            'competency_id' => $request->competency_code,
             'salary_range' => $request->salary_range,
             'positions_available' => $request->positions_available,
             'posted_by' => Auth::id(),
