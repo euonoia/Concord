@@ -90,6 +90,7 @@
                 'update' => 'admin.hr1.recognition.update',
                 'destroy' => 'admin.hr1.recognition.destroy',
             ]);
+            Route::post('recognition/{id}/sync-hr4', [AdminSocialRecognitionController::class, 'syncToHr4'])->name('admin.hr1.recognition.syncHr4');
         });
 
         // --- HR2 Department ---

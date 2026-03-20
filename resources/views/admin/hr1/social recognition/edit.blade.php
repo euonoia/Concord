@@ -61,6 +61,18 @@
                         @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Recognize Employee</label>
+                        <select name="employee_id" class="form-select @error('employee_id') is-invalid @enderror" required>
+                            <option value="">Select Employee</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->employee_id }}" {{ old('employee_id', $post->employee_id) == $employee->employee_id ? 'selected' : '' }}>
+                                    [{{ $employee->employee_id }}] {{ $employee->full_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('employee_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Content</label>
                         <textarea name="content" class="form-control @error('content') is-invalid @enderror" rows="8" required>{{ old('content', $post->content) }}</textarea>
                         @error('content') <div class="invalid-feedback">{{ $message }}</div> @enderror

@@ -144,9 +144,8 @@
                 <thead>
                     <tr>
                         <th>Post Info</th>
+                        <th>Recognized</th>
                         <th>Created By</th>
-                        <th>Engagement</th>
-                        <th>Date</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -157,53 +156,53 @@
                             <div class="d-flex align-items-center">
                                 @if($post->image_path)
                                     <div class="position-relative">
-                                        <img src="{{ asset('storage/' . $post->image_path) }}" class="rounded-3 shadow-sm border me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                        <img src="{{ asset('storage/' . $post->image_path) }}" class="rounded-3 shadow-sm border me-3" style="width: 50px; height: 50px; object-fit: cover;">
                                     </div>
                                 @else
-                                    <div class="rounded-3 me-3 bg-light d-flex align-items-center justify-content-center border" style="width: 60px; height: 60px;">
-                                        <i class="bi bi-card-image text-muted fs-4"></i>
+                                    <div class="rounded-3 me-3 bg-light d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-card-image text-muted fs-5"></i>
                                     </div>
                                 @endif
                                 <div>
-                                    <div class="fw-bold text-dark mb-1">{{ $post->title }}</div>
-                                    <div class="text-muted" style="font-size: 0.75rem; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $post->content }}</div>
+                                    <div class="fw-bold text-dark mb-0" style="font-size: 0.85rem;">{{ $post->title }}</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $post->created_at->format('M d, Y') }}</div>
                                 </div>
                             </div>
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
-                                    <i class="bi bi-person-fill"></i>
+                                <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                    <i class="bi bi-star-fill" style="font-size: 0.8rem;"></i>
                                 </div>
-                                <span class="small fw-bold text-dark">{{ $post->admin->username ?? 'Admin' }}</span>
+                                <div>
+                                    <div class="fw-bold text-dark" style="font-size: 0.85rem;">{{ $post->employee->full_name ?? 'N/A' }}</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">{{ $post->employee_id ?? 'No ID' }}</div>
+                                </div>
                             </div>
                         </td>
                         <td>
-                            <div class="d-flex gap-3 align-items-center">
-                                <span class="badge bg-danger bg-opacity-10 text-danger border-0 px-2 py-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-heart-fill me-1"></i>{{ $post->likes_count }}
-                                </span>
-                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-2 py-1" style="font-size: 0.7rem;">
-                                    <i class="bi bi-chat-dots-fill me-1"></i>{{ $post->comments_count }}
-                                </span>
+                            <div class="d-flex align-items-center">
+                                <span class="small fw-bold text-muted">{{ $post->admin->username ?? 'Admin' }}</span>
                             </div>
-                        </td>
-                        <td>
-                            <div class="text-dark small fw-semibold">{{ $post->created_at->format('M d, Y') }}</div>
-                            <div class="text-muted" style="font-size: 0.65rem;">{{ $post->created_at->diffForHumans() }}</div>
                         </td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-2">
+                                <form action="{{ route('admin.hr1.recognition.syncHr4', $post->id) }}" method="POST" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-primary border-dashed fw-bold py-1 px-3 rounded-pill" style="font-size: 0.7rem; border-style: dashed !important;">
+                                        <i class="bi bi-cash-stack me-1"></i> Send to HR4
+                                    </button>
+                                </form>
                                 <a href="{{ route('admin.hr1.recognition.edit', $post->id) }}" 
                                    class="btn btn-sm btn-light border shadow-sm rounded-2 py-1 px-2 text-primary" 
                                    title="Edit Recognition">
-                                    <i class="bi bi-pencil-square" style="font-size: 0.9rem;"></i>
+                                    <i class="bi bi-pencil-square" style="font-size: 0.8rem;"></i>
                                 </a>
                                 <form action="{{ route('admin.hr1.recognition.destroy', $post->id) }}" method="POST" onsubmit="return confirm('Delete this recognition post?');" class="m-0">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-light border shadow-sm rounded-2 py-1 px-2 text-danger" title="Delete Recognition">
-                                        <i class="bi bi-trash3-fill" style="font-size: 0.9rem;"></i>
+                                        <i class="bi bi-trash3-fill" style="font-size: 0.8rem;"></i>
                                     </button>
                                 </form>
                             </div>

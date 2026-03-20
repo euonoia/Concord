@@ -60,6 +60,18 @@
                         @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Recognize Employee</label>
+                        <select name="employee_id" class="form-select @error('employee_id') is-invalid @enderror" required>
+                            <option value="">Select Employee</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->employee_id }}" {{ old('employee_id') == $employee->employee_id ? 'selected' : '' }}>
+                                    [{{ $employee->employee_id }}] {{ $employee->full_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('employee_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Content</label>
                         <textarea name="content" class="form-control @error('content') is-invalid @enderror" rows="8" placeholder="Write your appreciation message here..." required>{{ old('content') }}</textarea>
                         @error('content') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -75,6 +87,17 @@
                         </div>
                         @error('image') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check form-switch p-3 border rounded-3 bg-white shadow-sm">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="award_bonus" id="award_bonus" value="1">
+                            <label class="form-check-label fw-bold text-primary" for="award_bonus">
+                                <i class="bi bi-cash-stack me-1"></i> Award Recognition Bonus
+                            </label>
+                            <p class="small text-muted mb-0 mt-1" style="font-size: 0.7rem;">Sends 500.00 bonus to HR4 Compensation Planning.</p>
+                        </div>
+                    </div>
+
                     <div class="mt-4 pt-4 border-top">
                         <button type="submit" class="btn btn-primary w-100 mb-2 fw-bold py-2 shadow-sm" style="border-radius: 8px;">
                             <i class="bi bi-check-circle-fill me-2"></i>Publish Recognition

@@ -13,6 +13,7 @@ class RecognitionPost extends Model
 
     protected $fillable = [
         'admin_id',
+        'employee_id',
         'title',
         'content',
         'image_path',
@@ -33,5 +34,10 @@ class RecognitionPost extends Model
     public function admin()
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }
