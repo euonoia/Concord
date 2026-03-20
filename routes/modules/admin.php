@@ -24,6 +24,7 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminLeaveManagementController;
         use App\Http\Controllers\admin\Hr\hr3\AdminClaimsController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminShiftRequestController;
         
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
@@ -187,6 +188,15 @@
             Route::get('/claims', [AdminClaimsController::class, 'index'])->name('admin.hr3.claims.index');
             Route::post('/claims/{claim_id}/approve', [AdminClaimsController::class, 'approve'])->name('admin.hr3.claims.approve');
             Route::post('/claims/{claim_id}/reject', [AdminClaimsController::class, 'reject'])->name('admin.hr3.claims.reject');
+
+            Route::get('/shift-requests', [AdminShiftRequestController::class, 'index'])
+                ->name('admin.hr3.shift_requests.index');
+
+            Route::post('/shift-requests/{id}/approve', [AdminShiftRequestController::class, 'approve'])
+                ->name('admin.hr3.shift_requests.approve');
+
+            Route::post('/shift-requests/{id}/reject', [AdminShiftRequestController::class, 'reject'])
+                ->name('admin.hr3.shift_requests.reject');
         });
 
         // --- END OF HR3 Department ---

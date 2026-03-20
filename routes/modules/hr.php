@@ -45,6 +45,8 @@ Route::prefix('learning')->middleware(['auth'])->group(function () {
         ->name('user.learning.materials.show');
 
 });
+Route::post('/user/request-shift/{id}', [UserEssController::class, 'requestShift'])
+    ->name('user.shift.request');
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---
