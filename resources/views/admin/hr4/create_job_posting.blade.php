@@ -3,42 +3,276 @@
 @section('title', 'Add Available Job - HR4 Admin')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        <div class="mb-6">
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">Add Available Job</h2>
-            <p class="text-gray-600">Fill in the details to add a new available job for HR1 to fetch.</p>
-        </div>
 
-        <form method="POST" action="{{ route('hr4.job_postings.store') }}" class="space-y-6">
-                        @if ($errors->any())
-                            <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-                                <ul>
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+    :root {
+        --c-bg:          #eef3f7;
+        --c-surface:     #ffffff;
+        --c-border:      #d4e3ee;
+        --c-teal:        #0a7c6e;
+        --c-teal-light:  #e4f4f1;
+        --c-teal-mid:    #b8e0da;
+        --c-blue:        #1a5f8a;
+        --c-blue-light:  #e8f2f9;
+        --c-red:         #be123c;
+        --c-red-light:   #fce7ef;
+        --c-red-mid:     #f4b8c8;
+        --c-text:        #1b2b3a;
+        --c-muted:       #5c798e;
+        --c-line:        #dde8f0;
+        --shadow-sm:     0 1px 4px rgba(10,50,80,.07);
+    }
+
+    .ajc * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+
+    .ajc {
+        background: var(--c-bg);
+        min-height: 100vh;
+        padding: 2.5rem 2rem;
+    }
+
+    /* ── Header ── */
+    .ajc-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1.5px solid var(--c-line);
+        animation: fadeDown .45s ease both;
+    }
+
+    .ajc-header h1 {
+        font-family: 'Instrument Serif', serif;
+        font-size: 2rem;
+        color: var(--c-text);
+        margin: 0 0 .25rem;
+        line-height: 1.1;
+    }
+
+    .ajc-header h1 em { color: var(--c-teal); font-style: italic; }
+    .ajc-header p { font-size: .88rem; color: var(--c-muted); margin: 0; }
+
+    /* ── Card ── */
+    .ajc-card {
+        max-width: 720px;
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
+        border-radius: 14px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        animation: fadeUp .5s .1s ease both;
+    }
+
+    .card-section-title {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--c-muted);
+        margin: 1.75rem 0 1rem;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid var(--c-line);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .card-section-title:first-child { margin-top: 0; }
+    .card-section-title i { color: var(--c-teal); font-size: .85rem; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    .form-label {
+        display: block;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--c-text);
+        margin-bottom: .4rem;
+    }
+
+    .form-label .req { color: var(--c-red); margin-left: .2rem; }
+
+    .form-control {
+        width: 100%;
+        padding: .6rem .9rem;
+        border: 1.5px solid var(--c-border);
+        border-radius: 9px;
+        font-size: .85rem;
+        color: var(--c-text);
+        background: var(--c-surface);
+        outline: none;
+        font-family: 'DM Sans', sans-serif;
+        transition: border-color .2s ease, box-shadow .2s ease;
+        appearance: auto;
+    }
+
+    .form-control:focus {
+        border-color: var(--c-teal);
+        box-shadow: 0 0 0 3px rgba(10,124,110,.1);
+    }
+
+    .form-control:disabled {
+        background: var(--c-bg);
+        color: var(--c-muted);
+        cursor: not-allowed;
+    }
+
+    textarea.form-control { resize: vertical; min-height: 100px; }
+
+    .form-error {
+        font-size: .75rem;
+        color: var(--c-red);
+        margin-top: .35rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    /* ── Two-col grid ── */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* ── Error alert ── */
+    .error-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .9rem 1.2rem;
+        background: var(--c-red-light);
+        border: 1px solid var(--c-red-mid);
+        border-left: 4px solid var(--c-red);
+        border-radius: 10px;
+        color: var(--c-red);
+        font-size: .83rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .error-alert ul { margin: 0; padding-left: 1rem; }
+    .error-alert li { margin-bottom: .2rem; }
+
+    /* ── Buttons ── */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .75rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--c-line);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        font-size: .85rem;
+        font-weight: 600;
+        padding: .6rem 1.4rem;
+        border-radius: 9px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: 'DM Sans', sans-serif;
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); text-decoration: none; }
+
+    .btn-teal {
+        background: var(--c-teal);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(10,124,110,.25);
+    }
+
+    .btn-teal:hover {
+        background: #0b9483;
+        box-shadow: 0 4px 14px rgba(10,124,110,.35);
+        color: #fff;
+    }
+
+    .btn-cancel {
+        background: var(--c-bg);
+        color: var(--c-muted);
+        border: 1.5px solid var(--c-border);
+    }
+
+    .btn-cancel:hover { background: #dce6ed; color: var(--c-text); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+</style>
+
+<div class="ajc">
+
+    <div class="ajc-header">
+        <h1>Add <em>Available Job</em></h1>
+        <p>Fill in the details to post a new job for HR1 to fetch.</p>
+    </div>
+
+    <div class="ajc-card">
+
+        {{-- Errors --}}
+        @if($errors->any())
+        <div class="error-alert">
+            <i class="bi bi-exclamation-circle-fill" style="margin-top:.1rem; flex-shrink:0"></i>
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('hr4.job_postings.store') }}">
             @csrf
 
-            <div>
-                <label for="dept_code" class="block text-sm font-medium text-gray-700 mb-2">Department Code</label>
-                <select name="dept_code" id="dept_code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
-                    <option value="">Select Department Code</option>
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->dept_code }}" {{ old('dept_code') == $dept->dept_code ? 'selected' : '' }}>
-                            {{ $dept->dept_code }} - {{ $dept->specialization_name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('dept_code')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            {{-- Department & Position --}}
+            <div class="card-section-title">
+                <i class="bi bi-building"></i> Department & Position
             </div>
-            <div>
-                <label for="specialization_name" class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
-                <select name="specialization_name" id="specialization_name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="dept_code">Department Code <span class="req">*</span></label>
+                    <select name="dept_code" id="dept_code" class="form-control" required>
+                        <option value="">Select Department</option>
+                        @foreach($departments as $dept)
+                            <option value="{{ $dept->dept_code }}" {{ old('dept_code') == $dept->dept_code ? 'selected' : '' }}>
+                                {{ $dept->dept_code }} — {{ $dept->specialization_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('dept_code')
+                        <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="position_id">Position <span class="req">*</span></label>
+                    <select name="position_id" id="position_id" class="form-control" required>
+                        <option value="">Select Position</option>
+                        @foreach($positions as $pos)
+                            <option value="{{ $pos->id }}" data-salary="{{ $pos->base_salary }}" {{ old('position_id') == $pos->id ? 'selected' : '' }}>
+                                {{ $pos->position_title }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('position_id')
+                        <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="specialization_name">Specialization <span class="req">*</span></label>
+                <select name="specialization_name" id="specialization_name" class="form-control" required>
                     <option value="">Select Position First</option>
                     @foreach($specializations as $spec)
                         <option value="{{ $spec->specialization_name }}" {{ old('specialization_name') == $spec->specialization_name ? 'selected' : '' }}>
@@ -47,145 +281,135 @@
                     @endforeach
                 </select>
                 @error('specialization_name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-            <div>
-                <label for="position_id" class="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                <select name="position_id" id="position_id" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" required>
-                    <option value="">Select Position</option>
-                    @foreach($positions as $pos)
-                        <option value="{{ $pos->id }}" data-salary="{{ $pos->base_salary }}" {{ old('position_id') == $pos->id ? 'selected' : '' }}>
-                            {{ $pos->position_title }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('position_id')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                 @enderror
             </div>
 
-            <script>
-            document.getElementById('position_id').addEventListener('change', function() {
-                const positionId = this.value;
-                const specSelect = document.getElementById('specialization_name');
-                
-                if (!positionId) {
-                    specSelect.innerHTML = '<option value="">Select Position First</option>';
-                    return;
-                }
-
-                specSelect.innerHTML = '<option value="">Loading specializations...</option>';
-
-                fetch(`/admin/hr4/job-postings/${positionId}/specializations`)
-                    .then(res => res.json())
-                    .then(data => {
-                        specSelect.innerHTML = '<option value="">Select Specialization</option>';
-                        if (data.length === 0) {
-                            specSelect.innerHTML += '<option value="" disabled>No specializations available</option>';
-                        } else {
-                            data.forEach(spec => {
-                                const opt = document.createElement('option');
-                                opt.value = spec.specialization_name;
-                                opt.textContent = spec.specialization_name;
-                                specSelect.appendChild(opt);
-                            });
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error loading specializations:', err);
-                        specSelect.innerHTML = '<option value="">Error loading specializations</option>';
-                    });
-            });
-
-            document.getElementById('specialization_name').addEventListener('change', function() {
-                const specName = this.value;
-                const positionId = document.getElementById('position_id').value;
-                const competencySelect = document.getElementById('competency_code');
-
-                if (!specName || !positionId) {
-                    competencySelect.innerHTML = '<option value="">Select Specialization & Position First</option>';
-                    competencySelect.disabled = true;
-                    return;
-                }
-
-                competencySelect.innerHTML = '<option value="">Loading competencies...</option>';
-                competencySelect.disabled = false;
-                
-                fetch(`/admin/hr4/job-postings/competencies?specialization=${encodeURIComponent(specName)}&position_id=${positionId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        competencySelect.innerHTML = '<option value="">Select Competency</option>';
-                        if (data.length === 0) {
-                            competencySelect.innerHTML += '<option value="" disabled>No competencies available</option>';
-                        } else {
-                            data.forEach(comp => {
-                                const opt = document.createElement('option');
-                                opt.value = comp.competency_code;
-                                opt.textContent = comp.competency_code + ' - ' + comp.description;
-                                competencySelect.appendChild(opt);
-                            });
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error loading competencies:', err);
-                        competencySelect.innerHTML = '<option value="">Error loading competencies</option>';
-                    });
-            });
-            </script>
-
-            <div>
-                <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-2">Salary Range</label>
-                <input type="text" name="salary_range" id="salary_range" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="{{ old('salary_range') }}" placeholder="e.g., $50,000 - $70,000">
-                @error('salary_range')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            {{-- Job Details --}}
+            <div class="card-section-title">
+                <i class="bi bi-card-text"></i> Job Details
             </div>
 
-            <div>
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea name="description" id="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the job responsibilities..." required>{{ old('description') }}</textarea>
+            <div class="form-group">
+                <label class="form-label" for="description">Description <span class="req">*</span></label>
+                <textarea name="description" id="description" class="form-control" placeholder="Describe the job responsibilities…" required>{{ old('description') }}</textarea>
                 @error('description')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                 @enderror
             </div>
 
-            <div>
-                <label for="competency_code" class="block text-sm font-medium text-gray-700 mb-2">Requirements (Competency)</label>
-                <select name="competency_code" id="competency_code" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
+            <div class="form-group">
+                <label class="form-label" for="competency_code">Requirements (Competency)</label>
+                <select name="competency_code" id="competency_code" class="form-control" disabled>
                     <option value="">Select Specialization & Position First</option>
                 </select>
                 @error('competency_code')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                 @enderror
             </div>
 
-            <div>
-                <label for="salary_range" class="block text-sm font-medium text-gray-700 mb-2">Salary Range</label>
-                <input type="text" name="salary_range" id="salary_range" value="{{ old('salary_range') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., $50,000 - $70,000">
-                @error('salary_range')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            {{-- Compensation & Slots --}}
+            <div class="card-section-title">
+                <i class="bi bi-cash-stack"></i> Compensation & Slots
             </div>
 
-            <div>
-                <label for="positions_available" class="block text-sm font-medium text-gray-700 mb-2">Number of Positions Available</label>
-                <input type="number" name="positions_available" id="positions_available" value="{{ old('positions_available', 1) }}" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter number of available positions" required>
-                @error('positions_available')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="salary_range">Salary Range</label>
+                    <input type="text" name="salary_range" id="salary_range" class="form-control"
+                           value="{{ old('salary_range') }}" placeholder="e.g., ₱30,000 – ₱50,000">
+                    @error('salary_range')
+                        <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="positions_available">Positions Available <span class="req">*</span></label>
+                    <input type="number" name="positions_available" id="positions_available"
+                           class="form-control" value="{{ old('positions_available', 1) }}" min="1" required>
+                    @error('positions_available')
+                        <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            <div class="flex justify-end space-x-4">
-                <a href="{{ route('hr4.job_postings.index') }}" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Cancel
-                </a>
-                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center">
-                    <i class="bi bi-plus-circle mr-2"></i>
-                    Add Available Job
+            {{-- Actions --}}
+            <div class="form-actions">
+                <a href="{{ route('hr4.job_postings.index') }}" class="btn btn-cancel">Cancel</a>
+                <button type="submit" class="btn btn-teal">
+                    <i class="bi bi-plus-circle"></i> Add Available Job
                 </button>
             </div>
+
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('position_id').addEventListener('change', function () {
+    const positionId  = this.value;
+    const specSelect  = document.getElementById('specialization_name');
+
+    if (!positionId) {
+        specSelect.innerHTML = '<option value="">Select Position First</option>';
+        return;
+    }
+
+    specSelect.innerHTML = '<option value="">Loading…</option>';
+
+    fetch(`/admin/hr4/job-postings/${positionId}/specializations`)
+        .then(res => res.json())
+        .then(data => {
+            specSelect.innerHTML = '<option value="">Select Specialization</option>';
+            if (data.length === 0) {
+                specSelect.innerHTML += '<option value="" disabled>No specializations available</option>';
+            } else {
+                data.forEach(spec => {
+                    const opt = document.createElement('option');
+                    opt.value = spec.specialization_name;
+                    opt.textContent = spec.specialization_name;
+                    specSelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(() => {
+            specSelect.innerHTML = '<option value="">Error loading specializations</option>';
+        });
+});
+
+document.getElementById('specialization_name').addEventListener('change', function () {
+    const specName        = this.value;
+    const positionId      = document.getElementById('position_id').value;
+    const competencySelect= document.getElementById('competency_code');
+
+    if (!specName || !positionId) {
+        competencySelect.innerHTML = '<option value="">Select Specialization & Position First</option>';
+        competencySelect.disabled  = true;
+        return;
+    }
+
+    competencySelect.innerHTML = '<option value="">Loading…</option>';
+    competencySelect.disabled  = false;
+
+    fetch(`/admin/hr4/job-postings/competencies?specialization=${encodeURIComponent(specName)}&position_id=${positionId}`)
+        .then(res => res.json())
+        .then(data => {
+            competencySelect.innerHTML = '<option value="">Select Competency</option>';
+            if (data.length === 0) {
+                competencySelect.innerHTML += '<option value="" disabled>No competencies available</option>';
+            } else {
+                data.forEach(comp => {
+                    const opt = document.createElement('option');
+                    opt.value       = comp.competency_code;
+                    opt.textContent = comp.competency_code + ' — ' + comp.description;
+                    competencySelect.appendChild(opt);
+                });
+            }
+        })
+        .catch(() => {
+            competencySelect.innerHTML = '<option value="">Error loading competencies</option>';
+        });
+});
+</script>
+
 @endsection

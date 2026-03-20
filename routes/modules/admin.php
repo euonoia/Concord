@@ -16,6 +16,7 @@
 
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
+        use App\Http\Controllers\admin\Hr\hr4\EssRequestController;
         use App\Http\Controllers\PayrollController;
         use App\Http\Controllers\PayrollReportController;
 
@@ -170,5 +171,12 @@
             Route::get('/payroll-reports/detailed', [PayrollReportController::class, 'detailed'])->name('hr4.payroll_reports.detailed');
             Route::get('/payroll-reports/export', [PayrollReportController::class, 'export'])->name('hr4.payroll_reports.export');
             Route::get('/payroll-reports/employee/{employeeId}', [PayrollReportController::class, 'employeeHistory'])->name('hr4.payroll_reports.employee');
+
+            // ESS Payroll Requests Management
+            Route::get('/ess-requests', [EssRequestController::class, 'index'])->name('hr4.ess_requests.index');
+            Route::get('/ess-requests/{id}', [EssRequestController::class, 'show'])->name('hr4.ess_requests.show');
+            Route::post('/ess-requests/{id}/approve', [EssRequestController::class, 'approve'])->name('hr4.ess_requests.approve');
+            Route::post('/ess-requests/{id}/reject', [EssRequestController::class, 'reject'])->name('hr4.ess_requests.reject');
+            Route::post('/ess-requests/sync', [EssRequestController::class, 'syncFromHr2'])->name('hr4.ess_requests.sync');
 
         });

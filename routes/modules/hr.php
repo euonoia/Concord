@@ -22,6 +22,10 @@ Route::any('/training/enroll/{id}', [UserTrainingController::class, 'enroll'])->
 Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
 Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
 Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');
+
+// ESS Payroll Requests (Employee)
+Route::get('/ess-payroll', [UserEssController::class, 'payrollIndex'])->name('user.ess.payroll.index');
+Route::post('/ess-payroll/store', [UserEssController::class, 'payrollStore'])->name('user.ess.payroll.store');
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---

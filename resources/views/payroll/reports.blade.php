@@ -164,7 +164,7 @@
             <table class="min-w-full bg-white border border-slate-200">
                 <thead class="bg-slate-100">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Employee ID</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Employee</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Salary</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Deductions</th>
@@ -178,7 +178,7 @@
                 <tbody>
                     @forelse($payrolls as $payroll)
                         <tr class="border-b hover:bg-slate-50">
-                            <td class="px-4 py-2">{{ $payroll->id }}</td>
+                            <td class="px-4 py-2">{{ $payroll->employee->employee_id }}</td>
                             <td class="px-4 py-2">{{ $payroll->employee->first_name ?? 'N/A' }} {{ $payroll->employee->last_name ?? '' }}</td>
                             <td class="px-4 py-2">₱{{ number_format($payroll->salary, 2) }}</td>
                             <td class="px-4 py-2">₱{{ number_format($payroll->deductions, 2) }}</td>
