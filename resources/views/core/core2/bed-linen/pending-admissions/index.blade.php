@@ -28,22 +28,54 @@
                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
                     <th class="px-8 py-6">Patient</th>
                     <th class="px-8 py-6">MRN</th>
-                    <th class="px-8 py-6">Triage</th>
-                    <th class="px-8 py-6">Acuity</th>
+                    <th class="px-8 py-6">Type</th>
+                    <th class="px-8 py-6">Requested Bed</th>
+                    <th class="px-8 py-6">Triage / Acuity</th>
                     <th class="px-8 py-6">Queued At</th>
-                    <th class="px-8 py-6">Status</th>
                     <th class="px-8 py-6 text-right">Action</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($records as $r)
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors" id="row-{{ $r->id }}">
+                    {{-- Patient --}}
                     <td class="px-8 py-5">
                         <p class="text-xs font-black text-slate-900">{{ $r->patient_name ?? 'Unknown' }}</p>
                         <p class="text-[10px] text-slate-400">Encounter #{{ $r->encounter_id }}</p>
                     </td>
+
+                    {{-- MRN --}}
                     <td class="px-8 py-5 text-xs font-mono font-bold text-indigo-700">{{ $r->mrn ?? '—' }}</td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->triage_summary ?? 'No vitals' }}</td>
+
+                    {{-- Request Type Badge --}}
+                    <td class="px-8 py-5">
+                        @if($r->request_type === 'Transfer')
+                            <span class="inline-block px-3 py-1.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">Transfer</span>
+                        @else
+                            <span class="inline-block px-3 py-1.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 uppercase">New Admission</span>
+                        @endif
+                    </td>
+
+                    {{-- Requested Bed --}}
+                    <td class="px-8 py-5">
+                        @if($r->request_type === 'Transfer')
+                            @if($r->source_bed_label)
+                                <div class="text-[10px] text-slate-400 font-bold mb-1">From: <span class="text-slate-600">{{ $r->source_bed_label }}</span></div>
+                            @endif
+                            @if($r->target_bed_label)
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Target: {{ $r->target_bed_label }}
+                                </div>
+                            @else
+                                <span class="text-[10px] text-slate-400 italic">No target specified</span>
+                            @endif
+                        @else
+                            <span class="text-[10px] text-slate-400 italic">No specific bed requested</span>
+                        @endif
+                    </td>
+
+                    {{-- Triage / Acuity --}}
                     <td class="px-8 py-5">
                         @php
                             $lvl = $r->triage_level;
@@ -56,25 +88,34 @@
                             ];
                             $badge = $colors[$lvl] ?? 'bg-slate-100 text-slate-500 border-slate-200';
                         @endphp
-                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black border {{ $badge }}">
-                            {{ $lvl ? "Level $lvl" : '—' }}
-                        </span>
-                    </td>
-                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->date_assigned ?? $r->created_at?->format('Y-m-d H:i') }}</td>
-                    <td class="px-8 py-5">
-                        @if($r->request_type === 'Transfer')
-                            <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">Transfer</span>
-                            <div class="text-[10px] text-slate-400 mt-1 font-bold">From Bed #{{ $r->source_bed_id ?? 'N/A' }}</div>
-                        @else
-                            <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 uppercase">Pending</span>
+                        @if($lvl)
+                            <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black border {{ $badge }} mb-1">Level {{ $lvl }}</span>
                         @endif
+                        <p class="text-[10px] text-slate-400 font-semibold">{{ $r->triage_summary ?? 'No vitals recorded' }}</p>
                     </td>
+
+                    {{-- Queued At --}}
+                    <td class="px-8 py-5 text-xs font-semibold text-slate-500">
+                        {{ $r->created_at?->format('M d, Y H:i') ?? $r->date_assigned ?? '—' }}
+                    </td>
+
+                    {{-- Action --}}
                     <td class="px-8 py-5 text-right">
-                        <button onclick="openFloorMap({{ $r->id }}, {{ json_encode($r->patient_name ?? 'Unknown') }}, '{{ $r->mrn ?? '' }}', {{ $r->encounter_id ?? 'null' }}, {{ $r->request_type === 'Transfer' ? 'true' : 'false' }})"
-                                class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide hover:bg-indigo-700 transition shadow-sm">
+                        @if($r->request_type === 'Transfer' && $r->bed_id_core1)
+                            {{-- Transfer with pre-selected bed: one-click confirm --}}
+                            <button onclick="processTransferRequest({{ $r->id }}, {{ json_encode($r->patient_name ?? 'Unknown') }}, {{ $r->bed_id_core1 }})"
+                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide hover:bg-indigo-700 transition shadow-sm">
+                                <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Confirm Transfer
+                            </button>
+                        @else
+                            {{-- New admission or transfer without pre-selected bed: open floor map --}}
+                            <button onclick="openFloorMap({{ $r->id }}, {{ json_encode($r->patient_name ?? 'Unknown') }}, '{{ $r->mrn ?? '' }}', {{ $r->encounter_id ?? 'null' }}, {{ $r->request_type === 'Transfer' ? 'true' : 'false' }})"
+                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide hover:bg-indigo-700 transition shadow-sm">
                             <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            {{ $r->request_type === 'Transfer' ? 'Process Transfer' : 'Assign Bed' }}
-                        </button>
+                            {{ $r->request_type === 'Transfer' ? 'Pick & Transfer' : 'Assign Bed' }}
+                            </button>
+                        @endif
                     </td>
                 </tr>
                 @empty
@@ -251,6 +292,45 @@
     function closeFloorMap() {
         document.getElementById('floorMapModal').classList.add('hidden');
         document.body.style.overflow = '';
+    }
+
+    function processTransferRequest(roomAssignmentId, patientName, targetBedId) {
+        if (!confirm(`Confirm transfer of ${patientName} to Bed #${targetBedId}?`)) return;
+
+        const btn = event.currentTarget;
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 inline mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing…`;
+
+        fetch('{{ route("core2.bed-linen.process-transfer-request") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ room_assignment_id: roomAssignmentId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById('row-' + roomAssignmentId);
+                if (row) { row.style.opacity = '0'; setTimeout(() => row.remove(), 400); }
+                const flash = document.createElement('div');
+                flash.className = 'fixed top-4 right-4 z-[10000] bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-6 py-4 text-sm font-semibold shadow-lg flex items-center gap-3';
+                flash.innerHTML = `<svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ${data.message}`;
+                document.body.appendChild(flash);
+                setTimeout(() => { flash.style.opacity='0'; setTimeout(()=>flash.remove(), 300); }, 4000);
+            } else {
+                alert(data.message || 'Transfer failed.');
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Confirm Transfer`;
+            }
+        })
+        .catch(() => {
+            alert('An error occurred. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Confirm Transfer`;
+        });
     }
 
     function switchBpZone(zoneKey) {
