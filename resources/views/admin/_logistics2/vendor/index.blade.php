@@ -22,9 +22,10 @@
                 <thead>
                     <tr style="text-align: left; background: #f8f9fa;">
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Drug Info</th>
-                        <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Supplier</th> {{-- ✅ NEW --}}
+                        <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Supplier</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Qty</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Requester</th>
+                        <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Delivery Address</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Time Received</th>
                         <th style="padding: 12px; border-bottom: 2px solid #dee2e6;">Assign Vehicle & Dispatch</th>
                     </tr>
@@ -41,7 +42,7 @@
                                 <code style="font-size: 0.75rem; color: #666;">{{ $request->drug_num }}</code>
                             </td>
 
-                            {{-- ✅ SUPPLIER --}}
+                            {{-- SUPPLIER --}}
                             <td style="padding: 12px;">
                                 <div style="font-size: 0.85rem; color: #555;">
                                     {{ $request->selected_supplier ?? 'N/A' }}
@@ -65,6 +66,13 @@
                                     <small style="color: #888; font-size: 0.7rem;">
                                         Emp ID: {{ $request->requested_by }}
                                     </small>
+                                </div>
+                            </td>
+
+                            {{-- DELIVERY ADDRESS --}}
+                            <td style="padding: 12px;">
+                                <div style="font-size: 0.85rem; color: #555;">
+                                    {{ $request->address ?? 'N/A' }}
                                 </div>
                             </td>
 
@@ -116,7 +124,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 30px; color: #999;">
+                            <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
                                 No pending requests from Logistics 1.
                             </td>
                         </tr>

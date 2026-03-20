@@ -7,7 +7,7 @@ use App\Http\Controllers\user\Hr\hr2\UserTrainingController;
 use App\Http\Controllers\user\Hr\hr2\UserSuccessionController;
 use App\Http\Controllers\user\Hr\hr2\UserEssController;
 use App\Http\Controllers\user\Hr\hr2\UserLearningMaterialsController;
-
+use App\Http\Controllers\user\Hr\hr2\UserPayrollController;
 // Import the new HR3 Controller
 use App\Http\Controllers\user\Hr\hr3\UserAttendanceController;
 use App\Http\Controllers\user\Hr\hr3\UserClaimsController;
@@ -47,6 +47,8 @@ Route::prefix('learning')->middleware(['auth'])->group(function () {
 });
 Route::post('/user/request-shift/{id}', [UserEssController::class, 'requestShift'])
     ->name('user.shift.request');
+     Route::get('/payroll', [UserPayrollController::class, 'index'])->name('user.payroll.index');
+    Route::post('/payroll/store', [UserPayrollController::class, 'store'])->name('user.payroll.store');
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---
