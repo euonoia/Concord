@@ -18,12 +18,18 @@ Route::get('/dashboard', function () {
     return view('admin._logistics2.dashboard'); 
 })->name('admin.logistics2.dashboard');
 
+// --- Logistics 1 Dashboard ---
+Route::get('/logistics1/dashboard', function () {
+    return view('admin._logistics1.dashboard');
+})->name('admin.logistics1.dashboard');
+
 // --- Logistics 1 Group ---
 Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
     Route::get('/warehouse', [AdminLogistics1WarehouseController::class, 'index'])->name('warehouse.index');
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', [AdminLogistics1ProcurementController::class, 'index'])->name('index');
         Route::post('/request', [AdminLogistics1ProcurementController::class, 'store'])->name('store');
+        Route::post('/update-status/{id}', [AdminLogistics1ProcurementController::class, 'updateStatus'])->name('update_status');
     });
 
     Route::prefix('maintenance')->name('maintenance.')->group(function () {

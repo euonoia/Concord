@@ -1,271 +1,152 @@
 @extends('admin._logistics1.layouts.app')
 
 @section('content')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-<div class="l1-inventory-wrapper">
-    <div class="d-flex justify-content-between align-items-end mb-4">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item small"><a href="#">Logistics 1</a></li>
-                    <li class="breadcrumb-item small active">Procurement</li>
-                </ol>
-            </nav>
-            <h2 class="l1-procure-main-title">Restock Procurement</h2>
-            <p class="text-muted mb-0">Items marked as Low Stock or Critical requiring replenishment.</p>
-        </div>
-        
-        <div class="l1-search-container">
-            <form action="{{ route('admin.logistics1.procurement.index') }}" method="GET">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white border-end-0 text-muted">
-                        <i class="bi bi-search"></i>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-truck me-2"></i>Procurement & Suppliers</h4>
+</div>
+
+{{-- ==================== TAB NAVIGATION ==================== --}}
+<ul class="nav nav-tabs mb-4" id="procurementTabs">
+    <li class="nav-item">
+        <a class="nav-link {{ $activeTab === 'needs_assessment'  ? 'active' : '' }}"
+           href="{{ route('admin.logistics1.procurement.index', ['tab' => 'needs_assessment']) }}">
+            <i class="bi bi-clipboard-check me-1"></i> Needs Assessment
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ $activeTab === 'vendor_selection'  ? 'active' : '' }}"
+           href="{{ route('admin.logistics1.procurement.index', ['tab' => 'vendor_selection']) }}">
+            <i class="bi bi-shop me-1"></i> Vendor Selection
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ $activeTab === 'purchase_orders'   ? 'active' : '' }}"
+           href="{{ route('admin.logistics1.procurement.index', ['tab' => 'purchase_orders']) }}">
+            <i class="bi bi-receipt me-1"></i> Purchase Orders
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ $activeTab === 'payment_processing' ? 'active' : '' }}"
+           href="{{ route('admin.logistics1.procurement.index', ['tab' => 'payment_processing']) }}">
+            <i class="bi bi-credit-card me-1"></i> Payment Processing
+        </a>
+    </li>
+</ul>
+
+
+{{-- ==================== TAB 1: NEEDS ASSESSMENT ==================== --}}
+@if($activeTab === 'needs_assessment')
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">Items currently at Low Stock, Critical, or Out of Stock status.</p>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRequestModal">
+        <i class="bi bi-plus-lg me-1"></i> New Restock Request
+    </button>
+</div>
+
+<form method="GET" action="{{ route('admin.logistics1.procurement.index') }}" class="row g-2 mb-3">
+    <input type="hidden" name="tab" value="needs_assessment">
+    <div class="col-md-5">
+        <input type="text" name="search" class="form-control form-control-sm"
+               placeholder="Search by drug name or number..."
+               value="{{ request('search') }}">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-secondary btn-sm w-100">
+            <i class="bi bi-search"></i> Search
+        </button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Drug No.</th>
+                <th>Drug Name</th>
+                <th>Status</th>
+                <th>Current Stock</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($inventory as $item)
+            <tr>
+                <td>{{ $loop->iteration + ($inventory->currentPage() - 1) * $inventory->perPage() }}</td>
+                <td><code>{{ $item->drug_num }}</code></td>
+                <td>{{ $item->drug_name }}</td>
+                <td>
+                    @php
+                        $stockMap = [
+                            'Low Stock'    => 'warning',
+                            'Critical'     => 'danger',
+                            'Out of Stock' => 'dark',
+                        ];
+                    @endphp
+                    <span class="badge bg-{{ $stockMap[$item->status] ?? 'secondary' }}">
+                        {{ $item->status }}
                     </span>
-                    <input type="text" name="search" class="form-control border-start-0 ps-0" 
-                           placeholder="Search drug or SKU..." value="{{ request('search') }}">
-                    <button type="submit" class="btn btn-primary px-4 fw-bold">Search</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="l1-mini-card shadow-sm border-start border-danger border-4">
-                <small class="text-muted d-block fw-bold">Items Needing Restock</small>
-                <span class="h4 fw-bold text-danger">{{ $inventory->total() }}</span>
-            </div>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div class="card l1-procure-card border-0 shadow-sm">
-        <div class="l1-procure-card-head d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-cart-plus me-2"></i> Pending Replenishment List</span>
-        </div>
-        
-        <div class="table-responsive">
-            <table class="table l1-procure-main-table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4">Product Details</th>
-                        <th class="text-center">Current Stock</th>
-                        <th>Supplier Info</th>
-                        <th>Status</th>
-                        <th class="text-end pe-4">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($inventory as $item)
-                    <tr>
-                        <td class="ps-4">
-                            <span class="l1-procure-sku-code">{{ $item->drug_num }}</span>
-                            <span class="l1-procure-drug-label">{{ $item->drug_name }}</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="l1-procure-stock-pill shadow-sm">
-                                <span class="l1-procure-qty-val {{ $item->quantity <= 10 ? 'text-danger' : '' }}">
-                                    {{ number_format($item->quantity) }}
-                                </span>
-                                <span class="l1-procure-qty-unit">units</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="supplier-avatar me-2">{{ substr($item->supplier ?? 'S', 0, 1) }}</div>
-                                <span class="text-muted small text-truncate" style="max-width: 150px;">
-                                    {{ $item->supplier }}
-                                </span>
-                            </div>
-                        </td>
-                        <td>
-                            @php
-                                $statusClass = match($item->status) {
-                                    'Low Stock' => 'l1-status-low',
-                                    'Critical' => 'l1-status-critical',
-                                    'Out of Stock' => 'l1-status-out',
-                                    default => 'l1-status-default'
-                                };
-                            @endphp
-                            <span class="l1-status-badge {{ $statusClass }}">
-                                {{ strtoupper($item->status) }}
-                            </span>
-                        </td>
-                        <td class="text-end pe-4">
-                            <button type="button" 
-                                class="btn btn-dark btn-sm fw-bold px-3 restock-trigger shadow-sm"
-                                data-sku="{{ $item->drug_num }}"
-                                data-name="{{ $item->drug_name }}"
-                                data-stock="{{ $item->quantity }}"
-                                data-supplier="{{ $item->supplier }}">
-                                <i class="bi bi-plus-lg me-1"></i> Restock
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <i class="bi bi-check2-circle text-success display-4"></i>
-                            <p class="mt-2 text-muted">All stock levels are currently stable.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer bg-white border-top-0 py-4">
-            <div class="d-flex justify-content-center">
-                {{ $inventory->appends(request()->query())->links() }}
-            </div>
-        </div>
-    </div>
+                </td>
+                <td>{{ $item->quantity ?? '0' }}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addRequestModal"
+                        data-drug_num="{{ $item->drug_num }}"
+                        data-drug_name="{{ $item->drug_name }}">
+                        <i class="bi bi-plus-lg me-1"></i> Request Restock
+                    </button>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="bi bi-check-circle fs-4 d-block mb-1"></i>
+                    All inventory levels are sufficient.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
+<div class="d-flex justify-content-end">{{ $inventory->withQueryString()->links() }}</div>
 
-{{-- PROCUREMENT HISTORY --}}
-<div class="card l1-procure-card border-0 shadow-sm mt-4">
-    <div class="l1-procure-card-head d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-clock-history me-2"></i> Recent Requests History</span>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th class="ps-4">Item</th>
-                    <th>Supplier</th>
-                    <th class="text-center">Qty</th>
-                    <th>Status</th>
-                    <th>Requested By</th>
-                    <th>Delivered By</th>
-                    <th class="text-end pe-4">Date</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($logs as $log)
-                <tr>
-                    <td class="ps-4">
-                        <div class="fw-bold">{{ $log->drug_name }}</div>
-                        <small class="text-muted">{{ $log->drug_num }}</small>
-                    </td>
-
-                    <td>
-                        <small class="text-muted">{{ $log->selected_supplier }}</small>
-                    </td>
-
-                    <td class="text-center fw-bold">
-                        {{ number_format($log->requested_quantity) }}
-                    </td>
-
-                    <td>
-                        @php
-                            $statusClass = match($log->status) {
-                                'pending' => 'bg-warning text-dark',
-                                'approved' => 'bg-success',
-                                'received' => 'bg-info text-dark',
-                                'rejected' => 'bg-danger',
-                                default => 'bg-secondary'
-                            };
-                        @endphp
-
-                        <span class="badge {{ $statusClass }}">
-                            {{ strtoupper($log->status) }}
-                        </span>
-                    </td>
-
-                    {{-- REQUESTED BY --}}
-                    <td>
-                        <small class="text-muted">
-                            {{ $log->req_first_name ?? 'Unknown' }}
-                            {{ $log->req_last_name ?? '' }}
-                        </small>
-                    </td>
-
-                    {{-- DELIVERED BY --}}
-                    <td>
-                        <small class="text-muted">
-                            {{ $log->del_first_name ?? '—' }}
-                            {{ $log->del_last_name ?? '' }}
-                        </small>
-                    </td>
-
-                    <td class="text-end pe-4">
-                        <small class="text-muted">
-                            {{ \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') }}
-                        </small>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        No procurement history yet.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="d-flex justify-content-center py-3">
-        {{ $logs->links() }}
-    </div>
-</div>
-<div class="modal fade" id="globalRestockModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content l1-procure-modal-content">
-            <div class="l1-procure-modal-accent"></div>
-            <div class="l1-procure-modal-header d-flex align-items-center justify-content-between text-white">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="l1-procure-modal-icon">
-                        <i class="bi bi-box-arrow-in-down"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-bold">Restock Request</h5>
-                        <small class="opacity-75" id="modal-item-name-title">Item Name</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <form action="{{ route('admin.logistics1.procurement.store') }}" method="POST">
+{{-- Add Restock Request Modal --}}
+<div class="modal fade" id="addRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('admin.logistics1.procurement.store') }}">
                 @csrf
-                <div class="modal-body p-4">
-                    <div class="l1-procure-item-id-card mb-4">
-                        <div class="row text-center">
-                            <div class="col-6 border-end">
-                                <label class="l1-procure-label-sm">CURRENT STOCK</label>
-                                <span class="fw-bold text-dark d-block" id="modal-stock-display">0</span>
-                            </div>
-                            <div class="col-6 ps-3">
-                                <label class="l1-procure-label-sm">SUPPLIER</label>
-                                <span class="fw-bold text-dark text-truncate d-block" id="modal-supplier-display">Name</span>
-                            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-clipboard-plus me-2"></i>New Restock Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Drug No. <span class="text-danger">*</span></label>
+                            <input type="text" name="drug_num" id="modal_drug_num" class="form-control" required>
                         </div>
-                    </div>
-
-                    <input type="hidden" name="drug_num" id="modal-input-sku">
-                    <input type="hidden" name="drug_name" id="modal-input-name">
-                    <input type="hidden" name="selected_supplier" id="modal-input-supplier">
-
-                    <div class="mb-3">
-                        <label class="l1-procure-input-label">Requested Quantity</label>
-                        <div class="l1-procure-custom-input-group">
-                            <input type="number" name="requested_quantity" class="form-control form-control-lg fw-bold" required min="1" placeholder="Enter Amount">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Drug Name <span class="text-danger">*</span></label>
+                            <input type="text" name="drug_name" id="modal_drug_name" class="form-control" required>
                         </div>
-                        <small class="text-muted mt-2 d-block text-center italic">Approved requests update the main inventory automatically.</small>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Requested Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="requested_quantity" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Preferred Supplier <span class="text-danger">*</span></label>
+                            <input type="text" name="selected_supplier" class="form-control" required>
+                        </div>
                     </div>
                 </div>
-
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="submit" class="l1-procure-btn-confirm w-100 justify-content-center py-3">
-                        Send to Logistics 2 <i class="bi bi-send-fill ms-2"></i>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i> Submit Request
                     </button>
                 </div>
             </form>
@@ -274,27 +155,249 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modalEl = document.getElementById('globalRestockModal');
-    if (!modalEl) return;
-
-    const modal = new bootstrap.Modal(modalEl);
-
-    document.querySelectorAll('.restock-trigger').forEach(btn => {
-        btn.addEventListener('click', function () {
-            // UI Labels
-            document.getElementById('modal-item-name-title').innerText = this.dataset.name;
-            document.getElementById('modal-stock-display').innerText = this.dataset.stock + ' Units';
-            document.getElementById('modal-supplier-display').innerText = this.dataset.supplier;
-
-            // Form Inputs
-            document.getElementById('modal-input-sku').value = this.dataset.sku;
-            document.getElementById('modal-input-name').value = this.dataset.name;
-            document.getElementById('modal-input-supplier').value = this.dataset.supplier;
-
-            modal.show();
-        });
-    });
+document.getElementById('addRequestModal').addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget;
+    if (btn && btn.dataset.drug_num) {
+        document.getElementById('modal_drug_num').value  = btn.dataset.drug_num;
+        document.getElementById('modal_drug_name').value = btn.dataset.drug_name;
+    }
 });
 </script>
+@endif
+
+
+{{-- ==================== TAB 2: VENDOR SELECTION ====================  --}}
+@if($activeTab === 'vendor_selection')
+
+<p class="text-muted mb-4">Select a vendor to assign to a procurement request.</p>
+
+@if($vendors->isEmpty())
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-shop fs-2 d-block mb-2"></i>
+        No suppliers found in inventory records.
+    </div>
+@else
+<div class="row g-3">
+    @foreach($vendors as $vendor)
+    <div class="col-md-3 col-sm-4 col-6">
+        <div class="card h-100 shadow-sm border-0 text-center vendor-card"
+             style="cursor:pointer; transition: transform 0.15s, box-shadow 0.15s;"
+             onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.12)'"
+             onmouseleave="this.style.transform='none';this.style.boxShadow=''"
+             onclick="selectVendor('{{ addslashes($vendor->supplier) }}')"
+             title="Select {{ $vendor->supplier }}">
+            <div class="card-body py-4 px-3">
+                <div class="mb-2">
+                    <i class="bi bi-building fs-3 text-primary"></i>
+                </div>
+                <p class="card-text fw-semibold mb-0" style="font-size:0.9rem; word-break:break-word;">
+                    {{ $vendor->supplier }}
+                </p>
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+@endif
+
+{{-- Vendor Selected — Assign Modal --}}
+<div class="modal fade" id="assignVendorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('admin.logistics1.procurement.store') }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-shop me-2"></i>Assign Vendor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-shop-window fs-5"></i>
+                        <span>Selected Vendor: <strong id="selectedVendorDisplay"></strong></span>
+                    </div>
+                    <input type="hidden" name="selected_supplier" id="selectedVendorInput">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Drug No. <span class="text-danger">*</span></label>
+                            <input type="text" name="drug_num" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Drug Name <span class="text-danger">*</span></label>
+                            <input type="text" name="drug_name" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Requested Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="requested_quantity" class="form-control" min="1" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i> Submit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectVendor(name) {
+    document.getElementById('selectedVendorDisplay').textContent = name;
+    document.getElementById('selectedVendorInput').value = name;
+    new bootstrap.Modal(document.getElementById('assignVendorModal')).show();
+}
+</script>
+@endif
+
+{{-- ==================== TAB 3: PURCHASE ORDERS ==================== --}}
+@if($activeTab === 'purchase_orders')
+
+<p class="text-muted mb-3">Orders that have been placed and are being processed or shipped.</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Drug No.</th>
+                <th>Drug Name</th>
+                <th>Supplier</th>
+                <th>Qty Ordered</th>
+                <th>Requested By</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($purchaseOrders as $order)
+            @php
+                $poStatusMap = [
+                    'approved' => 'info',
+                    'ordered'  => 'primary',
+                    'shipped'  => 'warning',
+                ];
+            @endphp
+            <tr>
+                <td>{{ $loop->iteration + ($purchaseOrders->currentPage() - 1) * $purchaseOrders->perPage() }}</td>
+                <td><code>{{ $order->drug_num }}</code></td>
+                <td>{{ $order->drug_name }}</td>
+                <td>{{ $order->selected_supplier }}</td>
+                <td>{{ $order->requested_quantity }}</td>
+                <td>{{ $order->req_first_name }} {{ $order->req_last_name }}</td>
+                <td>
+                    <span class="badge bg-{{ $poStatusMap[$order->status] ?? 'secondary' }}">
+                        {{ ucfirst($order->status) }}
+                    </span>
+                </td>
+                <td>{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td>
+                <td>
+                    @if($order->status === 'ordered')
+                    <form method="POST" action="{{ route('admin.logistics1.procurement.update_status', $order->id) }}" style="display:inline;">
+                        @csrf
+                        <input type="hidden" name="status" value="shipped">
+                        <button class="btn btn-warning btn-sm text-dark">
+                            <i class="bi bi-truck me-1"></i> Mark Shipped
+                        </button>
+                    </form>
+                    @endif
+                    @if($order->status === 'shipped')
+                    <form method="POST" action="{{ route('admin.logistics1.procurement.update_status', $order->id) }}" style="display:inline;">
+                        @csrf
+                        <input type="hidden" name="status" value="delivered">
+                        <button class="btn btn-success btn-sm">
+                            <i class="bi bi-box-seam me-1"></i> Mark Delivered
+                        </button>
+                    </form>
+                    @endif
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                    No active purchase orders.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+<div class="d-flex justify-content-end">{{ $purchaseOrders->withQueryString()->links() }}</div>
+@endif
+
+
+{{-- ==================== TAB 4: PAYMENT PROCESSING ==================== --}}
+@if($activeTab === 'payment_processing')
+
+<p class="text-muted mb-3">Delivered orders awaiting payment or already paid.</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-sm align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Drug No.</th>
+                <th>Drug Name</th>
+                <th>Supplier</th>
+                <th>Qty</th>
+                <th>Requested By</th>
+                <th>Delivered By</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($payments as $payment)
+            <tr>
+                <td>{{ $loop->iteration + ($payments->currentPage() - 1) * $payments->perPage() }}</td>
+                <td><code>{{ $payment->drug_num }}</code></td>
+                <td>{{ $payment->drug_name }}</td>
+                <td>{{ $payment->selected_supplier }}</td>
+                <td>{{ $payment->requested_quantity }}</td>
+                <td>{{ $payment->req_first_name }} {{ $payment->req_last_name }}</td>
+                <td>
+                    @if($payment->del_first_name)
+                        {{ $payment->del_first_name }} {{ $payment->del_last_name }}
+                    @else
+                        <span class="text-muted">—</span>
+                    @endif
+                </td>
+                <td>
+                    <span class="badge bg-{{ $payment->status === 'paid' ? 'success' : 'warning text-dark' }}">
+                        {{ ucfirst($payment->status) }}
+                    </span>
+                </td>
+                <td>{{ \Carbon\Carbon::parse($payment->created_at)->format('M d, Y') }}</td>
+                <td>
+                    @if($payment->status === 'delivered')
+                    <form method="POST" action="{{ route('admin.logistics1.procurement.update_status', $payment->id) }}" style="display:inline;">
+                        @csrf
+                        <input type="hidden" name="status" value="paid">
+                        <button class="btn btn-success btn-sm" onclick="return confirm('Mark this order as paid?')">
+                            <i class="bi bi-check-circle me-1"></i> Mark Paid
+                        </button>
+                    </form>
+                    @else
+                        <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Paid</span>
+                    @endif
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                    No payments to process.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+<div class="d-flex justify-content-end">{{ $payments->withQueryString()->links() }}</div>
+@endif
+
 @endsection

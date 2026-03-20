@@ -29,8 +29,8 @@
     </div>
 
     <nav>
-        <a href="{{ route('admin.logistics2.dashboard') }}" {{-- Updated to a valid logistics dashboard route --}}
-           class="{{ request()->routeIs('admin.logistics2.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('admin.logistics1.dashboard') }}"
+           class="{{ request()->routeIs('admin.logistics1.dashboard') ? 'active' : '' }}">
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>

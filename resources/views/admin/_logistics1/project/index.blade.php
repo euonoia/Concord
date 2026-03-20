@@ -1,4 +1,4 @@
-@extends('admin._logistics1.app')
+@extends('admin._logistics1.layouts.app')
 
 @section('content')
 
@@ -310,4 +310,5 @@ document.getElementById('editProjectModal').addEventListener('show.bs.modal', fu
     document.getElementById('edit_actual_cost').value   = btn.dataset.actual_cost;
 });
 </script>
-@extends('admin.layouts.app')
+
+@endsection

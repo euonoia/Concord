@@ -49,7 +49,7 @@ class AdminAssetManagementController extends Controller
 
         $assets = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('admin._logistics1.asset_management.index', compact('assets'));
+        return view('admin._logistics1.assets.index', compact('assets'));
     }
 
     /**
