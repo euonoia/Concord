@@ -113,16 +113,25 @@ class BedLinenController extends Controller
                 ], 400);
             }
 
-            $encounter = Encounter::findOrFail($roomAssignment->encounter_id);
+            $encounter = Encounter::with('activeAdmission')->findOrFail($roomAssignment->encounter_id);
             $bed = Bed::findOrFail($validated['bed_id']);
-
-            // Use AdmissionService to perform the admission (which also syncs to Core 2)
             $admissionService = app(AdmissionService::class);
-            $admissionService->admit($encounter, $bed);
+
+            if ($roomAssignment->request_type === 'Transfer') {
+                $admission = $encounter->activeAdmission;
+                if (!$admission) {
+                    throw new \Exception('No active admission found for this transfer request.');
+                }
+                $admissionService->transfer($admission, $bed);
+                $message = 'Patient successfully transferred and bed allocated.';
+            } else {
+                $admissionService->admit($encounter, $bed);
+                $message = 'Patient successfully admitted and bed allocated.';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Patient successfully admitted and bed allocated.'
+                'message' => $message
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -271,6 +280,41 @@ class BedLinenController extends Controller
 
         return redirect()->route('core2.bed-linen.patient-transfer.index')
             ->with('success', 'Patient transfer record added successfully.');
+    }
+
+    public function transferPatient(Request $request)
+    {
+        $validated = $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'new_bed_id'   => 'required|exists:beds_core1,id',
+        ]);
+
+        try {
+            $encounter = Encounter::with('activeAdmission')->findOrFail($validated['encounter_id']);
+            $admission = $encounter->activeAdmission;
+
+            if (!$admission) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active admission found for this encounter.'
+                ], 404);
+            }
+
+            $newBed = Bed::findOrFail($validated['new_bed_id']);
+
+            $admissionService = app(AdmissionService::class);
+            $admissionService->transfer($admission, $newBed);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Patient successfully transferred to ' . $newBed->bed_number
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
+            ], 400);
+        }
     }
 
     // ── House Keeping & Cleaning Status ────────────────────────────────────────

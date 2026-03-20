@@ -22,5 +22,7 @@ class RoomAssignment extends Model
         'patient_name',
         'triage_summary',
         'triage_level',
+        'request_type',
+        'source_bed_id',
     ];
 }

@@ -300,6 +300,55 @@
         </form>
     </div>
 </div>
+<!-- Transfer Request Modal -->
+<div id="transferRequestModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
+    <div class="core1-modal-content core1-card" style="width:500px; max-width:95%;">
+        <div class="core1-header border-bottom mb-20 pb-10">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div>
+                    <h3 class="core1-title">Request Patient Transfer</h3>
+                    <p class="core1-subtitle">Initiate a transfer request for <span id="trPatientName" class="font-bold text-dark"></span></p>
+                </div>
+            </div>
+        </div>
+        <form id="transferRequestForm" method="POST">
+            @csrf
+            <div class="mb-20" style="padding: 15px; background: var(--bg-light); border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-gray); font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px;">Current Location</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="bi bi-geo-alt-fill" style="color: var(--primary);"></i>
+                    <span id="trCurrentBed" class="font-bold text-dark" style="font-size: 14px;"></span>
+                </div>
+            </div>
+
+            <div class="mb-20">
+                <label class="font-bold block mb-10" style="font-size: 14px; color: var(--text-dark);">Target Bed <span style="font-weight: normal; color: var(--text-gray); font-size: 11px;">(Optional)</span></label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div id="trSelectedBedDisplay" style="flex: 1; padding: 12px 16px; background: #fff; border: 1px solid var(--border-color); border-radius: 10px; font-size: 13px; color: var(--text-gray); min-height: 45px; display: flex; align-items: center;">
+                        <span style="font-style: italic;">No specific bed selected yet...</span>
+                    </div>
+                    <button type="button" onclick="launchBedPickerForRequest()" class="core1-btn core1-btn-outline" style="padding: 11px 15px; border-radius: 10px; white-space: nowrap;">
+                        <i class="bi bi-grid-3x3-gap"></i> Pick Bed
+                    </button>
+                </div>
+                <input type="hidden" name="target_bed_id" id="trTargetBedId">
+            </div>
+
+            <div class="mb-20">
+                <label class="font-bold block mb-5" style="font-size: 14px;">Clinical Reason for Transfer</label>
+                <textarea name="reason" class="core1-input w-full" rows="2" placeholder="e.g. Condition escalation, proximity to nursing..."></textarea>
+            </div>
+
+            <div class="core1-flex-gap-2 justify-end pt-10 border-top">
+                <button type="button" class="core1-btn core1-btn-outline" onclick="closeModal('transferRequestModal')">Cancel</button>
+                <button type="submit" class="core1-btn core1-btn-primary">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Medication Administration (Selection) Modal -->
 <div id="administrationModal" class="core1-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; align-items:center; justify-content:center;">
@@ -321,14 +370,38 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
     // Shared behavior for clinical modals
     let administrationNeedsReload = false;
 
-    function openDischargeModal(admissionId, patientName) {
-        document.getElementById('dischargePatientName').innerText = patientName;
-        document.getElementById('dischargeForm').action = '/core/admissions/' + admissionId + '/request-discharge';
-        document.getElementById('dischargeModal').style.display = 'flex';
+    function openTransferRequestModal(admissionId, patientName, currentBedLabel) {
+        console.log('Opening transfer request modal for:', patientName);
+        document.getElementById('trPatientName').innerText = patientName;
+        document.getElementById('trCurrentBed').innerText = currentBedLabel;
+        document.getElementById('trTargetBedId').value = '';
+        document.getElementById('trSelectedBedDisplay').innerHTML = '<span style="font-style: italic;">No specific bed selected yet...</span>';
+        
+        const form = document.getElementById('transferRequestForm');
+        form.action = `/core/admissions/${admissionId}/request-transfer`;
+        
+        document.getElementById('transferRequestModal').style.display = 'flex';
+    }
+
+    function launchBedPickerForRequest() {
+        console.log('Launch bed picker for request clicked');
+        // Hide the transfer request modal temporarily
+        const transferModal = document.getElementById('transferRequestModal');
+        if (transferModal) transferModal.style.display = 'none';
+
+        // Show the floor map in selector mode
+        const floorModal = document.getElementById('floorMapModal');
+        if (!floorModal) {
+            alert('Floor map not found in this page.');
+            if (transferModal) transferModal.style.display = 'flex';
+            return;
+        }
+        openFloorMap(null, 'Select Target Bed', '', null, false, true);
     }
 
     function openVitalsModal(encounterId, patientName) {
@@ -562,3 +635,4 @@
         }
     });
 </script>
+@endpush

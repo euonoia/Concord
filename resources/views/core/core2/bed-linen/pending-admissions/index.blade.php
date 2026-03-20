@@ -8,6 +8,11 @@
         <p class="text-slate-500 font-bold text-sm mt-1">Patients recommended for admission awaiting bed allocation</p>
     </div>
     <div class="flex items-center gap-4">
+        <a href="{{ route('core2.bed-linen.bed-status.index') }}" 
+           class="bg-white border border-indigo-200 text-indigo-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            Initiate Transfer
+        </a>
         <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-2xl text-xs font-black uppercase">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ $records->total() }} Pending
@@ -57,13 +62,18 @@
                     </td>
                     <td class="px-8 py-5 text-xs font-semibold text-slate-500">{{ $r->date_assigned ?? $r->created_at?->format('Y-m-d H:i') }}</td>
                     <td class="px-8 py-5">
-                        <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 uppercase">Pending</span>
+                        @if($r->request_type === 'Transfer')
+                            <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">Transfer</span>
+                            <div class="text-[10px] text-slate-400 mt-1 font-bold">From Bed #{{ $r->source_bed_id ?? 'N/A' }}</div>
+                        @else
+                            <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 uppercase">Pending</span>
+                        @endif
                     </td>
                     <td class="px-8 py-5 text-right">
-                        <button onclick="openFloorMap({{ $r->id }}, '{{ addslashes($r->patient_name ?? 'Unknown') }}', '{{ $r->mrn ?? '' }}', {{ $r->encounter_id }})"
+                        <button onclick="openFloorMap({{ $r->id }}, {{ json_encode($r->patient_name ?? 'Unknown') }}, '{{ $r->mrn ?? '' }}', {{ $r->encounter_id ?? 'null' }}, {{ $r->request_type === 'Transfer' ? 'true' : 'false' }})"
                                 class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide hover:bg-indigo-700 transition shadow-sm">
                             <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            Assign Bed
+                            {{ $r->request_type === 'Transfer' ? 'Process Transfer' : 'Assign Bed' }}
                         </button>
                     </td>
                 </tr>
@@ -89,6 +99,7 @@
                         <th class="px-8 py-5">MRN</th>
                         <th class="px-8 py-5">Room / Bed</th>
                         <th class="px-8 py-5">Status</th>
+                        <th class="px-8 py-5 text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,6 +110,12 @@
                         <td class="px-8 py-4 text-xs font-semibold text-slate-600">{{ $a->room ?? '—' }}</td>
                         <td class="px-8 py-4">
                             <span class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase">Assigned</span>
+                        </td>
+                        <td class="px-8 py-4 text-right">
+                            <button onclick="openFloorMap({{ $a->id }}, {{ json_encode($a->patient_name ?? 'Unknown') }}, '{{ $a->mrn ?? '' }}', {{ $a->encounter_id ?? 'null' }}, true)"
+                                    class="text-indigo-600 hover:text-indigo-900 text-[10px] font-black uppercase tracking-widest border border-indigo-200 hover:border-indigo-400 px-4 py-2 rounded-xl transition bg-indigo-50/30">
+                                Transfer
+                            </button>
                         </td>
                     </tr>
                     @endforeach
@@ -122,7 +139,7 @@
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 </div>
                 <div>
-                    <h3 style="margin:0; font-size:17px; font-weight:900; color:#0f172a; font-family:'Inter', sans-serif;">Admit Patient</h3>
+                    <h3 style="margin:0; font-size:17px; font-weight:900; color:#0f172a; font-family:'Inter', sans-serif;" id="floorMapModalTitle">Admit Patient</h3>
                     <p style="margin:0; font-size:12px; color:#64748b; font-family:'Inter', sans-serif;" id="floorMapPatientInfo">Select an available bed from the floor plan below</p>
                 </div>
             </div>
@@ -172,7 +189,7 @@
                         <button type="button" tabindex="-1" onclick="closeFloorMap()" style="padding:10px 18px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; color:#475569; font-weight:700; font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">Cancel</button>
                         <button type="button" id="confirmAllocationBtn" onclick="confirmAllocation()" disabled style="padding:10px 18px; border-radius:8px; border:none; background:#94a3b8; color:#fff; font-weight:700; font-size:13px; cursor:not-allowed; display:flex; align-items:center; gap:8px; transition:all 0.2s;">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            Admit Patient
+                            <span id="confirmBtnText">Admit Patient</span>
                         </button>
                     </div>
                 </div>
@@ -194,6 +211,8 @@
     let currentRoomAssignmentId = null;
     let selectedBedId = null;
     let selectedBedLabel = '';
+    let isTransferMode = false;
+    let currentEncounterId = null;
     
     // Core 1 definitions
     const bpZones = {
@@ -203,8 +222,10 @@
         'OR': { icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>', color: '#7c3aed' }
     };
 
-    function openFloorMap(roomAssignmentId, patientName, mrn, encounterId) {
-        currentRoomAssignmentId = roomAssignmentId;
+    function openFloorMap(id, patientName, mrn, encounterId, transfer = false) {
+        currentRoomAssignmentId = id;
+        currentEncounterId = encounterId;
+        isTransferMode = transfer;
         selectedBedId = null;
         selectedBedLabel = '';
         
@@ -212,6 +233,9 @@
         btn.disabled = true;
         btn.style.background = '#94a3b8';
         btn.style.cursor = 'not-allowed';
+        
+        document.getElementById('floorMapModalTitle').textContent = isTransferMode ? 'Transfer Patient' : 'Admit Patient';
+        document.getElementById('confirmBtnText').textContent = isTransferMode ? 'Execute Transfer' : 'Admit Patient';
         
         document.getElementById('bpSelectionBar').innerHTML = 'No bed selected &mdash; click an available bed above';
         document.getElementById('floorMapPatientInfo').textContent =
@@ -419,51 +443,62 @@
         btn.style.background = '#4f46e5';
         btn.style.cursor = 'pointer';
     }
-
     function confirmAllocation() {
-        if (!selectedBedId || !currentRoomAssignmentId) return;
+        if (!selectedBedId) return;
 
         const btn = document.getElementById('confirmAllocationBtn');
         btn.disabled = true;
         btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing…`;
 
-        fetch('{{ route("core2.bed-linen.allocate-bed") }}', {
+        const endpoint = isTransferMode 
+            ? '{{ route("core2.bed-linen.patient-transfer.execute") }}'
+            : '{{ route("core2.bed-linen.allocate-bed") }}';
+
+        const body = isTransferMode
+            ? { encounter_id: currentEncounterId, new_bed_id: selectedBedId }
+            : { room_assignment_id: currentRoomAssignmentId, bed_id: selectedBedId };
+
+        fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({
-                room_assignment_id: currentRoomAssignmentId,
-                bed_id: selectedBedId,
-            })
+            body: JSON.stringify(body)
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
                 closeFloorMap();
-                const row = document.getElementById('row-' + currentRoomAssignmentId);
-                if (row) {
-                    row.style.transition = 'opacity 0.4s';
-                    row.style.opacity = '0';
-                    setTimeout(() => row.remove(), 400);
+                
+                if (isTransferMode) {
+                    // Refresh view or show success
+                    location.reload(); 
+                } else {
+                    const row = document.getElementById('row-' + currentRoomAssignmentId);
+                    if (row) {
+                        row.style.transition = 'opacity 0.4s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 400);
+                    }
                 }
+
                 const flash = document.createElement('div');
                 flash.className = 'core2-flash-success mx-10 mt-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl px-6 py-4 text-sm font-semibold flex items-center gap-3 fixed top-4 right-4 z-[10000] shadow-lg';
                 flash.innerHTML = `<svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ${data.message}`;
                 document.body.appendChild(flash);
                 setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 300); }, 4000);
             } else {
-                alert(data.message || 'Allocation failed.');
+                alert(data.message || 'Action failed.');
                 btn.disabled = false;
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Admit Patient`;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> ${isTransferMode ? 'Execute Transfer' : 'Admit Patient'}`;
             }
         })
         .catch(err => {
             alert('An error occurred. Please try again.');
             btn.disabled = false;
-            btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Admit Patient`;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> ${isTransferMode ? 'Execute Transfer' : 'Admit Patient'}`;
             console.error(err);
         });
     }

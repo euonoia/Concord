@@ -109,6 +109,9 @@ Route::middleware([])->group(function () {
         })->name('core1.ipd.dashboard');
         Route::get('/admissions/create', [AdmissionController::class, 'create'])->name('core1.admissions.create');
         Route::post('/admissions', [AdmissionController::class, 'store'])->name('core1.admissions.store');
+        Route::post('/admissions/{admission}/request-transfer', [AdmissionController::class, 'requestTransfer'])->name('core1.admissions.request-transfer');
+        Route::post('/admissions/{admission}/execute-transfer', [AdmissionController::class, 'executeTransfer'])->name('core1.admissions.execute-transfer');
+
         Route::post('/admissions/{admission}/request-discharge', [AdmissionController::class, 'requestDischarge'])->name('core1.admissions.request-discharge');
         Route::post('/admissions/{admission}/finalize-discharge', [AdmissionController::class, 'finalizeDischarge'])->name('core1.admissions.finalize-discharge');
     });

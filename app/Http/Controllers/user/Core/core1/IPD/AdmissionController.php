@@ -90,6 +90,56 @@ class AdmissionController extends Controller
     }
 
     /**
+     * Request a patient transfer.
+     */
+    public function requestTransfer(Request $request, Admission $admission)
+    {
+        $validated = $request->validate([
+            'target_bed_id' => 'nullable|exists:beds_core1,id',
+        ]);
+
+        try {
+            $this->admissionService->requestTransfer($admission, $validated['target_bed_id'] ?? null);
+
+            return redirect()->route('core1.inpatient.index')->with('success', 'Transfer request sent to Bed & Linen.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Transfer request failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Execute a direct patient transfer (Clinician picked the bed).
+     */
+    public function executeTransfer(Request $request, Admission $admission)
+    {
+        $validated = $request->validate([
+            'new_bed_id' => 'required|exists:beds_core1,id',
+        ]);
+
+        try {
+            $newBed = Bed::findOrFail($validated['new_bed_id']);
+            $this->admissionService->transfer($admission, $newBed);
+
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Patient successfully transferred.'
+                ]);
+            }
+
+            return redirect()->route('core1.inpatient.index')->with('success', 'Patient successfully transferred.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transfer failed: ' . $e->getMessage()
+                ], 400);
+            }
+            return back()->with('error', 'Transfer failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Handle patient final release.
      */
     public function finalizeDischarge(Request $request, Admission $admission)
