@@ -120,7 +120,7 @@
     $statusClass = 'core1-tag-recovering';
 
     if($apt['status'] == 'In consultation') {
-        $statusClass = 'core1-tag-critical';
+        $statusClass = 'core1-tag-consulting';
     }
 
     if($apt['status'] == 'Waiting') {
@@ -199,7 +199,15 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="core1-status-tag {{ $reg['status'] === 'Triaged' ? 'core1-tag-stable' : 'core1-tag-cleaning' }}">
+                                        @php
+                                            $regStatusClass = match($reg['status']) {
+                                                'In consultation' => 'core1-tag-consulting',
+                                                'Triaged'         => 'core1-tag-stable',
+                                                'Waiting'         => 'core1-tag-cleaning',
+                                                default           => 'core1-tag-neutral',
+                                            };
+                                        @endphp
+                                        <span class="core1-status-tag {{ $regStatusClass }}">
                                             {{ $reg['status'] }}
                                         </span>
                                     </td>
@@ -1360,6 +1368,17 @@ function openTriageModal(id) {
 }
 
 function openConsultationModal(id, name) {
+    // HIS rules: Once patient is in consultation room, status should be 'In consultation'.
+    // Trigger backend update via AJAX.
+    fetch('/core/outpatient/' + id + '/start-consultation', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    });
+
     currentEncounterId = id;
     const form = document.getElementById('consultationForm');
     form.action = `/core/outpatient/${id}/consultation`;

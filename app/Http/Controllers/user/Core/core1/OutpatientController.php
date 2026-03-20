@@ -37,7 +37,7 @@ class OutpatientController extends Controller
         */
         $query = Encounter::with(['patient', 'doctor', 'triage', 'consultation'])
             ->whereIn('type', ['OPD', 'Pending'])
-            ->where('status', 'Active');
+            ->whereIn('status', ['Active', 'In consultation']);
 
         // Doctor sees only her patients
         if ($user->role_slug === 'doctor') {
@@ -52,8 +52,8 @@ class OutpatientController extends Controller
         |--------------------------------------------------------------------------
         */
         $appointments = $encountersRaw->where('type', 'OPD')->map(function ($encounter) {
-            $status = 'Active';
-            if ($encounter->triage) {
+            $status = $encounter->status; 
+            if ($status === 'Active' && $encounter->triage) {
                 $status = 'Triaged';
             }
             if ($encounter->consultation) {
@@ -85,7 +85,10 @@ class OutpatientController extends Controller
         |--------------------------------------------------------------------------
         */
         $registrations = $encountersRaw->map(function ($encounter) use ($user) {
-            $status = $encounter->triage ? 'Triaged' : 'Waiting';
+            $status = $encounter->status; 
+            if ($status === 'Active') {
+                $status = $encounter->triage ? 'Triaged' : 'Waiting';
+            }
             
             $canAction = true;
 
@@ -178,6 +181,17 @@ class OutpatientController extends Controller
         }
 
         return back()->with('success', 'Triage vitals recorded.');
+    }
+
+    public function startConsultation(Request $request, $id)
+    {
+        $encounter = Encounter::findOrFail($id);
+        $this->outpatientService->startConsultation($encounter);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Consultation started.'
+        ]);
     }
 
     public function saveConsultation(Request $request, $id)

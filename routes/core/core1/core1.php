@@ -131,6 +131,7 @@ Route::middleware([])->group(function () {
     )->name('core1.patients.updateStatus');
     Route::post('/outpatient/{id}/triage', [OutpatientController::class, 'saveTriage'])->name('core1.outpatient.saveTriage');
     Route::post('/outpatient/{id}/consultation', [OutpatientController::class, 'saveConsultation'])->name('core1.outpatient.saveConsultation');
+    Route::post('/outpatient/{id}/start-consultation', [OutpatientController::class, 'startConsultation'])->name('core1.outpatient.startConsultation');
     Route::post('/outpatient/{id}/complete', [OutpatientController::class, 'completeConsultation'])->name('core1.outpatient.complete');
     Route::post('/outpatient/{id}/disposition', [OutpatientController::class, 'disposition'])->name('core1.outpatient.disposition');
 

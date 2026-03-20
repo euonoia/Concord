@@ -65,6 +65,17 @@ class OutpatientService
     }
 
     /**
+     * Start the consultation process.
+     */
+    public function startConsultation(Encounter $encounter): bool
+    {
+        return $encounter->update([
+            'status' => 'In consultation',
+            'updated_at' => Carbon::now()
+        ]);
+    }
+
+    /**
      * Complete OPD encounter and close it.
      */
     public function completeEncounter(Encounter $encounter): bool
