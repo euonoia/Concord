@@ -161,4 +161,41 @@ class DischargeController extends Controller
             return redirect()->back()->with('error', 'Finalization failed: ' . $e->getMessage());
         }
     }
+
+    /**
+     * View Historical Discharge Logs with period filtering.
+     */
+    public function logs(Request $request)
+    {
+        $period = $request->get('period', 'today'); // today, week, month
+        
+        $query = \App\Models\core1\Encounter::with([
+            'patient', 
+            'doctor', 
+            'admission.bed.room.ward',
+            'discharge.clearingDoctor'
+        ])->where('status', 'Closed');
+
+        // Apply Time Filtering
+        $now = \Carbon\Carbon::now();
+        if ($period === 'today') {
+            $query->whereDate('updated_at', \Carbon\Carbon::today());
+        } elseif ($period === 'week') {
+            $query->whereBetween('updated_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()]);
+        } elseif ($period === 'month') {
+            $query->whereMonth('updated_at', $now->month)
+                  ->whereYear('updated_at', $now->year);
+        }
+
+        $encounters = $query->latest('updated_at')->get();
+
+        // Statistics for the dashboard cards
+        $stats = [
+            'today' => \App\Models\core1\Encounter::where('status', 'Closed')->whereDate('updated_at', \Carbon\Carbon::today())->count(),
+            'week'  => \App\Models\core1\Encounter::where('status', 'Closed')->whereBetween('updated_at', [\Carbon\Carbon::now()->startOfWeek(), \Carbon\Carbon::now()->endOfWeek()])->count(),
+            'month' => \App\Models\core1\Encounter::where('status', 'Closed')->whereMonth('updated_at', $now->month)->whereYear('updated_at', $now->year)->count(),
+        ];
+
+        return view('core.core1.discharge.logs', compact('encounters', 'period', 'stats'));
+    }
 }

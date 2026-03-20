@@ -69,4 +69,9 @@ class Encounter extends Model
     {
         return $this->hasMany(LabOrder::class, 'encounter_id');
     }
+
+    public function discharge()
+    {
+        return $this->hasOne(Discharge::class, 'encounter_id');
+    }
 }

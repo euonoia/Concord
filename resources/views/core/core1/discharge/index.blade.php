@@ -14,9 +14,14 @@
             <h1 class="core1-title">Discharge Management</h1>
             <p class="core1-subtitle">Review and process patient discharge clearances</p>
         </div>
-        <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
-            <i class="bi bi-clock" style="color: var(--primary);"></i>
-            <span>{{ now()->format('l, F j, Y') }}</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="{{ route('core1.discharge.logs') }}" class="core1-btn core1-btn-outline" style="font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-clock-history"></i> View Discharge Logs
+            </a>
+            <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="bi bi-clock" style="color: var(--primary);"></i>
+                <span>{{ now()->format('l, F j, Y') }}</span>
+            </div>
         </div>
     </div>
 
