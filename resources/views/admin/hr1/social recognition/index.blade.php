@@ -80,6 +80,16 @@
         border-bottom: 1px solid #f3f4f6;
         font-size: 0.85rem;
     }
+
+    /* Bootstrap Flex Shims */
+    .d-flex { display: flex !important; }
+    .justify-content-between { justify-content: space-between !important; }
+    .justify-content-center { justify-content: center !important; }
+    .justify-content-end { justify-content: flex-end !important; }
+    .align-items-center { align-items: center !important; }
+    .flex-wrap { flex-wrap: wrap !important; }
+    .gap-2 { gap: 0.5rem !important; }
+    .gap-3 { gap: 1rem !important; }
 </style>
 
 <div class="container-fluid py-4">

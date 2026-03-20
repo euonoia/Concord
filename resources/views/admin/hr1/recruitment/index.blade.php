@@ -188,9 +188,11 @@
 
     {{-- HR4 Job Requests Card --}}
     <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+        <div class="card-header bg-dark text-white py-3" style="display: flex; align-items: center; position: relative;">
             <h6 class="mb-0 fw-bold"><i class="bi bi-briefcase me-2"></i>Job Requests from HR4 (Core Human Capital)</h6>
-            <span class="badge bg-primary rounded-pill">{{ $hr4Jobs->count() }} Pending Requests</span>
+            <div style="position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;">
+                <span class="badge bg-primary rounded-pill">{{ $hr4Jobs->count() }} Pending Requests</span>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -200,7 +202,7 @@
                             <th class="ps-4">Job Title</th>
                             <th>Department</th>
                             <th class="text-center">Positions</th>
-                            <th class="text-end pe-4">Action</th>
+                            <th class="text-end pe-4" style="text-align: center !important;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -215,16 +217,16 @@
                                 </td>
                                 <td><span class="badge bg-light text-dark border">{{ $job->department }}</span></td>
                                 <td class="text-center fw-bold">{{ $job->positions_available }}</td>
-                                <td class="text-end pe-4">
+                                <td class="text-end pe-4" style="text-align: center !important;">
                                     @if($isPublished)
                                         <button class="btn btn-sm btn-outline-secondary" disabled>
-                                            <i class="bi bi-check-circle-fill me-1"></i>Published
+                                            <i class="bi bi-check-circle-fill" style="margin-right: 6px;"></i>Published
                                         </button>
                                     @else
-                                        <form action="{{ route('hr1.recruitment.publishHr4', $job->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('hr1.recruitment.publishHr4', $job->id) }}" method="POST" class="d-inline" style="background: transparent !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border: none !important;">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-primary shadow-sm px-3">
-                                                <i class="bi bi-megaphone-fill me-1"></i>Publish to HR1
+                                                <i class="bi bi-megaphone-fill" style="margin-right: 6px;"></i>Publish to HR1
                                             </button>
                                         </form>
                                     @endif

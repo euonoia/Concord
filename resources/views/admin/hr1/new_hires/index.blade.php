@@ -58,8 +58,9 @@
         </div>
     @endif
 
-        <div class="card-body">
-            <form method="GET" class="row g-3">
+    <div class="card" style="margin-top: 40px; padding: 10px;">
+        <div class="card-body" style="padding: 10px;">
+            <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; align-items: end; margin-bottom: 0; padding: 10px 15px;">
                 <div class="col-md-4">
                     <label class="form-label font-weight-bold">Department</label>
                     <select name="department" class="form-select">
@@ -91,14 +92,14 @@
                         <option value="inactive" {{ ($filters['status'] ?? '') == 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button class="btn btn-primary w-100">Filter</button>
+                <div class="d-flex align-items-end justify-content-end">
+                    <button class="btn btn-primary px-5 py-2" style="width: auto;">Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" style="margin-top: 40px;">
         <div class="card-body p-0"> <div class="table-responsive">
                 <table class="table table-hover table-bordered mb-0 align-middle">
                     <thead class="table-light">
