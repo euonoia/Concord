@@ -30,9 +30,7 @@ class PharmacyController extends Controller
             'drug_num'    => 'required|string|max:50',
             'drug_name'   => 'required|string|max:100',
             'quantity'    => 'required|integer|min:0',
-            'statusS'     => 'required|string|in:Completed,Pending',
-            'expiry_date' => 'nullable|date',
-            'supplier'    => 'nullable|string|max:100',
+
         ]);
 
         DrugInventory::create($validated);
@@ -47,32 +45,34 @@ class PharmacyController extends Controller
 
     // ── Formula Management ─────────────────────────────────────────────────────
 
-    public function formulaManagementIndex(Request $request)
-    {
-        $records = FormulaManagement::latest()->paginate(15);
-        return view('core.core2.pharmacy.formula-management.index', compact('records'));
-    }
+public function formulaManagementIndex(Request $request)
+{
+    $records = FormulaManagement::latest()->paginate(15);
+    return view('core.core2.pharmacy.formula-management.index', compact('records'));
+}
 
-    public function formulaManagementCreate()
-    {
-        return view('core.core2.pharmacy.formula-management.create');
-    }
+public function formulaManagementCreate()
+{
+    return view('core.core2.pharmacy.formula-management.create');
+}
 
-    public function formulaManagementStore(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'formula_id'       => 'required|string|max:50',
-            'formula_name'     => 'required|string|max:100',
-            'ingredients_list' => 'nullable|string',
-            'drug_id'          => 'nullable|string|max:50',
-        ]);
+public function formulaManagementStore(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'formula_id' => 'required|string|max:50',
+        'formula_name' => 'required|string|max:100',
+        'ingredients_list' => 'nullable|string',
+        'drug_id' => 'nullable|string|max:50',
+        'dosage' => 'nullable|string|max:100',
+        'preparation_method' => 'nullable|string',
+        'status' => 'nullable|string|max:20',
+    ]);
 
-        FormulaManagement::create($validated);
+    FormulaManagement::create($validated);
 
-        return redirect()->route('core2.pharmacy.formula-management.index')
-            ->with('success', 'Formula management record added successfully.');
-    }
-
+    return redirect()->route('core2.pharmacy.formula-management.index')
+        ->with('success', 'Formula management record added successfully.');
+}
     // ── Prescriptions ──────────────────────────────────────────────────────────
 
     public function prescriptionIndex(Request $request)
@@ -103,22 +103,28 @@ class PharmacyController extends Controller
             ->with('success', 'Prescription record added successfully.');
     }
 
-    public function dispense(Request $request, Prescription $prescription): RedirectResponse
-    {
-        // Decrement Inventory
-        $inventory = \App\Models\core2\DrugInventory::where('drug_name', $prescription->drug_id)
-            ->orWhere('drug_num', $prescription->drug_id)
-            ->first();
+  public function dispense(Request $request, Prescription $prescription): RedirectResponse
+{
+    // 1. Change the query to search 'drug_name' since that is what is being passed
+    $inventory = DrugInventory::where('drug_name', trim($prescription->drug_id))->first();
 
-        if (!$inventory) {
-            return back()->with('error', 'Drug not found in inventory.');
-        }
+    // 2. If it still fails, try a 'LIKE' search as a safety net for minor typos
+    if (!$inventory) {
+        $inventory = DrugInventory::where('drug_name', 'LIKE', '%' . trim($prescription->drug_id) . '%')->first();
+    }
 
-        if ($inventory->quantity < $prescription->quantity) {
-            return back()->with('error', 'Insufficient stock. Available: ' . $inventory->quantity);
-        }
+    // 3. Error Handling
+    if (!$inventory) {
+        return back()->with('error', "Drug record not found. Could not find '{$prescription->drug_id}' in the inventory drug_name column.");
+    }
 
-        $inventory->decrement('quantity', $prescription->quantity);
+    if ($inventory->quantity <= 0) {
+        return back()->with('error', "Insufficient stock for {$inventory->drug_name}.");
+    }
+
+    // 4. Update the records
+    \DB::transaction(function () use ($prescription, $inventory) {
+        $inventory->decrement('quantity', 1);
 
         $prescription->update([
             'status'        => 'Dispensed',
@@ -126,14 +132,13 @@ class PharmacyController extends Controller
             'pharmacist_id' => auth()->id(),
         ]);
 
-        // Sync back to Core 1
         if ($prescription->core1_prescription_id) {
-            $core1Prescription = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
-            if ($core1Prescription) {
-                $core1Prescription->update(['status' => 'Dispensed']);
+            $core1 = \App\Models\core1\Prescription::find($prescription->core1_prescription_id);
+            if ($core1) {
+                $core1->update(['status' => 'Dispensed']);
             }
         }
+    });
 
-        return back()->with('success', 'Medication dispensed and clinical record updated.');
-    }
-}
+    return back()->with('success', "Medication dispensed. {$inventory->drug_name} stock reduced to {$inventory->quantity}.");
+}}

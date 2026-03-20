@@ -1,6 +1,6 @@
 @extends('layouts.core2.app')
 
-@section('title', 'Command Center')
+@section('title', 'Dashboard')
 
 @section('content')
 <header class="mb-10">

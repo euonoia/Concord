@@ -9,9 +9,12 @@ class FormulaManagement extends Model
     protected $table = 'formula_management_core2';
 
     protected $fillable = [
-        'formula_id',
-        'formula_name',
-        'ingredients_list',
-        'drug_id',
-    ];
+    'formula_id',
+    'formula_name',
+    'ingredients_list',
+    'drug_id',
+    'dosage',
+    'preparation_method',
+    'status'
+];
 }
