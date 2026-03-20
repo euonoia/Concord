@@ -26,12 +26,22 @@
 
                 <label>Request Type</label>
                 <select name="type" id="typeSelect" class="form-control" onchange="toggleUI()" required style="margin-bottom:15px;">
-                    <option value="Profile Update">Profile Update</option>
                     <option value="Leave">Request Leave</option>
-                    <option value="Document Request">Document Request</option>
+                    <option value="Payroll">Request Payroll</option>
                     <option value="Request Shift">Request Shift</option> 
                     <option value="Claim">Claim / Reimbursement</option>
                 </select>
+
+                {{-- Payroll Request UI --}}
+                <div id="payrollRequestUI" style="display:none; margin-bottom:15px; padding:10px; border:1px dashed #28a745; border-radius:8px;">
+                    @if(isset($employee->salary))
+                        <strong>Found your payroll!</strong><br>
+                        <small>Salary: ₱{{ number_format($employee->salary,2) }}</small><br>
+                        <small>Click submit to request payroll.</small>
+                    @else
+                        <strong>No payroll data found.</strong>
+                    @endif
+                </div>
 
                 {{-- Request Shift UI --}}
                 <div id="shiftRequestUI" style="display:none; margin-bottom:15px; padding:10px; border:1px dashed #007bff; border-radius:8px;">
@@ -91,13 +101,14 @@
                 <tbody>
                     @forelse($history as $h)
                     <tr>
-                        <td>{{ $h->ess_id ?? $h->claim_id }}</td>
-                        <td>{{ $h->type }}<br>{{ $h->details }}</td>
+                        <td>{{ $h->ess_id ?? $h->claim_id ?? $h->id }}</td>
+                        <td>{{ $h->type ?? 'Payroll' }}<br>{{ $h->details ?? '' }}</td>
                         <td>
                             @if(isset($h->shift_id)) Shift ID: {{ $h->shift_id }} @endif
                             @if(isset($h->leave_date)) Start: {{ $h->leave_date }} @endif
                             @if(isset($h->end_date)) End: {{ $h->end_date }} @endif
                             @if(isset($h->amount)) ₱{{ number_format($h->amount,2) }} @endif
+                            @if(isset($h->salary)) ₱{{ number_format($h->salary,2) }} @endif
                         </td>
                         <td>{{ $h->status }}</td>
                     </tr>
@@ -114,9 +125,11 @@
 <script>
 function toggleUI() {
     const type = document.getElementById('typeSelect').value;
+
     document.getElementById('leaveUI').style.display = type === 'Leave' ? 'block':'none';
     document.getElementById('shiftRequestUI').style.display = type === 'Request Shift' ? 'block':'none';
     document.getElementById('claimUI').style.display = type === 'Claim' ? 'block':'none';
+    document.getElementById('payrollRequestUI').style.display = type === 'Payroll' ? 'block':'none';
 }
 </script>
 @endsection
