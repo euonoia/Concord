@@ -11,6 +11,7 @@ class ClaimsHr3 extends Model
     protected $primaryKey = 'id'; 
     public $incrementing = true; 
     protected $fillable = [
+        'claim_id',
         'employee_id',
         'claim_type',
         'description',

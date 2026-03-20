@@ -9,6 +9,7 @@ use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVehicleReservationController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminFleetController;
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminDocumentTrackingLabOrdersController;
+use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorPortalController;
 
 
 // --- General Dashboard ---
@@ -63,4 +64,17 @@ Route::prefix('logistics2')->name('admin.logistics2.')->group(function () {
     ->name('document.diet');
     Route::get('/surgery-orders', [AdminDocumentTrackingLabOrdersController::class, 'surgeryIndex'])
     ->name('document.surgery');
+
+    // Vendor Master (Vendor Portal)
+Route::prefix('vendor-portal')->name('vendor.portal.')->group(function () {
+
+    Route::get('/', [AdminVendorPortalController::class, 'index'])->name('index');
+    Route::get('/create', [AdminVendorPortalController::class, 'create'])->name('create');
+    Route::post('/store', [AdminVendorPortalController::class, 'store'])->name('store');
+
+    Route::get('/edit/{id}', [AdminVendorPortalController::class, 'edit'])->name('edit');
+    Route::post('/update/{id}', [AdminVendorPortalController::class, 'update'])->name('update');
+
+    Route::post('/delete/{id}', [AdminVendorPortalController::class, 'destroy'])->name('delete');
+});
 });
