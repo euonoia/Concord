@@ -62,6 +62,7 @@
             Route::get('/newhires/{id}', [NewHireController::class, 'show'])->name('hr1.newhires.show');
             Route::get('/newhires/{id}/resume', [NewHireController::class, 'downloadResume'])->name('hr1.newhires.download');
             Route::post('/newhires/{id}/status', [NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
+            Route::post('/newhires/{applicant_id}/validate-assessment', [NewHireController::class, 'validateAssessment'])->name('hr1.newhires.validateAssessment');
             Route::post('/newhires/sync-hr4', [NewHireController::class, 'syncToHr4'])->name('hr1.newhires.syncHr4');
 
 
@@ -128,6 +129,12 @@
             
             Route::get('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])->name('hr2.training_evaluation.show');
             Route::post('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'storeEvaluation'])->name('hr2.training_evaluation.store');
+
+            // --- Competency Verification ---
+            Route::prefix('competency-verification')->group(function () {
+                Route::get('/', [AdminCompetencyVerificationController::class, 'index'])->name('admin.hr2.competency.verification.index');
+                Route::post('/{id}/verify', [AdminCompetencyVerificationController::class, 'verify'])->name('admin.hr2.competency.verify');
+            });
 
             // --- Shared AJAX Dropdowns ---
             Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);

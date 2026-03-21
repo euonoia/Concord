@@ -46,9 +46,13 @@ class NewHireController extends Controller
 
         $query = DB::table('new_hires_hr1')
             ->leftJoin('departments_hr2', 'new_hires_hr1.department_id', '=', 'departments_hr2.department_id')
+            ->leftJoin('onboarding_assessments_hr1', 'new_hires_hr1.applicant_id', '=', 'onboarding_assessments_hr1.applicant_id')
             ->select(
                 'new_hires_hr1.*',
-                'departments_hr2.name as department_name'
+                'departments_hr2.name as department_name',
+                'onboarding_assessments_hr1.assessment_status',
+                'onboarding_assessments_hr1.is_validated',
+                'onboarding_assessments_hr1.validated_by'
             );
 
         if (!empty($filters['department'])) {
@@ -125,6 +129,36 @@ class NewHireController extends Controller
     }
 
     /**
+     * Validate HR2 assessment result
+     */
+    public function validateAssessment(Request $request, $applicant_id)
+    {
+        $this->authorizeHr1Admin();
+
+        $assessment = DB::table('onboarding_assessments_hr1')
+            ->where('applicant_id', $applicant_id)
+            ->first();
+
+        if (!$assessment) {
+            return back()->with('error', 'Assessment record not found.');
+        }
+
+        if ($assessment->assessment_status !== 'passed') {
+            return back()->with('error', 'Cannot validate: Assessment status must be PASSED first (Current: ' . strtoupper($assessment->assessment_status) . ').');
+        }
+
+        DB::table('onboarding_assessments_hr1')
+            ->where('applicant_id', $applicant_id)
+            ->update([
+                'is_validated' => true,
+                'validated_by' => Auth::user()->name,
+                'updated_at' => now()
+            ]);
+
+        return back()->with('success', 'Onboarding assessment validated successfully.');
+    }
+
+    /**
      * Update onboarding status
      * Creates employee + user account when status = active
      */
@@ -135,6 +169,22 @@ class NewHireController extends Controller
         $request->validate([
             'status' => 'required|in:onboarding,active,inactive',
         ]);
+
+        // Check if activation is allowed
+        if ($request->status === 'active') {
+            $hire = DB::table('new_hires_hr1 as n')
+                ->leftJoin('onboarding_assessments_hr1 as a', 'n.applicant_id', '=', 'a.applicant_id')
+                ->where('n.id', $id)
+                ->select('a.is_validated', 'a.assessment_status')
+                ->first();
+
+            if (!$hire || !$hire->is_validated) {
+                $reason = ($hire && $hire->assessment_status !== 'passed') 
+                    ? "Mandatory HR2 Onboarding Assessment must be PASSED first." 
+                    : "HR1 must VALIDATE the assessment results before activation.";
+                return back()->with('error', "Activation failed: $reason");
+            }
+        }
 
         DB::beginTransaction();
 
@@ -151,9 +201,19 @@ class NewHireController extends Controller
 
             // Create employee account if status becomes active
             if ($request->status === 'active') {
+
+                // CHECK HR2 ASSESSMENT FIRST
                 /** @var object $newHire */
                 $newHire = DB::table('new_hires_hr1')->where('id', $id)->first();
                 if (!$newHire) throw new \Exception("New hire not found.");
+
+                $assessment = DB::table('onboarding_assessments_hr1')
+                    ->where('applicant_id', $newHire->applicant_id)
+                    ->first();
+
+                if (!$assessment || $assessment->assessment_status !== 'passed') {
+                    throw new \Exception("Activation failed: Mandatory HR2 Onboarding Assessment must be PASSED first.");
+                }
 
                 $existingUser = DB::table('users')->where('email', $newHire->email)->first();
 

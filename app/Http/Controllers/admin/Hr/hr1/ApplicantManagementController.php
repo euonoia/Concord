@@ -118,6 +118,7 @@ class ApplicantManagementController extends Controller
             $existingHire = DB::table('new_hires_hr1')->where('applicant_id', $id)->first();
 
             if (!$existingHire && $applicant) {
+                // Existing logic: Insert into new_hires_hr1
                 DB::table('new_hires_hr1')->insert([
                     'applicant_id'     => $id,
                     'first_name'       => $applicant->first_name,
@@ -131,6 +132,26 @@ class ApplicantManagementController extends Controller
                     'resume_path'      => $applicant->resume_path,
                     'created_at'       => now(),
                     'updated_at'       => now(),
+                ]);
+
+                // New logic: Sync to onboarding_assessments_hr1 for HR2 assessment
+                DB::table('onboarding_assessments_hr1')->insert([
+                    'applicant_id'       => $id,
+                    'job_posting_id'     => $applicant->job_posting_id ?? null,
+                    'application_id'     => $applicant->application_id ?? null,
+                    'first_name'         => $applicant->first_name,
+                    'last_name'          => $applicant->last_name,
+                    'email'              => $applicant->email,
+                    'phone'              => $applicant->phone,
+                    'department_id'      => $applicant->department_id,
+                    'specialization'     => $applicant->specialization,
+                    'post_grad_status'   => $applicant->post_grad_status,
+                    'application_status' => 'onboarding',
+                    'resume_path'        => $applicant->resume_path,
+                    'applied_at'         => $applicant->created_at,
+                    'assessment_status'  => 'pending',
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
                 ]);
             }
         }

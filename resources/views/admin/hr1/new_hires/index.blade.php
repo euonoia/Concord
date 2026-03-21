@@ -111,14 +111,21 @@
                             <th class="text-nowrap">Department</th>
                             <th class="text-nowrap">Specialization</th>
                             <th class="text-nowrap">Status</th>
-                            <th class="text-nowrap text-center" style="min-width: 250px;">Action</th>
+                            <th class="text-nowrap text-center">HR2 Assessment</th>
+                            <th class="text-nowrap text-center">HR1 Validation</th>
+                            <th class="text-nowrap text-center" style="min-width: 200px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($newHires as $n)
                             <tr>
                                 <td>{{ $n->id }}</td>
-                                <td class="text-nowrap font-weight-bold">{{ $n->first_name }} {{ $n->last_name }}</td>
+                                <td class="text-nowrap font-weight-bold">
+                                    {{ $n->first_name }} {{ $n->last_name }}
+                                    @if($n->status == 'onboarding')
+                                        <i class="bi bi-hourglass-split text-info ms-1" title="Onboarding In Progress"></i>
+                                    @endif
+                                </td>
                                 <td>{{ $n->email }}</td>
                                 <td class="text-nowrap">{{ $n->phone }}</td>
                                 <td>{{ $n->department_name }}</td>
@@ -128,19 +135,50 @@
                                         {{ ucfirst($n->status) }}
                                     </span>
                                 </td>
+                                <td class="text-center">
+                                    @php
+                                        $badgeClass = [
+                                            'pending' => 'bg-warning text-dark',
+                                            'scheduled' => 'bg-primary',
+                                            'passed' => 'bg-success',
+                                            'failed' => 'bg-danger'
+                                        ][$n->assessment_status ?? 'pending'];
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }}">{{ strtoupper($n->assessment_status ?? 'pending') }}</span>
+                                </td>
+                                <td class="text-center">
+                                    @if($n->is_validated)
+                                        <span class="badge bg-success" title="Validated by {{ $n->validated_by }}">
+                                            <i class="bi bi-check-all me-1"></i> VALIDATED
+                                        </span>
+                                    @elseif($n->assessment_status == 'passed')
+                                        <form action="{{ route('hr1.newhires.validateAssessment', $n->applicant_id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Click to Validate Grade">
+                                                <i class="bi bi-patch-check me-1"></i> Validate Grade
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-light text-muted border">WAITING</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="d-flex align-items-center justify-content-center gap-1">
-                                        <a href="{{ route('hr1.newhires.show', $n->id) }}" class="btn btn-sm btn-info text-white">View</a>
+                                        <a href="{{ route('hr1.newhires.show', $n->id) }}" class="btn btn-sm btn-info text-white" title="View Full Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                         
                                         @if($n->resume_path)
-                                            <a href="{{ route('hr1.newhires.download', $n->id) }}" class="btn btn-sm btn-success" target="_blank">CV</a>
+                                            <a href="{{ route('hr1.newhires.download', $n->id) }}" class="btn btn-sm btn-success" target="_blank" title="Download CV">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                            </a>
                                         @endif
 
                                         <form action="{{ route('hr1.newhires.updateStatus', $n->id) }}" method="POST" class="m-0">
                                             @csrf
-                                            <select name="status" onchange="this.form.submit()" class="form-select form-select-sm" style="width: 120px;">
+                                            <select name="status" onchange="this.form.submit()" class="form-select form-select-sm" style="width: 110px;" {{ ($n->status == 'onboarding' && !$n->is_validated) ? 'title="Validate grade first to activate"' : '' }}>
                                                 <option value="onboarding" {{ $n->status == 'onboarding' ? 'selected' : '' }}>Onboarding</option>
-                                                <option value="active" {{ $n->status == 'active' ? 'selected' : '' }}>Active</option>
+                                                <option value="active" {{ $n->status == 'active' ? 'selected' : '' }} {{ ($n->status == 'onboarding' && !$n->is_validated) ? 'disabled' : '' }}>Active</option>
                                                 <option value="inactive" {{ $n->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
                                             </select>
                                         </form>
