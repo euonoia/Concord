@@ -86,6 +86,7 @@ class AuthController extends Controller
         if (Auth::validate($credentials)) {
             $user = User::where($loginType, $request->login)->first();
 
+            /*
             // Step 2: Store user ID in session for 2FA
             $request->session()->put('2fa_user_id', $user->id);
             $request->session()->put('2fa_remember', $request->has('remember'));
@@ -94,6 +95,18 @@ class AuthController extends Controller
             $this->sendOtpForUser($user);
 
             return redirect()->route('portal.2fa');
+            */
+
+            // --- DIRECT LOGIN (OTP DISABLED) ---
+            Auth::login($user, $request->has('remember'));
+            $request->session()->regenerate();
+
+            $user->update([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+            ]);
+
+            return $this->redirectByUserRole($user);
         }
 
         return back()->withErrors([
@@ -101,9 +114,7 @@ class AuthController extends Controller
         ])->withInput($request->only('login'));
     }
 
-    /**
-     * Show the 2FA verification form.
-     */
+    /*
     public function show2fa(Request $request)
     {
         if (!$request->session()->has('2fa_user_id')) {
@@ -113,9 +124,6 @@ class AuthController extends Controller
         return view('authentication.2fa');
     }
 
-    /**
-     * Verify the 2FA OTP code.
-     */
     public function verify2fa(Request $request)
     {
         $request->validate([
@@ -170,9 +178,6 @@ class AuthController extends Controller
         return back()->withErrors(['otp_code' => 'Invalid or expired verification code.']);
     }
 
-    /**
-     * Resend the 2FA OTP.
-     */
     public function resend2fa(Request $request)
     {
         $userId = $request->session()->get('2fa_user_id');
@@ -186,9 +191,6 @@ class AuthController extends Controller
         return back()->with('status', 'A new verification code has been sent to your email.');
     }
 
-    /**
-     * Internal helper to generate and send OTP.
-     */
     protected function sendOtpForUser($user)
     {
         // Invalidate old OTPs
@@ -209,6 +211,7 @@ class AuthController extends Controller
         // Send Email
         \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\OTPMail($otpCode));
     }
+    */
 
     protected function redirectByUserRole($user)    {
         $role = $user->role_slug;
