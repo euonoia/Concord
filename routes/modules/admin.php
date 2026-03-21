@@ -132,6 +132,11 @@
         Route::get('/departments/{dept_id}/employees', 'getEmployeesByDeptAndSpec');
     });
 
+      // --- Training & Evaluation ---
+    Route::get('/training', [AdminTrainingController::class, 'index'])->name('hr2.training');
+    Route::get('/training/{id}', [AdminTrainingController::class, 'show'])->name('training.show');
+    Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees'])->name('hr2.training.employees');
+
     // --- Learning & Modules ---
     Route::controller(AdminLearningController::class)->group(function () {
         Route::get('/departments/{dept_code}/{spec}/competencies', 'getCompetencies')->name('departments.competencies');
