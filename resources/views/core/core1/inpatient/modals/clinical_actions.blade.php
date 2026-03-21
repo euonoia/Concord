@@ -436,6 +436,12 @@
         document.getElementById('dietModal').style.display = 'flex';
     }
 
+    function openDischargeModal(admissionId, patientName) {
+        document.getElementById('dischargePatientName').innerText = patientName;
+        document.getElementById('dischargeForm').action = "/core/admissions/" + admissionId + "/request-discharge";
+        document.getElementById('dischargeModal').style.display = 'flex';
+    }
+
     function openAdministrationModal(encounterId, patientName) {
         const modal = document.getElementById('administrationModal');
         const list = document.getElementById('adminMedsList');
