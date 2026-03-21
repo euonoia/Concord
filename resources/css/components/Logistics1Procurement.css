@@ -1,0 +1,29 @@
+.l1-inventory-wrapper { padding: 2.5rem; background-color: #f1f3f5; min-height: 100vh; font-family: 'Inter', sans-serif; }
+    .l1-procure-main-title { font-weight: 700; color: #334155; font-size: 1.6rem; margin: 0; }
+    .l1-procure-card { background: #ffffff; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; }
+    .l1-procure-card-head { padding: 16px 22px; font-weight: 600; color: #ffffff; background: #476282; }
+
+    .l1-procure-main-table th { background: #f8fafc; padding: 14px 20px; font-size: 0.7rem; color: #64748b; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.05em; }
+    .l1-procure-main-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    
+    .l1-procure-sku-code { display: block; font-size: 0.65rem; font-weight: 800; color: #476282; }
+    .l1-procure-drug-label { display: block; font-weight: 600; color: #1e293b; font-size: 1rem; }
+    .l1-procure-stock-pill { background: #f1f5f9; padding: 6px 14px; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-flex; align-items: baseline; }
+    
+    .l1-procure-modal-content { border: none; border-radius: 20px; overflow: hidden; }
+    .l1-procure-modal-accent { height: 6px; background: #476282; }
+    .l1-procure-modal-header { background: #476282; padding: 1.5rem; }
+    .l1-procure-modal-icon { width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+    
+    .l1-procure-btn-confirm { background: #476282; color: white; border: none; border-radius: 12px; font-weight: 700; transition: 0.2s ease; }
+    .l1-procure-btn-confirm:hover { background: #364b63; transform: translateY(-1px); }
+
+    .l1-status-badge { font-size: 0.65rem; font-weight: 800; padding: 5px 12px; border-radius: 50px; display: inline-block; min-width: 95px; text-align: center; }
+    .l1-status-low { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .l1-status-critical { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .l1-status-out { background: #111827; color: #ffffff; }
+    .l1-status-default { background: #f3f4f6; color: #6b7280; }
+
+    .l1-procure-item-id-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
+    .l1-procure-label-sm { font-size: 0.6rem; font-weight: 800; color: #94a3b8; display: block; margin-bottom: 2px; }
+    .l1-procure-input-label { font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px; display: block; text-align: center; }

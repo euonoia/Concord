@@ -19,6 +19,8 @@ class Shift extends Model
         'shift_name',
         'day_of_week',
         'start_time',
+        'requested_by',
+        'status',
         'end_time',
         'is_active'
     ];

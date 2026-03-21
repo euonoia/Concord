@@ -12,7 +12,7 @@ class AdminTrainingScheduleController extends Controller
 {
     private function authorizeHr3()
     {
-        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3'])) {
+        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3', 'admin_ultra'])) {
             abort(403, 'Unauthorized.');
         }
     }
@@ -21,24 +21,68 @@ class AdminTrainingScheduleController extends Controller
     {
         $this->authorizeHr3();
 
-        // 1. Get employees who have completed competencies in HR2
-        $eligibleEmployees = DB::table('employee_competency_completion_hr2')
-            ->where('status', 'completed')
-            ->select('employee_id')
+        /*
+        |--------------------------------------------------------------------------
+        | GET ELIGIBLE EMPLOYEES
+        |--------------------------------------------------------------------------
+        | Only show employees who have been ENROLLED via the HR2 Sync Tool.
+        | We join with 'competency_enroll_hr2' to ensure they have an active path.
+        */
+        $eligibleEmployees = DB::table('competency_enroll_hr2 as ce')
+            ->join('employees as e', 'ce.employee_id', '=', 'e.employee_id')
+            ->select(
+                'e.employee_id',
+                'e.first_name',
+                'e.last_name',
+                'e.specialization'
+            )
+            ->where('ce.status', 'completed') 
             ->distinct()
+            ->orderBy('e.first_name')
             ->get();
 
-        // 2. Get all Employees who have the 'admin_hr2' role slug (Selected as Trainer)
+        /*
+        |--------------------------------------------------------------------------
+        | GET TRAINERS (HR2 Admins)
+        |--------------------------------------------------------------------------
+        */
         $availableTrainers = DB::table('users')
             ->join('employees', 'users.id', '=', 'employees.user_id')
             ->where('users.role_slug', 'admin_hr2')
             ->select('employees.employee_id', 'employees.first_name', 'employees.last_name')
             ->get();
 
-        // 3. Get all existing training schedules with trainer and presenter info
-        $schedules = TrainingScheduleHr3::with(['trainer', 'presenter'])->latest()->get();
+        $schedules = TrainingScheduleHr3::with(['trainer', 'presenter', 'employee'])
+            ->latest()
+            ->get();
 
-        return view('admin.hr3.schedule.training_index', compact('eligibleEmployees', 'schedules', 'availableTrainers'));
+        return view(
+            'admin.hr3.schedule.training_index',
+            compact('eligibleEmployees', 'schedules', 'availableTrainers')
+        );
+    }
+
+    /**
+     * AJAX/Fetch call for the Schedule Modal
+     * Returns only the competencies the user is ACTUALLY enrolled in (from HR2)
+     */
+    public function getCompetencies($emp_id)
+    {
+        // 1. Get basic employee info
+        $employeeInfo = DB::table('employees')
+            ->where('employee_id', $emp_id)
+            ->first(['department_id', 'specialization']);
+
+        // 2. Get ONLY the competencies assigned via HR2 Sync
+        $competencies = DB::table('competency_enroll_hr2')
+            ->where('employee_id', $emp_id)
+            ->where('status', 'completed')
+            ->get(['competency_code']);
+
+        return response()->json([
+            'info' => $employeeInfo,
+            'competencies' => $competencies
+        ]);
     }
 
     public function store(Request $request)
@@ -51,10 +95,9 @@ class AdminTrainingScheduleController extends Controller
             'training_date'   => 'required|date',
             'training_time'   => 'required',
             'venue'           => 'required',
-            'trainer_id'      => 'required', // Selected HR2 Admin
+            'trainer_id'      => 'required',
         ]);
 
-        // AUTOMATION: Get the Employee ID of the logged-in user (The Presenter)
         $loggedInEmployee = DB::table('employees')
             ->where('user_id', Auth::id())
             ->first();
@@ -66,27 +109,10 @@ class AdminTrainingScheduleController extends Controller
             'training_time'   => $request->training_time,
             'venue'           => $request->venue,
             'notes'           => $request->notes,
-            'trainer_id'      => $request->trainer_id, // From dropdown
-            'presented_by'    => $loggedInEmployee ? $loggedInEmployee->employee_id : 'SYSTEM', // Logged in User
+            'trainer_id'      => $request->trainer_id,
+            'presented_by'    => $loggedInEmployee ? $loggedInEmployee->employee_id : 'SYSTEM',
         ]);
 
-        return back()->with('success', 'Training scheduled successfully. You are marked as the presenter.');
-    }
-
-    public function getCompetencies($emp_id)
-    {
-        $employeeInfo = DB::table('employees')
-            ->where('employee_id', $emp_id)
-            ->first(['department_id', 'specialization']);
-
-        $competencies = DB::table('employee_competency_completion_hr2')
-            ->where('employee_id', $emp_id)
-            ->where('status', 'completed') 
-            ->get(['competency_code']);
-
-        return response()->json([
-            'info' => $employeeInfo,
-            'competencies' => $competencies
-        ]);
+        return back()->with('success', 'Face-to-face training scheduled for the HR2 enrolled competency.');
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Controllers\user\Hr\hr1\ApplicantController;
 use App\Http\Controllers\hr\hr1\SocialRecognitionController;
 use App\Http\Middleware\RedirectIfGuest;
+use App\Http\Controllers\OnboardingAssessmentPublicController;
 
 // --- Public Routes ---
 require base_path('routes/landing/landing.php');

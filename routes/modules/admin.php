@@ -10,6 +10,7 @@
         use App\Http\Controllers\admin\Hr\hr1\AdminHr1DashboardController;
         use App\Http\Controllers\admin\Hr\hr1\AdminSocialRecognitionController;
 
+        use App\Http\Controllers\admin\Hr\hr2\AdminLearningEnrollController;
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
         use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
         use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
@@ -25,6 +26,8 @@
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminLeaveManagementController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminClaimsController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminShiftRequestController;
         
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
@@ -37,8 +40,8 @@
         Route::get('/hr4/dashboard', function () { return view('admin.hr4.dashboard'); })->name('admin.hr4.dashboard');
 
         // Logistics Modular
-        Route::get('/logistics1/dashboard', function () { return view('admin.logistics1.index'); })->name('admin.logistics1.dashboard');
-        Route::get('/logistics2/dashboard', function () { return view('admin.logistics2.index'); })->name('admin.logistics2.dashboard');
+        Route::get('/logistics1/dashboard', function () { return view('admin._logistics1.dashboard'); })->name('admin.logistics1.dashboard');
+        Route::get('/logistics2/dashboard', function () { return view('admin._logistics2.dashboard'); })->name('admin.logistics2.dashboard');
 
         // Core Modular
         Route::get('/core1/dashboard', function () { return view('admin.core1.index'); })->name('admin.core1.dashboard');
@@ -95,40 +98,41 @@
         });
 
         // --- HR2 Department ---
-        Route::prefix('hr2')->group(function () {
+      Route::prefix('hr2')->group(function () {
 
-            // --- Succession Management ---
-            Route::get('/departments/{dept_code}/specializations', [AdminSuccessionController::class, 'getSpecializations'])->name('departments.specializations');
-            Route::get('/departments/{dept_code}/positions', [AdminSuccessionController::class, 'getPositions'])->name('departments.positions');
-            Route::get('/departments/{dept_id}/employees', [AdminSuccessionController::class, 'getEmployeesByDeptAndSpec']);
 
-            // --- Learning & Modules ---
-            Route::get('/departments/{dept_code}/{spec}/competencies', [AdminLearningController::class, 'getCompetencies'])->name('departments.competencies');
-            Route::get('/generate-module-code/{dept}/{spec}', [AdminLearningController::class,'generateModuleCode'])->name('hr2.generateModuleCode');
-                
-            // --- Learning Materials ---
-            Route::get('/learning-materials', [AdminLearningMaterialsController::class, 'selector'])->name('learning.materials.selector');
-            Route::get('/materials/{moduleCode}/list', [AdminLearningMaterialsController::class, 'listMaterials'])->name('learning.materials.list');
-            Route::post('/{moduleCode}/materials', [AdminLearningMaterialsController::class, 'store'])->name('learning.materials.store');
-            Route::delete('/materials/{id}', [AdminLearningMaterialsController::class, 'destroy'])->name('learning.materials.destroy');
-            Route::get('/modules/{dept}/{spec}', [AdminLearningMaterialsController::class, 'getModulesByDeptSpec']);
+    Route::controller(AdminLearningEnrollController::class)->group(function () {
+        // Main Table View
+        Route::get('learning/enroll', 'index')->name('hr2.learning.enroll');
+        
+        // ADD THIS LINE: It defines the selection table route
+        Route::get('learning/enroll/{id}', 'showEnrollment')->name('hr2.learning.show_enroll');
+        
+        // Final Action
+        Route::post('learning/assign-modules', 'assignModules')->name('hr2.learning.assign');
+    });
 
-            // --- Competency Verification ---
-            Route::get('/competency-verification', [AdminCompetencyVerificationController::class,'index'])->name('admin.hr2.competency.verification.index');
-            Route::post('/competency-verification/{id}/verify', [AdminCompetencyVerificationController::class,'verify'])->name('admin.hr2.competency.verify');
+    // --- Succession Management ---
+    Route::controller(AdminSuccessionController::class)->group(function () {
+        Route::get('/departments/{dept_code}/specializations', 'getSpecializations')->name('departments.specializations');
+        Route::get('/departments/{dept_code}/positions', 'getPositions')->name('departments.positions');
+        Route::get('/departments/{dept_id}/employees', 'getEmployeesByDeptAndSpec');
+    });
 
-            // --- Training Viewer (AdminTrainingController) ---
-            Route::get('/training', [AdminTrainingController::class,'index'])->name('hr2.training');
-            Route::get('/training/{id}', [AdminTrainingController::class,'show'])->name('training.show');
-            // Basic employee list (No evaluation scores)
-            Route::get('/eligible-employees', [AdminTrainingController::class,'getEligibleEmployees'])->name('hr2.training.employees');
+    // --- Learning & Modules ---
+    Route::controller(AdminLearningController::class)->group(function () {
+        Route::get('/departments/{dept_code}/{spec}/competencies', 'getCompetencies')->name('departments.competencies');
+        Route::get('/generate-module-code/{dept}/{spec}', 'generateModuleCode')->name('hr2.generateModuleCode');
+    });
 
-            // --- Training EVALUATION (AdminTrainingEvaluationController) ---
-            // NEW UNIQUE URL for evaluation data to avoid collision
-            Route::get('/evaluation-eligible-employees', [AdminTrainingEvaluationController::class, 'getEligibleEmployees'])->name('hr2.evaluation.employees');
-            
-            Route::get('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])->name('hr2.training_evaluation.show');
-            Route::post('/training-evaluation/evaluate', [AdminTrainingEvaluationController::class, 'storeEvaluation'])->name('hr2.training_evaluation.store');
+    // --- Learning Materials ---
+    Route::controller(AdminLearningMaterialsController::class)->group(function () {
+        Route::get('/learning-materials', 'selector')->name('learning.materials.selector');
+        Route::get('/materials/{moduleCode}/list', 'listMaterials')->name('learning.materials.list');
+        Route::post('/{moduleCode}/materials', 'store')->name('learning.materials.store');
+        Route::delete('/materials/{id}', 'destroy')->name('learning.materials.destroy');
+        Route::get('/modules/{dept}/{spec}', 'getModulesByDeptSpec');
+    });
 
             // --- Competency Verification ---
             Route::prefix('competency-verification')->group(function () {
@@ -192,6 +196,20 @@
                 Route::post('/{id}/update', [AdminLeaveManagementController::class, 'updateStatus'])
                     ->name('admin.hr3.leave.update');
             });
+           
+            // Claims & Reimbursement
+            Route::get('/claims', [AdminClaimsController::class, 'index'])->name('admin.hr3.claims.index');
+            Route::post('/claims/{claim_id}/approve', [AdminClaimsController::class, 'approve'])->name('admin.hr3.claims.approve');
+            Route::post('/claims/{claim_id}/reject', [AdminClaimsController::class, 'reject'])->name('admin.hr3.claims.reject');
+
+            Route::get('/shift-requests', [AdminShiftRequestController::class, 'index'])
+                ->name('admin.hr3.shift_requests.index');
+
+            Route::post('/shift-requests/{id}/approve', [AdminShiftRequestController::class, 'approve'])
+                ->name('admin.hr3.shift_requests.approve');
+
+            Route::post('/shift-requests/{id}/reject', [AdminShiftRequestController::class, 'reject'])
+                ->name('admin.hr3.shift_requests.reject');
         });
 
         // --- END OF HR3 Department ---
