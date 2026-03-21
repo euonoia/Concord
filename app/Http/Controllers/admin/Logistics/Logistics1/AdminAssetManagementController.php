@@ -49,7 +49,36 @@ class AdminAssetManagementController extends Controller
 
         $assets = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('admin._logistics1.assets.index', compact('assets'));
+        // -------------------------------------------------------
+        // Fleet vehicles from fleet_management_logistics2
+        // -------------------------------------------------------
+        $fleetQuery = DB::table('fleet_management_logistics2');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $fleetQuery->where(function ($q) use ($search) {
+                $q->where('plate_number', 'like', "%$search%")
+                  ->orWhere('vehicle_type', 'like', "%$search%")
+                  ->orWhere('model', 'like', "%$search%");
+            });
+        }
+
+        if ($request->filled('fleet_status')) {
+            $fleetQuery->where('status', $request->input('fleet_status'));
+        }
+
+        $fleet = $fleetQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'fleet_page');
+
+        $activeTab = $request->get('tab', 'assets');
+
+        // Vendors for supplier dropdown
+        $vendors = DB::table('vendor_portal_logistics2')
+            ->whereNull('deleted_at')
+            ->where('status', 'active')
+            ->orderBy('vendor_name', 'asc')
+            ->get();
+
+        return view('admin._logistics1.assets.index', compact('assets', 'fleet', 'activeTab', 'vendors'));
     }
 
     /**
@@ -60,44 +89,54 @@ class AdminAssetManagementController extends Controller
      *              supplier, warranty_expiry, last_maintained_at,
      *              notes, created_by, created_at, updated_at
      */
+    /**
+     * Auto-generate a unique asset code: AST-YYYYMMDD-XXXX
+     */
+    private function generateAssetCode(): string
+    {
+        do {
+            $code = 'AST-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        } while (DB::table('assets_logistics1')->where('asset_code', $code)->exists());
+
+        return $code;
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'asset_code'        => 'required|string|max:100|unique:assets_logistics1,asset_code',
-            'asset_name'        => 'required|string|max:255',
-            'serial_number'     => 'nullable|string|max:255|unique:assets_logistics1,serial_number',
-            'category'          => 'required|string|max:100',
-            'location'          => 'nullable|string|max:255',
-            'status'            => 'required|in:active,inactive,under_repair,disposed',
-            'condition_status'  => 'required|in:excellent,good,fair,poor',
-            'purchase_date'     => 'nullable|date',
-            'purchase_cost'     => 'nullable|numeric|min:0',
-            'supplier'          => 'nullable|string|max:255',
-            'warranty_expiry'   => 'nullable|date',
-            'last_maintained_at'=> 'nullable|date',
-            'notes'             => 'nullable|string',
+            'asset_name'    => 'required|string|max:255',
+            'serial_number' => 'nullable|string|max:255|unique:assets_logistics1,serial_number',
+            'category'      => 'required|in:Equipment,Furniture,IT Hardware,Tools',
+            'location'      => 'nullable|string|max:255',
+            'status'        => 'required|in:active,inactive,under_repair,disposed',
+            'purchase_cost' => 'nullable|numeric|min:0',
+            'supplier'      => 'nullable|string|max:255',
+            'asset_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $employee = DB::table('employees')->where('user_id', Auth::id())->first();
 
+        // Handle single image upload
+        $imagePath = null;
+        if ($request->hasFile('asset_image')) {
+            $imagePath = $request->file('asset_image')->store('assets', 'public');
+        }
+
         DB::table('assets_logistics1')->insert([
-            'asset_code'         => $request->asset_code,
-            'asset_name'         => $request->asset_name,
-            'serial_number'      => $request->serial_number,
-            'category'           => $request->category,
-            'location'           => $request->location,
-            'status'             => $request->status,
-            'condition_status'   => $request->condition_status,
-            'purchase_date'      => $request->purchase_date,
-            'purchase_cost'      => $request->purchase_cost      ?? 0.00,
-            'supplier'           => $request->supplier,
-            'warranty_expiry'    => $request->warranty_expiry,
-            'last_maintained_at' => $request->last_maintained_at,
-            'notes'              => $request->notes,
-            'created_by'         => $employee ? $employee->employee_id : null,
-            'created_at'         => now(),
-            'updated_at'         => now(),
-            // deleted_at left NULL (active record)
+            'asset_code'       => $this->generateAssetCode(),
+            'asset_name'       => $request->asset_name,
+            'serial_number'    => $request->serial_number,
+            'category'         => $request->category,
+            'location'         => $request->location,
+            'status'           => $request->status,
+            'condition_status' => 'excellent',
+            'purchase_date'    => now()->toDateString(),
+            'purchase_cost'    => $request->purchase_cost ?? 0.00,
+            'supplier'         => $request->supplier,
+            'asset_image'      => $imagePath,
+            'created_by'       => $employee ? $employee->employee_id : null,
+            'created_at'       => now(),
+            'updated_at'       => now(),
         ]);
 
         return redirect()->back()->with('success', 'Asset added successfully.');
@@ -112,38 +151,37 @@ class AdminAssetManagementController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'asset_name'        => 'required|string|max:255',
-            'serial_number'     => 'nullable|string|max:255|unique:assets_logistics1,serial_number,' . $id,
-            'category'          => 'required|string|max:100',
-            'location'          => 'nullable|string|max:255',
-            'status'            => 'required|in:active,inactive,under_repair,disposed',
-            'condition_status'  => 'required|in:excellent,good,fair,poor',
-            'purchase_date'     => 'nullable|date',
-            'purchase_cost'     => 'nullable|numeric|min:0',
-            'supplier'          => 'nullable|string|max:255',
-            'warranty_expiry'   => 'nullable|date',
-            'last_maintained_at'=> 'nullable|date',
-            'notes'             => 'nullable|string',
+            'asset_name'       => 'required|string|max:255',
+            'serial_number'    => 'nullable|string|max:255|unique:assets_logistics1,serial_number,' . $id,
+            'category'         => 'required|in:Equipment,Furniture,IT Hardware,Tools',
+            'location'         => 'nullable|string|max:255',
+            'status'           => 'required|in:active,inactive,under_repair,disposed',
+            'condition_status' => 'required|in:excellent,good,fair,poor',
+            'purchase_cost'    => 'nullable|numeric|min:0',
+            'supplier'         => 'nullable|string|max:255',
+            'asset_image'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        $updateData = [
+            'asset_name'       => $request->asset_name,
+            'serial_number'    => $request->serial_number,
+            'category'         => $request->category,
+            'location'         => $request->location,
+            'status'           => $request->status,
+            'condition_status' => $request->condition_status,
+            'purchase_cost'    => $request->purchase_cost ?? 0.00,
+            'supplier'         => $request->supplier,
+            'updated_at'       => now(),
+        ];
+
+        if ($request->hasFile('asset_image')) {
+            $updateData['asset_image'] = $request->file('asset_image')->store('assets', 'public');
+        }
 
         DB::table('assets_logistics1')
             ->where('id', $id)
             ->whereNull('deleted_at')
-            ->update([
-                'asset_name'         => $request->asset_name,
-                'serial_number'      => $request->serial_number,
-                'category'           => $request->category,
-                'location'           => $request->location,
-                'status'             => $request->status,
-                'condition_status'   => $request->condition_status,
-                'purchase_date'      => $request->purchase_date,
-                'purchase_cost'      => $request->purchase_cost      ?? 0.00,
-                'supplier'           => $request->supplier,
-                'warranty_expiry'    => $request->warranty_expiry,
-                'last_maintained_at' => $request->last_maintained_at,
-                'notes'              => $request->notes,
-                'updated_at'         => now(),
-            ]);
+            ->update($updateData);
 
         return redirect()->back()->with('success', 'Asset updated successfully.');
     }
