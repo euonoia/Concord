@@ -30,11 +30,20 @@
         <i class="bi bi-house-door"></i>
         <span>Dashboard</span>
     </a>
-    
-    <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
-        <i class="bi bi-people"></i>
-        <span>Applicant Management</span>
-    </a>
+        <a href="{{ route('hr1.applicants.index') }}" class="{{ request()->routeIs('hr1.applicants.*') ? 'active' : '' }}">
+            <i class="bi bi-people"></i>
+            <span>Applicant Management</span>
+        </a>
+
+        <ul class="submenu">
+            <li>
+                <a href="{{ route('onboarding.assessment.public') }}"
+                class="{{ request()->routeIs('onboarding.assessment.*') ? 'active' : '' }}">
+                <i class="bi bi-list-check"></i>
+                <span>Applicant Assessment</span>
+                </a>
+            </li>
+        </ul>
     <a href="{{ route('hr1.newhires.index') }}" class="{{ request()->routeIs('hr1.newhires.*') ? 'active' : '' }}">
         <i class="bi bi-person-badge"></i>
         <span>New Hires</span>

@@ -6,7 +6,9 @@
         use App\Http\Controllers\admin\Hr\hr1\ApplicantManagementController;
         use App\Http\Controllers\admin\Hr\hr1\NewHireController;
         use App\Http\Controllers\admin\Hr\hr1\AdminTrainingPerformanceController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminOnboardingAssessmentController;
 
+        use App\Http\Controllers\admin\Hr\hr2\AdminLearningEnrollController;
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
         use App\Http\Controllers\admin\Hr\hr2\CompetencyController;
         use App\Http\Controllers\admin\Hr\hr2\AdminTrainingController;
@@ -15,7 +17,6 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningMaterialsController;
         use App\Http\Controllers\admin\Hr\hr2\AdminCompetencyVerificationController;
         use App\Http\Controllers\admin\Hr\hr2\AdminTrainingEvaluationController;
-        use App\Http\Controllers\admin\Hr\hr2\AdminLearningEnrollController;
 
 
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
@@ -72,6 +73,17 @@
             // Fixed: Removed leading /admin/ as the prefix handles it
             Route::post('/training-performance/{employee_id}/validate', [AdminTrainingPerformanceController::class, 'validateAndStore'])
                 ->name('hr1.training.performance.validate');
+             Route::get('/onboarding-assessment', [AdminOnboardingAssessmentController::class, 'index'])
+                ->name('onboarding.assessment.public');
+
+            Route::post('/onboarding-assessment/check', [AdminOnboardingAssessmentController::class, 'checkReference'])
+                ->name('onboarding.assessment.check');
+
+            Route::get('/onboarding-assessment/matrix/{id}', [AdminOnboardingAssessmentController::class, 'matrix'])
+                ->name('onboarding.assessment.matrix');
+
+            Route::post('/onboarding-assessment/matrix/{id}/submit', [AdminOnboardingAssessmentController::class, 'submitAssessment'])
+                ->name('onboarding.assessment.submit');
         });
 
         // --- HR2 Department ---
