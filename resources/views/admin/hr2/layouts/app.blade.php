@@ -33,12 +33,6 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('succession.index') }}" 
-           class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
-            <i class="bi bi-tree"></i>
-            <span>Succession</span>
-        </a>
-
         <a href="{{ route('competencies.index') }}" 
            class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
             <i class="bi bi-lightbulb"></i>
@@ -66,6 +60,13 @@
             </div>
         </div>
 
+
+        <a href="{{ route('succession.index') }}" 
+           class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
+            <i class="bi bi-tree"></i>
+            <span>Succession</span>
+        </a>
+        
         <a href="{{ route('hr2.training') }}" 
            class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>
