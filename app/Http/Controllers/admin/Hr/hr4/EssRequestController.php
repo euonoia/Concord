@@ -5,6 +5,8 @@ namespace App\Http\Controllers\admin\Hr\hr4;
 use App\Http\Controllers\Controller;
 use App\Models\admin\Hr\hr4\PayrollEssRequest;
 use App\Models\Employee;
+use App\Models\Payroll;
+use App\Models\admin\Hr\hr4\DirectCompensation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +61,60 @@ class EssRequestController extends Controller
             ->where('employee_id', $essRequest->employee_id)
             ->where('details', $essRequest->details)
             ->update(['status' => 'approved', 'updated_at' => Carbon::now()]);
+
+        // Create payroll entry for approved request based on employee_id + salary sources
+        $employee = Employee::where('employee_id', $essRequest->employee_id)->first();
+
+        if ($employee) {
+            // Source 1: HR2 sync table salary/net_pay if available
+            $hr2Request = DB::table('payroll_request_hr2')
+                ->where('employee_id', $essRequest->employee_id)
+                ->where('details', $essRequest->details)
+                ->orderByDesc('created_at')
+                ->first();
+
+            $salary = $hr2Request->salary ?? null;
+            $netPay = $hr2Request->net_pay ?? null;
+
+            // Source 2: Latest direct compensation in HR4
+            if (!$salary || $salary <= 0) {
+                $compensation = DirectCompensation::where('employee_id', $essRequest->employee_id)
+                    ->orderByDesc('month')
+                    ->first();
+
+                if ($compensation) {
+                    $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
+                }
+            }
+
+            // Source 3: Position base salary fallback
+            if (!$salary || $salary <= 0) {
+                $salary = $employee->position->base_salary ?? 0;
+            }
+
+            // If net_pay not set in HR2, use salary as net
+            if (!$netPay || $netPay <= 0) {
+                $netPay = $salary;
+            }
+
+            // Ensure positive salary
+            if ($salary > 0 && $netPay > 0) {
+                // Avoid duplicates for same day & employee
+                $existsPayroll = Payroll::where('employee_id', $employee->id)
+                    ->whereDate('pay_date', Carbon::now())
+                    ->exists();
+
+                if (!$existsPayroll) {
+                    Payroll::create([
+                        'employee_id' => $employee->id,
+                        'salary' => $salary,
+                        'deductions' => max(0, $salary - $netPay),
+                        'net_pay' => $netPay,
+                        'pay_date' => Carbon::now()->toDateString(),
+                    ]);
+                }
+            }
+        }
 
         return back()->with('success', 'Request has been approved.');
     }

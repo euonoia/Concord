@@ -396,7 +396,7 @@
 
         <a href="{{ route('hr4.ess_requests.index') }}" class="{{ request()->routeIs('hr4.ess_requests.*') ? 'active' : '' }}">
             <i class="bi bi-file-earmark-text"></i>
-            <span>ESS Requests</span>
+            <span>Payroll Requests</span>
         </a>
 
         <a href="{{ route('hr4.job_postings.index') }}" class="{{ request()->routeIs('hr4.job_postings.*') ? 'active' : '' }}">
