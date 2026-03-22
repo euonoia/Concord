@@ -36,6 +36,15 @@
     .btn-mc:hover { background: #e2e8f0; }
     .btn-ms { background: #1e293b; color: #fff; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 600; padding: 0.45rem 1.1rem; cursor: pointer; }
     .btn-ms:hover { background: #334155; color: #fff; }
+    .btn-mu { background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 600; padding: 0.45rem 1.1rem; cursor: pointer; }
+    .btn-mu:hover { background: #d97706; }
+    .btn-act { width: 30px; height: 30px; border-radius: 7px; border: none; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: all 0.15s; cursor: pointer; vertical-align: middle; }
+    .btn-act-edit { background: #fef9c3; color: #a16207; }
+    .btn-act-edit:hover { background: #fde68a; }
+    .btn-act-delete { background: #fee2e2; color: #b91c1c; }
+    .btn-act-delete:hover { background: #fecaca; }
+    .btn-act-restock-text { height: 30px; border-radius: 7px; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 0 10px; background: #dbeafe; color: #1d4ed8; cursor: pointer; transition: all 0.15s; vertical-align: middle; white-space: nowrap; }
+    .btn-act-restock-text:hover { background: #bfdbfe; }
     .po-option-detail { font-size: 0.75rem; color: #94a3b8; }
 
     .data-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
@@ -65,7 +74,7 @@
     .bp-stable   { background: #dcfce7; color: #16a34a; }
     .bp-low      { background: #fef9c3; color: #a16207; }
     .bp-critical { background: #fee2e2; color: #b91c1c; }
-    .bp-out      { background: #1e293b;  color: #f8fafc; }
+    .bp-out      { background: #fee2e2; color: #b91c1c; white-space: nowrap; }
     .bp-new      { background: #dbeafe; color: #1d4ed8; }
     .bp-ordered  { background: #ede9fe; color: #6d28d9; }
     .bp-shipped  { background: #ffedd5; color: #c2410c; }
@@ -128,8 +137,8 @@
         </div>
     </div>
 </form>
-<div class="data-card">
-    <table class="table data-table">
+<div class="data-card" style="overflow-x:auto;">
+    <table class="table data-table" style="min-width:1000px;">
         <thead>
             <tr>
                 <th>#</th>
@@ -137,11 +146,15 @@
                 <th>Drug</th>
                 <th>Supplier</th>
                 <th>Qty</th>
+                <th>Model Name</th>
+                <th>Actual Qty</th>
+                <th>Bad Orders</th>
+                <th>Inspector</th>
                 <th>Requested Date</th>
                 <th>Expected Delivery</th>
                 <th>Requested By</th>
                 <th>Status</th>
-            </tr>
+                <th></th>
         </thead>
         <tbody>
             @forelse($receiving as $item)
@@ -165,36 +178,134 @@
                 </td>
                 <td><span class="supplier-text" title="{{ $item->selected_supplier }}">{{ $item->selected_supplier }}</span></td>
                 <td><span class="qty-ok">{{ $item->requested_quantity }}</span></td>
+                <td style="font-size:0.78rem;">{{ $item->model_name ?? '—' }}</td>
+                <td style="font-size:0.78rem;">{{ $item->actual_quantity ?? '—' }}</td>
+                <td style="font-size:0.78rem;">{{ $item->bad_orders ?? '—' }}</td>
+                <td style="font-size:0.78rem;">{{ $item->inspector ?? '—' }}</td>
                 <td style="font-size:0.78rem;color:#64748b;">{{ \Carbon\Carbon::parse($item->requested_date)->format('M d, Y') }}</td>
                 <td style="font-size:0.78rem;color:#64748b;">{{ \Carbon\Carbon::parse($item->expected_delivery_date)->format('M d, Y') }}</td>
                 <td style="font-size:0.78rem;">{{ $item->req_first_name }} {{ $item->req_last_name }}</td>
                 <td><span class="badge-pill {{ $poStatusMap[$item->status] ?? 'bp-low' }}">{{ ucfirst($item->status) }}</span></td>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; flex-direction: row; align-items: center; gap: 6px;">
+                        <button class="btn-act btn-act-edit" title="Update Status"
+                            data-bs-toggle="modal"
+                            data-bs-target="#updateReceivingModal"
+                            data-id="{{ $item->id }}"
+                            data-status="{{ $item->status }}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" action="{{ route('admin.logistics1.warehouse.receiving_delete', $item->id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Delete this record?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-act btn-act-delete" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-box-arrow-in-down"></i><p>No receiving records found.</p></div></td></tr>
+            <tr><td colspan="14"><div class="empty-state"><i class="bi bi-box-arrow-in-down"></i><p>No receiving records found.</p></div></td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 <div class="d-flex justify-content-end mt-3">{{ $receiving->links() }}</div>
 
-{{-- Receive PO Modal --}}
+{{-- Update Receiving Status Modal --}}
+<div class="modal fade" id="updateReceivingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="updateReceivingForm">
+                @csrf @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Update Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Status <span class="text-danger">*</span></label>
+                    <select name="status" id="update_status" class="form-select" required onchange="toggleDeliveryFields(this.value)">
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="ordered">Ordered</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="paid">Paid</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    {{-- Delivery Details (shown only when status = delivered) --}}
+                    <div id="deliveryFields" style="display:none; margin-top:1rem;">
+                        <hr style="border-color:#e2e8f0;">
+                        <p style="font-size:0.78rem; font-weight:600; color:#475569; margin-bottom:0.75rem;">Delivery Details</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Actual Quantity Delivered <span class="text-danger">*</span></label>
+                                <input type="number" name="actual_quantity" id="actual_quantity" class="form-control" min="0" placeholder="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Bad Orders</label>
+                                <input type="number" name="bad_orders" id="bad_orders" class="form-control" min="0" placeholder="0" value="0">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Inspector <span class="text-danger">*</span></label>
+                                <input type="text" name="inspector" id="inspector" class="form-control" placeholder="Inspector name" maxlength="255">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-mc" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-ms"><i class="bi bi-check-lg me-1"></i>Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDeliveryFields(status) {
+    var fields = document.getElementById('deliveryFields');
+    var actualQty = document.getElementById('actual_quantity');
+    var inspector = document.getElementById('inspector');
+    if (status === 'delivered') {
+        fields.style.display = 'block';
+        actualQty.required = true;
+        inspector.required = true;
+    } else {
+        fields.style.display = 'none';
+        actualQty.required = false;
+        inspector.required = false;
+    }
+}
+
+document.getElementById('updateReceivingModal').addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    var form = document.getElementById('updateReceivingForm');
+    form.action = '{{ route("admin.logistics1.warehouse.receiving_update", ["id" => "__ID__"]) }}'.replace('__ID__', btn.dataset.id);
+    document.getElementById('update_status').value = btn.dataset.status;
+    toggleDeliveryFields(btn.dataset.status);
+    document.getElementById('actual_quantity').value = '';
+    document.getElementById('bad_orders').value = '0';
+    document.getElementById('inspector').value = '';
+});
+</script>
 <div class="modal fade" id="receivePoModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ route('admin.logistics1.warehouse.receive_po') }}">
                 @csrf
+                <input type="hidden" name="po_source" id="poSource" value="">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-box-arrow-in-down me-2"></i>Receive Purchase Order</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Delivered PO <span class="text-danger">*</span></label>
+                        <label class="form-label">Select Approved PO <span class="text-danger">*</span></label>
                         <select name="po_id" class="form-select" required id="poSelect">
-                            <option value="">— Choose a delivered PO —</option>
+                            <option value="">— Choose an approved PO —</option>
                             @forelse($approvedPOs as $po)
                             <option value="{{ $po->id }}"
+                                data-source="{{ isset($po->source) && $po->source === 'inventory_control' ? 'warehouse_purchaseorders' : 'purchase_orders' }}"
                                 data-drug="{{ $po->drug_name }}"
                                 data-num="{{ $po->drug_num }}"
                                 data-supplier="{{ $po->selected_supplier }}"
@@ -203,7 +314,7 @@
                                 {{ $po->po_number }} — {{ $po->drug_name }}
                             </option>
                             @empty
-                            <option value="" disabled>No delivered POs available</option>
+                            <option value="" disabled>No approved POs available</option>
                             @endforelse
                         </select>
                     </div>
@@ -230,10 +341,15 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Inspector --}}
+                    <div class="mt-3">
+                        <label class="form-label">Inspector <span class="text-danger">*</span></label>
+                        <input type="text" name="inspector" class="form-control" placeholder="Inspector name" maxlength="255" required>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-mc" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-ms"><i class="bi bi-check-lg me-1"></i> Confirm Receive</button>
                 </div>
             </form>
         </div>
@@ -244,7 +360,8 @@
 document.getElementById('poSelect').addEventListener('change', function () {
     const opt = this.options[this.selectedIndex];
     const preview = document.getElementById('poPreview');
-    if (!this.value) { preview.style.display = 'none'; return; }
+    if (!this.value) { preview.style.display = 'none'; document.getElementById('poSource').value = ''; return; }
+    document.getElementById('poSource').value           = opt.dataset.source;
     document.getElementById('preview_drug').textContent     = opt.dataset.drug;
     document.getElementById('preview_num').textContent      = opt.dataset.num;
     document.getElementById('preview_supplier').textContent = opt.dataset.supplier;
@@ -279,12 +396,12 @@ document.getElementById('poSelect').addEventListener('change', function () {
         </div>
     </div>
 </form>
-<div class="data-card">
-    <table class="table data-table">
+<div class="data-card" style="overflow-x:auto;">
+    <table class="table data-table" style="min-width:1000px;">
         <thead>
             <tr>
                 <th>#</th><th>SKU / No.</th><th>Drug Name</th><th>Qty</th>
-                <th>Expiry Date</th><th>Supplier</th><th>Stock Status</th>
+                <th>Expiry Date</th><th>Supplier</th><th>Stock Status</th><th></th>
             </tr>
         </thead>
         <tbody>
@@ -308,15 +425,187 @@ document.getElementById('poSelect').addEventListener('change', function () {
                     </span>
                 </td>
                 <td><span class="supplier-text" title="{{ $item->supplier }}">{{ $item->supplier ?? '—' }}</span></td>
-                <td><span class="badge-pill {{ $statusClass }}">{{ strtoupper($item->status ?? 'N/A') }}</span></td>
+                <td><span class="badge-pill {{ $statusClass }}" style="white-space:nowrap;">{{ $item->status ?? 'N/A' }}</span></td>
+                <td style="white-space: nowrap;">
+                    <div style="display: flex; flex-direction: row; align-items: center; gap: 6px;">
+                        <button class="btn-act btn-act-edit" title="Edit"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editInventoryModal"
+                            data-id="{{ $item->id }}"
+                            data-drug_num="{{ $item->drug_num }}"
+                            data-drug_name="{{ $item->drug_name }}"
+                            data-quantity="{{ $item->quantity }}"
+                            data-status="{{ $item->status }}"
+                            data-supplier="{{ $item->supplier }}"
+                            data-expiry_date="{{ $item->expiry_date }}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" action="{{ route('admin.logistics1.warehouse.inventory_delete', $item->id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Delete this inventory item?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-act btn-act-delete" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                        @if(in_array($item->status, ['Low Stock', 'Critical', 'Out of Stock']))
+                        <button class="btn-act-restock-text" title="Request Stock"
+                            data-bs-toggle="modal"
+                            data-bs-target="#requestStockModal"
+                            data-drug_num="{{ $item->drug_num }}"
+                            data-drug_name="{{ $item->drug_name }}"
+                            data-supplier="{{ $item->supplier }}"
+                            data-quantity="{{ $item->quantity }}">
+                            <i class="bi bi-box-arrow-in-down"></i> Request Stock
+                        </button>
+                        @endif
+                    </div>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="7"><div class="empty-state"><i class="bi bi-clipboard-data"></i><p>No inventory records found.</p></div></td></tr>
+            <tr><td colspan="8"><div class="empty-state"><i class="bi bi-clipboard-data"></i><p>No inventory records found.</p></div></td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 <div class="d-flex justify-content-end mt-3">{{ $inventory->links() }}</div>
+
+{{-- Request Stock Modal --}}
+<div class="modal fade" id="requestStockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('admin.logistics1.procurement.store') }}">
+                @csrf
+                <input type="hidden" name="source" value="inventory_control">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-box-arrow-in-down me-2"></i>Request Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Drug No.</label>
+                            <input type="text" name="drug_num" id="rs_drug_num" class="form-control" readonly style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Drug Name</label>
+                            <input type="text" name="drug_name" id="rs_drug_name" class="form-control" readonly style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="requested_quantity" id="rs_quantity" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Requested Date</label>
+                            <input type="date" name="requested_date" id="rs_requested_date" class="form-control" readonly style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expected Delivery Date</label>
+                            <input type="date" name="expected_delivery_date" id="rs_delivery_date" class="form-control" readonly style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Select Vendor <span class="text-danger">*</span></label>
+                            <select name="selected_supplier" id="rs_vendor" class="form-select" required>
+                                <option value="">— Choose a vendor —</option>
+                                @foreach($vendors as $vendor)
+                                <option value="{{ $vendor->vendor_name }}">{{ $vendor->vendor_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Delivered By</label>
+                            <input type="text" name="delivered_by" class="form-control" placeholder="e.g. John Doe" maxlength="255">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Address</label>
+                            <input type="text" name="address" class="form-control" placeholder="Delivery address" maxlength="255">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-mc" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-ms"><i class="bi bi-file-earmark-check me-1"></i> Create PO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('requestStockModal').addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    document.getElementById('rs_drug_num').value  = btn.dataset.drug_num  || '';
+    document.getElementById('rs_drug_name').value = btn.dataset.drug_name || '';
+    document.getElementById('rs_quantity').value  = '';
+    var today = new Date();
+    var toDateStr = function(d) { return d.toISOString().split('T')[0]; };
+    document.getElementById('rs_requested_date').value = toDateStr(today);
+    var delivery = new Date(today);
+    delivery.setMonth(delivery.getMonth() + 1);
+    document.getElementById('rs_delivery_date').value = toDateStr(delivery);
+    document.getElementById('rs_vendor').value = btn.dataset.supplier || '';
+});
+
+document.getElementById('editInventoryModal').addEventListener('show.bs.modal', function (e) {
+    var btn = e.relatedTarget;
+    var form = document.getElementById('editInventoryForm');
+    form.action = '{{ route("admin.logistics1.warehouse.inventory_update", ["id" => "__ID__"]) }}'.replace('__ID__', btn.dataset.id);
+    document.getElementById('ei_drug_num').value    = btn.dataset.drug_num   || '';
+    document.getElementById('ei_drug_name').value   = btn.dataset.drug_name  || '';
+    document.getElementById('ei_quantity').value    = btn.dataset.quantity    || '';
+    document.getElementById('ei_status').value      = btn.dataset.status      || '';
+    document.getElementById('ei_supplier').value    = btn.dataset.supplier    || '';
+    document.getElementById('ei_expiry_date').value = btn.dataset.expiry_date || '';
+});
+</script>
+
+{{-- Edit Inventory Modal --}}
+<div class="modal fade" id="editInventoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" id="editInventoryForm">
+                @csrf @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Drug No.</label>
+                            <input type="text" id="ei_drug_num" class="form-control" disabled style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Drug Name</label>
+                            <input type="text" id="ei_drug_name" class="form-control" disabled style="background:#f8fafc;color:#64748b;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="quantity" id="ei_quantity" class="form-control" min="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="status" id="ei_status" class="form-select" required>
+                                <option value="Stable">Stable</option>
+                                <option value="Low Stock">Low Stock</option>
+                                <option value="Critical">Critical</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" name="expiry_date" id="ei_expiry_date" class="form-control">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Supplier</label>
+                            <input type="text" name="supplier" id="ei_supplier" class="form-control" maxlength="255">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-mc" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-mu"><i class="bi bi-check-lg me-1"></i> Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endif
 
 

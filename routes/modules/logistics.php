@@ -26,6 +26,10 @@ Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
 
     Route::get('/warehouse', [AdminLogistics1WarehouseController::class, 'index'])->name('warehouse.index');
     Route::post('/warehouse/receive-po', [AdminLogistics1WarehouseController::class, 'receivePo'])->name('warehouse.receive_po');
+    Route::put('/warehouse/receiving-update/{id}', [AdminLogistics1WarehouseController::class, 'updateReceiving'])->name('warehouse.receiving_update');
+    Route::delete('/warehouse/receiving-delete/{id}', [AdminLogistics1WarehouseController::class, 'destroyReceiving'])->name('warehouse.receiving_delete');
+    Route::put('/warehouse/inventory-update/{id}', [AdminLogistics1WarehouseController::class, 'updateInventory'])->name('warehouse.inventory_update');
+    Route::delete('/warehouse/inventory-delete/{id}', [AdminLogistics1WarehouseController::class, 'destroyInventory'])->name('warehouse.inventory_delete');
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', [AdminLogistics1ProcurementController::class, 'index'])->name('index');
@@ -72,6 +76,7 @@ Route::prefix('logistics2')->name('admin.logistics2.')->group(function () {
     // Fleet
     Route::prefix('fleet')->name('fleet.')->group(function () {
         Route::get('/', [AdminFleetController::class, 'index'])->name('index');
+        Route::get('/warehousing', [AdminFleetController::class, 'warehousing'])->name('warehousing');
         Route::post('/store', [AdminFleetController::class, 'store'])->name('store');
         Route::post('/update-status/{id}', [AdminFleetController::class, 'updateStatus'])->name('update_status');
     });

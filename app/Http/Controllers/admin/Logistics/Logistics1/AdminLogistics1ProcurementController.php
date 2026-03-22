@@ -23,7 +23,7 @@ class AdminLogistics1ProcurementController extends Controller
             $search = $request->input('search');
             $inventoryQuery->where(function ($q) use ($search) {
                 $q->where('drug_name', 'like', "%$search%")
-                  ->orWhere('drug_num',  'like', "%$search%");
+                  ->orWhere('drug_num', 'like', "%$search%");
             });
         }
 
@@ -33,7 +33,6 @@ class AdminLogistics1ProcurementController extends Controller
         // TAB 2: VENDOR SELECTION
         // -------------------------------------------------------
         $vendors = DB::table('vendor_portal_logistics2')
-            ->whereNull('deleted_at')
             ->whereIn('status', ['active', 'pending_approval'])
             ->orderBy('vendor_name', 'asc')
             ->get();
@@ -44,19 +43,23 @@ class AdminLogistics1ProcurementController extends Controller
         $poQuery = DB::table('purchase_orders_logistics1 as po')
             ->leftJoin('employees as req_emp', 'po.requested_by', '=', 'req_emp.employee_id')
             ->select(
-                'po.*',
+                'po.id', 'po.po_number', 'po.drug_num', 'po.drug_name',
+                'po.requested_quantity', 'po.selected_supplier',
+                'po.requested_date', 'po.expected_delivery_date',
+                'po.status', 'po.requested_by', 'po.delivered_by',
+                'po.address', 'po.created_at', 'po.updated_at',
                 'req_emp.first_name as req_first_name',
-                'req_emp.last_name  as req_last_name'
+                'req_emp.last_name as req_last_name'
             )
             ->whereNull('po.deleted_at');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $poQuery->where(function ($q) use ($search) {
-                $q->where('po.drug_name',         'like', "%$search%")
-                  ->orWhere('po.drug_num',         'like', "%$search%")
-                  ->orWhere('po.selected_supplier','like', "%$search%")
-                  ->orWhere('po.po_number',         'like', "%$search%");
+                $q->where('po.drug_name',          'like', "%$search%")
+                  ->orWhere('po.drug_num',          'like', "%$search%")
+                  ->orWhere('po.selected_supplier', 'like', "%$search%")
+                  ->orWhere('po.po_number',          'like', "%$search%");
             });
         }
 
@@ -69,16 +72,20 @@ class AdminLogistics1ProcurementController extends Controller
 
         // -------------------------------------------------------
         // TAB 4: PAYMENT PROCESSING
+        // Delivered = awaiting confirmation, received = done
         // -------------------------------------------------------
         $payments = DB::table('purchase_orders_logistics1 as po')
             ->leftJoin('employees as req_emp', 'po.requested_by', '=', 'req_emp.employee_id')
             ->select(
-                'po.*',
+                'po.id', 'po.po_number', 'po.drug_num', 'po.drug_name',
+                'po.requested_quantity', 'po.selected_supplier',
+                'po.status', 'po.delivered_by', 'po.address',
+                'po.requested_by', 'po.created_at',
                 'req_emp.first_name as req_first_name',
-                'req_emp.last_name  as req_last_name'
+                'req_emp.last_name as req_last_name'
             )
             ->whereNull('po.deleted_at')
-            ->whereIn('po.status', ['delivered', 'paid'])
+            ->whereIn('po.status', ['delivered', 'received'])
             ->orderBy('po.created_at', 'desc')
             ->paginate(10)->withQueryString();
 
@@ -103,7 +110,7 @@ class AdminLogistics1ProcurementController extends Controller
             'selected_supplier'  => 'required',
             'delivered_by'       => 'nullable|string|max:255',
             'address'            => 'nullable|string|max:255',
-            'notes'              => 'nullable|string',
+            'source'             => 'nullable|string|max:100',
         ]);
 
         $employee = DB::table('employees')->where('user_id', Auth::id())->first();
@@ -112,12 +119,11 @@ class AdminLogistics1ProcurementController extends Controller
             return redirect()->back()->with('error', 'Unable to identify the requesting employee.');
         }
 
-        // Auto-generate unique PO number
         do {
             $poNumber = 'PO-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
         } while (DB::table('purchase_orders_logistics1')->where('po_number', $poNumber)->exists());
 
-        DB::table('purchase_orders_logistics1')->insert([
+        $data = [
             'po_number'              => $poNumber,
             'drug_num'               => $request->drug_num,
             'drug_name'              => $request->drug_name,
@@ -129,18 +135,21 @@ class AdminLogistics1ProcurementController extends Controller
             'requested_by'           => $employee->employee_id,
             'delivered_by'           => $request->delivered_by,
             'address'                => $request->address,
-            'notes'                  => $request->notes,
+            'source'                 => $request->source ?? null,
             'created_at'             => now(),
             'updated_at'             => now(),
-        ]);
+        ];
 
-        // Mark inventory as Ordered
+        DB::table('purchase_orders_logistics1')->insert($data);
+
+        // Also insert into warehouse table if request came from inventory control
+        if ($request->source === 'inventory_control') {
+            DB::table('warehouse_purchaseorders_logistics1')->insert($data);
+        }
+
         DB::table('drug_inventory_core2')
             ->where('drug_num', $request->drug_num)
-            ->update([
-                'status'     => 'Ordered',
-                'updated_at' => now(),
-            ]);
+            ->update(['status' => 'Ordered', 'updated_at' => now()]);
 
         return redirect()->route('admin.logistics1.procurement.index', ['tab' => 'purchase_orders'])
             ->with('success', 'Purchase Order ' . $poNumber . ' created successfully.');
@@ -152,7 +161,7 @@ class AdminLogistics1ProcurementController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,approved,ordered,shipped,delivered,paid,cancelled',
+            'status' => 'required|in:pending,approved,received,delivered,in_transit',
         ]);
 
         DB::table('purchase_orders_logistics1')
@@ -164,13 +173,11 @@ class AdminLogistics1ProcurementController extends Controller
             ]);
 
         $tabMap = [
-            'pending'   => 'needs_assessment',
-            'approved'  => 'vendor_selection',
-            'ordered'   => 'purchase_orders',
-            'shipped'   => 'purchase_orders',
-            'delivered' => 'payment_processing',
-            'paid'      => 'payment_processing',
-            'cancelled' => 'needs_assessment',
+            'pending'    => 'needs_assessment',
+            'approved'   => 'purchase_orders',
+            'in_transit' => 'purchase_orders',
+            'delivered'  => 'payment_processing',
+            'received'   => 'payment_processing',
         ];
 
         $tab = $tabMap[$request->status] ?? 'needs_assessment';
