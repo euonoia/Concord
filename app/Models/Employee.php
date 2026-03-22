@@ -32,6 +32,7 @@ class Employee extends Model
         'specialization',
         'hire_date',
         'is_on_duty',
+        'status',
     ];
 
     /*

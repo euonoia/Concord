@@ -155,7 +155,7 @@
             align-items: center;
             gap: .75rem;
             padding: .65rem 1rem;
-            color: var(--sb-text);
+            color: var(--primary);
             text-decoration: none;
             font-size: .85rem;
             font-weight: 500;
@@ -230,7 +230,7 @@
         .sidebar-dropdown.active .toggle-icon { transform: rotate(180deg); }
 
         .dropdown-menu {
-            background: #0b1925;
+            background: #e8f4f2;
             overflow: hidden;
             padding: 0;
             display: none;
@@ -241,7 +241,7 @@
             align-items: center;
             gap: .65rem;
             padding: .55rem 1rem .55rem 2.75rem !important;
-            color: #6a90a8 !important;
+            color: #3a5a70 !important;
             font-size: .8rem !important;
             font-weight: 400;
             text-decoration: none;
@@ -401,7 +401,12 @@
 
         <a href="{{ route('hr4.job_postings.index') }}" class="{{ request()->routeIs('hr4.job_postings.*') ? 'active' : '' }}">
             <i class="bi bi-briefcase"></i>
-            <span>Job Postings</span>
+            <span>Available Job</span>
+        </a>
+
+        <a href="{{ route('hr4.analytics.index') }}" class="{{ request()->routeIs('hr4.analytics.*') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-line"></i>
+            <span>HR Analytics</span>
         </a>
 
         <hr class="sb-divider">

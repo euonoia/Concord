@@ -259,16 +259,16 @@ class AdminDirectCompensationController extends Controller
         $this->authorizeHrAdmin();
 
         $specialization = $request->query('specialization');
-        $positionId = $request->query('position_id');
+        $departmentId = $request->query('department_id');
 
-        if (!$specialization || !$positionId) {
+        if (!$specialization || !$departmentId) {
             return response()->json([]);
         }
 
         try {
             $competencies = DB::table('competency_hr2')
                 ->where('specialization_name', $specialization)
-                ->where('position_id', $positionId)
+                ->where('department_id', $departmentId)
                 ->orderBy('competency_code')
                 ->get();
 
@@ -303,6 +303,27 @@ class AdminDirectCompensationController extends Controller
     }
 
     /**
+     * Get position details
+     */
+    public function getPositionDetails($positionId)
+    {
+        $this->authorizeHrAdmin();
+
+        $position = DB::table('department_position_titles_hr2')
+            ->where('id', $positionId)
+            ->first();
+
+        if (!$position) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'department_id' => $position->department_id,
+            'specialization_name' => $position->specialization_name,
+        ]);
+    }
+
+    /**
      * Store job posting
      */
     public function storeJobPosting(Request $request)
@@ -314,7 +335,7 @@ class AdminDirectCompensationController extends Controller
             'specialization_name' => 'required|string|max:255',
             'position_id' => 'required|integer',
             'description' => 'required|string',
-            'competency_code' => 'nullable|string',
+            'competency_id' => 'nullable|string',
             'salary_range' => 'nullable|string|max:255',
             'positions_available' => 'required|integer|min:1',
         ]);
@@ -324,8 +345,8 @@ class AdminDirectCompensationController extends Controller
         // Safely fetch competency
         $competency = null;
         try {
-            if ($request->competency_code) {
-                $competency = DB::table('competency_hr2')->where('competency_code', $request->competency_code)->first();
+            if ($request->competency_id) {
+                $competency = DB::table('competency_hr2')->where('id', $request->competency_id)->first();
             }
         } catch (\Exception $e) {
             // Table doesn't exist, continue without it
@@ -338,7 +359,7 @@ class AdminDirectCompensationController extends Controller
             'title' => $position ? $position->position_title : '',
             'description' => $request->description,
             'requirements' => $competency ? $competency->description : '',
-            'competency_id' => $request->competency_code,
+            'competency_id' => $request->competency_id,
             'salary_range' => $request->salary_range,
             'positions_available' => $request->positions_available,
             'posted_by' => Auth::id(),

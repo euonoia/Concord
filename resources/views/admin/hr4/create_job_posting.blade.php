@@ -241,7 +241,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="dept_code">Department Code <span class="req">*</span></label>
-                    <select name="dept_code" id="dept_code" class="form-control" required>
+                    <select id="dept_code" class="form-control" disabled>
                         <option value="">Select Department</option>
                         @foreach($departments as $dept)
                             <option value="{{ $dept->dept_code }}" {{ old('dept_code') == $dept->dept_code ? 'selected' : '' }}>
@@ -249,6 +249,7 @@
                             </option>
                         @endforeach
                     </select>
+                    <input type="hidden" name="dept_code" id="dept_code_hidden" value="{{ old('dept_code') }}">
                     @error('dept_code')
                         <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                     @enderror
@@ -272,7 +273,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="specialization_name">Specialization <span class="req">*</span></label>
-                <select name="specialization_name" id="specialization_name" class="form-control" required>
+                <select id="specialization_name" class="form-control" disabled>
                     <option value="">Select Position First</option>
                     @foreach($specializations as $spec)
                         <option value="{{ $spec->specialization_name }}" {{ old('specialization_name') == $spec->specialization_name ? 'selected' : '' }}>
@@ -280,6 +281,7 @@
                         </option>
                     @endforeach
                 </select>
+                <input type="hidden" name="specialization_name" id="specialization_name_hidden" value="{{ old('specialization_name') }}">
                 @error('specialization_name')
                     <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                 @enderror
@@ -299,11 +301,11 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="competency_code">Requirements (Competency)</label>
-                <select name="competency_code" id="competency_code" class="form-control" disabled>
-                    <option value="">Select Specialization & Position First</option>
+                <label class="form-label" for="competency_id">Requirements (Competency)</label>
+                <select name="competency_id" id="competency_code" class="form-control" disabled>
+                    <option value="">Select Position First</option>
                 </select>
-                @error('competency_code')
+                @error('competency_id')
                     <p class="form-error"><i class="bi bi-exclamation-circle"></i> {{ $message }}</p>
                 @enderror
             </div>
@@ -348,66 +350,72 @@
 <script>
 document.getElementById('position_id').addEventListener('change', function () {
     const positionId  = this.value;
+    const deptSelect  = document.getElementById('dept_code');
+    const deptHidden  = document.getElementById('dept_code_hidden');
     const specSelect  = document.getElementById('specialization_name');
+    const specHidden  = document.getElementById('specialization_name_hidden');
+    const competencySelect = document.getElementById('competency_code');
 
     if (!positionId) {
+        deptSelect.value = '';
+        deptHidden.value = '';
         specSelect.innerHTML = '<option value="">Select Position First</option>';
+        specHidden.value = '';
+        competencySelect.innerHTML = '<option value="">Select Position First</option>';
+        competencySelect.disabled = true;
         return;
     }
 
-    specSelect.innerHTML = '<option value="">Loading…</option>';
-
-    fetch(`/admin/hr4/job-postings/${positionId}/specializations`)
+    // Fetch position details
+    fetch(`/admin/hr4/job-postings/${positionId}/details`)
         .then(res => res.json())
         .then(data => {
-            specSelect.innerHTML = '<option value="">Select Specialization</option>';
-            if (data.length === 0) {
-                specSelect.innerHTML += '<option value="" disabled>No specializations available</option>';
+            if (data) {
+                // Set dept_code
+                deptSelect.value = data.department_id;
+                deptHidden.value = data.department_id;
+                // Set specialization
+                specSelect.innerHTML = `<option value="${data.specialization_name}" selected>${data.specialization_name}</option>`;
+                specHidden.value = data.specialization_name;
+
+                // Fetch competencies
+                competencySelect.innerHTML = '<option value="">Loading…</option>';
+                competencySelect.disabled = false;
+
+                fetch(`/admin/hr4/job-postings/competencies?specialization=${encodeURIComponent(data.specialization_name)}&department_id=${encodeURIComponent(data.department_id)}`)
+                    .then(res => res.json())
+                    .then(compData => {
+                        competencySelect.innerHTML = '<option value="">Select Competency</option>';
+                        if (compData.length === 0) {
+                            competencySelect.innerHTML += '<option value="" disabled>No competencies available</option>';
+                        } else {
+                            compData.forEach(comp => {
+                                const opt = document.createElement('option');
+                                opt.value = comp.id;
+                                opt.textContent = comp.competency_code + ' — ' + comp.description;
+                                competencySelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        competencySelect.innerHTML = '<option value="">Error loading competencies</option>';
+                    });
             } else {
-                data.forEach(spec => {
-                    const opt = document.createElement('option');
-                    opt.value = spec.specialization_name;
-                    opt.textContent = spec.specialization_name;
-                    specSelect.appendChild(opt);
-                });
+                deptSelect.value = '';
+                deptHidden.value = '';
+                specSelect.innerHTML = '<option value="">Error loading details</option>';
+                specHidden.value = '';
+                competencySelect.innerHTML = '<option value="">Select Position First</option>';
+                competencySelect.disabled = true;
             }
         })
         .catch(() => {
-            specSelect.innerHTML = '<option value="">Error loading specializations</option>';
-        });
-});
-
-document.getElementById('specialization_name').addEventListener('change', function () {
-    const specName        = this.value;
-    const positionId      = document.getElementById('position_id').value;
-    const competencySelect= document.getElementById('competency_code');
-
-    if (!specName || !positionId) {
-        competencySelect.innerHTML = '<option value="">Select Specialization & Position First</option>';
-        competencySelect.disabled  = true;
-        return;
-    }
-
-    competencySelect.innerHTML = '<option value="">Loading…</option>';
-    competencySelect.disabled  = false;
-
-    fetch(`/admin/hr4/job-postings/competencies?specialization=${encodeURIComponent(specName)}&position_id=${positionId}`)
-        .then(res => res.json())
-        .then(data => {
-            competencySelect.innerHTML = '<option value="">Select Competency</option>';
-            if (data.length === 0) {
-                competencySelect.innerHTML += '<option value="" disabled>No competencies available</option>';
-            } else {
-                data.forEach(comp => {
-                    const opt = document.createElement('option');
-                    opt.value       = comp.competency_code;
-                    opt.textContent = comp.competency_code + ' — ' + comp.description;
-                    competencySelect.appendChild(opt);
-                });
-            }
-        })
-        .catch(() => {
-            competencySelect.innerHTML = '<option value="">Error loading competencies</option>';
+            deptSelect.value = '';
+            deptHidden.value = '';
+            specSelect.innerHTML = '<option value="">Error loading details</option>';
+            specHidden.value = '';
+            competencySelect.innerHTML = '<option value="">Select Position First</option>';
+            competencySelect.disabled = true;
         });
 });
 </script>

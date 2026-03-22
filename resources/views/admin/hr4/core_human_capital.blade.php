@@ -246,6 +246,7 @@
 
     .badge-green  { background: var(--c-green-light);  color: var(--c-green); }
     .badge-red    { background: var(--c-red-light);    color: var(--c-red); }
+    .badge-gray   { background: #f3f4f6; color: #6b7280; }
     .badge-amber  { background: var(--c-amber-light);  color: var(--c-amber); }
     .badge-teal   { background: var(--c-teal-light);   color: var(--c-teal); }
     .badge-blue   { background: var(--c-blue-light);   color: var(--c-blue); }
@@ -317,9 +318,111 @@
     .empty-state h4 { font-size: 1rem; font-weight: 600; color: var(--c-text); margin: 0 0 .3rem; }
     .empty-state p  { font-size: .83rem; margin: 0 0 1rem; }
 
-    /* ── Animations ── */
-    @keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+    .btn-sm {
+        padding: .25rem .5rem;
+        font-size: .75rem;
+        border-radius: 6px;
+        border: 1px solid var(--c-border);
+        background: var(--c-surface);
+        color: var(--c-text);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+    }
+
+    .btn-sm:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+        color: var(--c-text);
+    }
+
+    .btn-outline-primary {
+        border-color: var(--c-teal);
+        color: var(--c-teal);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--c-teal);
+        color: #fff;
+    }
+
+    .btn-outline-secondary {
+        border-color: var(--c-blue);
+        color: var(--c-blue);
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--c-blue);
+        color: #fff;
+    }
+
+    .btn-outline-danger {
+        border-color: var(--c-red);
+        color: var(--c-red);
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--c-red);
+        color: #fff;
+    }
+
+    /* ── Dropdown ── */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-toggle {
+        cursor: pointer;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        min-width: 160px;
+        padding: .5rem 0;
+        margin: .125rem 0 0;
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(10,50,80,.15);
+    }
+
+    .dropdown-menu.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: .375rem 1rem;
+        clear: both;
+        font-weight: 400;
+        color: var(--c-text);
+        text-align: inherit;
+        text-decoration: none;
+        white-space: nowrap;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: .85rem;
+    }
+
+    .dropdown-item:hover {
+        background: var(--c-bg);
+        color: var(--c-text);
+    }
+
+    .dropdown-item i {
+        margin-right: .5rem;
+        width: 1rem;
+    }
 </style>
 
 <div class="chc">
@@ -381,6 +484,7 @@
                             <th>Department</th>
                             <th>Position</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -394,10 +498,105 @@
                             <td>{{ $emp->department->name ?? 'N/A' }}</td>
                             <td>{{ $emp->position->position_title ?? 'N/A' }}</td>
                             <td>
-                                <span class="badge {{ $emp->is_on_duty ? 'badge-green' : 'badge-red' }}">
-                                    <i class="bi bi-circle-fill" style="font-size:.45rem"></i>
+                                @if($emp->status === 'active')
+                                    <span class="badge badge-green">
+                                        <i class="bi bi-check-circle-fill"></i> Active
+                                    </span>
+                                @elseif($emp->status === 'inactive')
+                                    <span class="badge badge-yellow">
+                                        <i class="bi bi-pause-circle-fill"></i> Inactive
+                                    </span>
+                                @elseif($emp->status === 'resigned')
+                                    <span class="badge badge-blue">
+                                        <i class="bi bi-box-arrow-right"></i> Resigned
+                                    </span>
+                                @elseif($emp->status === 'terminated')
+                                    <span class="badge badge-red">
+                                        <i class="bi bi-x-circle-fill"></i> Terminated
+                                    </span>
+                                @else
+                                    <span class="badge badge-gray">
+                                        <i class="bi bi-question-circle"></i> Unknown
+                                    </span>
+                                @endif
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-circle-fill" style="color: {{ $emp->is_on_duty ? '#10b981' : '#ef4444' }}; font-size: .6rem;"></i>
                                     {{ $emp->is_on_duty ? 'On Duty' : 'Off Duty' }}
-                                </span>
+                                </small>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+                                    <a href="{{ route('hr4.employees.edit', $emp) }}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit Employee">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+
+                                    {{-- Status Update Dropdown --}}
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                title="Update Status">
+                                            <i class="bi bi-toggle-on"></i> Status
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="active">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-check-circle text-success"></i> Set Active
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="inactive">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-pause-circle text-warning"></i> Set Inactive
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="resigned">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-box-arrow-right text-info"></i> Set Resigned
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="status" value="terminated">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-x-circle text-danger"></i> Set Terminated
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    {{-- Delete Button --}}
+                                    <form method="POST" action="{{ route('hr4.employees.delete', $emp) }}"
+                                          onsubmit="return confirm('Are you sure you want to delete {{ $emp->first_name }} {{ $emp->last_name }}? This action cannot be undone.')"
+                                          style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Delete Employee">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -701,6 +900,33 @@
         document.querySelectorAll('#neededPositionsTable tbody tr').forEach(row => {
             row.style.display = (!dept || row.dataset.department === dept) ? '' : 'none';
         });
+    });
+
+    // ── Dropdown toggle ──
+    document.addEventListener('click', function(e) {
+        // Close all dropdowns when clicking outside
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+
+        // Toggle dropdown when clicking toggle button
+        if (e.target.closest('.dropdown-toggle')) {
+            e.preventDefault();
+            const dropdown = e.target.closest('.dropdown');
+            const menu = dropdown.querySelector('.dropdown-menu');
+
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-menu.show').forEach(otherMenu => {
+                if (otherMenu !== menu) {
+                    otherMenu.classList.remove('show');
+                }
+            });
+
+            // Toggle current dropdown
+            menu.classList.toggle('show');
+        }
     });
 </script>
 

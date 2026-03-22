@@ -11,12 +11,14 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminSuccessionController;
         use App\Http\Controllers\admin\Hr\hr2\AdminEssController;
 
-        use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
+        // use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
 
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
         use App\Http\Controllers\admin\Hr\hr4\EssRequestController;
+        use App\Http\Controllers\admin\Hr\hr4\HRAnalyticsController;
+        use App\Http\Controllers\admin\Hr\hr4\PayrollAnalyticsController;
         use App\Http\Controllers\PayrollController;
         use App\Http\Controllers\PayrollReportController;
 
@@ -94,8 +96,8 @@
 
         // --- HR3 Department ---
         Route::prefix('hr3')->group(function () {
-            Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
-            Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
+            // Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+            // Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
 
             Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
             Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
@@ -116,6 +118,19 @@
             Route::post('/core-human-capital/process-hired', [AdminCoreHumanCapitalController::class, 'processHiredUsers'])
                 ->name('hr4.core.process_hired');
 
+            // Employee CRUD
+            Route::get('/employees/{employee}/edit', [AdminCoreHumanCapitalController::class, 'editEmployee'])
+                ->name('hr4.employees.edit');
+
+            Route::put('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'updateEmployee'])
+                ->name('hr4.employees.update');
+
+            Route::delete('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'deleteEmployee'])
+                ->name('hr4.employees.delete');
+
+            Route::patch('/employees/{employee}/status', [AdminCoreHumanCapitalController::class, 'updateEmployeeStatus'])
+                ->name('hr4.employees.update_status');
+
             // Direct Compensation
             Route::get('/direct-compensation', [AdminDirectCompensationController::class, 'index'])
                 ->name('hr4.direct_compensation.index');
@@ -132,6 +147,9 @@
 
             Route::get('/job-postings/{positionId}/specializations', [AdminDirectCompensationController::class, 'getSpecializationsByPosition'])
                 ->name('hr4.job_postings.specializations');
+
+            Route::get('/job-postings/{positionId}/details', [AdminDirectCompensationController::class, 'getPositionDetails'])
+                ->name('hr4.job_postings.details');
 
             Route::get('/job-postings/competencies', [AdminDirectCompensationController::class, 'getCompetenciesBySpecializationAndPosition'])
                 ->name('hr4.job_postings.competencies');
@@ -178,5 +196,22 @@
             Route::post('/ess-requests/{id}/approve', [EssRequestController::class, 'approve'])->name('hr4.ess_requests.approve');
             Route::post('/ess-requests/{id}/reject', [EssRequestController::class, 'reject'])->name('hr4.ess_requests.reject');
             Route::post('/ess-requests/sync', [EssRequestController::class, 'syncFromHr2'])->name('hr4.ess_requests.sync');
+
+            // HR Analytics Module
+            Route::prefix('/analytics')->group(function () {
+                // Analytics Landing
+                Route::get('/', function () { return view('admin.hr4.analytics.index'); })->name('hr4.analytics.index');
+
+                // KPI Dashboard
+                Route::get('/kpi', [HRAnalyticsController::class, 'dashboard'])->name('hr4.analytics.kpi');
+                Route::get('/kpi/data', [HRAnalyticsController::class, 'getKPIDataJson'])->name('hr4.analytics.kpi.data');
+                Route::get('/kpi/department-health', [HRAnalyticsController::class, 'getDepartmentHealthScores'])->name('hr4.analytics.kpi.health');
+
+                // Payroll Analytics
+                Route::get('/payroll', [PayrollAnalyticsController::class, 'dashboard'])->name('hr4.analytics.payroll');
+                Route::get('/payroll/data', [PayrollAnalyticsController::class, 'getSummaryJson'])->name('hr4.analytics.payroll.data');
+                Route::get('/payroll/export', [PayrollAnalyticsController::class, 'exportReport'])->name('hr4.analytics.payroll.export');
+                Route::get('/payroll/revenue', [PayrollAnalyticsController::class, 'getRevenueComparison'])->name('hr4.analytics.payroll.revenue');
+            });
 
         });

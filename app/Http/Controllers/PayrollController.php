@@ -5,8 +5,10 @@ use App\Models\admin\Hr\hr4\DirectCompensation;
 use App\Http\Controllers\Controller;
 use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr3\AttendanceLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PayrollController extends Controller
@@ -72,6 +74,12 @@ class PayrollController extends Controller
             'worked_hours' => $comp->worked_hours ?? 0,
             'overtime_hours' => $comp->overtime_hours ?? 0,
             'night_diff_hours' => $comp->night_diff_hours ?? 0,
+            'base_salary' => $comp->base_salary ?? 0,
+            'shift_allowance' => $comp->shift_allowance ?? 0,
+            'overtime_pay' => $comp->overtime_pay ?? 0,
+            'bonus' => $comp->bonus ?? 0,
+            'training_reward' => $comp->training_reward ?? 0,
+            'total_compensation' => $comp ? $comp->total_compensation : 0,
         ]);
     }
 
@@ -218,6 +226,10 @@ class PayrollController extends Controller
      */
     public function reports(Request $request)
     {
+        // Default to current month/year if not specified
+        $month = $request->get('month', date('Y-m'));
+        $year = $request->get('year', date('Y'));
+
         $query = Payroll::with(['employee.position', 'employee.department']);
 
         // Filter by employee
@@ -254,10 +266,35 @@ class PayrollController extends Controller
         $totalDeductions = $payrolls->sum('deductions');
         $totalNetPay = $payrolls->sum('net_pay');
 
+        // YTD total
+        $ytdTotal = Payroll::whereYear('pay_date', $year)->sum('salary');
+
+        // Employee count
+        $employeeCount = Employee::where('status', 'active')->count();
+
+        // Department breakdown
+        $departmentBreakdown = DB::table('payrolls')
+            ->join('employees', 'payrolls.employee_id', '=', 'employees.id')
+            ->join('departments_hr2', 'employees.department_id', '=', 'departments_hr2.id')
+            ->select(
+                'departments_hr2.name as department',
+                DB::raw('COUNT(DISTINCT employees.id) as employees'),
+                DB::raw('SUM(payrolls.salary) as total_salary'),
+                DB::raw('SUM(payrolls.deductions) as total_deductions'),
+                DB::raw('SUM(payrolls.net_pay) as total_net_pay')
+            )
+            ->groupBy('departments_hr2.name', 'departments_hr2.id')
+            ->orderBy('total_salary', 'desc')
+            ->get();
+
         $employees = Employee::all();
         $positions = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::all();
-        $departments = \App\Models\admin\Hr\hr2\Department::all();
+        $departments = Department::all();
 
-        return view('payroll.reports', compact('payrolls', 'employees', 'positions', 'departments', 'totalSalary', 'totalDeductions', 'totalNetPay'));
+        return view('payroll.reports', compact(
+            'payrolls', 'employees', 'positions', 'departments',
+            'totalSalary', 'totalDeductions', 'totalNetPay',
+            'month', 'year', 'employeeCount', 'ytdTotal', 'departmentBreakdown'
+        ));
     }
 }

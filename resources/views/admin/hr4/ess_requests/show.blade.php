@@ -482,6 +482,76 @@
                     </div>
                 </div>
 
+                {{-- Payroll Information --}}
+                @php
+                    // Get salary/net_pay from multiple sources
+                    $salary = null;
+                    $netPay = null;
+                    
+                    // Source 1: HR2 sync table
+                    $hr2Request = \Illuminate\Support\Facades\DB::table('payroll_request_hr2')
+                        ->where('employee_id', $essRequest->employee_id)
+                        ->where('details', $essRequest->details)
+                        ->orderByDesc('created_at')
+                        ->first();
+                    
+                    if ($hr2Request) {
+                        $salary = $hr2Request->salary ?? null;
+                        $netPay = $hr2Request->net_pay ?? null;
+                    }
+                    
+                    // Source 2: Latest direct compensation in HR4
+                    if (!$salary || $salary <= 0) {
+                        $compensation = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $essRequest->employee_id)
+                            ->orderByDesc('month')
+                            ->first();
+                        
+                        if ($compensation) {
+                            $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
+                        }
+                    }
+                    
+                    // Source 3: Position base salary fallback
+                    if (!$salary || $salary <= 0) {
+                        $salary = $essRequest->employee->position->base_salary ?? 0;
+                    }
+                    
+                    // If net_pay not set, use salary as net
+                    if (!$netPay || $netPay <= 0) {
+                        $netPay = $salary;
+                    }
+                @endphp
+                
+                @if($salary > 0 || $netPay > 0)
+                    <div class="aj-section">
+                        <div class="section-title">
+                            <i class="bi bi-calculator"></i> Payroll Information
+                        </div>
+                        <div class="info-box">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Gross Salary</div>
+                                    <div class="info-value" style="color: var(--c-green); font-weight: 600; font-size: 1.1rem;">
+                                        ₱{{ number_format($salary, 2) }}
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Net Pay</div>
+                                    <div class="info-value" style="color: var(--c-teal); font-weight: 600; font-size: 1.1rem;">
+                                        ₱{{ number_format($netPay, 2) }}
+                                    </div>
+                                </div>
+                                @if($hr2Request)
+                                    <div class="info-item">
+                                        <div class="info-label">Source</div>
+                                        <div class="info-value">HR2 Sync</div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Approval Information --}}
                 @if($essRequest->status !== 'pending')
                     <div class="aj-section">

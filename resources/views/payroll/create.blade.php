@@ -310,6 +310,29 @@
 
     .deduction-info-box.show { display: block; }
 
+    /* Salary Breakdown */
+    .salary-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+    .salary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .5rem .75rem;
+        background: var(--c-gray-light);
+        border-radius: 6px;
+        font-size: .9rem;
+    }
+    .salary-row.total {
+        background: var(--c-teal-light);
+        font-weight: 600;
+        margin-top: .25rem;
+    }
+    .salary-row .label { color: var(--c-text); }
+    .salary-row.total .label { color: var(--c-teal); }
+
     /* ── Animations ── */
     @keyframes fadeUp   { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
     @keyframes fadeDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
@@ -393,6 +416,40 @@
                     <input type="hidden" name="worked_hours"    id="worked_hours_hidden"    value="0">
                     <input type="hidden" name="overtime_hours"  id="overtime_hours_hidden"  value="0">
                     <input type="hidden" name="night_diff_hours" id="night_diff_hours_hidden" value="0">
+                </div>
+
+                {{-- Salary Computation --}}
+                <div class="prc-card">
+                    <div class="card-section-title">
+                        <i class="bi bi-calculator"></i> Salary Computation
+                    </div>
+
+                    <div class="salary-breakdown">
+                        <div class="salary-row">
+                            <span class="label">Base Salary</span>
+                            <span id="base-salary">₱0.00</span>
+                        </div>
+                        <div class="salary-row">
+                            <span class="label">Shift Allowance</span>
+                            <span id="shift-allowance">₱0.00</span>
+                        </div>
+                        <div class="salary-row">
+                            <span class="label">Overtime Pay</span>
+                            <span id="overtime-pay">₱0.00</span>
+                        </div>
+                        <div class="salary-row">
+                            <span class="label">Bonus</span>
+                            <span id="bonus">₱0.00</span>
+                        </div>
+                        <div class="salary-row">
+                            <span class="label">Training Reward</span>
+                            <span id="training-reward">₱0.00</span>
+                        </div>
+                        <div class="salary-row total">
+                            <span class="label">Total Compensation</span>
+                            <span id="total-compensation">₱0.00</span>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Deductions --}}
@@ -538,6 +595,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('total-hours').innerHTML           = '0<sup>h</sup>';
         document.getElementById('overtime-hours').textContent      = '0';
         document.getElementById('night-diff-hours').textContent    = '0';
+        document.getElementById('base-salary').textContent         = '₱0.00';
+        document.getElementById('shift-allowance').textContent     = '₱0.00';
+        document.getElementById('overtime-pay').textContent        = '₱0.00';
+        document.getElementById('bonus').textContent               = '₱0.00';
+        document.getElementById('training-reward').textContent     = '₱0.00';
+        document.getElementById('total-compensation').textContent  = '₱0.00';
         document.getElementById('worked_hours_hidden').value       = '0';
         document.getElementById('overtime_hours_hidden').value     = '0';
         document.getElementById('night_diff_hours_hidden').value   = '0';
@@ -595,6 +658,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('total-hours').innerHTML        = (data.total_hours || 0) + '<sup>h</sup>';
                 document.getElementById('overtime-hours').textContent   = parseFloat(data.overtime_hours || 0).toFixed(2);
                 document.getElementById('night-diff-hours').textContent = parseFloat(data.night_diff_hours || 0).toFixed(2);
+
+                // Update salary breakdown
+                document.getElementById('base-salary').textContent = '₱' + (data.base_salary ? parseFloat(data.base_salary).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('shift-allowance').textContent = '₱' + (data.shift_allowance ? parseFloat(data.shift_allowance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('overtime-pay').textContent = '₱' + (data.overtime_pay ? parseFloat(data.overtime_pay).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('bonus').textContent = '₱' + (data.bonus ? parseFloat(data.bonus).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('training-reward').textContent = '₱' + (data.training_reward ? parseFloat(data.training_reward).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('total-compensation').textContent = '₱' + (data.total_compensation ? parseFloat(data.total_compensation).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+
+                // Update salary display and hidden field
+                salaryDisplay.value = '₱' + (data.total_compensation ? parseFloat(data.total_compensation).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                salaryHidden.value = data.total_compensation || 0;
+
+                // Update payment summary
+                document.getElementById('summary-salary').textContent = '₱' + (data.total_compensation ? parseFloat(data.total_compensation).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+
                 document.getElementById('worked_hours_hidden').value    = data.worked_hours || 0;
                 document.getElementById('overtime_hours_hidden').value  = data.overtime_hours || 0;
                 document.getElementById('night_diff_hours_hidden').value= data.night_diff_hours || 0;

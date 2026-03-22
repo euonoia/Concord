@@ -55,10 +55,12 @@ class AdminCoreHumanCapitalController extends Controller
         // Needed positions logic
         $needed_positions = [];
         foreach ($positions as $pos) {
-            $current_count = $employees->where('position_id', $pos->id)->count();
+            $current_count = $employees->where('position_id', $pos->id)
+                                      ->where('status', 'active')
+                                      ->count();
             $needed = max(0, ($pos->required_count ?? 0) - $current_count);
             $needed_positions[] = [
-                'department' => $pos->department->name ?? 'N/A',
+                'department' => $pos->department->name ?? $pos->department_id ?? 'Unknown Department',
                 'position' => $pos->position_title,
                 'required' => $pos->required_count ?? 0,
                 'current' => $current_count,
@@ -101,8 +103,8 @@ class AdminCoreHumanCapitalController extends Controller
             if ($job) {
                 // Find department by name
                 $department = Department::where('name', $job->department)->first();
-                // Find position by title
-                $position = DepartmentPositionTitle::where('position_title', $job->title)->first();
+                // Use position_id directly from the job posting
+                $position = DepartmentPositionTitle::find($job->position_id);
 
                 // Create employee record
                 Employee::create([
@@ -115,10 +117,99 @@ class AdminCoreHumanCapitalController extends Controller
                     'status' => 'active',
                 ]);
 
+                // Decrement available positions in the job posting
+                if ($job->positions_available > 0) {
+                    $job->decrement('positions_available');
+                    
+                    // If no positions left, close the job
+                    $job->refresh(); // Refresh to get updated value
+                    if ($job->positions_available <= 0) {
+                        $job->update(['status' => 'closed']);
+                    }
+                }
+
                 $processed++;
             }
         }
 
         return redirect()->back()->with('success', "Processed $processed new hires and created employee records.");
+    }
+
+    /**
+     * Show edit employee form
+     */
+    public function editEmployee(Employee $employee)
+    {
+        $this->authorizeHrAdmin();
+
+        $departments = Department::all();
+        $positions = DepartmentPositionTitle::with('department')->get();
+
+        return view('admin.hr4.edit_employee', compact('employee', 'departments', 'positions'));
+    }
+
+    /**
+     * Update employee
+     */
+    public function updateEmployee(Request $request, Employee $employee)
+    {
+        $this->authorizeHrAdmin();
+
+        $request->validate([
+            'employee_id' => 'required|string|max:50|unique:employees,employee_id,' . $employee->id,
+            'first_name' => 'required|string|max:150',
+            'last_name' => 'required|string|max:150',
+            'phone' => 'nullable|string|max:20',
+            'department_id' => 'nullable|string|max:50',
+            'position_id' => 'nullable|integer',
+            'specialization' => 'nullable|string|max:100',
+            'hire_date' => 'nullable|date',
+            'is_on_duty' => 'boolean',
+            'status' => 'required|in:active,inactive,resigned,terminated',
+        ]);
+
+        $employee->update($request->all());
+
+        return redirect()->route('hr4.core')->with('success', 'Employee updated successfully.');
+    }
+
+    /**
+     * Delete employee
+     */
+    public function deleteEmployee(Employee $employee)
+    {
+        $this->authorizeHrAdmin();
+
+        // Check if employee has related records that prevent deletion
+        if ($employee->payrolls()->exists()) {
+            return redirect()->back()->with('error', 'Cannot delete employee with existing payroll records.');
+        }
+
+        $employee->delete();
+
+        return redirect()->route('hr4.core')->with('success', 'Employee deleted successfully.');
+    }
+
+    /**
+     * Update employee status
+     */
+    public function updateEmployeeStatus(Request $request, Employee $employee)
+    {
+        $this->authorizeHrAdmin();
+
+        $request->validate([
+            'status' => 'required|in:active,inactive,resigned,terminated',
+        ]);
+
+        $employee->update(['status' => $request->status]);
+
+        $statusMessages = [
+            'active' => 'Employee activated successfully.',
+            'inactive' => 'Employee deactivated successfully.',
+            'resigned' => 'Employee marked as resigned.',
+            'terminated' => 'Employee terminated successfully.',
+        ];
+
+        return redirect()->back()->with('success', $statusMessages[$request->status] ?? 'Employee status updated.');
     }
 }
