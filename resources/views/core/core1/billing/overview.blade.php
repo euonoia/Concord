@@ -109,7 +109,7 @@
                                 @endif
                             </td>
                             <td class="text-right">
-                                <button type="button" 
+                                {{-- <button type="button" 
                                         data-bill-id="{{ $bill->id }}"
                                         data-bill-number="{{ $bill->bill_number }}"
                                         data-patient-name="{{ $bill->patient->name ?? 'N/A' }}"
@@ -120,7 +120,7 @@
                                         class="core1-btn-sm core1-btn-primary" 
                                         style="font-size: 10px; padding: 4px 10px;">
                                     <i class="bi bi-wallet2"></i> Pay Now
-                                </button>
+                                </button> --}}
                             </td>
                         </tr>
                         @empty

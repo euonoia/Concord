@@ -48,6 +48,8 @@ class Patient extends Model
         'last_visit' => 'datetime',
     ];
 
+    protected $appends = ['name'];
+
     public function appointments()
     {
         return $this->hasMany(Appointment::class);

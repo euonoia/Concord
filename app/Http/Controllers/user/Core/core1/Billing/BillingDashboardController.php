@@ -112,6 +112,7 @@ class BillingDashboardController extends Controller
         return response()->json(['requires_refresh' => $hasNewBills]);
     }
 
+    /*
     public function pay(Request $request, Bill $bill)
     {
         $request->validate([
@@ -130,5 +131,6 @@ class BillingDashboardController extends Controller
 
         return back()->with('success', 'Payment recorded successfully.');
     }
+    */
 }
 

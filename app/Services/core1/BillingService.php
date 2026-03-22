@@ -32,8 +32,8 @@ class BillingService
             $subtotal = 0;
 
             // 1. Consultation Fees
-            $consultation = Consultation::where('encounter_id', $encounter->id)->first();
-            if ($consultation) {
+            // For OPD, always charge consultation if it reaches billing
+            if ($encounter->type === 'OPD' || Consultation::where('encounter_id', $encounter->id)->exists()) {
                 $items[] = ['description' => 'General Consultation', 'qty' => 1, 'amount' => 500];
                 $subtotal += 500;
             }

@@ -1,4 +1,4 @@
-﻿<div class="core1-container">
+<div class="core1-container">
 
     {{-- Page Header --}}
     <div class="core1-flex-between core1-header">
@@ -179,9 +179,7 @@
                             <td>{{ \Carbon\Carbon::parse($bill->bill_date)->format('M d, Y') }}</td>
                             <td>{{ $bill->description ?? 'Medical Services' }}</td>
                             <td class="font-bold text-orange">₱{{ number_format($bill->total, 2) }}</td>
-                            <td>
-                                <button class="core1-btn-sm core1-btn-primary" style="padding: 5px 12px; font-size: 11px;">Pay Now</button>
-                            </td>
+                                {{-- <button class="core1-btn-sm core1-btn-primary" style="padding: 5px 12px; font-size: 11px;">Pay Now</button> --}}
                         </tr>
                         @empty
                         <tr>

@@ -66,7 +66,7 @@
                                     <button type="button" onclick="viewBillDetails({{ $bill->id }})" class="core1-btn-sm core1-btn-outline" style="padding: 4px 10px; font-size: 11px;">
                                         <i class="bi bi-eye"></i> View
                                     </button>
-                                    @if($bill->status !== 'paid')
+                                    {{-- @if($bill->status !== 'paid')
                                     <button type="button" 
                                             data-bill-id="{{ $bill->id }}"
                                             data-bill-number="{{ $bill->bill_number }}"
@@ -79,7 +79,7 @@
                                             style="font-size: 11px; padding: 4px 12px;">
                                         <i class="bi bi-wallet2"></i> Pay Now
                                     </button>
-                                    @endif
+                                    @endif --}}
                                 </div>
                             </td>
                         </tr>
