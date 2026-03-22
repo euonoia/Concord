@@ -9,7 +9,7 @@
         use App\Http\Controllers\admin\Hr\hr1\AdminRecruitmentController;
         use App\Http\Controllers\admin\Hr\hr1\AdminHr1DashboardController;
         use App\Http\Controllers\admin\Hr\hr1\AdminSocialRecognitionController;
-        use App\Http\Controllers\admin\Hr\hr1\AdminOnboardingAssessmentController;
+        use App\Http\Controllers\admin\Hr\hr1\AdminAssessmentPerformanceController;
 
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningEnrollController;
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningController;
@@ -20,6 +20,7 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminLearningMaterialsController;
         use App\Http\Controllers\admin\Hr\hr2\AdminCompetencyVerificationController;
         use App\Http\Controllers\admin\Hr\hr2\AdminTrainingEvaluationController;
+        use App\Http\Controllers\admin\Hr\hr2\AdminOnboardingAssessmentController;
 
 
         use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
@@ -96,7 +97,8 @@
                 'destroy' => 'admin.hr1.recognition.destroy',
             ]);
             Route::post('recognition/{id}/sync-hr4', [AdminSocialRecognitionController::class, 'syncToHr4'])->name('admin.hr1.recognition.syncHr4');
-              Route::get('/onboarding-assessment', [AdminOnboardingAssessmentController::class, 'index'])
+              
+            Route::get('/onboarding-assessment', [AdminOnboardingAssessmentController::class, 'index'])
                 ->name('onboarding.assessment.public');
 
             Route::post('/onboarding-assessment/check', [AdminOnboardingAssessmentController::class, 'checkReference'])
@@ -107,7 +109,20 @@
 
             Route::post('/onboarding-assessment/matrix/{id}/submit', [AdminOnboardingAssessmentController::class, 'submitAssessment'])
                 ->name('onboarding.assessment.submit');
+            
+            // Performance Management Group
+            Route::prefix('performance')->group(function () {
+                
+                // Training Performance (Existing)
+                Route::get('/training', [AdminTrainingPerformanceController::class, 'index'])->name('hr1.training.performance.index');
+                Route::get('/training/{employee_id}', [AdminTrainingPerformanceController::class, 'show'])->name('hr1.training.performance.show');
+                Route::post('/training/{employee_id}/validate', [AdminTrainingPerformanceController::class, 'validateAndStore'])->name('hr1.training.performance.validate');
 
+                // Assessment Performance (New)
+                Route::get('/assessment', [AdminAssessmentPerformanceController::class, 'index'])->name('hr1.assessment.performance.index');
+                Route::get('/assessment/{id}', [AdminAssessmentPerformanceController::class, 'show'])->name('hr1.assessment.performance.show');
+                Route::post('/assessment/{id}/validate', [AdminAssessmentPerformanceController::class, 'validateAssessment'])->name('hr1.assessment.performance.validate');
+            });
         });
 
         // --- HR2 Department ---

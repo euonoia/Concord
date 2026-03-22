@@ -5,63 +5,106 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Models\admin\Hr\hr1\OnboardingAssessment;
 
 class AdminOnboardingAssessmentController extends Controller
 {
-    private function authorizeHr2Admin()
+    /**
+     * Public page (user enters APP-XXXX reference)
+     */
+    public function index()
     {
-        if (!Auth::check() || (Auth::user()->role_slug !== 'admin_hr2' && Auth::user()->role_slug !== 'admin_hr1')) {
-            abort(403, 'Unauthorized action.');
-        }
+        $assessments = DB::table('onboarding_assessments_hr1')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.hr2.onboarding_assessment.index', compact('assessments'));
     }
 
-    public function index(Request $request)
+    /**
+     * Check reference ID (APP-OUG9ABP6)
+     */
+    public function checkReference(Request $request)
     {
-        $this->authorizeHr2Admin();
-
-        $query = OnboardingAssessment::query();
-
-        if ($request->filled('status')) {
-            $query->where('assessment_status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        $assessments = $query->orderByDesc('created_at')->paginate(10);
-
-        return view('admin.hr2.onboarding_assessments.index', compact('assessments'));
-    }
-
-    public function show($id)
-    {
-        $this->authorizeHr2Admin();
-        $assessment = OnboardingAssessment::findOrFail($id);
-        return view('admin.hr2.onboarding_assessments.show', compact('assessment'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $this->authorizeHr2Admin();
-
         $request->validate([
-            'assessment_status' => 'required|in:pending,scheduled,passed,failed',
-            'interview_date' => 'nullable|date',
-            'interviewer' => 'nullable|string|max:150',
-            'remarks' => 'nullable|string',
+            'reference_id' => 'required|string|max:50'
         ]);
 
-        $assessment = OnboardingAssessment::findOrFail($id);
-        $assessment->update($request->all());
+        $applicant = DB::table('onboarding_assessments_hr1')
+            ->where('application_id', $request->reference_id)
+            ->first();
 
-        return redirect()->route('admin.hr2.onboarding_assessments.index')->with('success', 'Assessment updated successfully.');
+        if (!$applicant) {
+            return redirect()->back()->with('error','Reference ID not found.');
+        }
+
+        return redirect()->route('onboarding.assessment.matrix', $applicant->id);
     }
+
+    /**
+     * Show the assessment matrix
+     */
+    public function matrix($id)
+    {
+        $applicant = DB::table('onboarding_assessments_hr1')
+            ->where('id', $id)
+            ->first();
+
+        if (!$applicant) {
+            abort(404);
+        }
+
+        // Example: load competencies (static or from DB)
+        $competencies = [
+            'Technical Knowledge',
+            'Communication Skills',
+            'Problem Solving',
+        ];
+
+        return view('admin.hr2.onboarding_assessment.matrix', compact('applicant', 'competencies'));
+    }
+
+    /**
+     * Submit the assessment
+     */
+  public function submitAssessment(Request $request, $id)
+{
+    $applicant = DB::table('onboarding_assessments_hr1')
+        ->where('id', $id)
+        ->first();
+
+    if (!$applicant) {
+        return redirect()->back()->with('error', 'Applicant not found.');
+    }
+
+    $ratings = $request->input('ratings', []);
+    $remarks = $request->input('remarks', []);
+
+    // Save each competency score into the scores table with application_id
+    foreach ($ratings as $competency => $score) {
+        DB::table('onboarding_assessment_scores_hr1')->updateOrInsert(
+            [
+                'applicant_id' => $applicant->id,
+                'competency'   => $competency,
+            ],
+            [
+                'application_id' => $applicant->application_id, 
+                'rating'         => $score,
+                'remarks'        => $remarks[$competency] ?? null,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]
+        );
+    }
+
+    // Update the applicant status using application_id
+    DB::table('onboarding_assessments_hr1')
+        ->where('application_id', $applicant->application_id)
+        ->update([
+            'assessment_status' => 'passed',
+            'updated_at' => now(),
+        ]);
+
+    return redirect()->route('onboarding.assessment.matrix', $id)
+        ->with('success', 'Assessment submitted successfully.');
+}
 }
