@@ -10,6 +10,7 @@ use App\Models\admin\Hr\hr4\DirectCompensation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -88,13 +89,29 @@ class EssRequestController extends Controller
             }
 
             // Source 3: Position base salary fallback
-            if (!$salary || $salary <= 0) {
+            if ((!$salary || $salary <= 0) && $employee->position) {
                 $salary = $employee->position->base_salary ?? 0;
             }
 
             // If net_pay not set in HR2, use salary as net
             if (!$netPay || $netPay <= 0) {
                 $netPay = $salary;
+            }
+
+            // Persist computed salary/net_pay back to payroll_request_hr2 for reporting
+            if ($hr2Request) {
+                $updateData = [
+                    'salary' => $salary,
+                    'updated_at' => Carbon::now(),
+                ];
+
+                if (Schema::hasColumn('payroll_request_hr2', 'net_pay')) {
+                    $updateData['net_pay'] = $netPay;
+                }
+
+                DB::table('payroll_request_hr2')
+                    ->where('id', $hr2Request->id)
+                    ->update($updateData);
             }
 
             // Ensure positive salary

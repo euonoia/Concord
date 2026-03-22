@@ -25,11 +25,40 @@ class PayrollApiController extends Controller
                 'request_type' => 'nullable|string|in:payroll,bonus,deduction',
             ]);
 
+            // Determine salary and net_pay defaults
+            $salary = $validated['salary'] ?? null;
+            $netPay = $validated['net_pay'] ?? null;
+
+            if (!$salary || $salary <= 0) {
+                $employee = Employee::where('employee_id', $validated['employee_id'])->first();
+
+                if ($employee) {
+                    $compensation = DirectCompensation::where('employee_id', $validated['employee_id'])
+                        ->orderByDesc('month')
+                        ->first();
+
+                    if ($compensation) {
+                        $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
+                    }
+
+                    if ((!$salary || $salary <= 0) && $employee->position) {
+                        $salary = $employee->position->base_salary ?? 0;
+                    }
+                }
+            }
+
+            if ((!$netPay || $netPay <= 0) && $salary > 0) {
+                $netPay = $salary;
+            }
+
+            $salary = $salary !== null ? $salary : 0;
+            $netPay = $netPay !== null ? $netPay : 0;
+
             // Create entry in payroll_request_hr2 table
             $payrollRequest = DB::table('payroll_request_hr2')->insertGetId([
                 'employee_id' => $validated['employee_id'],
-                'salary' => $validated['salary'] ?? 0,
-                'net_pay' => $validated['net_pay'] ?? 0,
+                'salary' => $salary,
+                'net_pay' => $netPay,
                 'details' => $validated['details'] ?? null,
                 'request_type' => $validated['request_type'] ?? 'payroll',
                 'status' => 'pending',
