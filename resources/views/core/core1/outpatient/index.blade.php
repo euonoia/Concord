@@ -301,7 +301,7 @@
                                                     onclick="openResultsModal(this)"
                                                     data-test="{{ $order->test_name }}"
                                                     data-patient="{{ $order->patient->name ?? 'Unknown' }}"
-                                                    data-result="{{ $order->result_data }}"
+                                                    data-result="{{ json_encode($order->result_data) }}"
                                                     data-received="{{ $order->result_received_at ? $order->result_received_at->format('Y-m-d H:i') : '' }}"
                                                     title="View Lab Results">
                                                 <i class="bi bi-file-earmark-medical"></i> View Results
@@ -902,7 +902,7 @@
                         btn.setAttribute('onclick', 'openResultsModal(this)');
                         btn.setAttribute('data-test', order.test_name);
                         btn.setAttribute('data-patient', order.patient_name);
-                        btn.setAttribute('data-result', order.result_data);
+                        btn.setAttribute('data-result', JSON.stringify(order.result_data));
                         btn.setAttribute('data-received', order.result_received_at_fmt);
                         btn.title = 'View Lab Results';
                         btn.innerHTML = '<i class="bi bi-file-earmark-medical"></i> View Results';

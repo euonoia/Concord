@@ -339,7 +339,7 @@ class OutpatientController extends Controller
     {
         $user = auth()->user();
         $query = Encounter::whereIn('type', ['OPD', 'Pending'])
-            ->where('status', 'Active');
+            ->whereIn('status', ['Active', 'In consultation']);
 
         if ($user->role_slug === 'doctor') {
             $query->where('doctor_id', $user->id);
