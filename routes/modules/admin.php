@@ -176,6 +176,7 @@
             // --- Shared AJAX Dropdowns ---
             Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);
             Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class, 'getCompetencies']);
+
         });
 
         Route::resource('competencies', CompetencyController::class);
