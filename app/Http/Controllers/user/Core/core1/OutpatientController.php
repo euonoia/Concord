@@ -4,51 +4,78 @@ namespace App\Http\Controllers\user\Core\core1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\user\Core\core1\Appointment;
-use App\Models\user\Core\core1\MedicalRecord;
+use App\Models\core1\Encounter;
+use App\Models\core1\Triage;
+use App\Models\core1\Consultation;
+use App\Models\core1\LabOrder;
+use App\Models\core1\Prescription;
+use App\Models\core1\Ward;
 use App\Models\user\Core\core1\Patient;
+use App\Services\core1\OutpatientService;
+use App\Services\core1\AdmissionSyncService;
 use Carbon\Carbon;
 
 class OutpatientController extends Controller
 {
+    protected $outpatientService;
+    protected $admissionSyncService;
+
+    public function __construct(OutpatientService $outpatientService, AdmissionSyncService $admissionSyncService)
+    {
+        $this->outpatientService = $outpatientService;
+        $this->admissionSyncService = $admissionSyncService;
+    }
+
     public function index()
     {
         $user = auth()->user();
 
         /*
         |--------------------------------------------------------------------------
-        | Base Query (Outpatient Only)
+        | Base Query (OPD Encounters)
         |--------------------------------------------------------------------------
         */
-        $query = Appointment::with(['patient', 'doctor'])
-            ->whereHas('patient', function ($q) {
-                $q->where('care_type', 'outpatient');
-            });
+        $query = Encounter::with(['patient', 'doctor', 'triage', 'consultation'])
+            ->whereIn('type', ['OPD', 'Pending'])
+            ->whereIn('status', ['Active', 'In consultation']);
 
         // Doctor sees only her patients
         if ($user->role_slug === 'doctor') {
             $query->where('doctor_id', $user->id);
         }
 
-        $appointmentsRaw = $query->orderBy('appointment_date')
-            ->orderBy('appointment_time')
-            ->get();
+        $encountersRaw = $query->orderBy('created_at', 'desc')->get();
 
         /*
         |--------------------------------------------------------------------------
         | Consultation Tracking Data
         |--------------------------------------------------------------------------
         */
-        $appointments = $appointmentsRaw->map(function ($apt) {
-
-            $status = $apt->status ?? 'scheduled';
+        $appointments = $encountersRaw->where('type', 'OPD')->map(function ($encounter) {
+            $status = $encounter->status; 
+            if ($status === 'Active' && $encounter->triage) {
+                $status = 'Triaged';
+            }
+            if ($encounter->consultation) {
+                $status = 'In consultation';
+            }
 
             return [
-                'id' => $apt->id,
-                'time' => Carbon::parse($apt->appointment_time)->format('Y-m-d h:i A'),
-                'patient' => $apt->patient->name ?? 'Unknown',
-                'type' => $apt->type,
-                'status' => ucfirst(str_replace('_', ' ', $status)),
+                'id' => $encounter->id,
+                'time' => $encounter->created_at->format('Y-m-d h:i A'),
+                'patient' => $encounter->patient->name ?? 'Unknown',
+                'patient_id' => $encounter->patient_id,
+                'triage' => $encounter->triage ? [
+                    'blood_pressure' => $encounter->triage->blood_pressure,
+                    'heart_rate'     => $encounter->triage->heart_rate,
+                    'temperature'    => $encounter->triage->temperature,
+                    'spo2'           => $encounter->triage->spo2,
+                    'triage_level'   => $encounter->triage->triage_level,
+                    'notes'          => $encounter->triage->notes,
+                    'summary'        => "BP: {$encounter->triage->blood_pressure}, HR: {$encounter->triage->heart_rate}, Temp: {$encounter->triage->temperature}"
+                ] : null,
+                'type' => $encounter->type,
+                'status' => $status,
             ];
         });
 
@@ -57,54 +84,23 @@ class OutpatientController extends Controller
         | Arrival Logs & Triage Data
         |--------------------------------------------------------------------------
         */
-        $registrations = $appointmentsRaw->map(function ($apt) use ($user) {
-
-            $isEmergency = $apt->type === 'emergency';
-
-            // Triage Display
-            $triageDisplay = '';
-            if ($apt->triage_note && $apt->vital_signs) {
-                $triageDisplay = $apt->triage_note . ' - BP ' . $apt->vital_signs;
+        $registrations = $encountersRaw->map(function ($encounter) use ($user) {
+            $status = $encounter->status; 
+            if ($status === 'Active') {
+                $status = $encounter->triage ? 'Triaged' : 'Waiting';
             }
-
-            // Status Logic
-            $status = $isEmergency ? 'Emergency' : 'Checking';
-
-            if ($apt->triage_note) {
-                $status = 'Triaged';
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Permission Logic
-            |--------------------------------------------------------------------------
-            */
-            $canAction = false;
-
-            // Doctor can only triage her own patients
-            if ($user->role === 'doctor' && $apt->doctor_id == $user->id) {
-                $canAction = true;
-            }
-
-            // Admin cannot click
-            if (in_array($user->role, ['admin'])) {
-                $canAction = false;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Priority Label
-            |--------------------------------------------------------------------------
-            */
-            $priority = '';
+            
+            $canAction = true;
 
             return [
-                'id' => $apt->id,
-                'date' => Carbon::parse($apt->appointment_time)->format('Y-m-d h:i A'),
-                'patient' => $apt->patient->name . $priority,
-                'triage' => $triageDisplay,
+                'id' => $encounter->id,
+                'date' => $encounter->created_at->format('Y-m-d h:i A'),
+                'patient' => $encounter->patient->name ?? 'Unknown',
+                'triage' => $encounter->triage ? "BP: {$encounter->triage->blood_pressure}, HR: {$encounter->triage->heart_rate}" : 'No Triage',
                 'status' => $status,
-                'isEmergency' => $isEmergency,
+                'type' => $encounter->type,
+                'patient_id' => $encounter->patient_id,
+                'isEmergency' => false,
                 'canAction' => $canAction
             ];
         });
@@ -115,89 +111,33 @@ class OutpatientController extends Controller
         |--------------------------------------------------------------------------
         */
         $stats = [
-            'my_appointments' => $appointments->count(),
-            'consulted' => Appointment::whereDate('appointment_date', today())
-                ->where('status', 'consulted')
+            'my_appointments' => $encountersRaw->count(),
+            'consulted' => Encounter::where('type', 'OPD')
+                ->where('status', 'Closed')
+                ->whereDate('updated_at', today())
                 ->count(),
             'pending_results' => 0,
-            'avg_consultation_time' => '12 min',
+            'avg_consultation_time' => '15 min',
         ];
 
-   $prescriptions = MedicalRecord::where('record_type','prescription')
-    ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
-        $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
-        $q->whereIn('patient_id', $patientIds);
-    })
-    ->get();
+        // Fetching existing orders/prescriptions linked to these active encounters
+        $encounterIds = $encountersRaw->pluck('id');
 
+        $prescriptions = Prescription::whereIn('encounter_id', $encounterIds)->get();
+        $diagnosticOrders = LabOrder::whereIn('encounter_id', $encounterIds)
+            ->with(['patient', 'doctor', 'encounter.patient'])
+            ->latest()
+            ->get();
 
+        $followUps = []; // Potentially handle follow-ups via a dedicated table later
 
-        /*
-|--------------------------------------------------------------------------
-| Diagnostic Orders (Functional)
-|--------------------------------------------------------------------------
-*/
+        $patients = Patient::where('care_type', 'outpatient')->get();
 
-$labOrders = MedicalRecord::where('record_type', 'lab_order')
-    ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
-        $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
-        $q->whereIn('patient_id', $patientIds);
-    })
-    ->get();
+        $wards = Ward::with(['rooms.beds.admissions' => function($query) {
+            $query->where('status', 'Admitted')->with('encounter.patient');
+        }])->get();
 
-$diagnosticOrders = $labOrders->map(function($order){
-
-    $patient = Patient::find($order->patient_id);
-    $data = json_decode($order->prescription, true);
-
-    return [
-        'id' => $order->id,
-        'patient' => $patient->name ?? 'Unknown',
-        'patient_id' => $patient->id ?? null, // <-- add this
-        'test' => $data['test'] ?? '',
-        'clinical_note' => $data['clinical_note'] ?? '',
-        'status' => ucfirst(str_replace('_',' ', $data['status'] ?? 'ordered'))
-    ];
-});
-
-/*
-|--------------------------------------------------------------------------
-| Follow-Up Data
-|--------------------------------------------------------------------------
-*/
-$followUps = MedicalRecord::where('record_type', 'follow_up')
-    ->when($user->role === 'doctor', function($q) use ($appointmentsRaw) {
-        // Only follow-ups for patients of this doctor
-        $patientIds = $appointmentsRaw->pluck('patient_id')->unique();
-        $q->whereIn('patient_id', $patientIds);
-    })
-
-    ->get()
-    ->map(function($record){
-        $patient = Patient::find($record->patient_id);
-        $data = json_decode($record->prescription, true);
-
-        return [
-            'id' => $record->id,
-            'patient' => $patient->name ?? 'Unknown',
-             'patient_id' => $patient->id ?? null, // <-- add this
-            'next_visit' => $data['next_visit'] ?? '',
-            'status' => ucfirst($data['status'] ?? 'scheduled')
-        ];
-    });
-
-
-       $patients = Patient::where('care_type','outpatient')
-    ->when($user->role === 'doctor', function($q) use ($user, $appointmentsRaw) {
-        // Only patients that have appointments for this doctor
-        $patientIdsWithAppointments = $appointmentsRaw->pluck('patient_id')->unique();
-        $q->whereIn('id', $patientIdsWithAppointments);
-    })
-
-    ->get();
-
-
-
+        $doctors = \App\Models\User::where('role_slug', 'doctor')->get();
 
         return view('core.core1.outpatient.index', compact(
             'stats',
@@ -206,285 +146,268 @@ $followUps = MedicalRecord::where('record_type', 'follow_up')
             'prescriptions',
             'diagnosticOrders',
             'followUps',
-            'patients' // <-- added
+            'patients',
+            'wards',
+            'doctors'
         ));
     }
     /*
     |--------------------------------------------------------------------------
-    | Update Consultation Status
+    | Triage & Consultation Actions
     |--------------------------------------------------------------------------
     */
-    public function updateStatus(Request $request, $id)
-    {
-        $user = auth()->user();
 
-        if (!in_array($user->role, ['doctor', 'admin'])) {
-            abort(403);
+    public function saveTriage(Request $request, $id)
+    {
+        $request->validate([
+            'blood_pressure' => 'nullable|string',
+            'heart_rate' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'spo2' => 'nullable|integer',
+            'triage_level' => 'nullable|in:1,2,3,4,5',
+            'notes' => 'nullable|string',
+            'send_to_admission' => 'nullable|boolean'
+        ]);
+
+        $encounter = Encounter::findOrFail($id);
+        $this->outpatientService->recordTriage($encounter, $request->all());
+
+        if ($request->input('send_to_admission')) {
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', 'Patient has been recommended for Admission. Queued for Room Assignment.');
         }
 
+        return back()->with('success', 'Triage vitals recorded.');
+    }
+
+    public function startConsultation(Request $request, $id)
+    {
+        $encounter = Encounter::findOrFail($id);
+        $this->outpatientService->startConsultation($encounter);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Consultation started.'
+        ]);
+    }
+
+    public function saveConsultation(Request $request, $id)
+    {
         $request->validate([
-            'status' => 'required|in:waiting,in_consultation,consulted'
+            'subjective' => 'nullable|string',
+            'objective' => 'nullable|string',
+            'assessment' => 'nullable|string',
+            'plan' => 'nullable|string',
+            'doctor_notes' => 'nullable|string'
         ]);
 
-        $appointment = Appointment::findOrFail($id);
+        $encounter = Encounter::findOrFail($id);
+        
+        if (!$encounter->triage) {
+            return back()->with('error', 'Patient must be triaged before consultation.');
+        }
 
-        $appointment->update([
-            'status' => $request->status
-        ]);
+        $this->outpatientService->saveConsultation($encounter, $request->all());
 
-        return back()->with('success', 'Status updated successfully.');
+        return back()->with('success', 'Consultation notes saved.');
+    }
+
+    public function completeConsultation(Request $request, $id)
+    {
+        $encounter = Encounter::findOrFail($id);
+
+        if (!$encounter->triage) {
+            return back()->with('error', 'Patient must be triaged before closing encounter.');
+        }
+
+        $disposition = $request->input('disposition', 'discharge');
+
+        if ($disposition === 'admit') {
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', 'Admission recommended. Patient queued for Room Assignment.');
+        }
+
+        // Default: Discharge path - move to Pending Billing
+        $encounter->update(['status' => 'Pending Billing']);
+        
+        // Trigger charge aggregation for the new bill
+        app(\App\Services\core1\BillingService::class)->aggregateCharges($encounter);
+        
+        return redirect()->route('core1.billing.index')
+            ->with('success', 'Consultation completed. Patient moved to billing for discharge settlement.');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Save Triage
+    | Orders & Prescriptions
     |--------------------------------------------------------------------------
     */
-    public function saveTriage(Request $request, $id)
+
+    public function storePrescription(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'medication' => 'required|string',
+            'dosage' => 'required|string',
+            'instructions' => 'nullable|string',
+            'duration' => 'nullable|string',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $prescription = Prescription::create($request->all());
+
+        // Sync to Core 2 Pharmacy
+        $syncService = app(\App\Services\core1\PrescriptionSyncService::class);
+        $syncService->syncToCore2($prescription);
+
+        return back()->with('success', 'Prescription issued and sent to pharmacy.');
+    }
+
+    public function storeLabOrder(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'test_name' => 'required|string',
+            'clinical_note' => 'nullable|string',
+            'priority' => 'nullable|in:Routine,Urgent,STAT',
+        ]);
+
+        $encounter = Encounter::with('patient', 'doctor')->findOrFail($request->encounter_id);
+
+        $labOrder = LabOrder::create([
+            'encounter_id' => $encounter->id,
+            'patient_id'   => $encounter->patient_id,
+            'doctor_id'    => auth()->user()->id,
+            'test_name'    => $request->test_name,
+            'clinical_note' => $request->clinical_note,
+            'priority'     => $request->priority ?? 'Routine',
+            'status'       => 'Ordered',
+            'sync_status'  => 'Pending',
+        ]);
+
+        // Sync to Core 2 Laboratory via internal API
+        $syncService = app(\App\Services\core1\LabSyncService::class);
+        $syncService->syncToCore2($labOrder, [
+            'patient_name'    => $encounter->patient->name ?? 'Unknown',
+            'patient_mrn'     => $encounter->patient->mrn ?? null,
+            'ordering_doctor' => 'Dr. ' . (auth()->user()->name ?? 'Unknown'),
+        ]);
+
+        return back()->with('success', 'Lab order created and synced to laboratory.');
+    }
+
+    public function storeSurgeryOrder(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'procedure_name' => 'required|string',
+            'priority' => 'nullable|in:Routine,Urgent,STAT',
+            'clinical_indication' => 'nullable|string',
+            'proposed_date' => 'required|date|after_or_equal:today',
+            'proposed_time' => 'required',
+        ]);
+
+        $encounter = Encounter::findOrFail($request->encounter_id);
+        $service = app(\App\Services\core1\SurgeryDietService::class);
+        $service->orderSurgery($encounter, $request->all());
+
+        return back()->with('success', 'Surgery order created and synced to OR.');
+    }
+
+    public function storeDietOrder(Request $request)
+    {
+        $request->validate([
+            'encounter_id' => 'required|exists:encounters_core1,id',
+            'diet_type' => 'required|string',
+            'instructions' => 'nullable|string',
+        ]);
+
+        $encounter = Encounter::findOrFail($request->encounter_id);
+        $service = app(\App\Services\core1\SurgeryDietService::class);
+        $service->orderDiet($encounter, $request->all());
+
+        return back()->with('success', 'Diet order created and synced to Nutrition.');
+    }
+
+    public function getDiagnosticOrdersJson()
     {
         $user = auth()->user();
+        $query = Encounter::whereIn('type', ['OPD', 'Pending'])
+            ->whereIn('status', ['Active', 'In consultation']);
 
-        if (!in_array($user->role, ['doctor'])) {
-            abort(403);
+        if ($user->role_slug === 'doctor') {
+            $query->where('doctor_id', $user->id);
         }
+        $encounterIds = $query->pluck('id');
 
-        $request->validate([
-            'triage_note' => 'required',
-            'vital_signs' => 'required'
+        $diagnosticOrders = LabOrder::whereIn('encounter_id', $encounterIds)
+            ->with(['patient', 'doctor', 'encounter.patient'])
+            ->latest()
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'created_at_fmt' => $order->created_at->format('Y-m-d'),
+                    'patient_name' => $order->patient->name ?? $order->encounter->patient->name ?? 'Unknown',
+                    'doctor_full' => $order->doctor->name ?? 'Unknown',
+                    'test_name' => $order->test_name,
+                    'priority' => $order->priority ?? 'Routine',
+                    'clinical_note' => $order->clinical_note,
+                    'sync_status' => $order->sync_status ?? 'Pending',
+                    'result_data' => $order->result_data,
+                    'result_received_at_fmt' => $order->result_received_at ? $order->result_received_at->format('Y-m-d H:i') : ''
+                ];
+            });
+
+        return response()->json($diagnosticOrders);
+    }
+    public function disposition(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:OPD,IPD'
         ]);
 
-        $appointment = Appointment::findOrFail($id);
+        $encounter = Encounter::findOrFail($id);
+        $encounter->update(['type' => $validated['type']]);
 
-        // Doctor can only triage her own patients
-        if ($user->role === 'doctor' && $appointment->doctor_id != $user->id) {
-            abort(403);
+        $message = "Encounter dispositioned to " . $validated['type'] . ".";
+
+        if ($validated['type'] === 'IPD') {
+            // Queue patient to Core 2 Room Assignment for bed allocation
+            $encounter->update(['type' => 'IPD']);
+            $this->admissionSyncService->queueForRoomAssignment($encounter);
+
+            return back()->with('success', $message . ' Patient queued for Room Assignment.');
         }
 
-        $appointment->update([
-            'triage_note' => $request->triage_note,
-            'vital_signs' => $request->vital_signs
+        return back()->with('success', $message);
+    }
+
+    public function administerMedication(Request $request, Prescription $prescription)
+    {
+        \App\Models\core1\MedicationAdministration::create([
+            'prescription_id' => $prescription->id,
+            'encounter_id'    => $prescription->encounter_id,
+            'administered_by' => auth()->id(),
+            'administered_at' => now(),
         ]);
 
-        return back()->with('success', 'Triage updated successfully.');
+        $prescription->update(['status' => 'Administered']);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Medication marked as administered.'
+            ]);
+        }
+
+        return back()->with('success', 'Medication marked as administered.');
     }
-    public function createPrescription()
-{
-    $user = auth()->user();
-
-    // Only doctor can create prescriptions
-    if (!in_array($user->role, ['doctor'])) {
-        abort(403);
-    }
-
-    // Get doctor’s outpatient patients
-    $patients = $user->role === 'doctor' 
-        ? $user->patients()->where('care_type','outpatient')->get()
-        : collect();
-
-    // Example medications
-    $medications = [
-        'Atovastatin 40mg', 
-        'Metformin 500mg',
-        'Lisinopril 10mg',
-        'Amlodipine 5mg',
-        'Paracetamol 500mg'
-    ];
-
-    // Example dosages
-    $dosages = [
-        'Once Daily (Morning)',
-        'Once Daily (Night)',
-        'Twice Daily',
-        'Three Times Daily (Morning, Afternoon, Night)',
-        'As Needed'
-    ];
-
-    // Example instructions
-    $instructions = [
-        'Take with food',
-        'Avoid alcohol',
-        'Monitor blood pressure',
-        'Take on empty stomach',
-        'With plenty of water'
-    ];
-
-    return view('core.core1.outpatient.create_prescription', compact(
-        'patients','medications','dosages','instructions'
-    ));
-}
-
-/*
-|--------------------------------------------------------------------------
-| Store Prescription
-|--------------------------------------------------------------------------
-*/
-// Store a new prescription
-public function storePrescription(Request $request)
-{
-    $user = auth()->user();
-
-    if (!in_array($user->role, ['doctor'])) {
-        abort(403);
-    }
-
-    $request->validate([
-        'patient_id' => 'required|exists:patients_core1,id', // <-- FIXED TABLE NAME
-        'medication' => 'required|string',
-        'dosage' => 'required|string',
-        'instruction' => 'nullable|string',
-    ]);
-
-    MedicalRecord::create([
-        'patient_id' => $request->patient_id,
-        'doctor_id' => $user->id,
-        'record_type' => 'prescription',
-        'prescription' => json_encode([
-            'medication' => $request->medication,
-            'dosage' => $request->dosage,
-            'instructions' => $request->instruction,
-        ]),
-        'record_date' => now(),
-    ]);
-
-    return back()->with('success', 'Prescription saved successfully.');
-}
-
-
-// Update an existing prescription
-public function updatePrescription(Request $request, $id)
-{
-    $user = auth()->user();
-
-    if (!in_array($user->role, ['doctor'])) {
-        abort(403);
-    }
-
-    $request->validate([
-        'medication' => 'required|string',
-        'dosage' => 'required|string',
-        'instruction' => 'nullable|string',
-    ]);
-
-    $record = MedicalRecord::findOrFail($id);
-
-    $record->update([
-        'prescription' => json_encode([
-            'medication' => $request->medication,
-            'dosage' => $request->dosage,
-            'instructions' => $request->instruction,
-        ]),
-    ]);
-
-    return back()->with('success', 'Prescription updated successfully.');
-}
-
-/*
-|--------------------------------------------------------------------------
-| Store Lab Order
-|--------------------------------------------------------------------------
-*/
-public function storeLabOrder(Request $request)
-{
-    $user = auth()->user();
-
-    if (!in_array($user->role, ['doctor','admin'])) {
-        abort(403);
-    }
-
-    $request->validate([
-        'patient_id' => 'required|exists:patients_core1,id',
-        'test' => 'required|string',
-        'clinical_note' => 'required|string',
-    ]);
-
-    MedicalRecord::create([
-        'patient_id' => $request->patient_id,
-        'doctor_id' => $user->id,
-        'record_type' => 'lab_order',
-        'prescription' => json_encode([
-            'test' => $request->test,
-            'clinical_note' => $request->clinical_note,
-            'status' => 'ordered' // default
-        ]),
-        'record_date' => now(),
-    ]);
-
-    return back()->with('success','Lab order created successfully.');
-}
-/*
-|-------------------------------------------------------------------------- 
-| Store Follow-Up
-|-------------------------------------------------------------------------- 
-*/
-public function storeFollowUp(Request $request)
-{
-    $user = auth()->user();
-
-    // Only doctor can schedule follow-ups
-    if (!in_array($user->role, ['doctor'])) {
-        abort(403);
-    }
-
-    $request->validate([
-        'patient_id' => 'required|exists:patients_core1,id',
-        'next_visit' => 'required|date|after:today',
-    ]);
-
-    // Check if patient has a consulted appointment
-    $appointment = Appointment::where('patient_id', $request->patient_id)
-        ->where('status', 'consulted')
-        ->first();
-
-    if (!$appointment) {
-        return back()->with('error', 'Follow-up can only be scheduled for patients who have been consulted.');
-    }
-
-    // Create the follow-up record
-    MedicalRecord::create([
-        'patient_id' => $request->patient_id,
-        'doctor_id' => $user->id,
-        'record_type' => 'follow_up',
-        'prescription' => json_encode([
-            'next_visit' => $request->next_visit,
-            'status' => 'scheduled',
-        ]),
-        'record_date' => now(),
-    ]);
-
-    return back()->with('success', 'Follow-up scheduled successfully.');
-}
-
-/*
-|-------------------------------------------------------------------------- 
-| Update Follow-Up (Modify Instructions / Change Date)
-|-------------------------------------------------------------------------- 
-*/
-public function updateFollowUp(Request $request, $id)
-{
-    $user = auth()->user();
-
-    // Only doctor can modify follow-ups
-    if (!in_array($user->role, ['doctor'])) {
-        abort(403);
-    }
-
-    $request->validate([
-        'next_visit' => 'required|date|after:today',
-    ]);
-
-    $record = MedicalRecord::findOrFail($id);
-
-    // Update next visit date and set status to scheduled
-    $record->update([
-        'prescription' => json_encode([
-            'next_visit' => $request->next_visit,
-            'status' => 'scheduled',
-        ]),
-    ]);
-
-    return back()->with('success', 'Follow-up date updated successfully.');
-}
-
-
 }
 

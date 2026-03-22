@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Book Appointment')
 
@@ -25,22 +25,43 @@
                 {{ old('patient_id') == $patient->id ? 'selected' : '' }}
                 @if($patient->hasUpcomingAppointment) disabled @endif
             >
-                {{ $patient->name }} ({{ $patient->patient_id }})
+                {{ $patient->name }} ({{ $patient->mrn }})
                 @if($patient->hasUpcomingAppointment) - Already Booked @endif
             </option>
         @endforeach
     </select>
 </div>
 
+{{-- Hidden Medical Department (Controlled by Service Type mapping) --}}
+<input type="hidden" id="department_id" name="department_id" value="{{ old('department_id') }}">
+
+                {{-- Service Type (Mapped to Department) --}}
+                <div class="core1-form-group core1-col-span-2">
+                    <label for="type" class="core1-label">Service Type *</label>
+                    <select id="type" name="type" required
+                            class="core1-input">
+                        <option value="">Select Service Type</option>
+                        <option value="General Checkup" data-dept="MED-GEN" {{ old('type') === 'General Checkup' ? 'selected' : '' }}>General Checkup</option>
+                        <option value="Sick Visit" data-dept="MED-GEN" {{ old('type') === 'Sick Visit' ? 'selected' : '' }}>Sick Visit</option>
+                        <option value="Pedia / Baby Check" data-dept="PED-01" {{ old('type') === 'Pedia / Baby Check' ? 'selected' : '' }}>Pedia / Baby Check</option>
+                        <option value="Follow-up" data-dept="MED-GEN" {{ old('type') === 'Follow-up' ? 'selected' : '' }}>Follow-up</option>
+                        <option value="Refill" data-dept="MED-GEN" {{ old('type') === 'Refill' ? 'selected' : '' }}>Refill</option>
+                        <option value="Lab / Test" data-dept="PATH-01" {{ old('type') === 'Lab / Test' ? 'selected' : '' }}>Lab / Test</option>
+                        <option value="Talk Therapy / Mental Health" data-dept="PSY-01" {{ old('type') === 'Talk Therapy / Mental Health' ? 'selected' : '' }}>Talk Therapy / Mental Health</option>
+                    </select>
+                </div>
 
                 <div class="core1-form-group core1-col-span-2">
-                    <label for="doctor_id" class="core1-label">Doctor *</label>
-                    <select id="doctor_id" name="doctor_id" required
-                            class="core1-input">
-                        <option value="">Select Doctor</option>
+                    <label for="doctor_id" class="core1-label">Select Doctor *</label>
+                    <select id="doctor_id" name="doctor_id" required class="core1-input">
+                        <option value="">Select Service Type First</option>
                         @foreach($doctors as $doctor)
-                            <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                {{ $doctor->name }} @if($doctor->specialization)({{ $doctor->specialization }})@endif
+                            <option value="{{ $doctor->id }}" 
+                                    data-department="{{ $doctor->employee->department_id ?? '' }}"
+                                    class="doctor-option"
+                                    style="display: none;"
+                                    {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                {{ ($doctor->employee && $doctor->employee->first_name) ? $doctor->employee->full_name : $doctor->username }} @if($doctor->employee && $doctor->employee->specialization)({{ $doctor->employee->specialization }})@endif
                             </option>
                         @endforeach
                     </select>
@@ -61,18 +82,6 @@
                     <p id="availability-msg" class="core1-error-text" style="color: var(--text-light);"></p>
                 </div>
 
-                <div class="core1-form-group core1-col-span-2">
-                    <label for="type" class="core1-label">Appointment Type *</label>
-                    <select id="type" name="type" required
-                            class="core1-input">
-                        <option value="">Select Type</option>
-                        <option value="consultation" {{ old('type') === 'consultation' ? 'selected' : '' }}>Consultation</option>
-<option value="follow-up" {{ old('type') === 'follow-up' ? 'selected' : '' }}>Follow-up</option>
-<option value="check-up" {{ old('type') === 'check-up' ? 'selected' : '' }}>Check-up</option>
-<option value="emergency" {{ old('type') === 'emergency' ? 'selected' : '' }}>Emergency</option>
-
-                    </select>
-                </div>
 
                 <div class="core1-form-group core1-col-span-2">
                     <label for="reason" class="core1-label">Reason</label>
@@ -132,24 +141,96 @@ document.addEventListener('DOMContentLoaded', function() {
                         timeSelect.appendChild(option);
                     });
                     msg.textContent = 'Slots updated.';
+                    msg.style.color = 'var(--text-light)';
                 } else {
                     timeSelect.innerHTML = '<option value="">No slots available</option>';
-                    msg.textContent = 'No slots available for this date.';
+                    msg.textContent = data.message || 'No slots available for this date.';
+                    msg.style.color = 'var(--core1-error)';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 msg.textContent = 'Error checking availability.';
+                msg.style.color = 'var(--core1-error)';
             })
             .finally(() => {
                 timeSelect.disabled = false;
             });
     }
 
+    const serviceTypeSelect = document.getElementById('type');
+    const deptInput = document.getElementById('department_id');
+    const initialDoctors = Array.from(document.querySelectorAll('.doctor-option')).map(opt => ({
+        id: opt.value,
+        name: opt.textContent.trim(),
+        deptId: (opt.getAttribute('data-department') || '').trim().toUpperCase()
+    }));
+
+    function filterDoctors() {
+        const selectedOption = serviceTypeSelect.options[serviceTypeSelect.selectedIndex];
+        const selectedDept = selectedOption ? (selectedOption.getAttribute('data-dept') || '').trim().toUpperCase() : '';
+        const currentDoctorId = doctorSelect.value;
+        
+        console.log('Filtering for Dept:', selectedDept);
+        console.log('Available Doctors:', initialDoctors);
+        
+        // Update hidden department_id for backend validation
+        deptInput.value = selectedDept;
+        
+        // Clear and add placeholder
+        doctorSelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        
+        if (!selectedDept) {
+            placeholder.textContent = 'Select Service Type First';
+            doctorSelect.appendChild(placeholder);
+            checkAvailability();
+            return;
+        }
+
+        placeholder.textContent = 'Select Doctor';
+        doctorSelect.appendChild(placeholder);
+
+        let matchCount = 0;
+        initialDoctors.forEach(doc => {
+            console.log(`Checking Doc: ${doc.name}, Dept: ${doc.deptId} vs ${selectedDept}`);
+            if (doc.deptId === selectedDept && doc.deptId !== '') {
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = doc.name;
+                if (doc.id === currentDoctorId) {
+                    opt.selected = true;
+                }
+                doctorSelect.appendChild(opt);
+                matchCount++;
+            }
+        });
+
+        if (matchCount === 0) {
+            placeholder.textContent = 'Select Doctor (No direct service match)';
+            // Fallback: Show all doctors if no specific match
+            initialDoctors.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = doc.name + ' (All Services)';
+                doctorSelect.appendChild(opt);
+            });
+        }
+        
+        checkAvailability();
+    }
+
+    serviceTypeSelect.addEventListener('change', filterDoctors);
     doctorSelect.addEventListener('change', checkAvailability);
     dateInput.addEventListener('change', checkAvailability);
     
-    // Check initial state if old values exist
+    // Initial filter if old values exist
+    if (deptInput && deptInput.value) {
+        filterDoctors();
+    }
+    
+    // Check initial state if date exists
     if (doctorSelect.value && dateInput.value) {
         checkAvailability();
     }

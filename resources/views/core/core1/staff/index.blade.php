@@ -8,7 +8,7 @@
 <div class="p-8">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-bold text-gray-900">Staff Management</h1>
-        <a href="{{ route('staff.create') }}" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <a href="{{ route('core1.staff.create') }}" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <i class="fas fa-plus"></i>
             Add Staff
         </a>
@@ -29,7 +29,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4">{{ $member->name }}</td>
                             <td class="px-6 py-4">{{ $member->email }}</td>
-                            <td class="px-6 py-4 capitalize">{{ $member->role }}</td>
+                            <td class="px-6 py-4 capitalize">{{ $member->role_slug }}</td>
                             <td class="px-6 py-4">{{ $member->department ?? 'N/A' }}</td>
                         </tr>
                     @empty

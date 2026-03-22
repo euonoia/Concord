@@ -13,9 +13,7 @@ use Illuminate\Http\JsonResponse;
 
 class OTPController extends Controller
 {
-    /**
-     * Send an OTP to the provided identifier (email).
-     */
+    /*
     public function send(SendOTPRequest $request): JsonResponse
     {
         $identifier = $request->identifier;
@@ -59,9 +57,6 @@ class OTPController extends Controller
         ]);
     }
 
-    /**
-     * Verify the provided OTP.
-     */
     public function verify(VerifyOTPRequest $request): JsonResponse
     {
         $identifier = $request->identifier;
@@ -105,4 +100,5 @@ class OTPController extends Controller
             // You might return a token or perform further actions here
         ]);
     }
+    */
 }

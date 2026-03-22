@@ -25,4 +25,8 @@ app/certs
 composer.lock
 package-lock.json
 .agents
+/database/migrations
+/database/seeders
+/database/sql
+/encounter.json
 .database/migrations

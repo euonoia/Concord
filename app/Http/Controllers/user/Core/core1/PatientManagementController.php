@@ -15,14 +15,28 @@ class PatientManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $searchTerm = $request->get('search', '');
-        $statusFilter = $request->get('status', '');
+        $searchTerm = $request->input('search', '');
+        $statusFilter = $request->input('status', '');
 
         $user = auth()->user();
         $isDoctor = $user->role_slug === 'doctor';
         $isNurse = $user->role_slug === 'nurse';
 
-        $query = Patient::where('registration_status', '!=', 'PRE_REGISTERED');
+        $query = Patient::where('registration_status', '!=', 'PRE_REGISTERED')
+            ->where(function ($q) {
+                // 1. Newly registered (no encounters)
+                $q->whereDoesntHave('encounters')
+                // 2. OR has an actively running encounter
+                ->orWhereHas('encounters', function ($e) {
+                    $e->where('status', '!=', 'Closed')
+                      ->orWhere(function ($sub) {
+                          $sub->where('type', 'IPD')
+                              ->whereHas('admission', function ($a) {
+                                  $a->whereNull('discharge_date');
+                              });
+                      });
+                });
+            });
 
         if ($isDoctor) {
             $query->whereHas('appointments', function ($q) use ($user) {
@@ -35,7 +49,6 @@ class PatientManagementController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'like', "%{$searchTerm}%")
                   ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                  ->orWhere('patient_id', 'like', "%{$searchTerm}%")
                   ->orWhere('mrn', 'like', "%{$searchTerm}%")
                   ->orWhere('email', 'like', "%{$searchTerm}%");
             });
@@ -45,7 +58,21 @@ class PatientManagementController extends Controller
             $query->where('status', $statusFilter);
         }
 
-        $patients = $query->latest()->paginate(15);
+        $patients = $query->with([
+            'encounters' => function($q) { $q->latest(); },
+            'encounters.admission.bed.room.ward',
+            'encounters.consultation',
+            'encounters.triage'
+        ])
+        ->select('patients_core1.*')
+        // Order by the most recent encounter first, fallback to patient creation date
+        ->orderByRaw("
+            COALESCE(
+                (SELECT created_at FROM encounters_core1 WHERE patient_id = patients_core1.id ORDER BY created_at DESC LIMIT 1),
+                patients_core1.created_at
+            ) DESC
+        ")
+        ->paginate(15);
 
         $nurses = [];
         if (auth()->user()->isAdmin() || auth()->user()->isHeadNurse()) {
@@ -102,14 +129,7 @@ class PatientManagementController extends Controller
                 ->with('warning', 'A patient with matching phone or email already exists. Please review before creating a new record.');
         }
 
-        // Generate HMS patient_id
-        $year = date('Y');
-        $lastNumber = Patient::where('patient_id', 'like', "HMS-{$year}-%")
-            ->selectRaw("MAX(CAST(SUBSTRING(patient_id, 10, 5) AS UNSIGNED)) as max_num")
-            ->value('max_num');
-        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
 
-        $validated['patient_id']          = 'HMS-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
         $validated['mrn']                  = Patient::generateMRN();
         $validated['registration_status']  = 'REGISTERED';
         $validated['status']               = 'active';
@@ -127,6 +147,14 @@ class PatientManagementController extends Controller
     public function show(Patient $patient)
     {
         $this->logAudit('patient_viewed', Patient::class, $patient->id);
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'patient' => $patient->load('assignedNurse'),
+                'age' => $patient->age
+            ]);
+        }
+
         return view('core.core1.patients.show', compact('patient'));
     }
 
@@ -142,18 +170,18 @@ class PatientManagementController extends Controller
             'middle_name'                => 'nullable|string|max:255',
             'last_name'                  => 'required|string|max:255',
             'date_of_birth'              => 'required|date',
-            'gender'                     => 'required|in:male,female,other,Male,Female,Other',
+            'gender'                     => 'required|in:male,female,other',
             'phone'                      => 'required|string',
             'email'                      => 'required|email|unique:patients_core1,email,' . $patient->id,
             'address'                    => 'nullable|string',
             'emergency_contact_name'     => 'nullable|string|max:255',
             'emergency_contact_phone'    => 'nullable|string|max:255',
+            'emergency_contact_relation' => 'nullable|string|max:255',
             'blood_type'                 => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown',
             'allergies'                  => 'nullable|string',
             'medical_history'            => 'nullable|string',
             'insurance_provider'         => 'nullable|string|max:255',
             'policy_number'              => 'nullable|string|max:255',
-            'emergency_contact_relation' => 'nullable|string|max:255',
         ]);
 
         $validated['gender']     = strtolower($validated['gender']);
@@ -218,11 +246,11 @@ class PatientManagementController extends Controller
     public function checkDuplicates(Request $request)
     {
         $duplicates = Patient::detectDuplicates([
-            'phone'      => $request->get('phone', ''),
-            'email'      => $request->get('email', ''),
-            'first_name' => $request->get('first_name', ''),
-            'last_name'  => $request->get('last_name', ''),
-            'date_of_birth' => $request->get('date_of_birth'),
+            'phone'      => $request->input('phone', ''),
+            'email'      => $request->input('email', ''),
+            'first_name' => $request->input('first_name', ''),
+            'last_name'  => $request->input('last_name', ''),
+            'date_of_birth' => $request->input('date_of_birth'),
         ]);
 
         return response()->json([
@@ -277,14 +305,7 @@ class PatientManagementController extends Controller
 
         $validated['gender'] = strtolower($validated['gender']);
 
-        // Generate HMS patient_id if not already set
-        if (!$patient->patient_id) {
-            $year       = date('Y');
-            $lastNumber = Patient::where('patient_id', 'like', "HMS-{$year}-%")
-                ->selectRaw("MAX(CAST(SUBSTRING(patient_id, 10, 5) AS UNSIGNED)) as max_num")
-                ->value('max_num');
-            $validated['patient_id'] = 'HMS-' . $year . '-' . str_pad(($lastNumber ? $lastNumber + 1 : 1), 5, '0', STR_PAD_LEFT);
-        }
+
 
         $validated['mrn']                 = Patient::generateMRN();
         $validated['registration_status'] = 'REGISTERED';

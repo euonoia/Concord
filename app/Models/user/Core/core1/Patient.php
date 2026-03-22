@@ -13,7 +13,6 @@ class Patient extends Model
 
     // <--- Replace this $fillable with the updated version
     protected $fillable = [
-        'patient_id',
         'mrn',
         'first_name',
         'middle_name',
@@ -49,6 +48,8 @@ class Patient extends Model
         'last_visit' => 'datetime',
     ];
 
+    protected $appends = ['name'];
+
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
@@ -57,6 +58,11 @@ class Patient extends Model
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class);
+    }
+
+    public function encounters()
+    {
+        return $this->hasMany(\App\Models\core1\Encounter::class, 'patient_id');
     }
 
     public function bills()
@@ -71,7 +77,7 @@ class Patient extends Model
 
     public function getAgeAttribute()
     {
-        return $this->date_of_birth ? $this->date_of_birth->age : null;
+        return $this->date_of_birth ? \Illuminate\Support\Carbon::parse($this->date_of_birth)->age : null;
     }
 
     public function getNameAttribute()
