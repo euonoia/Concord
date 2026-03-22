@@ -46,7 +46,14 @@ class AdminAssessmentPerformanceController extends Controller
 
         // Get the individual competency scores using the applicant_id or application_id
         $scores = DB::table('onboarding_assessment_scores_hr1')
-            ->where('application_id', $applicant->application_id)
+            ->leftJoin('employees as assessors', 'onboarding_assessment_scores_hr1.assessed_by', '=', 'assessors.employee_id')
+            ->leftJoin('employees as validators', 'onboarding_assessment_scores_hr1.validated_by', '=', 'validators.employee_id')
+            ->where('onboarding_assessment_scores_hr1.application_id', $applicant->application_id)
+            ->select(
+                'onboarding_assessment_scores_hr1.*',
+                DB::raw("CONCAT(assessors.first_name, ' ', assessors.last_name) as assessor_name"),
+                DB::raw("CONCAT(validators.first_name, ' ', validators.last_name) as validator_name")
+            )
             ->get();
 
         // Calculate Average
@@ -55,20 +62,67 @@ class AdminAssessmentPerformanceController extends Controller
         return view('admin.hr1.assessment_performance.show', compact('applicant', 'scores', 'average'));
     }
 
-    /**
-     * Finalize and validate the assessment.
-     */
     public function validateAssessment(Request $request, $id)
     {
-        // Update validation status in the onboarding_assessments_hr1 table
-        DB::table('onboarding_assessments_hr1')
-            ->where('id', $id)
-            ->update([
-                'is_validated' => 1,
-                'validated_by' => Auth::id(), // ID of the HR Admin currently logged in
-                'updated_at'   => now(),
-            ]);
+        // Get the assessment master record
+        $assessment = DB::table('onboarding_assessments_hr1')->where('id', $id)->first();
+        
+        if (!$assessment) {
+            return redirect()->back()->with('error', 'Assessment record not found.');
+        }
 
-        return redirect()->back()->with('success', 'Assessment scores have been officially validated.');
+        if ($assessment->assessment_status !== 'assessed') {
+            return redirect()->back()->with('error', 'Cannot validate: HR2 Assessment must be COMPLETED first (Current: ' . strtoupper($assessment->assessment_status) . ').');
+        }
+
+        // Fetch individual scores to calculate final grade
+        $scores = DB::table('onboarding_assessment_scores_hr1')
+            ->where('application_id', $assessment->application_id)
+            ->get();
+
+        if ($scores->isEmpty()) {
+            return redirect()->back()->with('error', 'No scores found for this applicant.');
+        }
+
+        $average = $scores->avg('rating');
+        $finalStatus = ($average >= 75) ? 'passed' : 'failed';
+
+        // Get admin employee info
+        $admin = DB::table('employees')->where('user_id', Auth::id())->first();
+        $adminId = $admin ? $admin->employee_id : 'ADMIN';
+        $adminName = Auth::user()->name;
+
+        DB::beginTransaction();
+        try {
+            // Update validation status in the onboarding_assessments_hr1 table
+            DB::table('onboarding_assessments_hr1')
+                ->where('id', $id)
+                ->update([
+                    'assessment_status' => $finalStatus,
+                    'is_validated'      => 1,
+                    'validated_by'      => $adminName,
+                    'updated_at'        => now(),
+                ]);
+
+            // Update scores tracking
+            DB::table('onboarding_assessment_scores_hr1')
+                ->where('application_id', $assessment->application_id)
+                ->update([
+                    'validated_by' => $adminId,
+                    'updated_at'   => now()
+                ]);
+
+            DB::commit();
+
+            $msg = $finalStatus === 'passed' 
+                ? 'Assessment scores validated: PASSED (' . number_format($average, 2) . '%).' 
+                : 'Assessment scores validated: FAILED (' . number_format($average, 2) . '%).';
+
+            return redirect()->back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Validation failed: ' . $e->getMessage());
+        }
     }
 }

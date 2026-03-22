@@ -140,6 +140,7 @@
                                         $badgeClass = [
                                             'pending' => 'bg-warning text-dark',
                                             'scheduled' => 'bg-primary',
+                                            'assessed' => 'bg-info',
                                             'passed' => 'bg-success',
                                             'failed' => 'bg-danger'
                                         ][$n->assessment_status ?? 'pending'];
@@ -151,7 +152,7 @@
                                         <span class="badge bg-success" title="Validated by {{ $n->validated_by }}">
                                             <i class="bi bi-check-all me-1"></i> VALIDATED
                                         </span>
-                                    @elseif($n->assessment_status == 'passed')
+                                    @elseif($n->assessment_status == 'assessed')
                                         <form action="{{ route('hr1.newhires.validateAssessment', $n->applicant_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Click to Validate Grade">

@@ -92,6 +92,7 @@
                                         $resultClass = match($applicant->assessment_status) {
                                             'passed' => 'text-success font-weight-bold',
                                             'failed' => 'text-danger font-weight-bold',
+                                            'assessed' => 'text-info font-weight-bold',
                                             default  => 'text-muted italic'
                                         };
                                     @endphp

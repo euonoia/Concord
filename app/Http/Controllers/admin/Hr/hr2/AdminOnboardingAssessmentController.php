@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminOnboardingAssessmentController extends Controller
 {
@@ -79,6 +80,9 @@ class AdminOnboardingAssessmentController extends Controller
     $ratings = $request->input('ratings', []);
     $remarks = $request->input('remarks', []);
 
+    $admin = DB::table('employees')->where('user_id', Auth::id())->first();
+    $adminId = $admin ? $admin->employee_id : 'ADMIN';
+
     // Save each competency score into the scores table with application_id
     foreach ($ratings as $competency => $score) {
         DB::table('onboarding_assessment_scores_hr1')->updateOrInsert(
@@ -90,6 +94,7 @@ class AdminOnboardingAssessmentController extends Controller
                 'application_id' => $applicant->application_id, 
                 'rating'         => $score,
                 'remarks'        => $remarks[$competency] ?? null,
+                'assessed_by'    => $adminId,
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]
@@ -100,8 +105,9 @@ class AdminOnboardingAssessmentController extends Controller
     DB::table('onboarding_assessments_hr1')
         ->where('application_id', $applicant->application_id)
         ->update([
-            'assessment_status' => 'passed',
-            'updated_at' => now(),
+            'assessment_status' => 'assessed',
+            'assessed_by'       => $adminId,
+            'updated_at'        => now(),
         ]);
 
     return redirect()->route('onboarding.assessment.matrix', $id)

@@ -89,6 +89,8 @@
                                     <th>Competency Name</th>
                                     <th class="text-center">Rating</th>
                                     <th>Remarks</th>
+                                    <th>Assessed By</th>
+                                    <th>Validated By</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,6 +111,12 @@
                                     </td>
                                     <td>
                                         <small class="text-muted italic">{{ $score->remarks ?? 'No remarks provided.' }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="font-weight-bold text-dark">{{ $score->assessor_name ?? $score->assessed_by ?? 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="font-weight-bold text-dark">{{ $score->validator_name ?? $score->validated_by ?? 'N/A' }}</small>
                                     </td>
                                 </tr>
                                 @empty

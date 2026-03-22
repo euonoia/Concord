@@ -143,19 +143,59 @@ class NewHireController extends Controller
             return back()->with('error', 'Assessment record not found.');
         }
 
-        if ($assessment->assessment_status !== 'passed') {
-            return back()->with('error', 'Cannot validate: Assessment status must be PASSED first (Current: ' . strtoupper($assessment->assessment_status) . ').');
+        if ($assessment->assessment_status !== 'assessed') {
+            return back()->with('error', 'Cannot validate: HR2 Assessment must be COMPLETED first (Current: ' . strtoupper($assessment->assessment_status) . ').');
         }
 
-        DB::table('onboarding_assessments_hr1')
-            ->where('applicant_id', $applicant_id)
-            ->update([
-                'is_validated' => true,
-                'validated_by' => Auth::user()->name,
-                'updated_at' => now()
-            ]);
+        // Fetch individual scores to calculate final grade
+        $scores = DB::table('onboarding_assessment_scores_hr1')
+            ->where('application_id', $assessment->application_id)
+            ->get();
 
-        return back()->with('success', 'Onboarding assessment validated successfully.');
+        if ($scores->isEmpty()) {
+            return back()->with('error', 'No scores found for this applicant.');
+        }
+
+        $average = $scores->avg('rating');
+        $finalStatus = ($average >= 75) ? 'passed' : 'failed';
+
+        // Get admin employee info
+        $admin = DB::table('employees')->where('user_id', Auth::id())->first();
+        $adminId = $admin ? $admin->employee_id : 'ADMIN';
+        $adminName = Auth::user()->name; // Standard name from users table
+
+        DB::beginTransaction();
+        try {
+            // Update master record
+            DB::table('onboarding_assessments_hr1')
+                ->where('applicant_id', $applicant_id)
+                ->update([
+                    'assessment_status' => $finalStatus,
+                    'is_validated'      => true,
+                    'validated_by'      => $adminName,
+                    'updated_at'        => now()
+                ]);
+
+            // Update scores tracking
+            DB::table('onboarding_assessment_scores_hr1')
+                ->where('application_id', $assessment->application_id)
+                ->update([
+                    'validated_by' => $adminId,
+                    'updated_at'   => now()
+                ]);
+
+            DB::commit();
+            
+            $msg = $finalStatus === 'passed' 
+                ? "Onboarding assessment VALIDATED (PASSED: " . number_format($average, 2) . "%)." 
+                : "Onboarding assessment VALIDATED (FAILED: " . number_format($average, 2) . "%).";
+            
+            return back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Validation failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -228,14 +268,29 @@ class NewHireController extends Controller
 
                     $prefix = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $department->name), 0, 3));
 
-                    /** @var object $lastEmployee */
+                    $nextNumber = 1;
                     $lastEmployee = DB::table('employees')
                         ->where('employee_id', 'LIKE', $prefix . '-%')
                         ->orderByDesc('employee_id')
                         ->first();
 
-                    $nextNumber = $lastEmployee ? ((int) substr($lastEmployee->employee_id, -4) + 1) : 1;
-                    $employeeId = $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                    if ($lastEmployee) {
+                        $nextNumber = ((int) substr($lastEmployee->employee_id, -4) + 1);
+                    }
+
+                    // Ensure uniqueness in both 'employees' AND 'users' (username)
+                    do {
+                        $employeeId = $prefix . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+                        
+                        $existsInEmployees = DB::table('employees')->where('employee_id', $employeeId)->exists();
+                        $existsInUsers = DB::table('users')->where('username', $employeeId)->exists();
+                        
+                        if ($existsInEmployees || $existsInUsers) {
+                            $nextNumber++;
+                        } else {
+                            break;
+                        }
+                    } while (true);
 
                     // Create user account
                     $userId = DB::table('users')->insertGetId([
