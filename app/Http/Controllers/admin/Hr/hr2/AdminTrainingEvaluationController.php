@@ -15,19 +15,30 @@ use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 
 class AdminTrainingEvaluationController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER PAGE (Training Matrix)
+    |--------------------------------------------------------------------------
+    */
     public function index() 
     {
         $departments = Department::where('is_active', 1)->get();
         return view('admin.hr2.training_evaluation', compact('departments'));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW MATRIX WHEN CLICKING EVALUATE
+    |--------------------------------------------------------------------------
+    */
     public function showEvaluation(Request $request) 
     {
         $employee_id = $request->query('employee_id');
         $competency_code = $request->query('competency_code');
 
         if (!$employee_id || !$competency_code) {
-            return redirect()->back()->with('error', 'Missing parameters.');
+            return redirect()->route('hr2.training')
+                ->with('error', 'Missing parameters.');
         }
 
         $exists = EmployeeTrainingScore::where('employee_id', $employee_id)
@@ -35,7 +46,8 @@ class AdminTrainingEvaluationController extends Controller
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('error', 'Employee already evaluated.');
+            return redirect()->route('hr2.training')
+                ->with('error', 'Employee already evaluated.');
         }
 
         $employee = Employee::where('employee_id', $employee_id)->firstOrFail();
@@ -43,101 +55,119 @@ class AdminTrainingEvaluationController extends Controller
         
         return view('admin.hr2.training_evaluation_matrix', compact('employee', 'competency'));
     }
-   public function storeEvaluation(Request $request) 
-{
-    $request->validate([
-        'employee_id' => 'required',
-        'competency_code' => 'required',
-        'scores' => 'required|array'
-    ]);
-
-    $exists = EmployeeTrainingScore::where('employee_id', $request->employee_id)
-        ->where('competency_code', $request->competency_code)
-        ->exists();
-
-    if ($exists) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Evaluation already exists.'
-        ], 422);
-    }
-
-    $evaluator = Employee::where('user_id', Auth::id())->first();
-    $evaluatorId = $evaluator ? $evaluator->employee_id : 'ADMIN';
-
-    $total = array_sum($request->scores);
-
-    EmployeeTrainingScore::create([
-        'employee_id' => $request->employee_id,
-        'competency_code' => $request->competency_code,
-        'scores' => json_encode([
-            'ratings' => $request->scores,
-            'remarks' => $request->remarks ?? []
-        ]),
-        'total_score' => $total,
-        'status' => 'completed',
-        'evaluated_by' => $evaluatorId,
-        'evaluated_at' => now()
-    ]);
 
     /*
     |--------------------------------------------------------------------------
-    | Update competency_enroll_hr2 status
+    | STORE MATRIX RESULT
     |--------------------------------------------------------------------------
     */
-
-    CompetencyEnroll::where('employee_id', $request->employee_id)
-        ->where('competency_code', $request->competency_code)
-        ->update([
-            'status' => 'completed'
+    public function storeEvaluation(Request $request) 
+    {
+        $request->validate([
+            'employee_id' => 'required',
+            'competency_code' => 'required',
+            'scores' => 'required|array'
         ]);
 
-    return response()->json([
-        'status' => 'success',
-        'total_score' => $total
-    ]);
-}
-public function getEligibleEmployees(Request $request)
-{
-    $employees = EmployeeCompetencyCompletion::join('employees', 'employees.employee_id', '=', 'employee_competency_completion_hr2.employee_id')
-        ->join('competency_hr2', 'competency_hr2.competency_code', '=', 'employee_competency_completion_hr2.competency_code')
-        
-        // HR3 Join
-        ->leftJoin('training_schedule_hr3', function($join) {
-            $join->on('employees.employee_id', '=', 'training_schedule_hr3.employee_id')
-                 ->on('competency_hr2.competency_code', '=', 'training_schedule_hr3.competency_code');
-        })
-        
-        // Evaluation Score Join (To check if button is needed)
-        ->leftJoin('employee_training_scores_hr2', function($join) {
-            $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
-                 ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
-        })
-        
-        ->where('competency_hr2.department_id', $request->department_id)
-        ->where('competency_hr2.specialization_name', $request->specialization)
-        ->where('competency_hr2.competency_code', $request->competency_code)
-        ->where('employee_competency_completion_hr2.status', 'completed')
-        ->select(
-            'employees.employee_id',
-            'employees.first_name',
-            'employees.last_name',
-            'employee_competency_completion_hr2.completed_at',
-            'training_schedule_hr3.training_date',
-            'training_schedule_hr3.training_time',
-            'training_schedule_hr3.venue',
-            'employee_training_scores_hr2.total_score as training_score' // Check if evaluated
-        )
-        ->get();
+        $exists = EmployeeTrainingScore::where('employee_id', $request->employee_id)
+            ->where('competency_code', $request->competency_code)
+            ->exists();
 
-    return response()->json($employees);
-}
+        if ($exists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Evaluation already exists.'
+            ], 422);
+        }
 
+        $evaluator = Employee::where('user_id', Auth::id())->first();
+        $evaluatorId = $evaluator ? $evaluator->employee_id : 'ADMIN';
+
+        $total = array_sum($request->scores);
+
+        EmployeeTrainingScore::create([
+            'employee_id' => $request->employee_id,
+            'competency_code' => $request->competency_code,
+            'scores' => json_encode([
+                'ratings' => $request->scores,
+                'remarks' => $request->remarks ?? []
+            ]),
+            'total_score' => $total,
+            'status' => 'completed',
+            'evaluated_by' => $evaluatorId,
+            'evaluated_at' => now()
+        ]);
+
+        CompetencyEnroll::where('employee_id', $request->employee_id)
+            ->where('competency_code', $request->competency_code)
+            ->update([
+                'status' => 'completed'
+            ]);
+
+        return response()->json([
+            'status' => 'success',
+            'total_score' => $total
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET ELIGIBLE EMPLOYEES (AJAX)
+    |--------------------------------------------------------------------------
+    */
+    public function getEligibleEmployees(Request $request)
+    {
+        $employees = EmployeeCompetencyCompletion::join('employees', 'employees.employee_id', '=', 'employee_competency_completion_hr2.employee_id')
+            ->join('competency_hr2', 'competency_hr2.competency_code', '=', 'employee_competency_completion_hr2.competency_code')
+            
+            ->leftJoin('training_schedule_hr3', function($join) {
+                $join->on('employees.employee_id', '=', 'training_schedule_hr3.employee_id')
+                     ->on('competency_hr2.competency_code', '=', 'training_schedule_hr3.competency_code');
+            })
+            
+            ->leftJoin('employee_training_scores_hr2', function($join) {
+                $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
+                     ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
+            })
+            
+            ->where('competency_hr2.department_id', $request->department_id)
+            ->where('competency_hr2.specialization_name', $request->specialization)
+            ->where('competency_hr2.competency_code', $request->competency_code)
+            ->where('employee_competency_completion_hr2.status', 'completed')
+
+            ->select(
+                'employees.employee_id',
+                'employees.first_name',
+                'employees.last_name',
+                'training_schedule_hr3.training_date',
+                'training_schedule_hr3.training_time',
+                'training_schedule_hr3.venue',
+                'employee_training_scores_hr2.total_score as training_score'
+            )
+            ->get();
+
+        return response()->json($employees);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | AJAX FILTERS
+    |--------------------------------------------------------------------------
+    */
     public function getSpecializations($dept) {
-        return response()->json(DepartmentSpecialization::where('dept_code', $dept)->where('is_active', 1)->get());
+        return response()->json(
+            DepartmentSpecialization::where('dept_code', $dept)
+                ->where('is_active', 1)
+                ->get()
+        );
     }
 
     public function getCompetencies($dept, $spec) {
-        return response()->json(Competency::where('department_id', $dept)->where('specialization_name', $spec)->where('is_active', 1)->get());
+        return response()->json(
+            Competency::where('department_id', $dept)
+                ->where('specialization_name', $spec)
+                ->where('is_active', 1)
+                ->get()
+        );
     }
 }

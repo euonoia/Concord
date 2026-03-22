@@ -37,8 +37,7 @@
                     <thead class="bg-primary text-white text-center">
                         <tr>
                             <th>Employee ID</th>
-                            <th>Full Name</th>
-                            <th>Completed At</th>
+                            <th>Full Name</th>    
                             <th>Training At (HR3)</th> 
                             <th>Action / Status</th>
                         </tr>
@@ -63,7 +62,7 @@ const comp = document.getElementById('competency');
 const table = document.getElementById('employeeTable');
 
 // Ensure this route points to your evaluation controller's show method
-const trainingEvaluationRoute = "{{ route('hr2.training_evaluation.show') }}";
+const trainingEvaluationRoute = "{{ route('hr2.training.evaluate') }}";
 
 dept.addEventListener('change', function() {
     let value = this.value;
@@ -157,7 +156,6 @@ comp.addEventListener('change', function() {
                 <tr>
                     <td class="align-middle text-center">${emp.employee_id}</td>
                     <td class="align-middle font-weight-bold text-dark">${emp.first_name} ${emp.last_name}</td>
-                    <td class="align-middle text-center text-muted small">${emp.completed_at ?? '-'}</td>
                     <td class="align-middle">${trainingAtHTML}</td>
                     <td class="align-middle" style="min-width: 180px;">${actionHTML}</td>
                 </tr>`;
