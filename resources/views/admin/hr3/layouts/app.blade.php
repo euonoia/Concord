@@ -31,10 +31,29 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('shifts.index') }}" class="{{ request()->routeIs('shifts.*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-range"></i>
-            <span>Shifts</span>
-        </a>
+      <div class="nav-dropdown {{ request()->routeIs('shifts.*') ? 'open' : '' }}">
+            <a href="javascript:void(0)" class="dropdown-toggle" onclick="toggleDropdown(this)">
+                <i class="bi bi-calendar-range"></i>
+                <span>Shifts</span>
+                <i class="bi bi-chevron-down ms-auto arrow-icon"></i>
+            </a>
+
+            <div class="dropdown-container">
+
+                <a href="{{ route('shifts.index') }}" 
+                class="sub-link {{ request()->routeIs('shifts.index') ? 'active' : '' }}">
+                    <i class="bi bi-clock"></i>
+                    <span>Assign Shifts</span>
+                </a>
+
+               <a href="{{ route('admin.hr3.shift_requests.index') }}" 
+                class="sub-link {{ request()->routeIs('admin.hr3.shift_requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>Shift Requests</span>
+                </a>
+
+            </div>
+        </div>
 
         <div class="nav-dropdown {{ (request()->routeIs('schedule.*') || request()->routeIs('training_schedule.*')) ? 'open' : '' }}">
             <a href="javascript:void(0)" class="dropdown-toggle" onclick="toggleDropdown(this)">

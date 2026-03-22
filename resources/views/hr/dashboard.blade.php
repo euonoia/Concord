@@ -176,8 +176,9 @@
                         </div>
                     </div>
                 @empty
-                    <p style="text-align: center; color: #64748b;">No shifts assigned.</p>
-                @endforelse
+                <p style="text-align: center; color: #64748b;">
+                    No approved shifts yet.
+                </p>                @endforelse
             </div>
         </div>
     </div>

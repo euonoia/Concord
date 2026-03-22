@@ -1,0 +1,97 @@
+
+    /* Applying your Theme Variables to the Portal */
+    .L2_portal_vendor {
+        background-color: var(--bg);
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: var(--text-dark);
+        padding: var(--space-lg);
+    }
+
+    .L2_portal_vendor .vendor-card {
+        background: #ffffff;
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    .L2_portal_vendor .header-strip {
+        background-color: var(--primary-base);
+        color: #ffffff;
+        padding: var(--space-md) var(--space-lg);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* GRID SYSTEM: This forces side-by-side layout */
+    .L2_portal_vendor .form-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: var(--space-md);
+        padding: var(--space-lg);
+    }
+
+    .L2_portal_vendor .col-3 { grid-column: span 3; }
+    .L2_portal_vendor .col-4 { grid-column: span 4; }
+    .L2_portal_vendor .col-6 { grid-column: span 6; }
+    .L2_portal_vendor .col-8 { grid-column: span 8; }
+    .L2_portal_vendor .col-12 { grid-column: span 12; }
+
+    .L2_portal_vendor .section-title {
+        grid-column: span 12;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent-base);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid var(--neutral-200);
+        padding-bottom: var(--space-xs);
+        margin-top: var(--space-md);
+    }
+
+    .L2_portal_vendor .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-light);
+        margin-bottom: var(--space-xs);
+        display: block;
+    }
+
+    .L2_portal_vendor .form-control, 
+    .L2_portal_vendor .form-select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--neutral-300);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .L2_portal_vendor .form-control:focus {
+        outline: none;
+        border-color: var(--accent-base);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .L2_portal_vendor .btn-save {
+        background-color: var(--accent-base);
+        color: white;
+        border: none;
+        padding: var(--space-sm) var(--space-xl);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .L2_portal_vendor .btn-save:hover {
+        background-color: var(--accent-dark);
+    }
+
+    .L2_portal_vendor .readonly-box {
+        background-color: var(--primary-light);
+        border-color: var(--neutral-300);
+        font-weight: bold;
+        color: var(--primary-base);
+    }
