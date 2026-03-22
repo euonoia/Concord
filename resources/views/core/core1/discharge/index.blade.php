@@ -114,7 +114,7 @@
                                         </div>
                                         @if($latestBill && $latestBill->validator)
                                             <div style="font-size: 10px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ $latestBill->validator->name }}
+                                                Validated by: {{ $latestBill->validator->full_name }}
                                             </div>
                                         @elseif($latestBill)
                                             <div style="font-size: 10px; color: var(--text-gray); font-style: italic;">Pending Val</div>

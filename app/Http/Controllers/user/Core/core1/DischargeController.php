@@ -69,6 +69,7 @@ class DischargeController extends Controller
                 'clearance_financial' => [
                     'bill' => $admission->encounter->patient->bills()
                         ->where('encounter_id', $admission->encounter_id)
+                        ->with('validator') // Eager load the validator for the latest bill
                         ->latest()
                         ->first()
                 ],
@@ -92,6 +93,7 @@ class DischargeController extends Controller
                 'clearance_financial' => [
                     'bill' => $encounter->patient->bills()
                         ->where('encounter_id', $encounter->id)
+                        ->with('validator') // Eager load the validator for the latest bill
                         ->latest()
                         ->first()
                 ],
