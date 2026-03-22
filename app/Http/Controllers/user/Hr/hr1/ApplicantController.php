@@ -17,6 +17,7 @@ class ApplicantController extends Controller
     public function showApplicationForm(Request $request)
     {
         $dept = $request->query('dept', null);
+        $jobId = $request->query('job_id', null);
 
         // Get all active departments
         $departments = DB::table('departments_hr2')
@@ -43,7 +44,7 @@ class ApplicantController extends Controller
                 ->get();
         }
 
-        return view('hr.hr1.apply', compact('departments', 'specializations', 'dept'));
+        return view('hr.hr1.apply', compact('departments', 'specializations', 'dept', 'jobId'));
     }
 
     /**
@@ -60,6 +61,7 @@ class ApplicantController extends Controller
             'department_id'  => 'required',
             'specialization' => 'nullable|string|max:255',
             'resume'         => 'required|mimes:pdf|max:5120',
+            'job_posting_id' => 'nullable|exists:job_postings_hr1,id',
         ]);
 
         $resumePath = null;
@@ -79,6 +81,7 @@ class ApplicantController extends Controller
         try {
             DB::table('applicants_hr1')->insert([
                 'application_id'     => 'APP-' . Str::upper(Str::random(8)),
+                'job_posting_id'     => $request->job_posting_id,
                 'first_name'         => $request->first_name,
                 'last_name'          => $request->last_name,
                 'email'              => $request->email,

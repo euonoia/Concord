@@ -4,9 +4,9 @@
 <div class="container py-4">
     <h2 class="mb-4">Applicant Management</h2>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" class="row g-3">
+    <div class="card mb-4" style="padding: 10px;">
+        <div class="card-body" style="padding: 10px;">
+            <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; align-items: end; margin-bottom: 0; padding: 10px 15px;">
                 <div class="col-md-4">
                     <select name="department" class="form-control">
                         <option value="">-- All Departments --</option>
@@ -37,14 +37,14 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-12 d-flex justify-content-end">
-                    <button class="btn btn-primary w-100">Filter</button>
+                <div class="d-flex justify-content-end align-items-end">
+                    <button class="btn btn-primary px-5 py-2" style="width: auto;">Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card">
+    <div class="card" style="margin-top: 40px;">
         <div class="card-body table-responsive">
             <table class="table table-bordered table-striped mb-0">
                 <thead>

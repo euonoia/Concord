@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 use App\Models\Employee;
+use App\Models\admin\Hr\hr1\OnboardingAssessment;
 
 class AdminCompetencyVerificationController extends Controller
 {
@@ -53,7 +54,7 @@ class AdminCompetencyVerificationController extends Controller
         return view('admin.hr2.competency_verification.index', compact('completions'));
     }
 
-   public function verify(Request $request, $id)
+    public function verify(Request $request, $id)
 {
         $request->validate([
             'verification_notes' => 'nullable|string|max:1000'

@@ -33,11 +33,33 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('competencies.index') }}" 
-           class="{{ request()->routeIs('competencies.*') ? 'active' : '' }}">
-            <i class="bi bi-lightbulb"></i>
-            <span>Competencies</span>
+        <a href="{{ route('succession.index') }}" 
+           class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
+            <i class="bi bi-tree"></i>
+            <span>Succession</span>
         </a>
+
+       {{-- Competencies Dropdown --}}
+        <div class="nav-dropdown {{ request()->is('competencies*') || request()->is('onboarding-assessment*') ? 'open' : '' }}">
+            <a href="#" onclick="toggleDropdown(event)">
+                <i class="bi bi-lightbulb"></i>
+                <span>Competencies</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </a>
+            <div class="dropdown-container">
+                <a href="{{ route('competencies.index') }}" 
+                class="sub-link {{ request()->routeIs('competencies.index') ? 'active' : '' }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Create Competency</span>
+                </a>
+                
+                <a href="{{ route('onboarding.assessment.public') }}" 
+                class="sub-link {{ request()->is('onboarding-assessment*') ? 'active' : '' }}">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>Competency Assessment</span>
+                </a>
+            </div>
+        </div>
 
         {{-- Learning Dropdown --}}
         <div class="nav-dropdown {{ request()->is('admin/hr2/learning*') || request()->is('admin/hr2/enrolls*') ? 'open' : '' }}">
