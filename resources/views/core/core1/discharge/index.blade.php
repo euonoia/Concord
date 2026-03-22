@@ -95,6 +95,11 @@
                                         </div>
                                         @if($item['clearance_clinical']['doctor'])
                                             <div style="font-size: 10px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @if($item['clearance_clinical']['approved'])
+                                                    <span class="text-success" style="font-size: 9px; margin-right: 2px;">Cleared by:</span>
+                                                @else
+                                                    <span class="text-gray" style="font-size: 9px; margin-right: 2px; font-style: italic;">Pending:</span>
+                                                @endif
                                                 Dr. {{ $item['clearance_clinical']['doctor'] }}
                                             </div>
                                         @else

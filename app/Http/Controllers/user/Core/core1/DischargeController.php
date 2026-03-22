@@ -24,9 +24,9 @@ class DischargeController extends Controller
         // 1. Fetch IPD Admissions (Admitted or Doctor Approved)
         $admissionQuery = Admission::with([
             'encounter.patient.bills.validator', 
-            'encounter.doctor', 
+            'encounter.doctor.employee', 
             'bed.room.ward',
-            'discharge.clearingDoctor'
+            'discharge.clearingDoctor.employee'
         ])
         ->whereIn('status', ['Admitted', 'Doctor Approved']);
 
@@ -39,7 +39,7 @@ class DischargeController extends Controller
         $admissions = $admissionQuery->latest('admission_date')->get();
 
         // 2. Fetch OPD Encounters (Pending Billing)
-        $opdQuery = \App\Models\core1\Encounter::with(['patient.bills.validator', 'doctor'])
+        $opdQuery = \App\Models\core1\Encounter::with(['patient.bills.validator', 'doctor.employee'])
             ->where('type', 'OPD')
             ->where('status', 'Pending Billing');
 
@@ -64,7 +64,8 @@ class DischargeController extends Controller
                 'status' => $admission->status,
                 'clearance_clinical' => [
                     'approved' => $admission->status === 'Doctor Approved',
-                    'doctor' => $admission->discharge?->clearingDoctor?->name
+                    'doctor' => ($admission->discharge?->clearingDoctor?->employee?->full_name ?? $admission->discharge?->clearingDoctor?->username) ?? 
+                                ($admission->encounter->doctor?->employee?->full_name ?? $admission->encounter->doctor?->username)
                 ],
                 'clearance_financial' => [
                     'bill' => $admission->encounter->patient->bills()
@@ -88,7 +89,7 @@ class DischargeController extends Controller
                 'status' => 'Pending Billing',
                 'clearance_clinical' => [
                     'approved' => true, // OPD is "Doctor Approved" once it reaches Pending Billing from consultation
-                    'doctor' => $encounter->doctor->name ?? 'Attending Doctor'
+                    'doctor' => $encounter->doctor->employee->full_name ?? $encounter->doctor->username ?? 'Attending Doctor'
                 ],
                 'clearance_financial' => [
                     'bill' => $encounter->patient->bills()
