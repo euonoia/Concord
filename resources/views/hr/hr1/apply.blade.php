@@ -60,7 +60,11 @@
 
             <div class="col-md-6">
                 <label>Department</label>
-                <input type="text" class="form-control" value="{{ $departments->firstWhere('department_id', $dept)->name ?? 'N/A' }}" readonly>
+                @php
+                    $deptObj = $departments->firstWhere('department_id', $dept);
+                    $deptName = $deptObj ? $deptObj->name : 'N/A';
+                @endphp
+                <input type="text" class="form-control" value="{{ $deptName }}" readonly>
                 <input type="hidden" name="department_id" value="{{ $dept }}">
             </div>
 
@@ -81,6 +85,7 @@
                 <input type="file" name="resume" class="form-control" required>
             </div>
 
+            <input type="hidden" name="job_posting_id" value="{{ $jobId }}">
             <input type="hidden" name="post_grad_status" value="residency">
 
             <div class="col-md-12">

@@ -1,6 +1,6 @@
 @extends('admin.hr2.layouts.app')
 
-@section('content')
+@@section('content')
 <div class="container-fluid"> <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Competency Verification</h2>
         <a href="{{ route('competencies.index') }}" class="btn btn-secondary">
@@ -97,3 +97,4 @@
 
 </div>
 @endsection
+on

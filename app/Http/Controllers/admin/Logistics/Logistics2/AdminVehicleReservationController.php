@@ -16,9 +16,13 @@ class AdminVehicleReservationController extends Controller
     {
         $reservations = DB::table('vehicle_reservations')
             ->leftJoin('vendor_logistics2', 'vehicle_reservations.vendor_log_id', '=', 'vendor_logistics2.id')
+            ->leftJoin('purchase_orders_logistics1 as po', 'vendor_logistics2.procurement_id', '=', 'po.id')
             ->select(
                 'vehicle_reservations.*', 
-                'vendor_logistics2.status as l2_status'
+                'vendor_logistics2.status as l2_status',
+                'po.address',
+                'po.selected_supplier',
+                'po.status as l1_status'
             )
             ->orderBy('vehicle_reservations.created_at', 'desc')
             ->get();
@@ -44,7 +48,7 @@ class AdminVehicleReservationController extends Controller
             // 1. Update Vehicle Reservation to in_transit and store cost
             DB::table('vehicle_reservations')->where('id', $id)->update([
                 'delivery_status' => 'in_transit',
-                'delivery_cost' => $cost, // store cost in reservation
+                'delivery_cost' => $cost,
                 'updated_at' => now()
             ]);
 
@@ -56,17 +60,15 @@ class AdminVehicleReservationController extends Controller
                 'updated_at' => now()
             ]);
 
-            // 3. Update Procurement Log
+            // 3. Update Purchase Orders (L1) to in_transit
             $vendorLog = DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->first();
-            DB::table('procurement_log_logistics2')->where('id', $vendorLog->procurement_id)->update([
-                'status' => 'shipped',
+            DB::table('purchase_orders_logistics1')->where('id', $vendorLog->procurement_id)->update([
+                'status' => 'in_transit',
                 'updated_at' => now()
             ]);
-
-            // No audit log yet; will create it on delivery
         });
 
-        return redirect()->back()->with('success', 'Shipment dispatched with cost recorded.');
+        return redirect()->back()->with('success', 'Shipment dispatched and status updated to in_transit.');
     }
 
     /**
@@ -102,10 +104,10 @@ class AdminVehicleReservationController extends Controller
                 'updated_at' => now()
             ]);
 
-            // 4. Update Procurement Log (L1)
+            // 4. Update Purchase Orders (L1) to delivered
             $vendorLog = DB::table('vendor_logistics2')->where('id', $reservation->vendor_log_id)->first();
-            DB::table('procurement_log_logistics2')->where('id', $vendorLog->procurement_id)->update([
-                'status' => 'received', 
+            DB::table('purchase_orders_logistics1')->where('id', $vendorLog->procurement_id)->update([
+                'status' => 'delivered',
                 'delivered_by' => $handlerId,
                 'updated_at' => now()
             ]);
@@ -127,17 +129,17 @@ class AdminVehicleReservationController extends Controller
                 ]);
             }
 
-            // 6. Insert into Audit Log for delivery WITH stored cost
+            // 6. Insert into Audit Log for delivery WITH stored cost and address
             DB::table('audit_logistics2')->insert([
                 'reference_id' => $reservation->id,
                 'category' => 'Delivery',
                 'action' => 'Vehicle Delivery Completed',
-                'details' => "Delivered {$reservation->quantity} units of {$reservation->drug_name} (SKU: {$reservation->drug_num}) via vehicle {$reservation->plate_number}",
+                'details' => "Delivered {$reservation->quantity} units of {$reservation->drug_name} (SKU: {$reservation->drug_num}) via vehicle {$reservation->plate_number} to address: {$reservation->address}",
                 'performed_by' => $handlerId,
                 'cost' => $reservation->delivery_cost ?? 0.00,
             ]);
         });
 
-        return redirect()->back()->with('success', 'Delivery completed, inventory updated, vehicle is now available, and audit logged with cost.');
+        return redirect()->back()->with('success', 'Delivery completed, inventory updated, vehicle is now available, and status updated to delivered.');
     }
 }

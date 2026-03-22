@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\authentication\AuthController;
 use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Controllers\user\Hr\hr1\ApplicantController;
+use App\Http\Controllers\hr\hr1\SocialRecognitionController;
 use App\Http\Middleware\RedirectIfGuest;
+use App\Http\Controllers\OnboardingAssessmentPublicController;
 
 // --- Public Routes ---
 require base_path('routes/landing/landing.php');
@@ -13,9 +15,14 @@ require base_path('routes/landing/landing.php');
 // Route::get('/', function () { return view('onboarding'); });
 Route::get('/ping', fn() => 'pong');
 
-// Residency & Fellowship page
+// Residency & Fellowship page — served with live job postings from DB
 Route::get('/careers/residency-fellowship', function () {
-    return view('hr.hr1.residency_fellowship');
+    $postings = \Illuminate\Support\Facades\DB::table('job_postings_hr1')
+        ->where('is_active', 1)
+        ->orderBy('track_type')
+        ->orderBy('id')
+        ->get();
+    return view('hr.hr1.residency_fellowship', compact('postings'));
 })->name('careers.residency');
 
 // --- Applicant Routes ---
@@ -33,6 +40,10 @@ Route::prefix('careers')->group(function () {
     Route::get('/get-positions', [ApplicantController::class, 'getPositions'])
         ->name('careers.getPositions');
 });
+
+// Social Recognition Interactions
+Route::post('/recognition/{id}/like', [SocialRecognitionController::class, 'like'])->name('recognition.like');
+Route::post('/recognition/{id}/comment', [SocialRecognitionController::class, 'comment'])->name('recognition.comment');
 
 // --- Attendance Station (Public QR display) ---
 Route::get('/attendance/station', [AdminAttendanceController::class, 'showStation'])

@@ -29,19 +29,27 @@
         <span>Dashboard</span>
     </a>
 
-    <div class="nav-dropdown {{ request()->is('admin/logistics2/vendor*') ? 'open' : '' }}">
-        <a href="#" onclick="toggleDropdown(event)">
-            <i class="bi bi-truck-flatbed"></i>
-            <span>Vendor Portal</span>
-            <i class="bi bi-chevron-down arrow-icon"></i>
-        </a>
-        <div class="dropdown-container">
-            <a href="{{ route('admin.logistics2.vendor.index') }}" 
-               class="sub-link {{ request()->routeIs('admin.logistics2.vendor.index') ? 'active' : '' }}">
-                <i class="bi bi-clipboard-check"></i>
-                <span>Procurement Requests</span>
+        <div class="nav-dropdown {{ request()->is('admin/logistics2/vendor*') ? 'open' : '' }}">
+            <a href="#" onclick="toggleDropdown(event)">
+                <i class="bi bi-truck-flatbed"></i>
+                <span>Vendor Portal</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
             </a>
-        </div>
+        <div class="dropdown-container">
+
+        <a href="{{ route('admin.logistics2.vendor.index') }}" 
+        class="sub-link {{ request()->routeIs('admin.logistics2.vendor.index') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Procurement Requests</span>
+        </a>
+
+        <a href="{{ route('admin.logistics2.vendor.portal.index') }}" 
+        class="sub-link {{ request()->routeIs('admin.logistics2.vendor.portal.index') ? 'active' : '' }}">
+            <i class="bi bi-buildings"></i>
+            <span>Vendor List</span>
+        </a>
+
+    </div>
     </div>
 
     <a href="{{ route('admin.logistics2.vehicle.index') }}" 
