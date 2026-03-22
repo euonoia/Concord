@@ -29,7 +29,11 @@ class AdminAssessmentPerformanceController extends Controller
             )
             ->paginate(15);
 
-        return view('admin.hr1.assessment_performance.index', compact('applicants'));
+        $totalPassed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'passed')->count();
+        $totalFailed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'failed')->count();
+        $totalAssessed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'assessed')->count();
+
+        return view('admin.hr1.assessment_performance.index', compact('applicants', 'totalPassed', 'totalFailed', 'totalAssessed'));
     }
 
     /**
@@ -39,7 +43,7 @@ class AdminAssessmentPerformanceController extends Controller
     {
         // Get the assessment master record
         $applicant = DB::table('onboarding_assessments_hr1')->where('id', $id)->first();
-        
+
         if (!$applicant) {
             return redirect()->route('hr1.assessment.performance.index')->with('error', 'Assessment record not found.');
         }
@@ -66,7 +70,7 @@ class AdminAssessmentPerformanceController extends Controller
     {
         // Get the assessment master record
         $assessment = DB::table('onboarding_assessments_hr1')->where('id', $id)->first();
-        
+
         if (!$assessment) {
             return redirect()->back()->with('error', 'Assessment record not found.');
         }
@@ -99,9 +103,9 @@ class AdminAssessmentPerformanceController extends Controller
                 ->where('id', $id)
                 ->update([
                     'assessment_status' => $finalStatus,
-                    'is_validated'      => 1,
-                    'validated_by'      => $adminName,
-                    'updated_at'        => now(),
+                    'is_validated' => 1,
+                    'validated_by' => $adminName,
+                    'updated_at' => now(),
                 ]);
 
             // Update scores tracking
@@ -109,13 +113,13 @@ class AdminAssessmentPerformanceController extends Controller
                 ->where('application_id', $assessment->application_id)
                 ->update([
                     'validated_by' => $adminId,
-                    'updated_at'   => now()
+                    'updated_at' => now()
                 ]);
 
             DB::commit();
 
-            $msg = $finalStatus === 'passed' 
-                ? 'Assessment scores validated: PASSED (' . number_format($average, 2) . '%).' 
+            $msg = $finalStatus === 'passed'
+                ? 'Assessment scores validated: PASSED (' . number_format($average, 2) . '%).'
                 : 'Assessment scores validated: FAILED (' . number_format($average, 2) . '%).';
 
             return redirect()->back()->with('success', $msg);
