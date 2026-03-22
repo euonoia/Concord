@@ -104,10 +104,9 @@
                 <table class="table table-hover table-bordered mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-nowrap" style="width: 50px;">#</th>
+                            <th class="text-nowrap">Application ID</th>
                             <th class="text-nowrap">Full Name</th>
-                            <th class="text-nowrap">Email</th>
-                            <th class="text-nowrap">Phone</th>
+                            <th class="text-nowrap">Username</th>
                             <th class="text-nowrap">Department</th>
                             <th class="text-nowrap">Specialization</th>
                             <th class="text-nowrap">Status</th>
@@ -119,15 +118,14 @@
                     <tbody>
                         @forelse($newHires as $n)
                             <tr>
-                                <td>{{ $n->id }}</td>
+                                <td class="text-nowrap small text-muted fw-semibold">{{ $n->application_id ?? 'N/A' }}</td>
                                 <td class="text-nowrap font-weight-bold">
                                     {{ $n->first_name }} {{ $n->last_name }}
                                     @if($n->status == 'onboarding')
                                         <i class="bi bi-hourglass-split text-info ms-1" title="Onboarding In Progress"></i>
                                     @endif
                                 </td>
-                                <td>{{ $n->email }}</td>
-                                <td class="text-nowrap">{{ $n->phone }}</td>
+                                <td class="text-nowrap"><code>{{ $n->username ?? '—' }}</code></td>
                                 <td>{{ $n->department_name }}</td>
                                 <td>{{ $n->specialization ?? 'N/A' }}</td>
                                 <td>

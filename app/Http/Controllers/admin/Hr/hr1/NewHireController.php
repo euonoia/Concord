@@ -47,12 +47,15 @@ class NewHireController extends Controller
         $query = DB::table('new_hires_hr1')
             ->leftJoin('departments_hr2', 'new_hires_hr1.department_id', '=', 'departments_hr2.department_id')
             ->leftJoin('onboarding_assessments_hr1', 'new_hires_hr1.applicant_id', '=', 'onboarding_assessments_hr1.applicant_id')
+            ->leftJoin('users', 'new_hires_hr1.email', '=', 'users.email')
             ->select(
                 'new_hires_hr1.*',
                 'departments_hr2.name as department_name',
+                'onboarding_assessments_hr1.application_id',
                 'onboarding_assessments_hr1.assessment_status',
                 'onboarding_assessments_hr1.is_validated',
-                'onboarding_assessments_hr1.validated_by'
+                'onboarding_assessments_hr1.validated_by',
+                'users.username'
             );
 
         if (!empty($filters['department'])) {
