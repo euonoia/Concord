@@ -112,8 +112,8 @@
                 <div id="shiftRequestUI" class="info-box" style="display:none; background: #fdf2f8; border: 1px solid #fbcfe8; color: #9d174d;">
                     <i class="fas fa-calendar-check fa-lg"></i>
                     <div>
-                        @if($allShifts->count())
-                            <strong>Active Shift Detected</strong><br>
+                @if($activeShifts->count())                            
+                <strong>Active Shift Detected</strong><br>
                             <small>Ready for submission.</small>
                         @else
                             <strong>No active shifts.</strong>
@@ -125,7 +125,7 @@
                 <div id="leaveUI" style="display:none;">
                     <label>Shift to Miss</label>
                     <select name="shift_id" class="form-control">
-                        @foreach($allShifts as $shift)
+                        @foreach($approvedShifts as $shift)
                             <option value="{{ $shift->id }}">{{ $shift->day_of_week }} - {{ $shift->shift_name }}</option>
                         @endforeach
                     </select>
