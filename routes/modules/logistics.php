@@ -33,8 +33,10 @@ Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', [AdminLogistics1ProcurementController::class, 'index'])->name('index');
+        Route::get('/goods-receipt', [AdminLogistics1ProcurementController::class, 'goodsReceipt'])->name('goods_receipt');
         Route::post('/request', [AdminLogistics1ProcurementController::class, 'store'])->name('store');
         Route::post('/update-status/{id}', [AdminLogistics1ProcurementController::class, 'updateStatus'])->name('update_status');
+        Route::post('/pay-bill/{id}', [AdminLogistics1ProcurementController::class, 'payBill'])->name('pay_bill');
     });
 
     Route::prefix('maintenance')->name('maintenance.')->group(function () {

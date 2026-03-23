@@ -35,22 +35,10 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="{{ route('admin.logistics1.warehouse.index') }}"
-           class="{{ request()->routeIs('admin.logistics1.warehouse.*') ? 'active' : '' }}">
-            <i class="bi bi-archive"></i>
-            <span>Warehouse Inventory</span>
-        </a>
-
         <a href="{{ route('admin.logistics1.procurement.index') }}"
            class="{{ request()->routeIs('admin.logistics1.procurement.*') ? 'active' : '' }}">
             <i class="bi bi-truck"></i>
-            <span>Procurement & Suppliers</span>
-        </a>
-
-        <a href="{{ route('admin.logistics1.maintenance.index') }}"
-           class="{{ request()->routeIs('admin.logistics1.maintenance.*') ? 'active' : '' }}">
-            <i class="bi bi-tools"></i>
-            <span>Maintenance</span>
+            <span>Procurement</span>
         </a>
 
         <a href="{{ route('admin.logistics1.project_management.index') }}"
@@ -63,6 +51,18 @@
            class="{{ request()->routeIs('admin.logistics1.asset_management.*') ? 'active' : '' }}">
             <i class="bi bi-boxes"></i>
             <span>Asset Management</span>
+        </a>
+
+        <a href="{{ route('admin.logistics1.maintenance.index') }}"
+           class="{{ request()->routeIs('admin.logistics1.maintenance.*') ? 'active' : '' }}">
+            <i class="bi bi-tools"></i>
+            <span>MRO</span>
+        </a>
+
+        <a href="{{ route('admin.logistics1.warehouse.index') }}"
+           class="{{ request()->routeIs('admin.logistics1.warehouse.*') ? 'active' : '' }}">
+            <i class="bi bi-archive"></i>
+            <span>Warehousing</span>
         </a>
 
         <form id="logout-form" method="POST" action="{{ route('portal.logout') }}" style="display:none;">

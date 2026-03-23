@@ -38,7 +38,9 @@ class AdminLogistics1WarehouseController extends Controller
         $receiving = $receivingQuery->paginate(10, ['*'], 'receiving_page')->withQueryString();
 
         // TAB 2: INVENTORY CONTROL
-        $inventoryQuery = DB::table('drug_inventory_core2')->orderBy('created_at', 'desc');
+        $inventoryQuery = DB::table('drug_inventory_core2')
+            ->orderByRaw("FIELD(status, 'Out of Stock', 'Critical', 'Low Stock', 'Stable')")
+            ->orderBy('drug_name', 'asc');
 
         if ($search) {
             $inventoryQuery->where(function ($q) use ($search) {
@@ -132,6 +134,7 @@ class AdminLogistics1WarehouseController extends Controller
             'requested_by'           => $po->requested_by,
             'notes'                  => $po->notes ?? null,
             'inspector'              => $request->inspector ?? null,
+            'amount'                 => $po->amount ?? 0.00,
             'created_at'             => now(),
             'updated_at'             => now(),
         ]);
@@ -139,44 +142,6 @@ class AdminLogistics1WarehouseController extends Controller
         DB::table($table)
             ->where('id', $po->id)
             ->update(['status' => 'receiving', 'updated_at' => now()]);
-
-        // Update drug inventory
-        $inventory = DB::table('drug_inventory_core2')
-            ->where('drug_num', $po->drug_num)
-            ->first();
-
-        if ($inventory) {
-            $newQuantity = $inventory->quantity + $po->requested_quantity;
-            $status = 'Stable';
-            if ($newQuantity == 0)       $status = 'Out of Stock';
-            elseif ($newQuantity <= 10)  $status = 'Low Stock';
-            elseif ($newQuantity <= 20)  $status = 'Critical';
-
-            DB::table('drug_inventory_core2')
-                ->where('drug_num', $po->drug_num)
-                ->update([
-                    'quantity'   => $newQuantity,
-                    'status'     => $status,
-                    'updated_at' => now(),
-                ]);
-        } else {
-            // Insert new inventory record if drug doesn't exist yet
-            $newQuantity = $po->requested_quantity;
-            $status = 'Stable';
-            if ($newQuantity == 0)       $status = 'Out of Stock';
-            elseif ($newQuantity <= 10)  $status = 'Low Stock';
-            elseif ($newQuantity <= 20)  $status = 'Critical';
-
-            DB::table('drug_inventory_core2')->insert([
-                'drug_num'   => $po->drug_num,
-                'drug_name'  => $po->drug_name,
-                'quantity'   => $newQuantity,
-                'status'     => $status,
-                'supplier'   => $po->selected_supplier,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
 
         return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'receiving'])
             ->with('success', 'PO ' . $po->po_number . ' received and logged successfully.');
@@ -208,6 +173,50 @@ class AdminLogistics1WarehouseController extends Controller
         DB::table('receiving_logistics1')
             ->where('id', $id)
             ->update($updateData);
+
+        // Update drug inventory when status is set to delivered
+        if ($request->status === 'delivered') {
+            $receiving = DB::table('receiving_logistics1')->where('id', $id)->first();
+            $receivedQty = $request->actual_quantity ?? $receiving->requested_quantity;
+            $badOrders   = $request->bad_orders ?? 0;
+            $netQty      = max(0, $receivedQty - $badOrders);
+
+            $inventory = DB::table('drug_inventory_core2')
+                ->where('drug_num', $receiving->drug_num)
+                ->first();
+
+            if ($inventory) {
+                $newQuantity = $inventory->quantity + $netQty;
+                $status = 'Stable';
+                if ($newQuantity == 0)      $status = 'Out of Stock';
+                elseif ($newQuantity <= 10) $status = 'Low Stock';
+                elseif ($newQuantity <= 20) $status = 'Critical';
+
+                DB::table('drug_inventory_core2')
+                    ->where('drug_num', $receiving->drug_num)
+                    ->update([
+                        'quantity'   => $newQuantity,
+                        'status'     => $status,
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                $newQuantity = $netQty;
+                $status = 'Stable';
+                if ($newQuantity == 0)      $status = 'Out of Stock';
+                elseif ($newQuantity <= 10) $status = 'Low Stock';
+                elseif ($newQuantity <= 20) $status = 'Critical';
+
+                DB::table('drug_inventory_core2')->insert([
+                    'drug_num'   => $receiving->drug_num,
+                    'drug_name'  => $receiving->drug_name,
+                    'quantity'   => $newQuantity,
+                    'status'     => $status,
+                    'supplier'   => $receiving->selected_supplier,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'receiving'])
             ->with('success', 'Status updated successfully.');

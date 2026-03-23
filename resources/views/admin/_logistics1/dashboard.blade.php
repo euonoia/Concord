@@ -3,7 +3,7 @@
 @section('content')
 <div class="dashboard_container">
     <h2>Welcome, {{ Auth::user()->username }}</h2>
-    <p>Here’s your Logistics2 summary overview:</p>
+    <p>Here’s your Logistics1 summary overview:</p>
 
     <div class="dashboard_grid">
             <div class="dashboard_card">

@@ -47,7 +47,7 @@ class AdminLogistics1ProcurementController extends Controller
                 'po.requested_quantity', 'po.selected_supplier',
                 'po.requested_date', 'po.expected_delivery_date',
                 'po.status', 'po.requested_by', 'po.delivered_by',
-                'po.address', 'po.created_at', 'po.updated_at',
+                'po.address', 'po.amount', 'po.created_at', 'po.updated_at',
                 'req_emp.first_name as req_first_name',
                 'req_emp.last_name as req_last_name'
             )
@@ -72,21 +72,21 @@ class AdminLogistics1ProcurementController extends Controller
 
         // -------------------------------------------------------
         // TAB 4: PAYMENT PROCESSING
-        // Delivered = awaiting confirmation, received = done
+        // Fetched from vendor_bills
         // -------------------------------------------------------
-        $payments = DB::table('purchase_orders_logistics1 as po')
+        $payments = DB::table('vendor_bills as vb')
+            ->leftJoin('purchase_orders_logistics1 as po', 'vb.po_number', '=', 'po.po_number')
             ->leftJoin('employees as req_emp', 'po.requested_by', '=', 'req_emp.employee_id')
             ->select(
-                'po.id', 'po.po_number', 'po.drug_num', 'po.drug_name',
-                'po.requested_quantity', 'po.selected_supplier',
-                'po.status', 'po.delivered_by', 'po.address',
-                'po.requested_by', 'po.created_at',
+                'vb.id', 'vb.invoice', 'vb.po_number', 'vb.delivery_date',
+                'vb.supplier', 'vb.amount', 'vb.status as bill_status',
+                'vb.created_at',
+                'po.drug_name', 'po.drug_num', 'po.requested_quantity',
+                'po.delivered_by', 'po.address',
                 'req_emp.first_name as req_first_name',
                 'req_emp.last_name as req_last_name'
             )
-            ->whereNull('po.deleted_at')
-            ->whereIn('po.status', ['delivered', 'received'])
-            ->orderBy('po.created_at', 'desc')
+            ->orderBy('vb.created_at', 'desc')
             ->paginate(10)->withQueryString();
 
         return view('admin._logistics1.procurement.index', compact(
@@ -111,6 +111,7 @@ class AdminLogistics1ProcurementController extends Controller
             'delivered_by'       => 'nullable|string|max:255',
             'address'            => 'nullable|string|max:255',
             'source'             => 'nullable|string|max:100',
+            'amount'             => 'nullable|numeric|min:0',
         ]);
 
         $employee = DB::table('employees')->where('user_id', Auth::id())->first();
@@ -136,6 +137,7 @@ class AdminLogistics1ProcurementController extends Controller
             'delivered_by'           => $request->delivered_by,
             'address'                => $request->address,
             'source'                 => $request->source ?? null,
+            'amount'                 => $request->amount ?? 0.00,
             'created_at'             => now(),
             'updated_at'             => now(),
         ];
@@ -172,6 +174,29 @@ class AdminLogistics1ProcurementController extends Controller
                 'updated_at' => now(),
             ]);
 
+        // When status is set to delivered, insert into vendor_bills
+        if ($request->status === 'delivered') {
+            $po = DB::table('purchase_orders_logistics1')->where('id', $id)->first();
+
+            if ($po) {
+                // Auto-generate unique invoice number
+                do {
+                    $invoice = 'INV-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+                } while (DB::table('vendor_bills')->where('invoice', $invoice)->exists());
+
+                DB::table('vendor_bills')->insert([
+                    'invoice'       => $invoice,
+                    'po_number'     => $po->po_number,
+                    'delivery_date' => now()->toDateString(),
+                    'supplier'      => $po->selected_supplier,
+                    'amount'        => $po->amount ?? 0.00,
+                    'status'        => 'pending',
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+            }
+        }
+
         $tabMap = [
             'pending'    => 'needs_assessment',
             'approved'   => 'purchase_orders',
@@ -184,5 +209,59 @@ class AdminLogistics1ProcurementController extends Controller
 
         return redirect()->route('admin.logistics1.procurement.index', ['tab' => $tab])
             ->with('success', 'Status updated successfully.');
+    }
+
+    /**
+     * Mark a vendor bill as paid
+     */
+    public function payBill($id)
+    {
+        DB::table('vendor_bills')
+            ->where('id', $id)
+            ->update([
+                'status'     => 'paid',
+                'updated_at' => now(),
+            ]);
+
+        // Also update the PO status to paid
+        $bill = DB::table('vendor_bills')->where('id', $id)->first();
+        if ($bill) {
+            DB::table('purchase_orders_logistics1')
+                ->where('po_number', $bill->po_number)
+                ->update(['status' => 'paid', 'updated_at' => now()]);
+        }
+
+        return redirect()->route('admin.logistics1.procurement.index', ['tab' => 'payment_processing'])
+            ->with('success', 'Bill marked as paid successfully.');
+    }
+    public function goodsReceipt(Request $request)
+    {
+        $vendor = $request->input('vendor');
+
+        $pos = DB::table('vendor_bills as vb')
+            ->leftJoin('purchase_orders_logistics1 as po', 'vb.po_number', '=', 'po.po_number')
+            ->where('vb.supplier', $vendor)
+            ->where('vb.status', 'paid')
+            ->orderBy('vb.updated_at', 'desc')
+            ->get([
+                'vb.invoice', 'vb.po_number', 'vb.delivery_date',
+                'vb.amount', 'vb.status as bill_status',
+                'po.drug_name', 'po.drug_num', 'po.requested_quantity',
+                'po.delivered_by',
+            ])
+            ->map(function ($row) {
+                return [
+                    'invoice'            => $row->invoice,
+                    'po_number'          => $row->po_number,
+                    'drug_num'           => $row->drug_num,
+                    'drug_name'          => $row->drug_name,
+                    'requested_quantity' => $row->requested_quantity,
+                    'delivered_by'       => $row->delivered_by,
+                    'delivery_date'      => \Carbon\Carbon::parse($row->delivery_date)->format('M d, Y'),
+                    'amount'             => number_format($row->amount, 2),
+                ];
+            });
+
+        return response()->json($pos);
     }
 }
