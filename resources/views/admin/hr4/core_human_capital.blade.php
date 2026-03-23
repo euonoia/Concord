@@ -455,6 +455,10 @@
         <a class="tab-link" onclick="showTab('departments')"     href="#departments">Departments</a>
         <a class="tab-link" onclick="showTab('positions')"       href="#positions">Positions</a>
         <a class="tab-link" onclick="showTab('neededpositions')" href="#neededpositions">Needed Positions</a>
+        <a class="tab-link" onclick="showTab('succession')" href="#succession">
+            Succession Pool
+            <span class="badge badge-teal" style="margin-left:.3rem;">{{ $successionPipeline->count() }}</span>
+        </a>
         <a class="tab-link" onclick="showTab('promoted')"        href="#promoted">
             Promoted Employees
             <span class="badge badge-green" style="margin-left:.3rem;">{{ $promotedEmployees->count() }}</span>
@@ -783,8 +787,63 @@
         </div>
     </div>
 
+    {{-- ── SUCCESSION PIPELINE ── --}}
+    <div id="succession" class="tab-section">
+        <div class="chc-card">
+            <div class="chc-card-header">
+                <h3>Succession Candidates (Ready Now Promotion Queue)</h3>
+                <span class="badge badge-teal">{{ $successionPipeline->count() }} candidates</span>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="chc-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Current Position</th>
+                            <th>Target Position</th>
+                            <th>Department</th>
+                            <th>Readiness</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($successionPipeline as $candidate)
+                        <tr>
+                            <td><span class="badge badge-blue">{{ $candidate->employee_id }}</span></td>
+                            <td>{{ optional($candidate->employee)->first_name ?? 'N/A' }} {{ optional($candidate->employee)->last_name ?? '' }}</td>
+                            <td>{{ optional($candidate->employee->position)->position_title ?? 'N/A' }}</td>
+                            <td>{{ optional($candidate->position)->position_title ?? 'N/A' }}</td>
+                            <td>{{ optional($candidate->position->department)->name ?? 'N/A' }}</td>
+                            <td>{{ $candidate->readiness }}</td>
+                            <td>
+                                @if($candidate->readiness === 'Ready Now')
+                                    <form method="POST" action="{{ route('hr4.core.promote_candidate', $candidate->id) }}" onsubmit="return confirm('Promote this candidate now?');">
+                                        @csrf
+                                        <button class="btn-primary btn-sm">Promote</button>
+                                    </form>
+                                @else
+                                    <span class="badge badge-gray">Waiting</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="bi bi-hourglass-split"></i>
+                                    <h4>No succession candidates in active pipeline.</h4>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {{-- ── PROMOTED EMPLOYEES ── --}}
-    <div id="promoted" class="tab-section">
         <div class="chc-card">
             <div class="chc-card-header">
                 <h3>Promoted Employees (from Succession Planning)</h3>

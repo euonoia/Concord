@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\admin\Hr\hr4\AvailableJob;
 use App\Models\admin\Hr\hr4\DirectCompensation;
+use App\Models\admin\Hr\hr4\PromotedEmployee;
 
 class AdminCoreHumanCapitalController extends Controller
 {
@@ -70,23 +71,29 @@ class AdminCoreHumanCapitalController extends Controller
             ];
         }
 
-        // Fetch promoted employees from HR2 succession (is_active = 0 means promoted)
-        $promotedEmployees = SuccessorCandidate::with(['position', 'position.department', 'employee'])
-            ->where('is_active', 0)
+        // HR2 succession pipeline (candidate table for HR4 to promote from)
+        $successionPipeline = SuccessorCandidate::with(['position', 'position.department', 'employee'])
+            ->where('is_active', 1)
+            ->orderByRaw("FIELD(readiness,'Ready Now','1-2 Years','3+ Years','Emergency')")
             ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // Fetch promoted employees from dedicated HR4 promotion history
+        $promotedEmployees = PromotedEmployee::with(['employee', 'oldPosition', 'newPosition'])
+            ->orderBy('promoted_at', 'desc')
             ->get()
-            ->map(function($candidate) {
+            ->map(function($promotion) {
                 return [
-                    'id' => $candidate->id,
-                    'employee_id' => $candidate->employee_id,
-                    'first_name' => optional($candidate->employee)->first_name ?? 'N/A',
-                    'last_name' => optional($candidate->employee)->last_name ?? 'N/A',
-                    'previous_position' => optional($candidate->employee)->position->position_title ?? 'N/A',
-                    'new_position' => optional($candidate->position)->position_title ?? 'N/A',
-                    'department' => optional($candidate->position->department)->name ?? 'N/A',
-                    'promoted_at' => $candidate->updated_at ? $candidate->updated_at->format('Y-m-d') : 'N/A',
-                    'readiness' => $candidate->readiness ?? 'N/A',
-                    'performance_score' => $candidate->performance_score ?? 'N/A',
+                    'id' => $promotion->id,
+                    'employee_id' => $promotion->employee_id,
+                    'first_name' => optional($promotion->employee)->first_name ?? 'N/A',
+                    'last_name' => optional($promotion->employee)->last_name ?? 'N/A',
+                    'previous_position' => optional($promotion->oldPosition)->position_title ?? 'N/A',
+                    'new_position' => optional($promotion->newPosition)->position_title ?? 'N/A',
+                    'department' => optional($promotion->newPosition->department)->name ?? 'N/A',
+                    'promoted_at' => $promotion->promoted_at instanceof \Carbon\Carbon ? $promotion->promoted_at->format('Y-m-d') : 'N/A',
+                    'readiness' => 'Promoted', // Since it's from promotion history
+                    'performance_score' => 'N/A', // Not applicable here
                 ];
             });
 
@@ -100,8 +107,106 @@ class AdminCoreHumanCapitalController extends Controller
             'jobPostings',
             'availableJobsCount',
             'needed_positions',
+            'successionPipeline',
             'promotedEmployees'
         ));
+    }
+
+    /**
+     * Promote a succession candidate from HR4 core, grade-based using rank levels
+     */
+    public function promoteSuccessionCandidate($id)
+    {
+        $this->authorizeHrAdmin();
+
+        try {
+            DB::beginTransaction();
+
+            $candidate = SuccessorCandidate::with(['position', 'employee'])->findOrFail($id);
+
+            if ($candidate->readiness !== 'Ready Now') {
+                return redirect()->back()->with('error', 'Only candidates with Ready Now can be promoted.');
+            }
+
+            $employee = Employee::where('employee_id', $candidate->employee_id)->first();
+            if (!$employee) {
+                return redirect()->back()->with('error', 'Employee profile not found for this candidate.');
+            }
+
+            $currentPosition = $employee->position;
+
+            // Define rank hierarchy (lowest to highest)
+            $rankHierarchy = ['Resident', 'Specialist', 'Consultant', 'Chief'];
+            
+            // Determine the true promotion target based on rank level
+            $targetPosition = null;
+
+            if ($currentPosition && $currentPosition->rank_level !== null) {
+                $currentRankIndex = array_search($currentPosition->rank_level, $rankHierarchy);
+                
+                if ($currentRankIndex !== false && $currentRankIndex < count($rankHierarchy) - 1) {
+                    $nextRank = $rankHierarchy[$currentRankIndex + 1];
+                    
+                    $targetPosition = DepartmentPositionTitle::where('department_id', $currentPosition->department_id)
+                        ->where('specialization_name', $currentPosition->specialization_name ?? $employee->specialization)
+                        ->where('is_active', 1)
+                        ->where('rank_level', $nextRank)
+                        ->first();
+                }
+            }
+
+            if (!$targetPosition && $candidate->position) {
+                $targetPosition = $candidate->position;
+            }
+
+            if (!$targetPosition) {
+                return redirect()->back()->with('error', 'No eligible promotion position found for this candidate.');
+            }
+
+            // Store old values for history
+            $oldPositionId = $employee->position_id;
+            $oldDepartmentId = $employee->department_id;
+            $oldSpecialization = $employee->specialization;
+
+            // Update employee to promoted position (based on shared HR2 logic)
+            $employee->update([
+                'position_id' => $targetPosition->id,
+                'department_id' => $targetPosition->department_id,
+                'specialization' => $targetPosition->specialization_name,
+                'post_grad_status' => 'fellowship', // Based on shared code
+            ]);
+
+            // Update candidate status
+            $candidate->is_active = 0;
+            $candidate->position_id = $targetPosition->id;
+            $candidate->department_id = $targetPosition->department_id;
+            $candidate->specialization = $targetPosition->specialization_name;
+            $candidate->save();
+
+            // Get the logged-in HR4 admin's employee record
+            $loggedInEmployee = Employee::where('user_id', Auth::id())->first();
+
+            // Record promotion in HR4 history
+            PromotedEmployee::create([
+                'employee_id' => $employee->employee_id,
+                'old_position_id' => $oldPositionId,
+                'new_position_id' => $targetPosition->id,
+                'old_department_id' => $oldDepartmentId,
+                'new_department_id' => $targetPosition->department_id,
+                'old_specialization' => $oldSpecialization,
+                'new_specialization' => $targetPosition->specialization_name,
+                'promoted_by' => $loggedInEmployee ? $loggedInEmployee->employee_id : 'HR4',
+                'promoted_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Promotion successful: {$employee->first_name} {$employee->last_name} is now {$targetPosition->position_title} with Fellowship status.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Promotion failed: ' . $e->getMessage());
+        }
     }
 
     /**
