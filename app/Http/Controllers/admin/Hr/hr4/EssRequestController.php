@@ -39,7 +39,7 @@ class EssRequestController extends Controller
 
     public function show($id)
     {
-        $essRequest = PayrollEssRequest::with('employee')->findOrFail($id);
+        $essRequest = PayrollEssRequest::with(['employee.position', 'employee.department'])->findOrFail($id);
         return view('admin.hr4.ess_requests.show', compact('essRequest'));
     }
 
@@ -67,25 +67,31 @@ class EssRequestController extends Controller
         $employee = Employee::where('employee_id', $essRequest->employee_id)->first();
 
         if ($employee) {
-            // Source 1: HR2 sync table salary/net_pay if available
+            // Get HR2 request for reference
             $hr2Request = DB::table('payroll_request_hr2')
                 ->where('employee_id', $essRequest->employee_id)
                 ->where('details', $essRequest->details)
                 ->orderByDesc('created_at')
                 ->first();
 
-            $salary = $hr2Request->salary ?? null;
-            $netPay = $hr2Request->net_pay ?? null;
+            // Source 1: Latest direct compensation in HR4 (Primary), use latest available month up to current month
+            $compensation = DirectCompensation::where('employee_id', $essRequest->employee_id)
+                ->where('month', '<=', now()->format('Y-m'))
+                ->orderByDesc('month')
+                ->first();
 
-            // Source 2: Latest direct compensation in HR4
+            $salary = null;
+            $netPay = null;
+
+            if ($compensation && $compensation->total_compensation > 0) {
+                $salary = $compensation->total_compensation;
+                $netPay = $this->calculateNetPay($salary); // Calculate net pay with deductions
+            }
+
+            // Source 2: HR2 sync table salary/net_pay if DirectCompensation not available
             if (!$salary || $salary <= 0) {
-                $compensation = DirectCompensation::where('employee_id', $essRequest->employee_id)
-                    ->orderByDesc('month')
-                    ->first();
-
-                if ($compensation) {
-                    $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
-                }
+                $salary = $hr2Request->salary ?? null;
+                $netPay = $hr2Request->net_pay ?? null;
             }
 
             // Source 3: Position base salary fallback
@@ -93,7 +99,7 @@ class EssRequestController extends Controller
                 $salary = $employee->position->base_salary ?? 0;
             }
 
-            // If net_pay not set in HR2, use salary as net
+            // If net_pay not set, use salary as net
             if (!$netPay || $netPay <= 0) {
                 $netPay = $salary;
             }
@@ -206,5 +212,31 @@ class EssRequestController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to sync: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Calculate net pay by applying standard deductions to gross salary
+     */
+    private function calculateNetPay($grossSalary)
+    {
+        if (!$grossSalary || $grossSalary <= 0) {
+            return 0;
+        }
+
+        // Standard deduction rates (based on Philippine labor law)
+        $deductions = [
+            'sss' => 0.045,        // 4.5% SSS contribution
+            'philhealth' => 0.04,  // 4% PhilHealth contribution
+            'pagibig' => 0.02,     // 2% PAG-IBIG contribution
+            'income_tax' => 0.15,  // Estimated 15% income tax (varies by bracket)
+        ];
+
+        $totalDeductionRate = array_sum($deductions); // Approximately 25.5%
+        $totalDeductions = $grossSalary * $totalDeductionRate;
+
+        $netPay = $grossSalary - $totalDeductions;
+
+        // Ensure net pay is not negative
+        return max(0, $netPay);
     }
 }

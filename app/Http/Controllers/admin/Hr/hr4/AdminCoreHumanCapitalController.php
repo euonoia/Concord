@@ -7,11 +7,13 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
+use App\Models\admin\Hr\hr2\SuccessorCandidate;
 use App\Models\User;
 use App\Models\admin\Hr\hr4\HiredUser;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\admin\Hr\hr4\AvailableJob;
+use App\Models\admin\Hr\hr4\DirectCompensation;
 
 class AdminCoreHumanCapitalController extends Controller
 {
@@ -68,6 +70,26 @@ class AdminCoreHumanCapitalController extends Controller
             ];
         }
 
+        // Fetch promoted employees from HR2 succession (is_active = 0 means promoted)
+        $promotedEmployees = SuccessorCandidate::with(['position', 'position.department', 'employee'])
+            ->where('is_active', 0)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function($candidate) {
+                return [
+                    'id' => $candidate->id,
+                    'employee_id' => $candidate->employee_id,
+                    'first_name' => optional($candidate->employee)->first_name ?? 'N/A',
+                    'last_name' => optional($candidate->employee)->last_name ?? 'N/A',
+                    'previous_position' => optional($candidate->employee)->position->position_title ?? 'N/A',
+                    'new_position' => optional($candidate->position)->position_title ?? 'N/A',
+                    'department' => optional($candidate->position->department)->name ?? 'N/A',
+                    'promoted_at' => $candidate->updated_at ? $candidate->updated_at->format('Y-m-d') : 'N/A',
+                    'readiness' => $candidate->readiness ?? 'N/A',
+                    'performance_score' => $candidate->performance_score ?? 'N/A',
+                ];
+            });
+
         // Return view (compact fully closed)
         return view('admin.hr4.core_human_capital', compact(
             'employees',
@@ -77,7 +99,8 @@ class AdminCoreHumanCapitalController extends Controller
             'users',
             'jobPostings',
             'availableJobsCount',
-            'needed_positions'
+            'needed_positions',
+            'promotedEmployees'
         ));
     }
 
@@ -100,25 +123,77 @@ class AdminCoreHumanCapitalController extends Controller
 
             // Get job details for department and position
             $job = $hired->job;
+            $department = null;
+            $position = null;
+
             if ($job) {
                 // Find department by name
                 $department = Department::where('name', $job->department)->first();
                 // Use position_id directly from the job posting
                 $position = DepartmentPositionTitle::find($job->position_id);
+            } else {
+                // Fallback: Determine department and position from employee_id pattern
+                $employeeId = $hired->employee_id;
+                
+                // Extract department code from employee ID (e.g., GEN-0001 -> GEN, NEU-0001 -> NEU)
+                $deptCode = strtoupper(explode('-', $employeeId)[0] ?? '');
+                
+                // Map department codes to actual department IDs
+                $deptMapping = [
+                    'GEN' => 'MED-GEN',      // General Medicine
+                    'NEU' => 'NEURO-01',     // Neurology
+                    'PED' => 'PED-01',       // Pediatrics
+                    'PSY' => 'PSY-01',       // Psychology/Psychiatry
+                    'PATH' => 'PATH-01',     // Pathology
+                    'RAD' => 'RAD-01',       // Radiology
+                ];
+                
+                if (isset($deptMapping[$deptCode])) {
+                    $department = Department::where('department_id', $deptMapping[$deptCode])->first();
+                    
+                    // Find a suitable position in this department (preferably the first one with base salary)
+                    if ($department) {
+                        $position = DepartmentPositionTitle::where('department_id', $department->department_id)
+                            ->where('base_salary', '>', 0)
+                            ->orderBy('rank_level')
+                            ->first();
+                    }
+                }
+            }
+
+            // Only proceed if we have department and position
+            if ($department && $position) {
 
                 // Create employee record
-                Employee::create([
+                $employee = Employee::create([
                     'employee_id' => $hired->employee_id,
                     'first_name' => $firstName,
                     'last_name' => $lastName,
-                    'department_id' => $department ? $department->department_id : null,
-                    'position_id' => $position ? $position->id : null,
+                    'department_id' => $department->department_id,
+                    'position_id' => $position->id,
                     'hire_date' => $hired->hired_at->toDateString(),
                     'status' => 'active',
                 ]);
 
-                // Decrement available positions in the job posting
-                if ($job->positions_available > 0) {
+                // Create DirectCompensation record with base salary from position
+                // Always create a DirectCompensation record, even if base_salary might be adjusted later
+                $baseSalary = $position->base_salary ?? 0;
+                DirectCompensation::create([
+                    'employee_id' => $hired->employee_id,
+                    'month' => now()->format('Y-m'), // Current month
+                    'base_salary' => $baseSalary,
+                    'shift_allowance' => 0,
+                    'overtime_pay' => 0,
+                    'night_diff_pay' => 0,
+                    'bonus' => 0,
+                    'training_reward' => 0,
+                    'worked_hours' => 0,
+                    'overtime_hours' => 0,
+                    'night_diff_hours' => 0,
+                ]);
+
+                // If this was from a job posting, decrement available positions
+                if ($job && $job->positions_available > 0) {
                     $job->decrement('positions_available');
                     
                     // If no positions left, close the job

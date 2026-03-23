@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\admin\Hr\hr4\DirectCompensation;
+use App\Models\BudgetAllocationRequest;
+use App\Models\BudgetAllocation;
 use App\Http\Controllers\Controller;
 use App\Models\Payroll;
 use App\Models\Employee;
@@ -9,6 +11,7 @@ use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr3\AttendanceLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class PayrollController extends Controller
@@ -106,10 +109,25 @@ class PayrollController extends Controller
 
         $position = \App\Models\admin\Hr\hr2\DepartmentPositionTitle::find($employee->position_id);
         
+        // Try to get salary from DirectCompensation first (most recent month)
+        $salary = 0;
+        $directComp = DirectCompensation::where('employee_id', $employeeId)
+            ->orderByDesc('month')
+            ->first();
+        
+        if ($directComp) {
+            // Use the total compensation or base_salary from DirectCompensation
+            $salary = $directComp->base_salary ?? 0;
+        } elseif ($position) {
+            // Fall back to position base_salary if no DirectCompensation record
+            $salary = $position->base_salary ?? 0;
+        }
+        
         return response()->json([
             'position_id' => $employee->position_id,
             'position_title' => $position ? $position->position_title : 'N/A',
-            'salary' => $position ? $position->base_salary : 0
+            'salary' => $salary,
+            'base_salary' => $salary
         ]);
     }
 
@@ -131,7 +149,8 @@ class PayrollController extends Controller
     public function index()
     {
         $payrolls = Payroll::with('employee')->orderBy('pay_date', 'desc')->get();
-        return view('payroll.index', compact('payrolls'));
+        $budgetRequests = BudgetAllocationRequest::orderBy('created_at', 'desc')->limit(5)->get();
+        return view('payroll.index', compact('payrolls', 'budgetRequests'));
     }
 
     /**
@@ -303,4 +322,78 @@ class PayrollController extends Controller
             'month', 'year', 'employeeCount', 'ytdTotal', 'departmentBreakdown'
         ));
     }
+
+    /**
+     * Request budget allocation for finance based on compensation planning totals.
+     */
+    public function requestBudgetAllocation(Request $request)
+    {
+        $targetMonth = $request->input('month', now()->format('Y-m'));
+
+        $compensations = DirectCompensation::where('month', $targetMonth)->get();
+        $totalAllocation = $compensations->sum(function ($comp) {
+            return $comp->total_compensation;
+        });
+
+        if ($compensations->isEmpty()) {
+            return redirect()->route('hr4.payroll.index')
+                ->with('success', "No compensation planning data found for {$targetMonth}. Budget request was not sent.");
+        }
+
+        // Save the request in DB audit/history
+        BudgetAllocationRequest::create([
+            'user_id' => auth()->id(),
+            'month' => $targetMonth,
+            'total_compensation' => $totalAllocation,
+            'status' => 'sent',
+            'note' => 'Auto-created by HR payroll budget allocation request.',
+        ]);
+
+        // Also save in budget_allocations (finance DTO target), if available
+        if (Schema::hasTable('budget_allocations')) {
+            $allocationData = [];
+
+            // Only add fields that might exist in the table
+            if (Schema::hasColumn('budget_allocations', 'total_compensation')) {
+                $allocationData['total_compensation'] = $totalAllocation;
+            }
+
+            // Try to add other fields conditionally, but skip problematic ones
+            if (Schema::hasColumn('budget_allocations', 'month')) {
+                $allocationData['month'] = $targetMonth;
+            }
+
+            // Skip status for now to avoid truncation issues
+            // if (Schema::hasColumn('budget_allocations', 'status')) {
+            //     $allocationData['status'] = 'sent';
+            // }
+
+            if (Schema::hasColumn('budget_allocations', 'note')) {
+                $allocationData['note'] = 'DTO for finance allocation request.';
+            }
+
+            if (Schema::hasColumn('budget_allocations', 'user_id')) {
+                $allocationData['user_id'] = auth()->id();
+            }
+
+            // Only create if we have at least the essential data
+            if (!empty($allocationData)) {
+                try {
+                    BudgetAllocation::create($allocationData);
+                } catch (\Exception $e) {
+                    // Log the error but don't fail the entire request
+                    \Log::warning("Failed to create budget allocation record: " . $e->getMessage(), [
+                        'allocationData' => $allocationData,
+                        'user_id' => auth()->id()
+                    ]);
+                }
+            }
+        }
+
+        \Log::info("Budget allocation request submitted for month={$targetMonth} amount=PHP {$totalAllocation}", ['user_id' => auth()->id() ?? null]);
+
+        return redirect()->route('hr4.payroll.index')
+            ->with('success', "Budget allocation request sent to Finance for ₱" . number_format($totalAllocation, 2) . " (month: {$targetMonth}).");
+    }
 }
+

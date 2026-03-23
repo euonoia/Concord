@@ -19,35 +19,34 @@ class PayrollApiController extends Controller
         try {
             $validated = $request->validate([
                 'employee_id' => 'required|string',
-                'salary' => 'nullable|numeric|min:0',
+                'salary' => 'nullable|numeric|min:0', // HR2 can send this but we'll override with DirectCompensation
                 'net_pay' => 'nullable|numeric|min:0',
                 'details' => 'nullable|string',
                 'request_type' => 'nullable|string|in:payroll,bonus,deduction',
             ]);
 
-            // Determine salary and net_pay defaults
-            $salary = $validated['salary'] ?? null;
-            $netPay = $validated['net_pay'] ?? null;
+            // Always get salary from latest DirectCompensation to ensure consistency
+            $employee = Employee::where('employee_id', $validated['employee_id'])->first();
+            $salary = null;
 
-            if (!$salary || $salary <= 0) {
-                $employee = Employee::where('employee_id', $validated['employee_id'])->first();
+            if ($employee) {
+                $compensation = DirectCompensation::where('employee_id', $validated['employee_id'])
+                    ->orderByDesc('month')
+                    ->first();
 
-                if ($employee) {
-                    $compensation = DirectCompensation::where('employee_id', $validated['employee_id'])
-                        ->orderByDesc('month')
-                        ->first();
+                if ($compensation) {
+                    $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
+                }
 
-                    if ($compensation) {
-                        $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
-                    }
-
-                    if ((!$salary || $salary <= 0) && $employee->position) {
-                        $salary = $employee->position->base_salary ?? 0;
-                    }
+                // Fallback to position if no compensation
+                if (!$salary || $salary <= 0) {
+                    $salary = $employee->position->base_salary ?? 0;
                 }
             }
 
-            if ((!$netPay || $netPay <= 0) && $salary > 0) {
+            // Use HR2's net_pay if provided, otherwise default to salary
+            $netPay = $validated['net_pay'] ?? null;
+            if (!$netPay || $netPay <= 0) {
                 $netPay = $salary;
             }
 

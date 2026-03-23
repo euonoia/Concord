@@ -223,19 +223,62 @@
             <a href="{{ route('hr4.payroll.reports') }}" class="btn btn-outline">
                 <i class="bi bi-file-earmark-bar-graph"></i> Reports
             </a>
-            <a href="{{ route('hr4.payroll.create') }}" class="btn btn-teal">
-                <i class="bi bi-plus-circle"></i> Add Payroll
-            </a>
-        </div>
     </div>
 
-    {{-- Success alert --}}
+    {{-- Flash messages --}}
     @if(session('success'))
     <div class="pr-alert">
         <i class="bi bi-check-circle-fill"></i>
         {{ session('success') }}
     </div>
     @endif
+
+    @if(isset($budgetRequests) && $budgetRequests->count())
+    <div class="pr-card" style="margin-bottom:1rem;">
+        <div style="padding:.85rem 1rem; font-size:.9rem; background:#f3f6f9; border:1px solid #d4e3ee; border-radius:10px;">
+            <strong>Latest Budget Allocation Requests</strong>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="pr-table" style="margin:0;">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($budgetRequests as $request)
+                    <tr>
+                        <td>{{ $request->created_at->format('Y-m-d H:i') }}</td>
+                        <td>{{ $request->month }}</td>
+                        <td>₱{{ number_format($request->total_compensation, 2) }}</td>
+                        <td>{{ ucfirst($request->status) }}</td>
+                        <td>{{ optional($request->user)->name ?? 'N/A' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    <div class="pr-card">
+        <div style="overflow-x:auto">
+            <table class="pr-table">
+                <thead>
+
+            <a href="{{ route('hr4.payroll.create') }}" class="btn btn-teal">
+                <i class="bi bi-plus-circle"></i> Add Payroll
+            </a>
+            <form method="POST" action="{{ route('hr4.payroll.request_budget_allocation') }}" style="display:inline;">
+                @csrf
+                <button type="submit" class="btn btn-outline" title="Request budget allocation from finance">
+                    <i class="bi bi-wallet2"></i> Request Budget Allocation
+                </button>
+            </form>
 
     {{-- Table card --}}
     <div class="pr-card">

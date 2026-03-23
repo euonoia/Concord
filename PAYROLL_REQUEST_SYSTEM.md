@@ -53,12 +53,16 @@ Final payroll records created when requests are approved:
 ```json
 {
   "employee_id": "EMP001",
-  "salary": 50000.00,
-  "net_pay": 45000.00,
+  "net_pay": 45000.00,  // Optional: if not provided, defaults to gross salary
   "details": "Monthly payroll for March 2026",
   "request_type": "payroll"
 }
 ```
+
+**Notes:**
+- **Salary is automatically fetched** from the latest DirectCompensation record in HR4
+- HR2 should only provide `net_pay` if there are specific deductions to apply
+- If `net_pay` is not provided, it defaults to the gross salary (no deductions)
 
 **Response (Success - 201):**
 ```json
@@ -195,15 +199,17 @@ When request is approved, system creates payroll entry:
 
 When processing a payroll request, the system retrieves salary from multiple sources in this order:
 
-1. **HR2 Sync Data** (Primary):
-   - Uses salary/net_pay provided in the HR2 request
-
-2. **Direct Compensation (HR4)** (Secondary):
+1. **Direct Compensation (HR4)** (Primary):
    - Latest monthly compensation record
    - Calculated as: Base Salary + Shift Allowance + Overtime Pay + Bonus + Training Reward
+   - **Used for all HR2 requests** to ensure consistency
+
+2. **HR2 Sync Data** (Secondary - Net Pay Only):
+   - HR2 can optionally provide `net_pay` for specific deductions
+   - If not provided, net_pay defaults to gross salary
 
 3. **Position Base Salary** (Tertiary/Fallback):
-   - Default salary from employee's position
+   - Default salary from employee's position (only if no DirectCompensation exists)
 
 If net_pay is not provided, it defaults to the gross salary.
 
@@ -228,7 +234,6 @@ curl -X POST "http://localhost:8000/api/payroll/request-from-hr2" \
   -H "Content-Type: application/json" \
   -d '{
     "employee_id": "EMP001",
-    "salary": 50000.00,
     "net_pay": 45000.00,
     "details": "March 2026 Payroll",
     "request_type": "payroll"

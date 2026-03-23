@@ -12,6 +12,8 @@ class Employee extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql'; // Connect to TiDB cloud
+
     // Payroll records
     public function payrolls()
     {

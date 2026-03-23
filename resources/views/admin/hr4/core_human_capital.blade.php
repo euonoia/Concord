@@ -413,6 +413,9 @@
         cursor: pointer;
         font-size: .85rem;
     }
+    .dropdown-item p{
+        color: white;
+    }
 
     .dropdown-item:hover {
         background: var(--c-bg);
@@ -452,6 +455,10 @@
         <a class="tab-link" onclick="showTab('departments')"     href="#departments">Departments</a>
         <a class="tab-link" onclick="showTab('positions')"       href="#positions">Positions</a>
         <a class="tab-link" onclick="showTab('neededpositions')" href="#neededpositions">Needed Positions</a>
+        <a class="tab-link" onclick="showTab('promoted')"        href="#promoted">
+            Promoted Employees
+            <span class="badge badge-green" style="margin-left:.3rem;">{{ $promotedEmployees->count() }}</span>
+        </a>
         <a class="tab-link" onclick="showTab('userlogs')"        href="#userlogs">User Logs</a>
         <a class="tab-link" onclick="showTab('availablejobs')"   href="#availablejobs">
             Available Jobs
@@ -527,62 +534,91 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
-                                    <a href="{{ route('hr4.employees.edit', $emp) }}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Edit Employee">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </a>
+                                    {{-- Edit button disabled - only status modification allowed --}}
 
                                     {{-- Status Update Dropdown --}}
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                type="button"
-                                                data-bs-toggle="dropdown"
-                                                title="Update Status">
-                                            <i class="bi bi-toggle-on"></i> Status
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="active">
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-check-circle text-success"></i> Set Active
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="inactive">
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-pause-circle text-warning"></i> Set Inactive
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="resigned">
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-box-arrow-right text-info"></i> Set Resigned
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" style="display: inline;">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="terminated">
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-x-circle text-danger"></i> Set Terminated
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {{-- Current Status Badge --}}
+                                        @php
+                                            $statusColors = [
+                                                'active' => 'success',
+                                                'inactive' => 'warning',
+                                                'resigned' => 'info',
+                                                'terminated' => 'danger'
+                                            ];
+                                            $statusIcons = [
+                                                'active' => 'check-circle',
+                                                'inactive' => 'pause-circle',
+                                                'resigned' => 'box-arrow-right',
+                                                'terminated' => 'x-circle'
+                                            ];
+                                            $currentStatus = $emp->status ?? 'active';
+                                            $badgeColor = $statusColors[$currentStatus] ?? 'secondary';
+                                            $badgeIcon = $statusIcons[$currentStatus] ?? 'circle';
+                                        @endphp
+                                        <span class="badge bg-{{ $badgeColor }}">
+                                            <i class="bi bi-{{ $badgeIcon }}"></i> {{ ucfirst($currentStatus) }}
+                                        </span>
+
+                                        {{-- Status Change Dropdown --}}
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                    type="button"
+                                                    data-bs-toggle="dropdown"
+                                                    title="Change Status">
+                                                <i class="bi bi-arrow-repeat"></i> Change
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" class="status-form">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="status" value="active">
+                                                        <button type="submit" 
+                                                                class="dropdown-item"
+                                                                {{ $currentStatus === 'active' ? 'disabled' : '' }}>
+                                                            <i class="bi bi-check-circle text-success"></i><p>Set Active</p>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" class="status-form">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="status" value="inactive">
+                                                        <button type="submit" 
+                                                                class="dropdown-item"
+                                                                {{ $currentStatus === 'inactive' ? 'disabled' : '' }}>
+                                                            <i class="bi bi-pause-circle text-warning"></i><p>Set Inactive</p>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" class="status-form" data-confirm="resign">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="status" value="resigned">
+                                                        <button type="submit" 
+                                                                class="dropdown-item"
+                                                                {{ $currentStatus === 'resigned' ? 'disabled' : '' }}>
+                                                            <i class="bi bi-box-arrow-right text-info"></i><p>Set Resigned</p>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="POST" action="{{ route('hr4.employees.update_status', $emp) }}" class="status-form" data-confirm="terminate">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="status" value="terminated">
+                                                        <button type="submit" 
+                                                                class="dropdown-item"
+                                                                {{ $currentStatus === 'terminated' ? 'disabled' : '' }}>
+                                                            <i class="bi bi-x-circle text-danger"></i><p>Set Terminated</p>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
 
                                     {{-- Delete Button --}}
@@ -747,6 +783,69 @@
         </div>
     </div>
 
+    {{-- ── PROMOTED EMPLOYEES ── --}}
+    <div id="promoted" class="tab-section">
+        <div class="chc-card">
+            <div class="chc-card-header">
+                <h3>Promoted Employees (from Succession Planning)</h3>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="chc-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Previous Position</th>
+                            <th>New Position</th>
+                            <th>Department</th>
+                            <th>Promoted Date</th>
+                            <th>Readiness Level</th>
+                            <th>Performance Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($promotedEmployees as $promoted)
+                        <tr>
+                            <td>
+                                <span class="badge badge-blue">{{ $promoted['employee_id'] }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ $promoted['first_name'] }} {{ $promoted['last_name'] }}</strong>
+                            </td>
+                            <td>{{ $promoted['previous_position'] }}</td>
+                            <td>
+                                <strong style="color: var(--c-green);">{{ $promoted['new_position'] }}</strong>
+                            </td>
+                            <td>{{ $promoted['department'] }}</td>
+                            <td>{{ $promoted['promoted_at'] }}</td>
+                            <td>
+                                <span class="badge badge-green">{{ $promoted['readiness'] }}</span>
+                            </td>
+                            <td>
+                                @if($promoted['performance_score'])
+                                    <strong>{{ $promoted['performance_score'] }}</strong>
+                                @else
+                                    <span style="color: var(--c-muted);">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                    <h4>No promoted employees yet</h4>
+                                    <p>Employees promoted through succession planning will appear here.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {{-- ── USER LOGS ── --}}
     <div id="userlogs" class="tab-section">
         <div class="chc-card">
@@ -869,7 +968,7 @@
 
     function handleTabFromHash() {
         const hash = window.location.hash.substring(1);
-        const valid = ['employees','departments','positions','neededpositions','userlogs','availablejobs'];
+        const valid = ['employees','departments','positions','neededpositions','promoted','userlogs','availablejobs'];
         showTab(valid.includes(hash) ? hash : 'employees');
     }
 
@@ -927,6 +1026,24 @@
             // Toggle current dropdown
             menu.classList.toggle('show');
         }
+    });
+
+    // ── Status form confirmation ──
+    document.querySelectorAll('.status-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const confirmType = this.dataset.confirm;
+            if (confirmType === 'resign') {
+                if (!confirm('Are you sure you want to set this employee as Resigned? This action may affect payroll and benefits.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (confirmType === 'terminate') {
+                if (!confirm('⚠️ WARNING: You are about to TERMINATE this employee. This is a critical action that affects payroll, benefits, and records. Are you absolutely sure?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
     });
 </script>
 

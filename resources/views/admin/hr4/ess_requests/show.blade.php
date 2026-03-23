@@ -484,40 +484,49 @@
 
                 {{-- Payroll Information --}}
                 @php
-                    // Get salary/net_pay from multiple sources
+                    // Get salary/net_pay from multiple sources (priority: DirectCompensation > HR2 > Position)
                     $salary = null;
                     $netPay = null;
-                    
-                    // Source 1: HR2 sync table
+                    $source = 'N/A';
+
+                    // Fetch HR2 request reference
                     $hr2Request = \Illuminate\Support\Facades\DB::table('payroll_request_hr2')
                         ->where('employee_id', $essRequest->employee_id)
                         ->where('details', $essRequest->details)
                         ->orderByDesc('created_at')
                         ->first();
-                    
-                    if ($hr2Request) {
-                        $salary = $hr2Request->salary ?? null;
-                        $netPay = $hr2Request->net_pay ?? null;
+
+                    // Source 1: Latest direct compensation in HR4 (current month or past)
+                    $compensation = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $essRequest->employee_id)
+                        ->where('month', '<=', now()->format('Y-m'))
+                        ->orderByDesc('month')
+                        ->first();
+
+                    if ($compensation && $compensation->total_compensation > 0) {
+                        $salary = $compensation->total_compensation;
+                        // Calculate net pay with standard deductions
+                        $deductionRate = 0.045 + 0.04 + 0.02 + 0.15; // SSS + PhilHealth + PAG-IBIG + Income Tax
+                        $netPay = $salary - ($salary * $deductionRate);
+                        $netPay = max(0, $netPay); // Ensure not negative
+                        $source = 'Direct Compensation (HR4)';
                     }
-                    
-                    // Source 2: Latest direct compensation in HR4
-                    if (!$salary || $salary <= 0) {
-                        $compensation = \App\Models\admin\Hr\hr4\DirectCompensation::where('employee_id', $essRequest->employee_id)
-                            ->orderByDesc('month')
-                            ->first();
-                        
-                        if ($compensation) {
-                            $salary = $compensation->base_salary + $compensation->shift_allowance + $compensation->overtime_pay + $compensation->bonus + $compensation->training_reward;
-                        }
+
+                    // Source 2: HR2 sync table if DirectComp not available
+                    if ((!$salary || $salary <= 0) && $hr2Request) {
+                        $salary = $hr2Request->salary ?? 0;
+                        $netPay = $hr2Request->net_pay ?? $salary;
+                        $source = 'HR2 Sync';
                     }
-                    
+
                     // Source 3: Position base salary fallback
-                    if (!$salary || $salary <= 0) {
+                    if ((!$salary || $salary <= 0) && $essRequest->employee && $essRequest->employee->position) {
                         $salary = $essRequest->employee->position->base_salary ?? 0;
+                        $netPay = $salary;
+                        $source = 'Position Base Salary';
                     }
-                    
-                    // If net_pay not set, use salary as net
-                    if (!$netPay || $netPay <= 0) {
+
+                    // Ensure net_pay is set
+                    if ((!$netPay || $netPay <= 0) && $salary > 0) {
                         $netPay = $salary;
                     }
                 @endphp
@@ -541,12 +550,10 @@
                                         ₱{{ number_format($netPay, 2) }}
                                     </div>
                                 </div>
-                                @if($hr2Request)
-                                    <div class="info-item">
-                                        <div class="info-label">Source</div>
-                                        <div class="info-value">HR2 Sync</div>
-                                    </div>
-                                @endif
+                                <div class="info-item">
+                                    <div class="info-label">Source</div>
+                                    <div class="info-value">{{ $source }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>

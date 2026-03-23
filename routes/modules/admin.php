@@ -119,11 +119,11 @@
                 ->name('hr4.core.process_hired');
 
             // Employee CRUD
-            Route::get('/employees/{employee}/edit', [AdminCoreHumanCapitalController::class, 'editEmployee'])
-                ->name('hr4.employees.edit');
-
-            Route::put('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'updateEmployee'])
-                ->name('hr4.employees.update');
+            // Edit and Update routes disabled - only status modification allowed
+            // Route::get('/employees/{employee}/edit', [AdminCoreHumanCapitalController::class, 'editEmployee'])
+            //     ->name('hr4.employees.edit');
+            // Route::put('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'updateEmployee'])
+            //     ->name('hr4.employees.update');
 
             Route::delete('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'deleteEmployee'])
                 ->name('hr4.employees.delete');
@@ -178,6 +178,7 @@
 
             // Payroll Management
             Route::resource('payroll', PayrollController::class, ['as' => 'hr4']);
+            Route::post('/payroll/request-budget-allocation', [PayrollController::class, 'requestBudgetAllocation'])->name('hr4.payroll.request_budget_allocation');
             Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('hr4.payroll.reports');
             Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('hr4.payroll.getAttendance');
             Route::get('/payroll/get-salary/{employeeId}', [PayrollController::class, 'getSalary'])->name('hr4.payroll.getSalary');

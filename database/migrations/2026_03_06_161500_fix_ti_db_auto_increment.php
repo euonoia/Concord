@@ -43,6 +43,11 @@ return new class extends Migration
                 policy_number varchar(255) DEFAULT NULL,
                 emergency_contact_relation varchar(255) DEFAULT NULL,
                 assigned_nurse_id bigint(20) DEFAULT NULL,
+                mrn varchar(255) DEFAULT NULL,
+                registration_status varchar(255) DEFAULT NULL,
+                created_by bigint(20) DEFAULT NULL,
+                updated_by bigint(20) DEFAULT NULL,
+                merged_into_id bigint(20) DEFAULT NULL,
                 created_at timestamp NULL DEFAULT NULL,
                 updated_at timestamp NULL DEFAULT NULL,
                 PRIMARY KEY (id)
