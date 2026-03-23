@@ -118,13 +118,13 @@ public function formulaManagementStore(Request $request): RedirectResponse
         return back()->with('error', "Drug record not found. Could not find '{$prescription->drug_id}' in the inventory drug_name column.");
     }
 
-    if ($inventory->quantity <= 0) {
-        return back()->with('error', "Insufficient stock for {$inventory->drug_name}.");
+    if ($inventory->quantity < $prescription->quantity) {
+        return back()->with('error', "Insufficient stock for {$inventory->drug_name}. Requested: {$prescription->quantity}, Available: {$inventory->quantity}");
     }
 
     // 4. Update the records
     \DB::transaction(function () use ($prescription, $inventory) {
-        $inventory->decrement('quantity', 1);
+        $inventory->decrement('quantity', $prescription->quantity);
 
         $prescription->update([
             'status'        => 'Dispensed',

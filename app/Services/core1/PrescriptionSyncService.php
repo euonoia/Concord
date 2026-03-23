@@ -16,10 +16,23 @@ class PrescriptionSyncService
      *
      * @param Prescription $prescription The newly created prescription
      * @return bool Whether the sync was successful
+     * @throws \Exception
      */
     public function syncToCore2(Prescription $prescription): bool
     {
         try {
+            // Check inventory in Core 2 before syncing
+            $inventory = \App\Models\core2\DrugInventory::where('drug_name', trim($prescription->medication))->first();
+            
+            if (!$inventory) {
+                $inventory = \App\Models\core2\DrugInventory::where('drug_name', 'LIKE', '%' . trim($prescription->medication) . '%')->first();
+            }
+
+            if (!$inventory || $inventory->quantity < $prescription->quantity) {
+                $available = $inventory ? $inventory->quantity : 0;
+                throw new \Exception("Insufficient stock in Pharmacy. Requested: {$prescription->quantity}, Available: {$available}");
+            }
+
             // Create the record in Core 2 Pharmacy
             $pharmacyOrder = PharmacyOrder::create([
                 'prescription_id'        => $prescription->id, // This matches core2's logic of identifier
@@ -45,9 +58,7 @@ class PrescriptionSyncService
                 'prescription_id' => $prescription->id,
             ]);
 
-            $prescription->update(['status' => 'Ordered']); // Reset to Ordered if failed
-
-            return false;
+            throw $e;
         }
     }
 }
