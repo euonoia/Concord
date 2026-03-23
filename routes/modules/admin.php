@@ -153,6 +153,7 @@ use App\Http\Controllers\admin\Hr\hr2\AdminDashboardController;
         // --- Training & Evaluation ---
         Route::get('/training', [AdminTrainingController::class, 'index'])->name('hr2.training');
         Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees'])->name('hr2.training.employees');
+        Route::get('/validated-employees', [AdminTrainingController::class, 'getValidatedEmployees']);
         Route::get('/training/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])->name('hr2.training.evaluate');
         Route::post('/training/evaluate/store', [AdminTrainingEvaluationController::class, 'storeEvaluation'])->name('hr2.training_evaluation.store');
         Route::get('/get-specializations/{dept}', [AdminTrainingEvaluationController::class, 'getSpecializations']);

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentSpecialization;
 use App\Models\admin\Hr\hr2\Competency;
+use Illuminate\Support\Facades\DB;
 use App\Models\Employee;
 use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
 
@@ -89,4 +90,29 @@ class AdminTrainingController extends Controller
 
         return response()->json($employees);
     }
+
+    public function getValidatedEmployees(Request $request)
+{
+    $data = DB::table('validated_training_performance_hr1 as vtp')
+        ->join('employees', 'employees.employee_id', '=', 'vtp.employee_id')
+
+        // join again to employees table to get the evaluator name
+        ->leftJoin('employees as evaluator', 'evaluator.employee_id', '=', 'vtp.evaluated_by')
+
+        ->select(
+            'vtp.employee_id',
+            'employees.first_name',
+            'employees.last_name',
+            'vtp.weighted_average',
+            'vtp.status',
+            'vtp.evaluated_at',
+            'evaluator.first_name as eval_fname',
+            'evaluator.last_name as eval_lname'
+        )
+        ->where('vtp.status', 'completed')
+        ->orderByDesc('vtp.evaluated_at')
+        ->get();
+
+    return response()->json($data);
+}
 }
