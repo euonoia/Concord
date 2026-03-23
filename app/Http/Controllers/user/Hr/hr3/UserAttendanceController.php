@@ -13,7 +13,6 @@ use Carbon\Carbon;
 
 class UserAttendanceController extends Controller
 {
-
     public function scanView()
     {
         return view('hr.hr3.attendance_scan');
@@ -21,27 +20,30 @@ class UserAttendanceController extends Controller
 
     public function verify(Request $request)
     {
-
         if (!Auth::check()) {
-            return $this->handleResponse($request,false,'Unauthorized',401);
+            return $this->handleResponse($request, false, 'Unauthorized', 401);
         }
 
         $user = Auth::user();
 
-        $employee = Employee::where('user_id',$user->id)->first();
-
-        if(!$employee){
-            return $this->handleResponse($request,false,'Employee record not found.',404);
+        $employee = Employee::where('user_id', $user->id)->first();
+        if (!$employee) {
+            return $this->handleResponse($request, false, 'Employee record not found.', 404);
         }
 
-        $today = now()->format('l');
+        $now = now();
 
-        $assignedShift = Shift::where('employee_id',$employee->employee_id)
-            ->where('day_of_week',$today)
-            ->where('is_active',1)
+        // Find assigned shift for today or yesterday (to handle night shifts crossing midnight)
+        $today = $now->format('l');
+        $yesterday = Carbon::yesterday()->format('l');
+
+        $assignedShift = Shift::where('employee_id', $employee->employee_id)
+            ->where('is_active', 1)
+            ->whereIn('day_of_week', [$today, $yesterday])
+            ->latest('id')
             ->first();
 
-        if(!$assignedShift){
+        if (!$assignedShift) {
             return $this->handleResponse(
                 $request,
                 false,
@@ -50,26 +52,23 @@ class UserAttendanceController extends Controller
             );
         }
 
-        $existingLog = AttendanceLog::where('employee_id',$employee->employee_id)
+        $existingLog = AttendanceLog::where('employee_id', $employee->employee_id)
             ->whereNull('clock_out')
             ->latest('clock_in')
             ->first();
-
 
         /*
         |--------------------------------------------------------------------------
         | PREVENT DOUBLE SHIFT
         |--------------------------------------------------------------------------
         */
-
-        if(!$existingLog){
-
-            $alreadyCompleted = AttendanceLog::where('employee_id',$employee->employee_id)
-                ->whereDate('clock_in',now()->toDateString())
+        if (!$existingLog) {
+            $alreadyCompleted = AttendanceLog::where('employee_id', $employee->employee_id)
+                ->whereDate('clock_in', $now->toDateString())
                 ->whereNotNull('clock_out')
                 ->exists();
 
-            if($alreadyCompleted){
+            if ($alreadyCompleted) {
                 return $this->handleResponse(
                     $request,
                     false,
@@ -79,132 +78,86 @@ class UserAttendanceController extends Controller
             }
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | TOKEN VALIDATION
         |--------------------------------------------------------------------------
         */
-
         $tokenValue = null;
 
-        if(!$existingLog){
-
+        if (!$existingLog) {
             $rawToken = $request->input('token');
 
-            if($rawToken === 'DASHBOARD_BUTTON'){
-                $tokenValue = 'DIRECT_CLOCK_'.now()->timestamp;
-            }else{
-
-                $tokenValue = str_contains($rawToken ?? '','/')
-                    ? collect(explode('/',$rawToken))->last()
+            if ($rawToken === 'DASHBOARD_BUTTON') {
+                $tokenValue = 'DIRECT_CLOCK_' . $now->timestamp;
+            } else {
+                $tokenValue = str_contains($rawToken ?? '', '/') 
+                    ? collect(explode('/', $rawToken))->last()
                     : $rawToken;
 
-                if(!$tokenValue){
-                    return $this->handleResponse($request,false,'QR Token required',400);
+                if (!$tokenValue) {
+                    return $this->handleResponse($request, false, 'QR Token required', 400);
                 }
 
                 $validToken = Cache::pull("attendance_token_$tokenValue");
 
-                if(!$validToken){
-                    return $this->handleResponse($request,false,'QR expired or invalid.',422);
+                if (!$validToken) {
+                    return $this->handleResponse($request, false, 'QR expired or invalid.', 422);
                 }
             }
-
-        }else{
+        } else {
             $tokenValue = $existingLog->qr_token;
         }
 
-
-        try{
-
-            $now = now();
-
-
+        try {
             /*
             |--------------------------------------------------------------------------
             | CLOCK OUT
             |--------------------------------------------------------------------------
             */
-
-            if($existingLog){
+            if ($existingLog) {
 
                 $clockIn = Carbon::parse($existingLog->clock_in);
                 $clockOut = $now;
 
-                $scheduledStart = Carbon::parse(
-                    $clockIn->format('Y-m-d').' '.$assignedShift->start_time
-                );
+                $scheduledStart = Carbon::parse($assignedShift->start_time);
+                $scheduledEnd = Carbon::parse($assignedShift->end_time);
 
-                $scheduledEnd = Carbon::parse(
-                    $clockIn->format('Y-m-d').' '.$assignedShift->end_time
-                );
-
-                if($scheduledEnd->lte($scheduledStart)){
+                // If shift ends earlier than it starts, it crosses midnight
+                if ($scheduledEnd->lte($scheduledStart)) {
                     $scheduledEnd->addDay();
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | WORKED HOURS (SECOND PRECISION)
-                |--------------------------------------------------------------------------
-                */
-
-                $workedSeconds = $clockIn->diffInSeconds($clockOut);
-                $workedHours = round($workedSeconds / 3600,4);
-
-                /*
-                |--------------------------------------------------------------------------
-                | SCHEDULED HOURS
-                |--------------------------------------------------------------------------
-                */
-
-                $scheduledSeconds = $scheduledStart->diffInSeconds($scheduledEnd);
-
-                /*
-                |--------------------------------------------------------------------------
-                | OVERTIME
-                |--------------------------------------------------------------------------
-                */
-
-                $overtimeSeconds = max(0,$workedSeconds - $scheduledSeconds);
-                $overtimeHours = round($overtimeSeconds / 3600,4);
-
-                /*
-                |--------------------------------------------------------------------------
-                | NIGHT DIFFERENTIAL (22:00 - 06:00)
-                |--------------------------------------------------------------------------
-                */
-
-                $nightSeconds = 0;
-
-                $periodStart = $clockIn->copy();
-                $periodEnd = $clockOut->copy();
-
-                while($periodStart < $periodEnd){
-
-                    $nightStart = $periodStart->copy()->setTime(22,0,0);
-                    $nightEnd = $periodStart->copy()->addDay()->setTime(6,0,0);
-
-                    $start = $periodStart->copy()->max($nightStart);
-                    $end = $periodEnd->copy()->min($nightEnd);
-
-                    if($end > $start){
-                        $nightSeconds += $start->diffInSeconds($end);
-                    }
-
-                    $periodStart->addDay()->startOfDay();
+                // Make scheduledStart use clockIn date for proper calculation
+                $scheduledStart->setDate($clockIn->year, $clockIn->month, $clockIn->day);
+                if ($scheduledEnd->lessThan($scheduledStart)) {
+                    $scheduledEnd->addDay();
+                } else {
+                    $scheduledEnd->setDate($scheduledStart->year, $scheduledStart->month, $scheduledStart->day);
                 }
 
-                $nightHours = round($nightSeconds / 3600,4);
+                // Worked hours
+                $workedSeconds = $clockIn->diffInSeconds($clockOut);
+                $workedHours = round($workedSeconds / 3600, 4);
 
+                // Scheduled hours
+                $scheduledSeconds = $scheduledStart->diffInSeconds($scheduledEnd);
 
-                /*
-                |--------------------------------------------------------------------------
-                | UPDATE LOG
-                |--------------------------------------------------------------------------
-                */
+                // Overtime
+                $overtimeSeconds = max(0, $workedSeconds - $scheduledSeconds);
+                $overtimeHours = round($overtimeSeconds / 3600, 4);
 
+                // Night Differential (22:00 - 06:00)
+                $nightStart = $clockIn->copy()->setTime(22, 0, 0);
+                $nightEnd = $clockIn->copy()->addDay()->setTime(6, 0, 0);
+
+                $nightIntervalStart = $clockIn->copy()->max($nightStart);
+                $nightIntervalEnd = $clockOut->copy()->min($nightEnd);
+
+                $nightSeconds = max(0, $nightIntervalStart->diffInSeconds($nightIntervalEnd));
+                $nightHours = round($nightSeconds / 3600, 4);
+
+                // Update log
                 $existingLog->update([
                     'clock_out' => $clockOut,
                     'worked_hours' => $workedHours,
@@ -212,34 +165,20 @@ class UserAttendanceController extends Controller
                     'night_diff_hours' => $nightHours
                 ]);
 
-
-                return $this->handleResponse(
-                    $request,
-                    true,
-                    'Clock-out recorded successfully!'
-                );
+                return $this->handleResponse($request, true, 'Clock-out recorded successfully!');
             }
-
 
             /*
             |--------------------------------------------------------------------------
             | CLOCK IN
             |--------------------------------------------------------------------------
             */
-
-            $scheduledStart = Carbon::parse(
-                $now->format('Y-m-d').' '.$assignedShift->start_time
-            );
-
-            $status = $now->gt($scheduledStart->copy()->addMinutes(15))
-                ? 'late'
-                : 'on-time';
-
+            $scheduledStart = Carbon::parse($assignedShift->start_time)->setDate($now->year, $now->month, $now->day);
+            $status = $now->gt($scheduledStart->copy()->addMinutes(15)) ? 'late' : 'on-time';
 
             $employee->load('position');
 
             AttendanceLog::create([
-
                 'employee_id' => $employee->employee_id,
                 'department_id' => $employee->department_id,
                 'specialization' => $employee->position->specialization_name ?? $employee->specialization,
@@ -251,55 +190,34 @@ class UserAttendanceController extends Controller
                 'status' => $status
             ]);
 
+            return $this->handleResponse($request, true, "Clock-in successful! You are marked as $status.");
 
-            return $this->handleResponse(
-                $request,
-                true,
-                "Clock-in successful! You are marked as $status."
-            );
-
-        }
-        catch(\Exception $e){
-
-            return $this->handleResponse(
-                $request,
-                false,
-                'Server Error: '.$e->getMessage(),
-                500
-            );
+        } catch (\Exception $e) {
+            return $this->handleResponse($request, false, 'Server Error: ' . $e->getMessage(), 500);
         }
     }
 
-
-
-    private function handleResponse(Request $request,bool $success,string $message,int $status=200)
+    private function handleResponse(Request $request, bool $success, string $message, int $status = 200)
     {
-
-        if($request->expectsJson()){
-            return response()->json([
-                'success'=>$success,
-                'message'=>$message
-            ],$status);
+        if ($request->expectsJson()) {
+            return response()->json(['success' => $success, 'message' => $message], $status);
         }
 
-        if($request->isMethod('post')){
-
+        if ($request->isMethod('post')) {
             return $success
-                ? redirect()->route('user.attendance.success')->with('status',$message)
-                : redirect()->back()->with('error',$message);
+                ? redirect()->route('user.attendance.success')->with('status', $message)
+                : redirect()->back()->with('error', $message);
         }
 
         return $success
-            ? redirect()->route('user.attendance.success')->with('status',$message)
-            : redirect()->route('user.attendance.scan')->with('error',$message);
+            ? redirect()->route('user.attendance.success')->with('status', $message)
+            : redirect()->route('user.attendance.scan')->with('error', $message);
     }
-
-
 
     public function success()
     {
         return redirect()
             ->route('hr.dashboard')
-            ->with('success','Attendance logged successfully!');
+            ->with('success', 'Attendance logged successfully!');
     }
 }
