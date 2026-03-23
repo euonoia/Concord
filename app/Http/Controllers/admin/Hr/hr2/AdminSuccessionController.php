@@ -21,28 +21,69 @@ class AdminSuccessionController extends Controller
         }
     }
 
-    public function index()
-    {
-        $this->checkAccess();
+   public function index()
+{
+    $this->checkAccess();
 
-        $departments = Department::where('is_active', 1)->get();
-        $positions = DepartmentPositionTitle::where('is_active', 1)->orderBy('position_title')->get();
+    $departments = Department::where('is_active', 1)->get();
+    $positions = DepartmentPositionTitle::where('is_active', 1)
+        ->orderBy('position_title')
+        ->get();
 
-        $candidates = SuccessorCandidate::with(['position', 'employee'])
-            ->leftJoin('validated_training_performance_hr1 as vtp', 'successor_candidates_hr2.employee_id', '=', 'vtp.employee_id')
-            ->leftJoin('employees as evaluator', 'vtp.evaluated_by', '=', 'evaluator.employee_id')
-            ->select(
-                'successor_candidates_hr2.*',
-                'vtp.weighted_average as training_grade',
-                'evaluator.first_name as eval_fname',
-                'evaluator.last_name as eval_lname'
-            )
-            ->where('successor_candidates_hr2.is_active', 1)
-            ->get()
-            ->sortBy(fn($c) => ['Ready Now'=>1,'1-2 Years'=>2,'3+ Years'=>3,'Emergency'=>4][$c->readiness] ?? 5);
+    /**
+     * ACTIVE SUCCESSION PIPELINE (your current working one)
+     */
+    $candidates = SuccessorCandidate::with(['position', 'employee'])
+        ->leftJoin('validated_training_performance_hr1 as vtp', 'successor_candidates_hr2.employee_id', '=', 'vtp.employee_id')
+        ->leftJoin('employees as evaluator', 'vtp.evaluated_by', '=', 'evaluator.employee_id')
+        ->select(
+            'successor_candidates_hr2.*',
+            'vtp.weighted_average as training_grade',
+            'evaluator.first_name as eval_fname',
+            'evaluator.last_name as eval_lname'
+        )
+        ->where('successor_candidates_hr2.is_active', 1)
+        ->get()
+        ->sortBy(fn($c) => ['Ready Now'=>1,'1-2 Years'=>2,'3+ Years'=>3,'Emergency'=>4][$c->readiness] ?? 5);
 
-        return view('admin.hr2.succession', compact('departments', 'positions', 'candidates'));
-    }
+
+    /**
+     * PROMOTED SUCCESSION CANDIDATES
+     * this joins successor candidates with the promotion table
+     */
+    $promotedCandidates = DB::table('successor_candidates_hr2 as sc')
+        ->join('employees as e', 'sc.employee_id', '=', 'e.employee_id')
+        ->leftJoin('promoted_employees_hr4 as p', 'sc.employee_id', '=', 'p.employee_id')
+        ->leftJoin('employees as promoter', 'p.promoted_by', '=', 'promoter.employee_id')
+        ->leftJoin('department_position_titles_hr2 as pos_old', 'p.old_position_id', '=', 'pos_old.id')
+        ->leftJoin('department_position_titles_hr2 as pos_new', 'p.new_position_id', '=', 'pos_new.id')
+        ->select(
+            'sc.id as candidate_id',
+            'e.employee_id',
+            'e.first_name',
+            'e.last_name',
+            'promoter.first_name as promoter_first_name',
+            'promoter.last_name as promoter_last_name',
+
+            'pos_old.position_title as old_position',
+            'pos_new.position_title as new_position',
+
+            'p.old_specialization',
+            'p.new_specialization',
+            'p.promoted_at'
+        )
+        ->where('sc.is_active', 0) 
+        ->orderByDesc('p.promoted_at')
+        ->get();
+
+
+    return view('admin.hr2.succession', compact(
+        'departments',
+        'positions',
+        'candidates',
+        'promotedCandidates'
+    ));
+}
 
     public function storeCandidate(Request $request)
     {
