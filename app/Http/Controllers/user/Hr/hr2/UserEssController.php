@@ -25,7 +25,7 @@ class UserEssController extends Controller
         $allShifts = Shift::where('employee_id', $employee->employee_id)
             ->where('is_active', 1)
             ->get();
-
+        
         // ESS Requests
         $essRequests = EssRequest::where('employee_id', $employee->employee_id)->get();
 
@@ -46,7 +46,11 @@ class UserEssController extends Controller
                     'created_at' => $p->created_at,
                 ];
             });
-
+        // Latest approved payroll request
+        $latestPayroll = PayrollRequestHr2::where('employee_id', $employee->employee_id)
+            ->where('status', 'approved')
+            ->latest('created_at')
+            ->first();
         // Include Shift Requests in history
         $shiftRequests = Shift::where('employee_id', $employee->employee_id)
             ->where('requested_by', $employee->employee_id)
@@ -68,7 +72,7 @@ class UserEssController extends Controller
         $history = $essRequests->concat($claims)->concat($payrollRequests)->concat($shiftRequests)
             ->sortByDesc('created_at');
 
-        return view('hr.hr2.ess', compact('employee', 'allShifts', 'history'));
+        return view('hr.hr2.ess', compact('employee', 'allShifts', 'history', 'latestPayroll'));
     }
 
     public function store(Request $request)
