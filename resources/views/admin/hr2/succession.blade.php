@@ -147,12 +147,6 @@
                     </td>
                     <td class="p-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <form action="{{ route('succession.candidate.promote', $c->id) }}" method="POST" onsubmit="return confirm('Officially promote this candidate?')">
-                                @csrf
-                                <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600 transition shadow-sm">
-                                    Grant Role
-                                </button>
-                            </form>
                             <form action="{{ route('succession.candidate.destroy', $c->id) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-400 hover:text-red-600 transition p-1" title="Remove Nomination">
@@ -170,6 +164,43 @@
             </tbody>
         </table>
     </div>
+    {{-- PROMOTED SUCCESSOR CANDIDATES --}}
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mt-10">
+    <div class="bg-green-50 p-4 border-b">
+        <h3 class="font-bold text-green-700 text-sm uppercase tracking-wider">
+            Promoted Successor Candidates
+        </h3>
+    </div>
+
+    <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @forelse($promotedCandidates as $p)
+            <div class="border rounded-lg p-4 bg-green-50 shadow-sm hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $p->first_name }} {{ $p->last_name }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ $p->employee_id }}</div>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">{{ \Carbon\Carbon::parse($p->promoted_at)->format('M d, Y') }}</span>
+                </div>
+
+                <div class="mb-2 text-sm text-gray-700">
+                    <div><strong>From:</strong> {{ $p->old_position ?? 'N/A' }}</div>
+                    <div><strong>To:</strong> {{ $p->new_position ?? 'N/A' }}</div>
+                </div>
+
+                <div class="mb-2 text-xs text-gray-600">
+                    <strong>Specialization:</strong> {{ $p->old_specialization ?? 'N/A' }} <span class="text-gray-400">→</span> {{ $p->new_specialization ?? 'N/A' }}
+                </div>
+
+                <div class="text-xs text-gray-500">
+                    Promoted by: <strong>{{ $p->promoter_first_name ?? 'Unknown' }} {{ $p->promoter_last_name ?? '' }}</strong>
+                </div>
+            </div>
+        @empty
+            <div class="col-span-1 sm:col-span-2 lg:col-span-3 p-10 text-center text-gray-400 italic">No promoted successor candidates yet.</div>
+        @endforelse
+    </div>
+</div>
 </div>
 
 <script>
