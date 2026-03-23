@@ -146,7 +146,7 @@
                 <th>Drug</th>
                 <th>Supplier</th>
                 <th>Qty</th>
-                <th>Model Name</th>
+                <th>Vehicle</th>
                 <th>Actual Qty</th>
                 <th>Bad Orders</th>
                 <th>Inspector</th>
@@ -178,7 +178,7 @@
                 </td>
                 <td><span class="supplier-text" title="{{ $item->selected_supplier }}">{{ $item->selected_supplier }}</span></td>
                 <td><span class="qty-ok">{{ $item->requested_quantity }}</span></td>
-                <td style="font-size:0.78rem;">{{ $item->model_name ?? '—' }}</td>
+                <td style="font-size:0.78rem;">{{ $item->vehicle ?? '—' }}</td>
                 <td style="font-size:0.78rem;">{{ $item->actual_quantity ?? '—' }}</td>
                 <td style="font-size:0.78rem;">{{ $item->bad_orders ?? '—' }}</td>
                 <td style="font-size:0.78rem;">{{ $item->inspector ?? '—' }}</td>
