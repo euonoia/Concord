@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\admin\Hr\hr3\Shift; 
 use App\Models\admin\Hr\hr3\AttendanceLog;
+use App\Models\admin\Hr\hr4\DirectCompensation;
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\Employee;
 use Carbon\Carbon; 
 
@@ -78,7 +80,56 @@ class UserAttendanceController extends Controller
                     return $this->handleResponse($request, false, "Shift incomplete. Your scheduled shift ends at " . $scheduledEnd->format('H:i') . " (in $remaining).", 422);
                 }
 
-                $existingLog->update(['clock_out' => $now]);
+                $workedHours = \App\Helpers\AttendanceHelper::calculateWorkedHours($existingLog->clock_in, $now);
+                $overtimeHours = \App\Helpers\AttendanceHelper::calculateOvertimeHours($workedHours);
+                $nightDiffHours = \App\Helpers\AttendanceHelper::calculateNightDiffHours($existingLog->clock_in, $now);
+
+                $existingLog->update([
+                    'clock_out' => $now,
+                    'worked_hours' => $workedHours,
+                    'overtime_hours' => $overtimeHours,
+                    'night_diff_hours' => $nightDiffHours,
+                ]);
+
+                // Keep monthly direct compensation in sync when clocking out
+                $month = $now->format('Y-m');
+                $monthly = \App\Helpers\AttendanceHelper::getMonthlyHoursSummary($existingLog->employee_id, $month);
+
+                // Get employee position for calculations
+                $empRecord = Employee::where('employee_id', $existingLog->employee_id)->first();
+                $position = $empRecord ? \App\Models\admin\Hr\hr2\DepartmentPositionTitle::find($empRecord->position_id) : null;
+                $baseSalary = $position ? $position->base_salary : 0;
+                $hourlyRate = $baseSalary > 0 ? $baseSalary / 160 : 0;
+
+                // Calculate shift allowance based on clock-in times
+                $shiftAllowance = \App\Models\admin\Hr\hr3\Shift::calculateMonthlyShiftAllowance($existingLog->employee_id, $month);
+
+                // Calculate overtime pay (25% premium)
+                $overtimePay = \App\Helpers\AttendanceHelper::calculateOvertimePay(
+                    $monthly['overtime_hours'],
+                    $hourlyRate,
+                    1.25
+                );
+
+                // Calculate night differential pay (10% premium)
+                $nightDiffPay = \App\Helpers\AttendanceHelper::calculateNightDiffPay(
+                    $monthly['night_diff_hours'],
+                    $hourlyRate,
+                    0.10
+                );
+
+                DirectCompensation::updateOrCreate(
+                    ['employee_id' => $existingLog->employee_id, 'month' => $month],
+                    [
+                        'worked_hours' => $monthly['worked_hours'],
+                        'overtime_hours' => $monthly['overtime_hours'],
+                        'night_diff_hours' => $monthly['night_diff_hours'],
+                        'shift_allowance' => $shiftAllowance,
+                        'overtime_pay' => $overtimePay,
+                        'night_diff_pay' => $nightDiffPay,
+                    ]
+                );
+
                 return $this->handleResponse($request, true, 'Clock-out recorded successfully!');
             }
 

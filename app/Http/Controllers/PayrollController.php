@@ -22,10 +22,10 @@ class PayrollController extends Controller
             ->orderByDesc('month')
             ->first();
         if ($comp) {
-            $salary = $comp->base_salary + $comp->shift_allowance + $comp->overtime_pay + $comp->bonus;
+            $salary = $comp->base_salary + $comp->shift_allowance + $comp->overtime_pay + $comp->night_diff_pay + $comp->bonus;
             return response()->json([
                 'salary' => $salary,
-                'info' => 'Base: ₱' . number_format($comp->base_salary,2) . ', Allowance: ₱' . number_format($comp->shift_allowance,2) . ', OT: ₱' . number_format($comp->overtime_pay,2) . ', Bonus: ₱' . number_format($comp->bonus,2)
+                'info' => 'Base: ₱' . number_format($comp->base_salary,2) . ', Allowance: ₱' . number_format($comp->shift_allowance,2) . ', OT: ₱' . number_format($comp->overtime_pay,2) . ', Night Diff: ₱' . number_format($comp->night_diff_pay,2) . ', Bonus: ₱' . number_format($comp->bonus,2)
             ]);
         }
         return response()->json(['salary' => null, 'info' => null]);
@@ -52,31 +52,37 @@ class PayrollController extends Controller
 
         foreach ($attendances as $att) {
             if ($att->clock_in && $att->clock_out) {
-                $hours = $att->clock_in->diffInHours($att->clock_out);
+                $hours = $att->clock_in->diffInMinutes($att->clock_out) / 60;
                 $totalHours += $hours;
             }
         }
 
+        $hoursSummary = \App\Helpers\AttendanceHelper::getMonthlyHoursSummary($employeeId, now()->format('Y-m'));
+
         return response()->json([
             'attendances' => $attendances->map(function ($att) {
+                $attWorked = $att->worked_hours ?? ($att->clock_in && $att->clock_out ? $att->clock_in->diffInMinutes($att->clock_out) / 60 : 0);
+                $attOvertime = $att->overtime_hours ?? \App\Helpers\AttendanceHelper::calculateOvertimeHours($attWorked);
+                $attNightDiff = $att->night_diff_hours ?? ($att->clock_in && $att->clock_out ? \App\Helpers\AttendanceHelper::calculateNightDiffHours($att->clock_in, $att->clock_out) : 0);
                 return [
                     'date' => $att->clock_in ? $att->clock_in->format('Y-m-d') : null,
                     'clock_in' => $att->clock_in ? $att->clock_in->format('H:i') : null,
                     'clock_out' => $att->clock_out ? $att->clock_out->format('H:i') : null,
-                    'hours' => $att->clock_in && $att->clock_out ? $att->clock_in->diffInHours($att->clock_out) : 0,
-                    'worked_hours' => $att->worked_hours ?? 0,
-                    'overtime_hours' => $att->overtime_hours ?? 0,
-                    'night_diff_hours' => $att->night_diff_hours ?? 0,
+                    'hours' => $att->clock_in && $att->clock_out ? round($att->clock_in->diffInMinutes($att->clock_out) / 60, 2) : 0,
+                    'worked_hours' => round($attWorked, 2),
+                    'overtime_hours' => round($attOvertime, 2),
+                    'night_diff_hours' => round($attNightDiff, 2),
                 ];
             }),
             'total_days' => $totalDays,
-            'total_hours' => $totalHours,
-            'worked_hours' => $comp->worked_hours ?? 0,
-            'overtime_hours' => $comp->overtime_hours ?? 0,
-            'night_diff_hours' => $comp->night_diff_hours ?? 0,
+            'total_hours' => round($totalHours, 2),
+            'worked_hours' => $comp->worked_hours ?? $hoursSummary['worked_hours'],
+            'overtime_hours' => $comp->overtime_hours ?? $hoursSummary['overtime_hours'],
+            'night_diff_hours' => $comp->night_diff_hours ?? $hoursSummary['night_diff_hours'],
             'base_salary' => $comp->base_salary ?? 0,
             'shift_allowance' => $comp->shift_allowance ?? 0,
             'overtime_pay' => $comp->overtime_pay ?? 0,
+            'night_diff_pay' => $comp->night_diff_pay ?? 0,
             'bonus' => $comp->bonus ?? 0,
             'training_reward' => $comp->training_reward ?? 0,
             'total_compensation' => $comp ? $comp->total_compensation : 0,

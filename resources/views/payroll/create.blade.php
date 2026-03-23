@@ -438,6 +438,10 @@
                             <span id="overtime-pay">₱0.00</span>
                         </div>
                         <div class="salary-row">
+                            <span class="label">Night Diff Pay</span>
+                            <span id="night-diff-pay">₱0.00</span>
+                        </div>
+                        <div class="salary-row">
                             <span class="label">Bonus</span>
                             <span id="bonus">₱0.00</span>
                         </div>
@@ -598,6 +602,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('base-salary').textContent         = '₱0.00';
         document.getElementById('shift-allowance').textContent     = '₱0.00';
         document.getElementById('overtime-pay').textContent        = '₱0.00';
+        document.getElementById('night-diff-pay').textContent      = '₱0.00';
         document.getElementById('bonus').textContent               = '₱0.00';
         document.getElementById('training-reward').textContent     = '₱0.00';
         document.getElementById('total-compensation').textContent  = '₱0.00';
@@ -663,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('base-salary').textContent = '₱' + (data.base_salary ? parseFloat(data.base_salary).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
                 document.getElementById('shift-allowance').textContent = '₱' + (data.shift_allowance ? parseFloat(data.shift_allowance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
                 document.getElementById('overtime-pay').textContent = '₱' + (data.overtime_pay ? parseFloat(data.overtime_pay).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+                document.getElementById('night-diff-pay').textContent = '₱' + (data.night_diff_pay ? parseFloat(data.night_diff_pay).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
                 document.getElementById('bonus').textContent = '₱' + (data.bonus ? parseFloat(data.bonus).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
                 document.getElementById('training-reward').textContent = '₱' + (data.training_reward ? parseFloat(data.training_reward).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
                 document.getElementById('total-compensation').textContent = '₱' + (data.total_compensation ? parseFloat(data.total_compensation).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');

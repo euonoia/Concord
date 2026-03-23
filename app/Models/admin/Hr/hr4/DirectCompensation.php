@@ -19,6 +19,7 @@ class DirectCompensation extends Model
         'base_salary',
         'shift_allowance',
         'overtime_pay',
+        'night_diff_pay',
         'bonus',
         'worked_hours',
         'overtime_hours',
@@ -29,6 +30,7 @@ class DirectCompensation extends Model
         'base_salary' => 'decimal:2',
         'shift_allowance' => 'decimal:2',
         'overtime_pay' => 'decimal:2',
+        'night_diff_pay' => 'decimal:2',
         'bonus' => 'decimal:2',
         'worked_hours' => 'decimal:2',
         'overtime_hours' => 'decimal:2',
@@ -51,7 +53,7 @@ class DirectCompensation extends Model
     public function getTotalCompensationAttribute()
     {
         $trainingReward = $this->calculateTrainingReward();
-        return $this->base_salary + $this->shift_allowance + $this->overtime_pay + $this->bonus + $trainingReward;
+        return $this->base_salary + $this->shift_allowance + $this->overtime_pay + $this->night_diff_pay + $this->bonus + $trainingReward;
     }
 
     // Calculate training reward based on HR1 data

@@ -44,22 +44,32 @@ class AttendanceHelper
      */
     public static function calculateNightDiffHours(Carbon $clockIn, Carbon $clockOut): float
     {
-        if (!$clockIn || !$clockOut) {
+        if (!$clockIn || !$clockOut || !$clockIn->lessThan($clockOut)) {
             return 0;
         }
 
-        $ndHours = 0;
-        $current = $clockIn->copy();
+        $ndMinutes = 0;
+        $periodStart = $clockIn->copy();
+        $periodEnd = $clockOut->copy();
 
-        while ($current < $clockOut) {
-            $hour = $current->hour;
-            if ($hour >= 22 || $hour < 6) {
-                $ndHours += 1;
+        // Walk by day chunks to support multi-day and over-midnight spans.
+        $cursor = $periodStart->copy()->startOfDay();
+
+        while ($cursor->lessThanOrEqualTo($periodEnd)) {
+            $nightStart = $cursor->copy()->setTime(22, 0, 0);
+            $nightEnd = $cursor->copy()->addDay()->setTime(6, 0, 0);
+
+            $segmentStart = $periodStart->greaterThan($nightStart) ? $periodStart->copy() : $nightStart;
+            $segmentEnd = $periodEnd->lessThan($nightEnd) ? $periodEnd->copy() : $nightEnd;
+
+            if ($segmentStart->lessThan($segmentEnd)) {
+                $ndMinutes += $segmentStart->diffInMinutes($segmentEnd);
             }
-            $current->addHour();
+
+            $cursor->addDay();
         }
 
-        return round(max(0, $ndHours), 2);
+        return round(max(0, $ndMinutes / 60), 2);
     }
 
     /**

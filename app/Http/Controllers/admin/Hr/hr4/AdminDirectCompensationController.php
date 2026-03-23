@@ -73,6 +73,23 @@ class AdminDirectCompensationController extends Controller
             // Calculate attendance hours for the month
             $hoursSummary = \App\Helpers\AttendanceHelper::getMonthlyHoursSummary((int)$emp->employee_id, $month);
 
+            // Calculate hourly rate (assuming 160 hours/month standard)
+            $hourlyRate = $base_salary > 0 ? $base_salary / 160 : 0;
+
+            // Calculate overtime pay (25% premium)
+            $overtimePay = \App\Helpers\AttendanceHelper::calculateOvertimePay(
+                $hoursSummary['overtime_hours'],
+                $hourlyRate,
+                1.25
+            );
+
+            // Calculate night differential pay (10% premium)
+            $nightDiffPay = \App\Helpers\AttendanceHelper::calculateNightDiffPay(
+                $hoursSummary['night_diff_hours'],
+                $hourlyRate,
+                0.10
+            );
+
             // Training reward is now calculated dynamically in the model
             // based on latest HR1 training performance data
 
@@ -81,6 +98,8 @@ class AdminDirectCompensationController extends Controller
                 [
                     'base_salary' => $base_salary,
                     'shift_allowance' => $shift_allowance,
+                    'overtime_pay' => $overtimePay,
+                    'night_diff_pay' => $nightDiffPay,
                     'bonus' => $bonus,
                     'worked_hours' => $hoursSummary['worked_hours'],
                     'overtime_hours' => $hoursSummary['overtime_hours'],

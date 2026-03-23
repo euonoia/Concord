@@ -33,54 +33,49 @@ class Shift extends Model
     }
 
     /**
-     * Calculate monthly shift allowance based on actual attendance
+     * Calculate monthly shift allowance based on actual clock-in time
      */
     public static function calculateMonthlyShiftAllowance($employeeId, $month)
     {
         $totalAllowance = 0;
 
-        // Define fixed shift allowances in ₱
+        // Define shift allowances based on clock-in time (₱ per day)
         $shiftAllowances = [
-            'Morning Shift'   => 0,
-            'Afternoon Shift' => 50,
-            'Night Shift'     => 100, // fixed
+            'morning'   => 200,   // 06:00 - 14:00
+            'afternoon' => 250,   // 14:00 - 22:00
+            'night'     => 300,   // 22:00 - 06:00
         ];
 
-        $nightDiffPercent = 0.10; // 10% ND for 10 PM - 6 AM
-
         // Get all attendance logs for the employee in the month
-        $attendances = AttendanceLog::with('shift', 'employee.position')
-            ->where('employee_id', $employeeId)
+        $attendances = AttendanceLog::where('employee_id', $employeeId)
             ->whereMonth('clock_in', Carbon::parse($month . '-01')->month)
             ->whereNotNull('clock_in')
             ->get();
 
         foreach ($attendances as $att) {
+            $clockInHour = $att->clock_in->hour;
 
-            // Only apply allowance if attendance has a scheduled shift
-            if ($att->shift) {
-                $shiftName = $att->shift->shift_name;
-                $totalAllowance += $shiftAllowances[$shiftName] ?? 0;
+            // Determine shift based on clock-in time
+            $shiftType = self::getShiftTypeFromClockIn($clockInHour);
 
-                // Night differential calculation
-                if ($shiftName === 'Night Shift' && $att->clock_out) {
-                    $clockIn = $att->clock_in;
-                    $clockOut = $att->clock_out;
-
-                    // ND hours: 10 PM – 6 AM
-                    $ndStart = $clockIn->copy()->hour(22)->minute(0);
-                    $ndEnd   = $clockIn->copy()->addDay()->hour(6)->minute(0);
-
-                    $ndHours = max(0, min($clockOut->timestamp, $ndEnd->timestamp) - max($clockIn->timestamp, $ndStart->timestamp)) / 3600;
-
-                    $dailyRate = $att->employee->position->base_salary ?? 0;
-                    $hourlyRate = $dailyRate / 8;
-
-                    $totalAllowance += $hourlyRate * $ndHours * $nightDiffPercent;
-                }
-            }
+            // Add daily shift allowance
+            $totalAllowance += $shiftAllowances[$shiftType] ?? 0;
         }
 
         return $totalAllowance;
+    }
+
+    /**
+     * Determine shift type based on clock-in hour
+     */
+    private static function getShiftTypeFromClockIn($hour)
+    {
+        if ($hour >= 6 && $hour < 14) {
+            return 'morning';    // 06:00 - 13:59
+        } elseif ($hour >= 14 && $hour < 22) {
+            return 'afternoon';  // 14:00 - 21:59
+        } else {
+            return 'night';      // 22:00 - 05:59 (including midnight crossover)
+        }
     }
 }
