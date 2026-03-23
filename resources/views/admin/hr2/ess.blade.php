@@ -24,7 +24,6 @@
                 <th style="padding: 12px;">Request Type & Details</th>
                 <th style="padding: 12px;">Status</th>
                 <th style="padding: 12px;">Submitted</th>
-                <th style="padding: 12px; text-align: center;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -62,28 +61,6 @@
                         <small style="color: #999;">{{ \Carbon\Carbon::parse($r->created_at)->diffForHumans() }}</small>
                     </td>
                     <td style="padding: 12px; text-align: center;">
-                        <form method="POST" action="{{ route('ess.updateStatus', $r->id) }}" onsubmit="return confirm('Update status to ' + event.submitter.value + '?');">
-                            @csrf
-                            <div style="display: flex; gap: 5px; justify-content: center;">
-                                <button type="submit" name="status" value="approved" 
-                                    style="background: none; border: 1px solid #28a745; color: #28a745; padding: 5px 8px; border-radius: 4px; cursor: {{ $isFinalized ? 'not-allowed' : 'pointer' }}" 
-                                    {{ $isFinalized ? 'disabled' : '' }}>
-                                    Approve
-                                </button>
-
-                                <button type="submit" name="status" value="rejected" 
-                                    style="background: none; border: 1px solid #dc3545; color: #dc3545; padding: 5px 8px; border-radius: 4px; cursor: {{ $isFinalized ? 'not-allowed' : 'pointer' }}" 
-                                    {{ $isFinalized ? 'disabled' : '' }}>
-                                    Reject
-                                </button>
-
-                                <button type="submit" name="status" value="closed" 
-                                    style="background: none; border: 1px solid #6c757d; color: #6c757d; padding: 5px 8px; border-radius: 4px; cursor: {{ $isClosed ? 'not-allowed' : 'pointer' }}" 
-                                    {{ $isClosed ? 'disabled' : '' }}>
-                                    Close
-                                </button>
-                            </div>
-                        </form>
                     </td>
                 </tr>
             @empty

@@ -1,0 +1,203 @@
+
+:root {
+    --p-indigo: #6366f1;
+    --p-slate: #0f172a;
+    --p-emerald: #10b981;
+    --p-rose: #f43f5e;
+    --p-gold: #f59e0b;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(231, 231, 255, 0.5);
+}
+
+.hr2-dashboard-wrapper {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    color: var(--p-slate);
+}
+
+/* Background Glow Effect */
+.bg-glow {
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    z-index: 0;
+}
+
+/* Header Styles */
+.display-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #0f172a, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.badge-premium {
+    background: #eef2ff;
+    color: var(--p-indigo);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: inline-block;
+}
+
+/* Stat Cards V2 */
+.stat-card-v2 {
+    background: white;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.stat-card-v2:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+}
+
+.stat-card-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label-v2 {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stat-number-v2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-top: 5px;
+}
+
+.icon-blob {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* Color Themes */
+.indigo .icon-blob { background: #eef2ff; color: var(--p-indigo); }
+.indigo .stat-number-v2 { color: var(--p-indigo); }
+.rose .icon-blob { background: #fff1f2; color: var(--p-rose); }
+.emerald .icon-blob { background: #ecfdf5; color: var(--p-emerald); }
+.gold .icon-blob { background: #fffbeb; color: var(--p-gold); }
+
+/* Glass Cards */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+}
+
+/* Custom Table Styles */
+.table-custom thead th {
+    background: #f8fafc;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #94a3b8;
+    padding: 18px;
+    border: none;
+}
+
+.table-custom tbody td {
+    padding: 18px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Avatar with Ring */
+.avatar-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-text {
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 2;
+    position: relative;
+}
+
+.avatar-ring {
+    position: absolute;
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    border: 2px solid var(--p-indigo);
+    border-radius: 15px;
+    opacity: 0.3;
+}
+
+/* Navigation Grid */
+.nav-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.nav-item-v2 {
+    text-decoration: none;
+    background: white;
+    padding: 15px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #f1f5f9;
+    color: var(--p-slate);
+    transition: 0.2s;
+}
+
+.nav-item-v2 i { font-size: 1.2rem; color: var(--p-indigo); }
+.nav-item-v2 span { font-size: 12px; font-weight: 600; }
+.nav-item-v2:hover {
+    background: var(--p-indigo);
+    color: white !important;
+}
+.nav-item-v2:hover i { color: white; }
+
+/* Progress Bars */
+.progress-bar-v2 {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--p-indigo), #818cf8);
+    border-radius: 10px;
+}

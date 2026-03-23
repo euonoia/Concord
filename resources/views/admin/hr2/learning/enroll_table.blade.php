@@ -4,7 +4,7 @@
 
 <div class="hr2_enroll_table_wrapper">
     <header class="hr2_enroll_table_page_header">
-        <h1>Enroll Employee</h1>
+        <h1>Assign Modules</h1>
     </header>
 
     <div class="hr2_enroll_table_card">

@@ -1,31 +1,94 @@
 @extends('layouts.dashboard.app')
 
 @section('content')
-<div class="container" style="padding: 20px;">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .container { max-width: 1200px; margin: auto; }
+    
+    /* Card Enhancements */
+    .custom-card {
+        background: #fff;
+        padding: 28px;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s;
+    }
+
+    /* Form Styling */
+    label { font-weight: 600; color: #4a5568; margin-bottom: 8px; display: block; font-size: 0.9rem; }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+    /* Button Styling */
+    .btn-submit {
+        background: #2563eb;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        width: 100%;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-submit:hover { background: #1d4ed8; }
+
+    /* Status Badges */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    /* Dynamic Info Boxes */
+    .info-box {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+</style>
+
+<div class="container" style="padding: 40px 20px;">
 
     {{-- Flash Messages --}}
     @if(session('success'))
-        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            {{ session('error') }}
+        <div style="background: #ecfdf5; color: #065f46; border-left: 5px solid #10b981; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; align-items: center;">
+            <i class="fas fa-check-circle" style="margin-right: 10px;"></i> {{ session('success') }}
         </div>
     @endif
 
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+    <div style="display: grid; grid-template-columns: 1fr 1.8fr; gap: 30px;">
 
-        {{-- Left Column --}}
-        <div class="card" style="background: #fff; padding: 25px; border-radius: 12px;">
-            <h3 style="margin-bottom: 20px;">New Request / Claim</h3>
+        {{-- Left Column: Form --}}
+        <div class="custom-card">
+            <h3 style="margin-top: 0; margin-bottom: 25px; color: #1e293b; font-weight: 700;">
+                <i class="fas fa-paper-plane" style="color: #3b82f6; margin-right: 8px;"></i> New Request
+            </h3>
 
             <form id="requestForm" action="{{ route('user.ess.store') }}" method="POST">
                 @csrf
 
                 <label>Request Type</label>
-                <select name="type" id="typeSelect" class="form-control" onchange="toggleUI()" required style="margin-bottom:15px;">
+                <select name="type" id="typeSelect" class="form-control" onchange="toggleUI()" required>
                     <option value="Leave">Request Leave</option>
                     <option value="Payroll">Request Payroll</option>
                     <option value="Request Shift">Request Shift</option> 
@@ -33,90 +96,117 @@
                 </select>
 
                 {{-- Payroll Request UI --}}
-                <div id="payrollRequestUI" style="display:none; margin-bottom:15px; padding:10px; border:1px dashed #28a745; border-radius:8px;">
-                    @if(isset($employee->salary))
-                        <strong>Found your payroll!</strong><br>
-                        <small>Salary: ₱{{ number_format($employee->salary,2) }}</small><br>
-                        <small>Click submit to request payroll.</small>
-                    @else
-                        <strong>No payroll data found.</strong>
-                    @endif
+              <div id="payrollRequestUI" class="info-box" style="display:none; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
+                    <i class="fas fa-info-circle fa-lg"></i>
+                    <div>
+                        @if($latestPayroll)
+                            <strong>Payroll Found</strong><br>
+                            <small>₱{{ number_format($latestPayroll->salary, 2) }}</small>
+                        @else
+                            <strong>No data found.</strong>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Request Shift UI --}}
-                <div id="shiftRequestUI" style="display:none; margin-bottom:15px; padding:10px; border:1px dashed #007bff; border-radius:8px;">
-                    @if($allShifts->count())
-                        @php $shift = $allShifts->first(); @endphp
-                        <strong>Found your shift!</strong><br>
-                        <small>Click submit to request this shift.</small>
-                    @else
-                        <strong>No active shift found.</strong>
-                    @endif
+                <div id="shiftRequestUI" class="info-box" style="display:none; background: #fdf2f8; border: 1px solid #fbcfe8; color: #9d174d;">
+                    <i class="fas fa-calendar-check fa-lg"></i>
+                    <div>
+                        @if($allShifts->count())
+                            <strong>Active Shift Detected</strong><br>
+                            <small>Ready for submission.</small>
+                        @else
+                            <strong>No active shifts.</strong>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Leave UI --}}
                 <div id="leaveUI" style="display:none;">
-                    <label>Select Shift to Miss:</label>
-                    <select name="shift_id" class="form-control" style="margin-bottom:10px;">
+                    <label>Shift to Miss</label>
+                    <select name="shift_id" class="form-control">
                         @foreach($allShifts as $shift)
                             <option value="{{ $shift->id }}">{{ $shift->day_of_week }} - {{ $shift->shift_name }}</option>
                         @endforeach
                     </select>
-                    <label>Start Date</label>
-                    <input type="date" name="leave_date" class="form-control">
-                    <label>End Date</label>
-                    <input type="date" name="end_date" class="form-control">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label>Start Date</label>
+                            <input type="date" name="leave_date" class="form-control">
+                        </div>
+                        <div>
+                            <label>End Date</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Claim UI --}}
                 <div id="claimUI" style="display:none;">
-                    <label>Claim Type</label>
-                    <select name="claim_type" class="form-control" style="margin-bottom:10px;">
-                        <option value="Travel">Travel</option>
-                        <option value="Training">Training</option>
-                        <option value="Medical Supplies">Medical Supplies</option>
-                        <option value="Certification Fees">Certification Fees</option>
-                        <option value="Conference">Conference</option>
-                        <option value="Equipment Purchase">Equipment Purchase</option>
+                    <label>Category</label>
+                    <select name="claim_type" class="form-control">
+                        <option value="Travel">🚗 Travel</option>
+                        <option value="Training">📚 Training</option>
+                        <option value="Medical">🏥 Medical Supplies</option>
+                        <option value="Conference">🎤 Conference</option>
                     </select>
-                    <label>Amount</label>
-                    <input type="number" name="amount" step="0.01" class="form-control">
+                    <label>Amount (PHP)</label>
+                    <input type="number" name="amount" step="0.01" class="form-control" placeholder="0.00">
                 </div>
 
-                {{-- Reason / Details --}}
                 <label>Reason / Details</label>
-                <textarea name="details" rows="4" class="form-control" required></textarea>
+                <textarea name="details" rows="3" class="form-control" required placeholder="Brief explanation..."></textarea>
 
-                <button type="submit" class="btn btn-primary" style="margin-top:10px;">Submit Request</button>
+                <button type="submit" class="btn-submit">
+                    Send Request <i class="fas fa-chevron-right" style="font-size: 0.8rem; margin-left: 5px;"></i>
+                </button>
             </form>
         </div>
 
         {{-- Right Column: History --}}
-        <div class="card" style="background: #fff; padding: 25px; border-radius: 12px;">
-            <h3>Request & Claim History</h3>
-            <table class="table">
-                <thead>
-                    <tr><th>ID</th><th>Type & Details</th><th>Amount / Schedule</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                    @forelse($history as $h)
-                    <tr>
-                        <td>{{ $h->ess_id ?? $h->claim_id ?? $h->id }}</td>
-                        <td>{{ $h->type ?? 'Payroll' }}<br>{{ $h->details ?? '' }}</td>
-                        <td>
-                            @if(isset($h->shift_id)) Shift ID: {{ $h->shift_id }} @endif
-                            @if(isset($h->leave_date)) Start: {{ $h->leave_date }} @endif
-                            @if(isset($h->end_date)) End: {{ $h->end_date }} @endif
-                            @if(isset($h->amount)) ₱{{ number_format($h->amount,2) }} @endif
-                            @if(isset($h->salary)) ₱{{ number_format($h->salary,2) }} @endif
-                        </td>
-                        <td>{{ $h->status }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="4">No requests yet.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="custom-card">
+            <h3 style="margin-top: 0; margin-bottom: 25px; color: #1e293b; font-weight: 700;">History</h3>
+            <div style="overflow-x: auto;">
+                <table class="table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 2px solid #f1f5f9;">
+                            <th style="padding: 12px; color: #64748b; font-size: 0.85rem;">DETAILS</th>
+                            <th style="padding: 12px; color: #64748b; font-size: 0.85rem;">SCHEDULE/AMOUNT</th>
+                            <th style="padding: 12px; color: #64748b; font-size: 0.85rem; text-align: center;">STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($history as $h)
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 15px 12px;">
+                                <span style="font-weight: 600; color: #334155;">{{ $h->type ?? 'Payroll' }}</span><br>
+                                <small style="color: #94a3b8;">{{ $h->details ?? 'No details' }}</small>
+                            </td>
+                            <td style="padding: 15px 12px;">
+                                <div style="font-size: 0.9rem;">
+                                    @if(isset($h->leave_date)) <span style="display:block"><i class="far fa-calendar-alt"></i> {{ $h->leave_date }}</span> @endif
+                                    @if(isset($h->amount) || isset($h->salary)) 
+                                        <strong style="color: #059669;">₱{{ number_format($h->amount ?? $h->salary, 2) }}</strong> 
+                                    @endif
+                                </div>
+                            </td>
+                            <td style="padding: 15px 12px; text-align: center;">
+                                <span class="badge status-{{ strtolower($h->status) }}">
+                                    {{ $h->status }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3" style="padding: 40px; text-align: center; color: #94a3b8;">
+                                <i class="fas fa-folder-open fa-2x" style="display:block; margin-bottom: 10px;"></i>
+                                No requests found.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
@@ -125,11 +215,18 @@
 <script>
 function toggleUI() {
     const type = document.getElementById('typeSelect').value;
+    const sections = ['leaveUI', 'shiftRequestUI', 'claimUI', 'payrollRequestUI'];
+    
+    sections.forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
 
-    document.getElementById('leaveUI').style.display = type === 'Leave' ? 'block':'none';
-    document.getElementById('shiftRequestUI').style.display = type === 'Request Shift' ? 'block':'none';
-    document.getElementById('claimUI').style.display = type === 'Claim' ? 'block':'none';
-    document.getElementById('payrollRequestUI').style.display = type === 'Payroll' ? 'block':'none';
+    if (type === 'Leave') document.getElementById('leaveUI').style.display = 'block';
+    if (type === 'Request Shift') document.getElementById('shiftRequestUI').style.display = 'flex';
+    if (type === 'Claim') document.getElementById('claimUI').style.display = 'block';
+    if (type === 'Payroll') document.getElementById('payrollRequestUI').style.display = 'flex';
 }
+// Run once on load to set initial state
+window.onload = toggleUI;
 </script>
 @endsection

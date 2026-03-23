@@ -5,26 +5,59 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminOnboardingAssessmentController extends Controller
 {
     /**
-     * Public page (user enters APP-XXXX reference)
+     * Allow only HR2
+     */
+    private function authorizeHr2()
+    {
+        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr2'])) {
+            abort(403, 'Unauthorized.');
+        }
+    }
+
+    /**
+     * LIST OF APPLICANTS
      */
     public function index()
     {
+        $this->authorizeHr2();
+
         $assessments = DB::table('onboarding_assessments_hr1')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('admin.hr2.onboarding_assessment.index', compact('assessments'));
+        // Get validated assessments to show in table
+        $validatedAssessments = DB::table('onboarding_assessment_scores_hr1 as s')
+            ->join('onboarding_assessments_hr1 as a', 's.applicant_id', '=', 'a.id')
+            ->leftJoin('employees as e', 's.validated_by', '=', 'e.employee_id')
+            ->whereNotNull('s.validated_by')
+            ->select(
+                'a.application_id',
+                'a.first_name',
+                'a.last_name',
+                's.competency',
+                's.rating',
+                's.remarks',
+                DB::raw('CONCAT(e.first_name, " ", e.last_name) as validator_name'),
+                's.updated_at'
+            )
+            ->orderBy('s.updated_at', 'desc')
+            ->get();
+
+        return view('admin.hr2.onboarding_assessment.index', compact('assessments', 'validatedAssessments'));
     }
 
     /**
-     * Check reference ID (APP-OUG9ABP6)
+     * CHECK REFERENCE ID (APP-XXXX) & ASSESSMENT STATUS
      */
     public function checkReference(Request $request)
     {
+        $this->authorizeHr2();
+
         $request->validate([
             'reference_id' => 'required|string|max:50'
         ]);
@@ -37,14 +70,20 @@ class AdminOnboardingAssessmentController extends Controller
             return redirect()->back()->with('error','Reference ID not found.');
         }
 
+        if ($applicant->assessment_status === 'assessed') {
+            return redirect()->back()->with('info','This applicant has already been assessed.');
+        }
+
         return redirect()->route('onboarding.assessment.matrix', $applicant->id);
     }
 
     /**
-     * Show the assessment matrix
+     * SHOW ASSESSMENT MATRIX
      */
     public function matrix($id)
     {
+        $this->authorizeHr2();
+
         $applicant = DB::table('onboarding_assessments_hr1')
             ->where('id', $id)
             ->first();
@@ -53,7 +92,7 @@ class AdminOnboardingAssessmentController extends Controller
             abort(404);
         }
 
-        // Example: load competencies (static or from DB)
+        // For backward compatibility, leave competencies array if needed
         $competencies = [
             'Technical Knowledge',
             'Communication Skills',
@@ -64,47 +103,85 @@ class AdminOnboardingAssessmentController extends Controller
     }
 
     /**
-     * Submit the assessment
+     * SUBMIT ASSESSMENT (Weighted + Automatic Competency & Remarks)
      */
-  public function submitAssessment(Request $request, $id)
-{
-    $applicant = DB::table('onboarding_assessments_hr1')
-        ->where('id', $id)
-        ->first();
+    public function submitAssessment(Request $request, $id)
+    {
+        $this->authorizeHr2();
 
-    if (!$applicant) {
-        return redirect()->back()->with('error', 'Applicant not found.');
-    }
+        $applicant = DB::table('onboarding_assessments_hr1')
+            ->where('id', $id)
+            ->first();
 
-    $ratings = $request->input('ratings', []);
-    $remarks = $request->input('remarks', []);
+        if (!$applicant) {
+            return redirect()->back()->with('error', 'Applicant not found.');
+        }
 
-    // Save each competency score into the scores table with application_id
-    foreach ($ratings as $competency => $score) {
+        $loggedInEmployee = DB::table('employees')
+            ->where('user_id', Auth::id())
+            ->first();
+
+        $assessedBy = $loggedInEmployee ? $loggedInEmployee->employee_id : null;
+
+        $ratings = $request->input('ratings', []);
+
+        $weights = [
+            'Technical Knowledge'   => 0.40,
+            'Communication Skills'  => 0.30,
+            'Problem Solving'       => 0.30,
+        ];
+
+        $totalWeightedScore = 0;
+        $totalWeight = 0;
+
+        foreach ($ratings as $competency => $score) {
+            if (isset($weights[$competency])) {
+                $totalWeightedScore += $score * $weights[$competency];
+                $totalWeight += $weights[$competency];
+            }
+        }
+
+        $finalAverage = $totalWeight > 0 ? $totalWeightedScore / $totalWeight : 0;
+
+        // Determine competency level & automatic remarks
+        if ($finalAverage >= 90) {
+            $level = 'Advanced';
+            $autoRemarks = 'Excellent performance — highly competent.';
+        } elseif ($finalAverage >= 75) {
+            $level = 'Intermediate';
+            $autoRemarks = 'Good performance — meets expectations.';
+        } elseif ($finalAverage >= 60) {
+            $level = 'Basic';
+            $autoRemarks = 'Satisfactory performance — needs improvement in some areas.';
+        } else {
+            $level = 'Beginner';
+            $autoRemarks = 'Insufficient performance — significant improvement required.';
+        }
+
+        // Store one row per applicant with final level
         DB::table('onboarding_assessment_scores_hr1')->updateOrInsert(
+            ['applicant_id' => $applicant->id],
             [
-                'applicant_id' => $applicant->id,
-                'competency'   => $competency,
-            ],
-            [
-                'application_id' => $applicant->application_id, 
-                'rating'         => $score,
-                'remarks'        => $remarks[$competency] ?? null,
-                'created_at'     => now(),
-                'updated_at'     => now(),
+                'application_id' => $applicant->application_id,
+                'competency'    => $level,
+                'rating'        => round($finalAverage, 2),
+                'remarks'       => $autoRemarks,
+                'assessed_by'   => $assessedBy,
+                'updated_at'    => now(),
+                'created_at'    => now(),
             ]
         );
+
+        // Update applicant status
+        DB::table('onboarding_assessments_hr1')
+            ->where('id', $id)
+            ->update([
+                'assessment_status' => 'assessed',
+                'updated_at'        => now(),
+            ]);
+
+        return redirect()->route('onboarding.assessment.public')
+            ->with('success', 'Assessment submitted successfully. Final Level: ' . $level);
     }
 
-    // Update the applicant status using application_id
-    DB::table('onboarding_assessments_hr1')
-        ->where('application_id', $applicant->application_id)
-        ->update([
-            'assessment_status' => 'passed',
-            'updated_at' => now(),
-        ]);
-
-    return redirect()->route('onboarding.assessment.matrix', $id)
-        ->with('success', 'Assessment submitted successfully.');
-}
 }
