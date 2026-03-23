@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -104,13 +105,28 @@
     </nav>
 </div>
 
-<!-- Main Content -->
-<div class="dashboard-main main">
-    <div class="main-inner">
+<<div class="dashboard-main main unique-hr2-container">
+    <div class="main-inner hr2-content-wrapper">
         @yield('content')
     </div>
 </div>
 
+<style>
+    /* Removes all background, borders, and shadows from the HR2 layout */
+    .unique-hr2-container, 
+    .hr2-content-wrapper {
+        background: none !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 20px; /* Kept for spacing, remove if you want it flush to the edge */
+    }
+
+    /* This ensures any default dashboard styling doesn't override the 'no background' rule */
+    .dashboard-main {
+        background: transparent !important;
+    }
+</style>
 </body>
 
 
