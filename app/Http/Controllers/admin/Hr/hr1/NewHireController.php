@@ -221,11 +221,14 @@ class NewHireController extends Controller
                 ->select('a.is_validated', 'a.assessment_status')
                 ->first();
 
-            if (!$hire || !$hire->is_validated) {
-                $reason = ($hire && $hire->assessment_status !== 'passed') 
-                    ? "Mandatory HR2 Onboarding Assessment must be PASSED first." 
-                    : "HR1 must VALIDATE the assessment results before activation.";
-                return back()->with('error', "Activation failed: $reason");
+            if (!$hire) {
+                return back()->with('error', 'Activation failed: Assessment record not found.');
+            }
+            if (!$hire->is_validated) {
+                return back()->with('error', 'Activation failed: HR1 must VALIDATE the assessment results before activation.');
+            }
+            if ($hire->assessment_status !== 'passed') {
+                return back()->with('error', 'Activation failed: Mandatory HR2 Onboarding Assessment must be PASSED first.');
             }
         }
 

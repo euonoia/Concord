@@ -8,29 +8,26 @@
 
     <!-- SUCCESS / ERROR MESSAGES -->
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success fade show" role="alert">
             {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger fade show" role="alert">
             {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            </div>
     @endif
 
     <!-- VALIDATION ERRORS -->
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
+        <div class="alert alert-danger fade show">
             <ul class="mb-0">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            </div>
     @endif
 
     <form method="POST" action="{{ route('careers.apply.store') }}" enctype="multipart/form-data">

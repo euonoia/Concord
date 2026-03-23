@@ -7,10 +7,9 @@
 
     {{-- Session Alerts --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm" role="alert">
+        <div class="alert alert-success fade show mb-4 shadow-sm" role="alert">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     <h2 class="mb-4">Training Performance Validation</h2>

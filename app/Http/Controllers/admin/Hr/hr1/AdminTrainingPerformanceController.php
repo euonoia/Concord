@@ -123,10 +123,12 @@ class AdminTrainingPerformanceController extends Controller
         );
 
         // Connection 2: HR1 -> HR2 Grade Validation Sync
+        // The column employee_training_scores_hr2.status only supports 'pending' and 'completed'.
+        // It is already 'completed' since HR2 evaluation, so we can just update the timestamp or keep it 'completed'.
         DB::table('employee_training_scores_hr2')
             ->where('employee_id', $employee_id)
             ->update([
-                'status'     => 'validated',
+                'status'     => 'completed',
                 'updated_at' => now(),
             ]);
 

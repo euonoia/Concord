@@ -48,11 +48,10 @@
 
     {{-- Flash Message --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm py-2" style="border-left: 4px solid #198754 !important;" role="alert">
+        <div class="alert alert-success fade show border-0 shadow-sm py-2" style="border-left: 4px solid #198754 !important;" role="alert">
             <i class="bi bi-check-circle-fill me-2 text-success"></i>
             {{ session('success') }}
-            <button type="button" class="btn-close pb-2" data-bs-dismiss="alert"></button>
-        </div>
+            </div>
     @endif
 
     <div class="row g-3">

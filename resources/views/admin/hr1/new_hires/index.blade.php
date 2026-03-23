@@ -5,17 +5,15 @@
     <h2 class="mb-4">New Hire Management</h2>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success fade show" role="alert">
             {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger fade show" role="alert">
             {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     <div class="row mb-4">
@@ -52,10 +50,9 @@
     </div>
 
     @if(session('info'))
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <div class="alert alert-info fade show" role="alert">
             {{ session('info') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     <div class="card" style="margin-top: 40px; padding: 10px;">
