@@ -32,13 +32,6 @@
             <i class="bi bi-house-door"></i>
             <span>Dashboard</span>
         </a>
-
-        <a href="{{ route('succession.index') }}" 
-           class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
-            <i class="bi bi-tree"></i>
-            <span>Succession</span>
-        </a>
-
        {{-- Competencies Dropdown --}}
         <div class="nav-dropdown {{ request()->is('competencies*') || request()->is('onboarding-assessment*') ? 'open' : '' }}">
             <a href="#" onclick="toggleDropdown(event)">
@@ -82,6 +75,13 @@
             </div>
         </div>
 
+
+        <a href="{{ route('succession.index') }}" 
+           class="{{ request()->routeIs('succession.*') ? 'active' : '' }}">
+            <i class="bi bi-tree"></i>
+            <span>Succession</span>
+        </a>
+        
         <a href="{{ route('hr2.training') }}" 
            class="{{ request()->routeIs('training.*') ? 'active' : '' }}">
             <i class="bi bi-mortarboard"></i>

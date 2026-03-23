@@ -149,8 +149,13 @@
 
       // --- Training & Evaluation ---
     Route::get('/training', [AdminTrainingController::class, 'index'])->name('hr2.training');
-    Route::get('/training/{id}', [AdminTrainingController::class, 'show'])->name('training.show');
     Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees'])->name('hr2.training.employees');
+    Route::get('/training/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])
+        ->name('hr2.training.evaluate');
+   Route::post('/training/evaluate/store', [AdminTrainingEvaluationController::class, 'storeEvaluation'])
+    ->name('hr2.training_evaluation.store');
+    Route::get('/get-specializations/{dept}', [AdminTrainingEvaluationController::class, 'getSpecializations']);
+    Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingEvaluationController::class, 'getCompetencies']);
 
     // --- Learning & Modules ---
     Route::controller(AdminLearningController::class)->group(function () {
@@ -176,6 +181,7 @@
             // --- Shared AJAX Dropdowns ---
             Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);
             Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class, 'getCompetencies']);
+
         });
 
         Route::resource('competencies', CompetencyController::class);
