@@ -263,8 +263,12 @@ class OutpatientController extends Controller
         $prescription = Prescription::create($request->all());
 
         // Sync to Core 2 Pharmacy
-        $syncService = app(\App\Services\core1\PrescriptionSyncService::class);
-        $syncService->syncToCore2($prescription);
+        try {
+            $syncService = app(\App\Services\core1\PrescriptionSyncService::class);
+            $syncService->syncToCore2($prescription);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Pharmacy Sync Error: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Prescription issued and sent to pharmacy.');
     }
