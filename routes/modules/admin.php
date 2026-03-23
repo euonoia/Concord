@@ -126,80 +126,79 @@
         });
 
         // --- HR2 Department ---
-      Route::prefix('hr2')->group(function () {
+     // routes/modules/admin.php
 
+use App\Http\Controllers\admin\Hr\hr2\AdminDashboardController;
 
-    Route::controller(AdminLearningEnrollController::class)->group(function () {
-        // Main Table View
-        Route::get('learning/enroll', 'index')->name('hr2.learning.enroll');
-        
-        // ADD THIS LINE: It defines the selection table route
-        Route::get('learning/enroll/{id}', 'showEnrollment')->name('hr2.learning.show_enroll');
-        
-        // Final Action
-        Route::post('learning/assign-modules', 'assignModules')->name('hr2.learning.assign');
-    });
+// HR2 Dashboard
+    Route::prefix('hr2')->group(function () {
 
-    // --- Succession Management ---
-    Route::controller(AdminSuccessionController::class)->group(function () {
-        Route::get('/departments/{dept_code}/specializations', 'getSpecializations')->name('departments.specializations');
-        Route::get('/departments/{dept_code}/positions', 'getPositions')->name('departments.positions');
-        Route::get('/departments/{dept_id}/employees', 'getEmployeesByDeptAndSpec');
-    });
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+            ->name('admin.hr2.dashboard');
 
-      // --- Training & Evaluation ---
-    Route::get('/training', [AdminTrainingController::class, 'index'])->name('hr2.training');
-    Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees'])->name('hr2.training.employees');
-    Route::get('/training/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])
-        ->name('hr2.training.evaluate');
-   Route::post('/training/evaluate/store', [AdminTrainingEvaluationController::class, 'storeEvaluation'])
-    ->name('hr2.training_evaluation.store');
-    Route::get('/get-specializations/{dept}', [AdminTrainingEvaluationController::class, 'getSpecializations']);
-    Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingEvaluationController::class, 'getCompetencies']);
-
-    // --- Learning & Modules ---
-    Route::controller(AdminLearningController::class)->group(function () {
-        Route::get('/departments/{dept_code}/{spec}/competencies', 'getCompetencies')->name('departments.competencies');
-        Route::get('/generate-module-code/{dept}/{spec}', 'generateModuleCode')->name('hr2.generateModuleCode');
-    });
-
-    // --- Learning Materials ---
-    Route::controller(AdminLearningMaterialsController::class)->group(function () {
-        Route::get('/learning-materials', 'selector')->name('learning.materials.selector');
-        Route::get('/materials/{moduleCode}/list', 'listMaterials')->name('learning.materials.list');
-        Route::post('/{moduleCode}/materials', 'store')->name('learning.materials.store');
-        Route::delete('/materials/{id}', 'destroy')->name('learning.materials.destroy');
-        Route::get('/modules/{dept}/{spec}', 'getModulesByDeptSpec');
-    });
-
-            // --- Competency Verification ---
-            Route::prefix('competency-verification')->group(function () {
-                Route::get('/', [AdminCompetencyVerificationController::class, 'index'])->name('admin.hr2.competency.verification.index');
-                Route::post('/{id}/verify', [AdminCompetencyVerificationController::class, 'verify'])->name('admin.hr2.competency.verify');
-            });
-
-            // --- Shared AJAX Dropdowns ---
-            Route::get('/get-specializations/{dept}', [AdminTrainingController::class, 'getSpecializations']);
-            Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingController::class, 'getCompetencies']);
-
+        // --- Learning Enrollment ---
+        Route::controller(AdminLearningEnrollController::class)->group(function () {
+            Route::get('learning/enroll', 'index')->name('hr2.learning.enroll');
+            Route::get('learning/enroll/{id}', 'showEnrollment')->name('hr2.learning.show_enroll');
+            Route::post('learning/assign-modules', 'assignModules')->name('hr2.learning.assign');
         });
 
-        Route::resource('competencies', CompetencyController::class);
-        Route::resource('learning', AdminLearningController::class);
-        Route::prefix('succession')->group(function () {
-            Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
-
-            // Candidates
-            Route::post('/candidate', [AdminSuccessionController::class, 'storeCandidate'])->name('succession.candidate.store');
-            Route::delete('/candidate/{id}', [AdminSuccessionController::class, 'destroyCandidate'])->name('succession.candidate.destroy');
-            
-            //promote candidate
-            Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
+        // --- Succession Management ---
+        Route::controller(AdminSuccessionController::class)->group(function () {
+            Route::get('/departments/{dept_code}/specializations', 'getSpecializations')->name('departments.specializations');
+            Route::get('/departments/{dept_code}/positions', 'getPositions')->name('departments.positions');
+            Route::get('/departments/{dept_id}/employees', 'getEmployeesByDeptAndSpec');
         });
+
+        // --- Training & Evaluation ---
+        Route::get('/training', [AdminTrainingController::class, 'index'])->name('hr2.training');
+        Route::get('/eligible-employees', [AdminTrainingController::class, 'getEligibleEmployees'])->name('hr2.training.employees');
+        Route::get('/training/evaluate', [AdminTrainingEvaluationController::class, 'showEvaluation'])->name('hr2.training.evaluate');
+        Route::post('/training/evaluate/store', [AdminTrainingEvaluationController::class, 'storeEvaluation'])->name('hr2.training_evaluation.store');
+        Route::get('/get-specializations/{dept}', [AdminTrainingEvaluationController::class, 'getSpecializations']);
+        Route::get('/get-competencies/{dept}/{spec}', [AdminTrainingEvaluationController::class, 'getCompetencies']);
+
+        // --- Learning Modules ---
+        Route::controller(AdminLearningController::class)->group(function () {
+            Route::get('/departments/{dept_code}/{spec}/competencies', 'getCompetencies')->name('departments.competencies');
+            Route::get('/generate-module-code/{dept}/{spec}', 'generateModuleCode')->name('hr2.generateModuleCode');
+        });
+
+        // --- Learning Materials ---
+        Route::controller(AdminLearningMaterialsController::class)->group(function () {
+            Route::get('/learning-materials', 'selector')->name('learning.materials.selector');
+            Route::get('/materials/{moduleCode}/list', 'listMaterials')->name('learning.materials.list');
+            Route::post('/{moduleCode}/materials', 'store')->name('learning.materials.store');
+            Route::delete('/materials/{id}', 'destroy')->name('learning.materials.destroy');
+            Route::get('/modules/{dept}/{spec}', 'getModulesByDeptSpec');
+        });
+
+        // --- Competency Verification ---
+        Route::prefix('competency-verification')->group(function () {
+            Route::get('/', [AdminCompetencyVerificationController::class, 'index'])
+                ->name('admin.hr2.competency.verification.index');
+            Route::post('/{id}/verify', [AdminCompetencyVerificationController::class, 'verify'])
+                ->name('admin.hr2.competency.verify');
+        });
+
+        // --- ESS Requests ---
         Route::prefix('ess')->group(function () {
             Route::get('/', [AdminEssController::class, 'index'])->name('ess.index');
             Route::post('/{id}/status', [AdminEssController::class, 'updateStatus'])->name('ess.updateStatus');
         });
+
+        // --- Competencies & Succession Resource Routes ---
+        Route::resource('competencies', CompetencyController::class);
+        Route::resource('learning', AdminLearningController::class);
+
+        Route::prefix('succession')->group(function () {
+            Route::get('/', [AdminSuccessionController::class, 'index'])->name('succession.index');
+            Route::post('/candidate', [AdminSuccessionController::class, 'storeCandidate'])->name('succession.candidate.store');
+            Route::delete('/candidate/{id}', [AdminSuccessionController::class, 'destroyCandidate'])->name('succession.candidate.destroy');
+            Route::post('/candidate/{id}/promote', [AdminSuccessionController::class, 'promoteCandidate'])->name('succession.candidate.promote');
+        });
+
+    });
         // --- END OF HR2 Department ---
 
         // --- HR3 Department ---
