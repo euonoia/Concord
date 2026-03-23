@@ -39,15 +39,16 @@ class UserAttendanceController extends Controller
 
         $assignedShift = Shift::where('employee_id', $employee->employee_id)
             ->where('is_active', 1)
+            ->where('status', 'approved') 
             ->whereIn('day_of_week', [$today, $yesterday])
             ->latest('id')
             ->first();
 
-        if (!$assignedShift) {
+            if (!$assignedShift) {
             return $this->handleResponse(
                 $request,
                 false,
-                "Access Denied: No assigned shift for today ($today).",
+                "Access Denied: You have no approved shift for today ($today).",
                 403
             );
         }
