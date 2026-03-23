@@ -101,7 +101,7 @@
                     <div>
                         @if($latestPayroll)
                             <strong>Payroll Found</strong><br>
-                            <small>Monthly: ₱{{ number_format($latestPayroll->salary, 2) }}</small>
+                            <small>₱{{ number_format($latestPayroll->salary, 2) }}</small>
                         @else
                             <strong>No data found.</strong>
                         @endif
