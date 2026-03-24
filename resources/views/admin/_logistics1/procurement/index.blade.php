@@ -308,14 +308,16 @@ document.getElementById('addRequestModal').addEventListener('show.bs.modal', fun
 
 {{-- Vendor Detail Modal --}}
 <div class="modal fade" id="vendorDetailModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-building me-2"></i>Vendor Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-3">
+
+                {{-- Vendor Info --}}
+                <div class="row g-3 mb-4">
                     <div class="col-12">
                         <label class="form-label">Vendor Name</label>
                         <input type="text" id="detail_name" class="form-control" disabled>
@@ -341,6 +343,38 @@ document.getElementById('addRequestModal').addEventListener('show.bs.modal', fun
                         <input type="text" id="detail_address" class="form-control" disabled>
                     </div>
                 </div>
+
+                {{-- Goods Receipt Section --}}
+                <hr style="border-color:#e2e8f0;">
+                <p style="font-size:0.85rem; font-weight:700; color:#1e293b; margin-bottom:0.75rem;">
+                    <i class="bi bi-receipt me-1"></i> Goods Receipt
+                    <span style="font-size:0.75rem; font-weight:400; color:#94a3b8; margin-left:6px;">Paid purchase orders from this vendor</span>
+                </p>
+                <div id="goodsReceiptLoading" style="display:none; text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.82rem;">
+                    <i class="bi bi-arrow-repeat"></i> Loading...
+                </div>
+                <div id="goodsReceiptEmpty" style="display:none; text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.82rem;">
+                    <i class="bi bi-inbox" style="font-size:1.5rem; display:block; margin-bottom:0.4rem; opacity:0.4;"></i>
+                    No paid orders found for this vendor.
+                </div>
+                <div id="goodsReceiptTable" style="display:none; overflow-x:auto;">
+                    <table class="table data-table" style="font-size:0.8rem; margin:0;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Invoice</th>
+                                <th>PO Number</th>
+                                <th>Drug</th>
+                                <th>Qty</th>
+                                <th>Delivered By</th>
+                                <th>Delivery Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goodsReceiptBody"></tbody>
+                    </table>
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-mc" data-bs-dismiss="modal">Close</button>
@@ -352,12 +386,53 @@ document.getElementById('addRequestModal').addEventListener('show.bs.modal', fun
 <script>
 document.getElementById('vendorDetailModal').addEventListener('show.bs.modal', function (e) {
     const card = e.relatedTarget;
-    document.getElementById('detail_name').value     = card.dataset.name     ?? '—';
+    const vendorName = card.dataset.name ?? '—';
+
+    document.getElementById('detail_name').value     = vendorName;
     document.getElementById('detail_category').value = card.dataset.category ?? '—';
     document.getElementById('detail_status').value   = card.dataset.status   ?? '—';
     document.getElementById('detail_email').value    = card.dataset.email    ?? '—';
     document.getElementById('detail_phone').value    = card.dataset.phone    ?? '—';
     document.getElementById('detail_address').value  = card.dataset.address  ?? '—';
+
+    // Reset goods receipt section
+    document.getElementById('goodsReceiptLoading').style.display = 'block';
+    document.getElementById('goodsReceiptEmpty').style.display   = 'none';
+    document.getElementById('goodsReceiptTable').style.display   = 'none';
+    document.getElementById('goodsReceiptBody').innerHTML        = '';
+
+    // Fetch paid POs for this vendor
+    fetch('{{ route("admin.logistics1.procurement.goods_receipt") }}?vendor=' + encodeURIComponent(vendorName))
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('goodsReceiptLoading').style.display = 'none';
+            if (!data || data.length === 0) {
+                document.getElementById('goodsReceiptEmpty').style.display = 'block';
+                return;
+            }
+            const tbody = document.getElementById('goodsReceiptBody');
+            data.forEach((row, i) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="row-num">${i + 1}</span></td>
+                        <td><span class="code-pill">${row.invoice ?? '—'}</span></td>
+                        <td><span class="code-pill">${row.po_number ?? '—'}</span></td>
+                        <td>
+                            <div class="row-title">${row.drug_name ?? '—'}</div>
+                            <div class="row-sub">${row.drug_num ?? '—'}</div>
+                        </td>
+                        <td>${row.requested_quantity ?? '—'}</td>
+                        <td>${row.delivered_by ?? '—'}</td>
+                        <td style="font-size:0.78rem;">${row.delivery_date ?? '—'}</td>
+                        <td style="font-weight:600; color:#16a34a;">₱${row.amount ?? '0.00'}</td>
+                    </tr>`;
+            });
+            document.getElementById('goodsReceiptTable').style.display = 'block';
+        })
+        .catch(() => {
+            document.getElementById('goodsReceiptLoading').style.display = 'none';
+            document.getElementById('goodsReceiptEmpty').style.display   = 'block';
+        });
 });
 </script>
 @endif

@@ -192,7 +192,11 @@
                             data-bs-toggle="modal"
                             data-bs-target="#updateReceivingModal"
                             data-id="{{ $item->id }}"
-                            data-status="{{ $item->status }}">
+                            data-status="{{ $item->status }}"
+                            data-requested_quantity="{{ $item->requested_quantity }}"
+                            data-actual_quantity="{{ $item->actual_quantity }}"
+                            data-bad_orders="{{ $item->bad_orders }}"
+                            data-inspector="{{ $item->inspector }}">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <form method="POST" action="{{ route('admin.logistics1.warehouse.receiving_delete', $item->id) }}" style="display:inline-flex; margin:0;" onsubmit="return confirm('Delete this record?')">
@@ -237,17 +241,21 @@
                         <hr style="border-color:#e2e8f0;">
                         <p style="font-size:0.78rem; font-weight:600; color:#475569; margin-bottom:0.75rem;">Delivery Details</p>
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label">Requested Quantity</label>
+                                <input type="number" id="requested_quantity_display" class="form-control" disabled style="background:#f8fafc;color:#64748b;">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Actual Quantity Delivered <span class="text-danger">*</span></label>
                                 <input type="number" name="actual_quantity" id="actual_quantity" class="form-control" min="0" placeholder="0">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Bad Orders</label>
                                 <input type="number" name="bad_orders" id="bad_orders" class="form-control" min="0" placeholder="0" value="0">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Inspector <span class="text-danger">*</span></label>
-                                <input type="text" name="inspector" id="inspector" class="form-control" placeholder="Inspector name" maxlength="255">
+                                <label class="form-label">Inspector</label>
+                                <input type="text" name="inspector" id="inspector" class="form-control" readonly style="background:#f8fafc;color:#64748b;">
                             </div>
                         </div>
                     </div>
@@ -283,9 +291,10 @@ document.getElementById('updateReceivingModal').addEventListener('show.bs.modal'
     form.action = '{{ route("admin.logistics1.warehouse.receiving_update", ["id" => "__ID__"]) }}'.replace('__ID__', btn.dataset.id);
     document.getElementById('update_status').value = btn.dataset.status;
     toggleDeliveryFields(btn.dataset.status);
-    document.getElementById('actual_quantity').value = '';
-    document.getElementById('bad_orders').value = '0';
-    document.getElementById('inspector').value = '';
+    document.getElementById('requested_quantity_display').value = btn.dataset.requested_quantity || '';
+    document.getElementById('actual_quantity').value = btn.dataset.actual_quantity || '';
+    document.getElementById('bad_orders').value = btn.dataset.bad_orders || '0';
+    document.getElementById('inspector').value = btn.dataset.inspector || '';
 });
 </script>
 <div class="modal fade" id="receivePoModal" tabindex="-1">
@@ -470,7 +479,7 @@ document.getElementById('poSelect').addEventListener('change', function () {
 <div class="modal fade" id="requestStockModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST" action="{{ route('admin.logistics1.warehouse.request_stock') }}">
+            <form method="POST" action="{{ route('admin.logistics1.procurement.store') }}">
                 @csrf
                 <input type="hidden" name="source" value="inventory_control">
                 <div class="modal-header">

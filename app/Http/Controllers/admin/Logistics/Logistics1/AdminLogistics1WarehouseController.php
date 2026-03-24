@@ -218,6 +218,45 @@ class AdminLogistics1WarehouseController extends Controller
             }
         }
 
+        // When status is delivered, insert into vendor_bills and update the PO status
+        if ($request->status === 'delivered') {
+            $receiving = DB::table('receiving_logistics1')->where('id', $id)->first();
+
+            if ($receiving) {
+                // Update purchase_orders_logistics1 status to delivered
+                DB::table('purchase_orders_logistics1')
+                    ->where('po_number', $receiving->po_number)
+                    ->update(['status' => 'delivered', 'updated_at' => now()]);
+
+                // Also update warehouse_purchaseorders_logistics1 if exists
+                DB::table('warehouse_purchaseorders_logistics1')
+                    ->where('po_number', $receiving->po_number)
+                    ->update(['status' => 'delivered', 'updated_at' => now()]);
+
+                // Insert into vendor_bills so it appears in Payment Processing
+                $alreadyExists = DB::table('vendor_bills')
+                    ->where('po_number', $receiving->po_number)
+                    ->exists();
+
+                if (!$alreadyExists) {
+                    do {
+                        $invoice = 'INV-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+                    } while (DB::table('vendor_bills')->where('invoice', $invoice)->exists());
+
+                    DB::table('vendor_bills')->insert([
+                        'invoice'       => $invoice,
+                        'po_number'     => $receiving->po_number,
+                        'delivery_date' => now()->toDateString(),
+                        'supplier'      => $receiving->selected_supplier,
+                        'amount'        => $receiving->amount ?? 0.00,
+                        'status'        => 'delivered',
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'receiving'])
             ->with('success', 'Status updated successfully.');
     }
@@ -275,47 +314,5 @@ class AdminLogistics1WarehouseController extends Controller
 
         return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'inventory_control'])
             ->with('success', 'Inventory item deleted successfully.');
-    }
-
-    /**
-     * Request stock — inserts into warehouse_purchaseorders_logistics1 with status pending.
-     * Triggered from the Request Stock button on Low Stock / Critical / Out of Stock items.
-     */
-    public function requestStock(Request $request)
-    {
-        $request->validate([
-            'drug_num'               => 'required|string',
-            'drug_name'              => 'required|string',
-            'requested_quantity'     => 'required|numeric|min:1',
-            'selected_supplier'      => 'required|string',
-            'delivered_by'           => 'nullable|string|max:255',
-            'address'                => 'nullable|string|max:255',
-            'expected_delivery_date' => 'nullable|date',
-        ]);
-
-        // Generate unique PO number
-        do {
-            $poNumber = 'PO-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
-        } while (DB::table('warehouse_purchaseorders_logistics1')->where('po_number', $poNumber)->exists());
-
-        DB::table('warehouse_purchaseorders_logistics1')->insert([
-            'po_number'              => $poNumber,
-            'drug_num'               => $request->drug_num,
-            'drug_name'              => $request->drug_name,
-            'selected_supplier'      => $request->selected_supplier,
-            'requested_quantity'     => $request->requested_quantity,
-            'requested_date'         => now()->toDateString(),
-            'expected_delivery_date' => $request->expected_delivery_date ?? now()->addMonth()->toDateString(),
-            'status'                 => 'pending',
-            'delivered_by'           => $request->delivered_by ?? null,
-            'address'                => $request->address ?? null,
-            'source'                 => 'inventory_control',
-            'amount'                 => 0.00,
-            'created_at'             => now(),
-            'updated_at'             => now(),
-        ]);
-
-        return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'inventory_control'])
-            ->with('success', 'Stock request for ' . $request->drug_name . ' submitted successfully (PO: ' . $poNumber . ').');
     }
 }
