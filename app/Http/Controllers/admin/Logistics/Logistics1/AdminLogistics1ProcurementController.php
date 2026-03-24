@@ -112,6 +112,7 @@ class AdminLogistics1ProcurementController extends Controller
             'address'            => 'nullable|string|max:255',
             'source'             => 'nullable|string|max:100',
             'amount'             => 'nullable|numeric|min:0',
+            'vehicle'            => 'nullable|string|max:255',
         ]);
 
         $employee = DB::table('employees')->where('user_id', Auth::id())->first();
@@ -138,6 +139,7 @@ class AdminLogistics1ProcurementController extends Controller
             'address'                => $request->address,
             'source'                 => $request->source ?? null,
             'amount'                 => $request->amount ?? 0.00,
+            'vehicle'                => $request->vehicle ?? null,
             'created_at'             => now(),
             'updated_at'             => now(),
         ];
