@@ -30,6 +30,7 @@ Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
     Route::delete('/warehouse/receiving-delete/{id}', [AdminLogistics1WarehouseController::class, 'destroyReceiving'])->name('warehouse.receiving_delete');
     Route::put('/warehouse/inventory-update/{id}', [AdminLogistics1WarehouseController::class, 'updateInventory'])->name('warehouse.inventory_update');
     Route::delete('/warehouse/inventory-delete/{id}', [AdminLogistics1WarehouseController::class, 'destroyInventory'])->name('warehouse.inventory_delete');
+    Route::post('/warehouse/request-stock', [AdminLogistics1WarehouseController::class, 'requestStock'])->name('warehouse.request_stock');
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', [AdminLogistics1ProcurementController::class, 'index'])->name('index');

@@ -134,7 +134,6 @@ class AdminLogistics1WarehouseController extends Controller
             'requested_by'           => $po->requested_by,
             'notes'                  => $po->notes ?? null,
             'inspector'              => $request->inspector ?? null,
-            'vehicle'                => $po->model_name ?? null,
             'amount'                 => $po->amount ?? 0.00,
             'created_at'             => now(),
             'updated_at'             => now(),
@@ -276,5 +275,47 @@ class AdminLogistics1WarehouseController extends Controller
 
         return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'inventory_control'])
             ->with('success', 'Inventory item deleted successfully.');
+    }
+
+    /**
+     * Request stock — inserts into warehouse_purchaseorders_logistics1 with status pending.
+     * Triggered from the Request Stock button on Low Stock / Critical / Out of Stock items.
+     */
+    public function requestStock(Request $request)
+    {
+        $request->validate([
+            'drug_num'               => 'required|string',
+            'drug_name'              => 'required|string',
+            'requested_quantity'     => 'required|numeric|min:1',
+            'selected_supplier'      => 'required|string',
+            'delivered_by'           => 'nullable|string|max:255',
+            'address'                => 'nullable|string|max:255',
+            'expected_delivery_date' => 'nullable|date',
+        ]);
+
+        // Generate unique PO number
+        do {
+            $poNumber = 'PO-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        } while (DB::table('warehouse_purchaseorders_logistics1')->where('po_number', $poNumber)->exists());
+
+        DB::table('warehouse_purchaseorders_logistics1')->insert([
+            'po_number'              => $poNumber,
+            'drug_num'               => $request->drug_num,
+            'drug_name'              => $request->drug_name,
+            'selected_supplier'      => $request->selected_supplier,
+            'requested_quantity'     => $request->requested_quantity,
+            'requested_date'         => now()->toDateString(),
+            'expected_delivery_date' => $request->expected_delivery_date ?? now()->addMonth()->toDateString(),
+            'status'                 => 'pending',
+            'delivered_by'           => $request->delivered_by ?? null,
+            'address'                => $request->address ?? null,
+            'source'                 => 'inventory_control',
+            'amount'                 => 0.00,
+            'created_at'             => now(),
+            'updated_at'             => now(),
+        ]);
+
+        return redirect()->route('admin.logistics1.warehouse.index', ['tab' => 'inventory_control'])
+            ->with('success', 'Stock request for ' . $request->drug_name . ' submitted successfully (PO: ' . $poNumber . ').');
     }
 }
