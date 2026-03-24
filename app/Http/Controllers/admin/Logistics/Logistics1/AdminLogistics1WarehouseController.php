@@ -134,7 +134,7 @@ class AdminLogistics1WarehouseController extends Controller
             'requested_by'           => $po->requested_by,
             'notes'                  => $po->notes ?? null,
             'inspector'              => $request->inspector ?? null,
-            'vehicle'                => $po->vehicle ?? null,
+            'vehicle'                => $po->model_name ?? null,
             'amount'                 => $po->amount ?? 0.00,
             'created_at'             => now(),
             'updated_at'             => now(),
