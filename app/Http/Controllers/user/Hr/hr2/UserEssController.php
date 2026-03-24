@@ -21,8 +21,14 @@ class UserEssController extends Controller
             abort(403, 'Employee not found.');
         }
 
-        // Get active shifts
-        $allShifts = Shift::where('employee_id', $employee->employee_id)
+      // Approved shifts (used for Leave)
+        $approvedShifts = Shift::where('employee_id', $employee->employee_id)
+            ->where('is_active', 1)
+            ->where('status', 'approved')
+            ->get();
+
+        // Active shifts (used for Request Shift)
+        $activeShifts = Shift::where('employee_id', $employee->employee_id)
             ->where('is_active', 1)
             ->get();
         
@@ -72,7 +78,13 @@ class UserEssController extends Controller
         $history = $essRequests->concat($claims)->concat($payrollRequests)->concat($shiftRequests)
             ->sortByDesc('created_at');
 
-        return view('hr.hr2.ess', compact('employee', 'allShifts', 'history', 'latestPayroll'));
+      return view('hr.hr2.ess', compact(
+            'employee',
+            'approvedShifts',
+            'activeShifts',
+            'history',
+            'latestPayroll'
+        ));
     }
 
     public function store(Request $request)
@@ -131,6 +143,18 @@ class UserEssController extends Controller
 
             return redirect()->back()->with('success', 'Payroll request submitted successfully.');
         }
+
+        if ($request->type === 'Leave') {
+
+        $approvedShift = Shift::where('employee_id', $employee->employee_id)
+            ->where('is_active', 1)
+            ->where('status', 'approved')
+            ->first();
+
+        if (!$approvedShift) {
+            return redirect()->back()->with('error', 'You cannot request leave because you do not have an approved shift.');
+        }
+    }
 
         // --- Other ESS Requests ---
         EssRequest::create([
