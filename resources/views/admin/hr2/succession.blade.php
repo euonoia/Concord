@@ -6,7 +6,7 @@
 <div class="container p-5 font-sans">
     <div class="flex justify-between items-center mb-6">
         <h2 class="font-bold text-2xl text-gray-800">
-            <i class="fas fa-seedling text-green-600 mr-2"></i>Succession Planning
+            Succession Planning
         </h2>
     </div>
 
