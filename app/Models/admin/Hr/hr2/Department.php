@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
+    protected $connection = 'mysql'; // Connect to TiDB cloud
     protected $table = 'departments_hr2';
 
     protected $fillable = [

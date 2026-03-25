@@ -22,11 +22,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Custom Seeders for Clinical Flows
+        // Seed sample data
         $this->call([
-            DoctorProfileSyncSeeder::class,
-            DoctorSmithShiftSeeder::class,
-            SpecializedStaffShiftSeeder::class,
+            SampleEmployeesSeeder::class,
+            AvailableJobsSeeder::class,
+            PayrollSeeder::class,
         ]);
     }
 }

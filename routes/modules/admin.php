@@ -1,4 +1,4 @@
-        <?php
+<?php
         // routes/modules/admin.php
 
         use Illuminate\Support\Facades\Route;
@@ -23,7 +23,7 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminOnboardingAssessmentController;
 
 
-        use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
+        // use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
@@ -33,6 +33,14 @@
         
         use App\Http\Controllers\admin\Hr\hr4\AdminCoreHumanCapitalController;
         use App\Http\Controllers\admin\Hr\hr4\AdminDirectCompensationController;
+        use App\Http\Controllers\admin\Hr\hr4\EssRequestController;
+        use App\Http\Controllers\admin\Hr\hr4\HRAnalyticsController;
+        use App\Http\Controllers\admin\Hr\hr4\PayrollAnalyticsController;
+        use App\Http\Controllers\PayrollController;
+        use App\Http\Controllers\PayrollReportController;
+
+
+        // --- Admin Dashboard ---
         // --- Modular Admin Dashboards ---
 
         // HR Modular
@@ -204,7 +212,8 @@ use App\Http\Controllers\admin\Hr\hr2\AdminDashboardController;
 
         // --- HR3 Department ---
         Route::prefix('hr3')->group(function () {
-            Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+            // Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+            // Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
 
             Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
             Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
@@ -261,11 +270,104 @@ use App\Http\Controllers\admin\Hr\hr2\AdminDashboardController;
             Route::get('/core-human-capital', [AdminCoreHumanCapitalController::class, 'index'])
                 ->name('hr4.core');
 
+            Route::post('/core-human-capital/process-hired', [AdminCoreHumanCapitalController::class, 'processHiredUsers'])
+                ->name('hr4.core.process_hired');
+
+            // Employee CRUD
+            // Edit and Update routes disabled - only status modification allowed
+            // Route::get('/employees/{employee}/edit', [AdminCoreHumanCapitalController::class, 'editEmployee'])
+            //     ->name('hr4.employees.edit');
+            // Route::put('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'updateEmployee'])
+            //     ->name('hr4.employees.update');
+
+            Route::delete('/employees/{employee}', [AdminCoreHumanCapitalController::class, 'deleteEmployee'])
+                ->name('hr4.employees.delete');
+
+            Route::patch('/employees/{employee}/status', [AdminCoreHumanCapitalController::class, 'updateEmployeeStatus'])
+                ->name('hr4.employees.update_status');
+
             // Direct Compensation
             Route::get('/direct-compensation', [AdminDirectCompensationController::class, 'index'])
                 ->name('hr4.direct_compensation.index');
 
             Route::post('/direct-compensation/generate', [AdminDirectCompensationController::class, 'generate'])
                 ->name('hr4.direct_compensation.generate');
+
+            // Job Postings
+            Route::get('/job-postings', [AdminDirectCompensationController::class, 'jobPostingsIndex'])
+                ->name('hr4.job_postings.index');
+
+            Route::get('/job-postings/create', [AdminDirectCompensationController::class, 'createJobPosting'])
+                ->name('hr4.job_postings.create');
+
+            Route::get('/job-postings/{positionId}/specializations', [AdminDirectCompensationController::class, 'getSpecializationsByPosition'])
+                ->name('hr4.job_postings.specializations');
+
+            Route::get('/job-postings/{positionId}/details', [AdminDirectCompensationController::class, 'getPositionDetails'])
+                ->name('hr4.job_postings.details');
+
+            Route::get('/job-postings/competencies', [AdminDirectCompensationController::class, 'getCompetenciesBySpecializationAndPosition'])
+                ->name('hr4.job_postings.competencies');
+
+            Route::post('/job-postings', [AdminDirectCompensationController::class, 'storeJobPosting'])
+                ->name('hr4.job_postings.store');
+
+            Route::get('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'showJobPosting'])
+                ->name('hr4.job_postings.show');
+
+            Route::get('/job-postings/{jobPosting}/edit', [AdminDirectCompensationController::class, 'editJobPosting'])
+                ->name('hr4.job_postings.edit');
+
+            Route::put('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'updateJobPosting'])
+                ->name('hr4.job_postings.update');
+
+            Route::delete('/job-postings/{jobPosting}', [AdminDirectCompensationController::class, 'archiveJobPosting'])
+                ->name('hr4.job_postings.destroy');
+
+            // Training Rewards Management
+            Route::get('/training-rewards', [AdminDirectCompensationController::class, 'trainingRewardsIndex'])
+                ->name('hr4.training_rewards.index');
+
+            Route::get('/training-rewards/{employee}', [AdminDirectCompensationController::class, 'showEmployeeTrainingRewards'])
+                ->name('hr4.training_rewards.show');
+
+            // Payroll Management
+            Route::resource('payroll', PayrollController::class, ['as' => 'hr4']);
+            Route::post('/payroll/request-budget-allocation', [PayrollController::class, 'requestBudgetAllocation'])->name('hr4.payroll.request_budget_allocation');
+            Route::get('/payroll/reports', [PayrollController::class, 'reports'])->name('hr4.payroll.reports');
+            Route::get('/payroll/get-attendance/{employeeId}', [PayrollController::class, 'getAttendance'])->name('hr4.payroll.getAttendance');
+            Route::get('/payroll/get-salary/{employeeId}', [PayrollController::class, 'getSalary'])->name('hr4.payroll.getSalary');
+            Route::get('/payroll/get-employee-position/{employeeId}', [PayrollController::class, 'getEmployeePosition'])->name('hr4.payroll.getEmployeePosition');
+            Route::get('/payroll/get-position-salary/{positionId}', [PayrollController::class, 'getPositionSalary'])->name('hr4.payroll.getPositionSalary');
+
+            // Payroll Reports
+            Route::get('/payroll-reports', [PayrollReportController::class, 'index'])->name('hr4.payroll_reports.index');
+            Route::get('/payroll-reports/detailed', [PayrollReportController::class, 'detailed'])->name('hr4.payroll_reports.detailed');
+            Route::get('/payroll-reports/export', [PayrollReportController::class, 'export'])->name('hr4.payroll_reports.export');
+            Route::get('/payroll-reports/employee/{employeeId}', [PayrollReportController::class, 'employeeHistory'])->name('hr4.payroll_reports.employee');
+
+            // ESS Payroll Requests Management
+            Route::get('/ess-requests', [EssRequestController::class, 'index'])->name('hr4.ess_requests.index');
+            Route::get('/ess-requests/{id}', [EssRequestController::class, 'show'])->name('hr4.ess_requests.show');
+            Route::post('/ess-requests/{id}/approve', [EssRequestController::class, 'approve'])->name('hr4.ess_requests.approve');
+            Route::post('/ess-requests/{id}/reject', [EssRequestController::class, 'reject'])->name('hr4.ess_requests.reject');
+            Route::post('/ess-requests/sync', [EssRequestController::class, 'syncFromHr2'])->name('hr4.ess_requests.sync');
+
+            // HR Analytics Module
+            Route::prefix('/analytics')->group(function () {
+                // Analytics Landing
+                Route::get('/', function () { return view('admin.hr4.analytics.index'); })->name('hr4.analytics.index');
+
+                // KPI Dashboard
+                Route::get('/kpi', [HRAnalyticsController::class, 'dashboard'])->name('hr4.analytics.kpi');
+                Route::get('/kpi/data', [HRAnalyticsController::class, 'getKPIDataJson'])->name('hr4.analytics.kpi.data');
+                Route::get('/kpi/department-health', [HRAnalyticsController::class, 'getDepartmentHealthScores'])->name('hr4.analytics.kpi.health');
+
+                // Payroll Analytics
+                Route::get('/payroll', [PayrollAnalyticsController::class, 'dashboard'])->name('hr4.analytics.payroll');
+                Route::get('/payroll/data', [PayrollAnalyticsController::class, 'getSummaryJson'])->name('hr4.analytics.payroll.data');
+                Route::get('/payroll/export', [PayrollAnalyticsController::class, 'exportReport'])->name('hr4.analytics.payroll.export');
+                Route::get('/payroll/revenue', [PayrollAnalyticsController::class, 'getRevenueComparison'])->name('hr4.analytics.payroll.revenue');
+            });
 
         });

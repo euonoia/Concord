@@ -1,0 +1,178 @@
+@extends('layouts.dashboard.app')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Request Form Column -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+                    <i class="bi bi-file-earmark-plus text-blue-600 mr-3"></i>
+                    Submit Payroll Request
+                </h2>
+                <p class="text-gray-600 mb-6">Submit a request to HR for payroll-related matters</p>
+
+                @if(session('success'))
+                    <div class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg flex items-center">
+                        <i class="bi bi-check-circle-fill mr-3"></i>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg flex items-center">
+                        <i class="bi bi-exclamation-circle-fill mr-3"></i>
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <form action="{{ route('user.ess.payroll.store') }}" method="POST" class="space-y-6">
+                    @csrf
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Request Type <span class="text-red-600">*</span>
+                        </label>
+                        <select name="request_type" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 @error('request_type') border-red-500 @enderror">
+                            <option value="">Select request type...</option>
+                            <option value="payroll" {{ old('request_type') == 'payroll' ? 'selected' : '' }}>
+                                Payroll Inquiry
+                            </option>
+                            <option value="bonus" {{ old('request_type') == 'bonus' ? 'selected' : '' }}>
+                                Bonus Request
+                            </option>
+                            <option value="deduction" {{ old('request_type') == 'deduction' ? 'selected' : '' }}>
+                                Deduction Inquiry
+                            </option>
+                            <option value="advance" {{ old('request_type') == 'advance' ? 'selected' : '' }}>
+                                Salary Advance
+                            </option>
+                            <option value="other" {{ old('request_type') == 'other' ? 'selected' : '' }}>
+                                Other
+                            </option>
+                        </select>
+                        @error('request_type')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="payrollDetails" style="display: none;">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Payroll Month
+                        </label>
+                        <input type="month" name="payroll_month" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Description <span class="text-red-600">*</span>
+                        </label>
+                        <textarea name="details" rows="5" required placeholder="Please provide details about your request..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 @error('details') border-red-500 @enderror">{{ old('details') }}</textarea>
+                        @error('details')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p class="text-sm text-gray-700">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            <strong>Note:</strong> Your ESS request will be reviewed by the HR team. You will receive notification once it's been processed.
+                        </p>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 flex items-center justify-center">
+                            <i class="bi bi-send mr-2"></i>
+                            Submit Request
+                        </button>
+                        <button type="reset" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 rounded-lg transition duration-200">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Request History Column -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow-lg rounded-lg p-6 sticky top-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="bi bi-clock-history text-gray-600 mr-2"></i>
+                    Your Requests
+                </h3>
+
+                <div class="space-y-4">
+                    @forelse($requests ?? [] as $request)
+                        <div class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition duration-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ ucfirst($request->request_type) }}
+                                </span>
+                                <span class="text-xs px-2 py-1 rounded-full
+                                    @if($request->status === 'pending') bg-yellow-100 text-yellow-800
+                                    @elseif($request->status === 'approved') bg-green-100 text-green-800
+                                    @else bg-red-100 text-red-800
+                                    @endif">
+                                    {{ ucfirst($request->status) }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600">
+                                {{ $request->requested_date?->format('M d, Y') ?? 'N/A' }}
+                            </p>
+                            <p class="text-xs text-gray-700 mt-2 truncate">
+                                {{ Str::limit($request->details, 50) }}
+                            </p>
+                        </div>
+                    @empty
+                        <div class="text-center py-6">
+                            <i class="bi bi-inbox text-3xl text-gray-300 block mb-2"></i>
+                            <p class="text-gray-500 text-sm">No requests yet</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                @if(count($requests ?? []) > 0)
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <p class="text-xs text-gray-600 mb-3">
+                            <strong>Status Guide:</strong>
+                        </p>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+                                <span class="text-gray-700">Pending - Awaiting review</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                                <span class="text-gray-700">Approved - Request granted</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
+                                <span class="text-gray-700">Rejected - Request declined</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('select[name="request_type"]').addEventListener('change', function() {
+    const payrollDetailsDiv = document.getElementById('payrollDetails');
+    if (this.value === 'payroll') {
+        payrollDetailsDiv.style.display = 'block';
+    } else {
+        payrollDetailsDiv.style.display = 'none';
+    }
+});
+
+// Initialize on page load
+window.addEventListener('load', function() {
+    const requestType = document.querySelector('select[name="request_type"]').value;
+    if (requestType === 'payroll') {
+        document.getElementById('payrollDetails').style.display = 'block';
+    }
+});
+</script>
+@endsection

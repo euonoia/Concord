@@ -167,4 +167,41 @@ class UserEssController extends Controller
 
         return redirect()->back()->with('success', "Request submitted successfully.");
     }
+
+    public function payrollIndex()
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee record not found.');
+        }
+
+        $requests = \App\Models\admin\Hr\hr4\PayrollEssRequest::where('employee_id', $employee->employee_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('employee.ess_payroll.index', compact('employee', 'requests'));
+    }
+
+    public function payrollStore(Request $request)
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee record not found.');
+        }
+
+        $request->validate([
+            'request_type' => 'required|in:Payroll,Bonus,Deduction,Advance,Other',
+            'details' => 'nullable|string|max:500',
+        ]);
+
+        \App\Models\admin\Hr\hr4\PayrollEssRequest::create([
+            'employee_id' => $employee->employee_id,
+            'request_type' => $request->request_type,
+            'details' => $request->details ?? 'N/A',
+            'status' => 'pending',
+            'requested_date' => now()->toDateString(),
+        ]);
+
+        return redirect()->back()->with('success', 'Payroll request submitted successfully. Please wait for admin approval.');
+    }
 }

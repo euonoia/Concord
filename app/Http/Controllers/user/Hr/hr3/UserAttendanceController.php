@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\admin\Hr\hr3\Shift;
 use App\Models\admin\Hr\hr3\AttendanceLog;
+use App\Models\admin\Hr\hr4\DirectCompensation;
+use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\Employee;
 use Carbon\Carbon;
 
