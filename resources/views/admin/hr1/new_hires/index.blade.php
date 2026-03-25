@@ -5,17 +5,15 @@
     <h2 class="mb-4">New Hire Management</h2>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success fade show" role="alert">
             {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger fade show" role="alert">
             {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     <div class="row mb-4">
@@ -52,10 +50,9 @@
     </div>
 
     @if(session('info'))
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <div class="alert alert-info fade show" role="alert">
             {{ session('info') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            </div>
     @endif
 
     <div class="card" style="margin-top: 40px; padding: 10px;">
@@ -104,10 +101,9 @@
                 <table class="table table-hover table-bordered mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-nowrap" style="width: 50px;">#</th>
+                            <th class="text-nowrap">Application ID</th>
                             <th class="text-nowrap">Full Name</th>
-                            <th class="text-nowrap">Email</th>
-                            <th class="text-nowrap">Phone</th>
+                            <th class="text-nowrap">Username</th>
                             <th class="text-nowrap">Department</th>
                             <th class="text-nowrap">Specialization</th>
                             <th class="text-nowrap">Status</th>
@@ -119,15 +115,14 @@
                     <tbody>
                         @forelse($newHires as $n)
                             <tr>
-                                <td>{{ $n->id }}</td>
+                                <td class="text-nowrap small text-muted fw-semibold">{{ $n->application_id ?? 'N/A' }}</td>
                                 <td class="text-nowrap font-weight-bold">
                                     {{ $n->first_name }} {{ $n->last_name }}
                                     @if($n->status == 'onboarding')
                                         <i class="bi bi-hourglass-split text-info ms-1" title="Onboarding In Progress"></i>
                                     @endif
                                 </td>
-                                <td>{{ $n->email }}</td>
-                                <td class="text-nowrap">{{ $n->phone }}</td>
+                                <td class="text-nowrap"><code>{{ $n->username ?? '—' }}</code></td>
                                 <td>{{ $n->department_name }}</td>
                                 <td>{{ $n->specialization ?? 'N/A' }}</td>
                                 <td>
@@ -140,6 +135,7 @@
                                         $badgeClass = [
                                             'pending' => 'bg-warning text-dark',
                                             'scheduled' => 'bg-primary',
+                                            'assessed' => 'bg-info',
                                             'passed' => 'bg-success',
                                             'failed' => 'bg-danger'
                                         ][$n->assessment_status ?? 'pending'];
@@ -151,7 +147,7 @@
                                         <span class="badge bg-success" title="Validated by {{ $n->validated_by }}">
                                             <i class="bi bi-check-all me-1"></i> VALIDATED
                                         </span>
-                                    @elseif($n->assessment_status == 'passed')
+                                    @elseif($n->assessment_status == 'assessed')
                                         <form action="{{ route('hr1.newhires.validateAssessment', $n->applicant_id) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Click to Validate Grade">
