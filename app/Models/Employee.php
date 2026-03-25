@@ -12,6 +12,15 @@ class Employee extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql'; // Connect to TiDB cloud
+
+    // Payroll records
+    public function payrolls()
+    {
+        return $this->hasMany(\App\Models\Payroll::class, 'employee_id', 'id');
+    }
+    use HasFactory;
+
     protected $table = 'employees';
 
     protected $fillable = [
@@ -26,6 +35,7 @@ class Employee extends Model
         'post_grad_status',
         'hire_date',
         'is_on_duty',
+        'status',
     ];
 
     /*

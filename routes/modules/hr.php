@@ -49,6 +49,10 @@ Route::post('/user/request-shift/{id}', [UserEssController::class, 'requestShift
     ->name('user.shift.request');
      Route::get('/payroll', [UserPayrollController::class, 'index'])->name('user.payroll.index');
     Route::post('/payroll/store', [UserPayrollController::class, 'store'])->name('user.payroll.store');
+
+// ESS Payroll Requests (Employee)
+Route::get('/ess-payroll', [UserEssController::class, 'payrollIndex'])->name('user.ess.payroll.index');
+Route::post('/ess-payroll/store', [UserEssController::class, 'payrollStore'])->name('user.ess.payroll.store');
 // --- END OF HR2 Department ---
 
 // --- START OF HR3 Department (Attendance & Timekeeping) ---

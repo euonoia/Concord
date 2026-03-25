@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\authentication\AuthController;
 use App\Http\Controllers\admin\Hr\hr3\AdminAttendanceController;
 use App\Http\Controllers\user\Hr\hr1\ApplicantController;

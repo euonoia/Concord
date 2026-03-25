@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DepartmentPositionTitle extends Model
 {
+    protected $connection = 'mysql'; // Connect to TiDB cloud
     protected $table = 'department_position_titles_hr2';
 
     protected $fillable = [
@@ -14,7 +15,8 @@ class DepartmentPositionTitle extends Model
         'rank_level',
         'employee_type',
         'base_salary',
-        'is_active'
+        'is_active',
+        'required_count'
     ];
 
     public function department()
