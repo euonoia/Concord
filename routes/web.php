@@ -13,6 +13,7 @@ require base_path('routes/landing/landing.php');
 
 // Home or onboarding (optional)
 // Route::get('/', function () { return view('onboarding'); });
+Route::get('/ping', fn() => 'pong');
 
 // Residency & Fellowship page — served with live job postings from DB
 Route::get('/careers/residency-fellowship', function () {
@@ -67,10 +68,12 @@ Route::prefix('portal')->group(function () {
     Route::post('/register', [AuthController::class, 'store'])->name('portal.register.submit');
     Route::post('/logout', [AuthController::class, 'destroy'])->name('portal.logout');
 
-    // 2FA Routes
+    // 2FA Routes (Disabled)
+    /*
     Route::get('/2fa', [AuthController::class, 'show2fa'])->name('portal.2fa');
     Route::post('/2fa', [AuthController::class, 'verify2fa'])->name('portal.2fa.verify');
     Route::get('/2fa/resend', [AuthController::class, 'resend2fa'])->name('portal.2fa.resend');
+    */
 });
 
 // --- Protected Subsystem Routes (requires redirect if guest) ---

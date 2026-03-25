@@ -12,7 +12,7 @@ class Patient extends Model
     protected $table = 'patients_core1';
 
     protected $fillable = [
-        'patient_id',
+        'mrn',
         'first_name',
         'middle_name',
         'last_name',
@@ -39,11 +39,27 @@ class Patient extends Model
     ];
 
     /**
+     * Get the bills for the patient.
+     */
+    public function bills()
+    {
+        return $this->hasMany(\App\Models\user\Core\core1\Bill::class, 'patient_id');
+    }
+
+    /**
      * Get the appointments for the patient.
      */
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    /**
+     * Get the nurse assigned to the patient.
+     */
+    public function assignedNurse()
+    {
+        return $this->belongsTo(User::class, 'assigned_nurse_id');
     }
 
     /**

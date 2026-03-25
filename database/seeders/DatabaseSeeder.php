@@ -21,5 +21,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Custom Seeders for Clinical Flows
+        $this->call([
+            DoctorProfileSyncSeeder::class,
+            DoctorSmithShiftSeeder::class,
+            SpecializedStaffShiftSeeder::class,
+        ]);
     }
 }

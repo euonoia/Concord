@@ -58,11 +58,29 @@
         <span>Reservations</span>
     </a>
 
-    <a href="{{ route('admin.logistics2.fleet.index') }}" 
-       class="{{ request()->is('admin/logistics2/fleet*') ? 'active' : '' }}">
+   <div class="nav-dropdown {{ request()->is('admin/logistics2/fleet*') || request()->is('admin/logistics2/warehouse-purchase-orders*') ? 'open' : '' }}">
+    <a href="#" onclick="toggleDropdown(event)">
         <i class="bi bi-bus-front"></i>
         <span>Fleet Management</span>
+        <i class="bi bi-chevron-down arrow-icon"></i>
     </a>
+
+    <div class="dropdown-container">
+
+        <a href="{{ route('admin.logistics2.fleet.index') }}" 
+           class="sub-link {{ request()->routeIs('admin.logistics2.fleet.index') ? 'active' : '' }}">
+            <i class="bi bi-truck"></i>
+            <span>Manage Vehicles</span>
+        </a>
+
+        <a href="{{ route('admin.logistics2.purchase.index') }}" 
+           class="sub-link {{ request()->routeIs('admin.logistics2.purchase.index') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Assign Vehicle</span>
+        </a>
+
+    </div>
+</div>
 
     <a href="{{ route('admin.logistics2.audit.index') }}"
        class="{{ request()->routeIs('admin.logistics2.audit.*') ? 'active' : '' }}">

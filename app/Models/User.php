@@ -82,6 +82,24 @@ class User extends Authenticatable
         return $this->role_slug === 'billing';
     }
 
+    /**
+     * Virtual attribute for 'role' mapping to 'role_slug'
+     * for backward compatibility in controllers.
+     */
+    public function getRoleAttribute()
+    {
+        return $this->role_slug;
+    }
+
+    /**
+     * Get the display name for the user.
+     * Delegates to the employee profile if available.
+     */
+    public function getNameAttribute()
+    {
+        return $this->employee?->full_name ?? $this->username;
+    }
+
     protected static function boot()
     {
         parent::boot();

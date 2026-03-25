@@ -112,22 +112,6 @@ class AdminVehicleReservationController extends Controller
                 'updated_at' => now()
             ]);
 
-            // 5. Update Drug Inventory
-            $inventory = DB::table('drug_inventory_core2')->where('drug_num', $reservation->drug_num)->first();
-            if ($inventory) {
-                $newQuantity = $inventory->quantity + $reservation->quantity;
-                $status = match(true) {
-                    $newQuantity == 0 => 'Out of Stock',
-                    $newQuantity <= 10 => 'Low Stock',
-                    $newQuantity <= 20 => 'Critical',
-                    default => 'Stable'
-                };
-                DB::table('drug_inventory_core2')->where('drug_num', $reservation->drug_num)->update([
-                    'quantity' => $newQuantity,
-                    'status' => $status,
-                    'updated_at' => now()
-                ]);
-            }
 
             // 6. Insert into Audit Log for delivery WITH stored cost and address
             DB::table('audit_logistics2')->insert([

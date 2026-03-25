@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\user\Core\core1\core1Controller;
-use App\Http\Controllers\user\Core\core1\Admin\AdminDashboardController;
+use App\Http\Controllers\admin\Core\core1\AdminDashboardController;
 use App\Http\Controllers\user\Core\core1\Doctor\DoctorDashboardController;
 use App\Http\Controllers\user\Core\core1\Nurse\NurseDashboardController;
 use App\Http\Controllers\user\Core\core1\Patient\PatientDashboardController;
@@ -18,6 +18,8 @@ use App\Http\Controllers\user\Core\core1\DischargeController;
 use App\Http\Controllers\user\Core\core1\StaffManagementController;
 use App\Http\Controllers\user\Core\core1\ReportsController;
 use App\Http\Controllers\user\Core\core1\SettingsController;
+use App\Http\Controllers\user\Core\core1\EncounterController;
+use App\Http\Controllers\user\Core\core1\IPD\AdmissionController;
 
 Route::prefix('core1')->name('core1.')->group(function () {
     // Main index
@@ -29,7 +31,7 @@ Route::prefix('core1')->name('core1.')->group(function () {
 
 Route::middleware([])->group(function () {
     // Dashboard Routes by Role
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin,admin_core1')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('core1.admin.dashboard');
         Route::get('/overview', [AdminDashboardController::class, 'overview'])->name('core1.admin.overview');
     });
@@ -58,13 +60,15 @@ Route::middleware([])->group(function () {
         Route::get('/online-appointments/pending', [ReceptionistDashboardController::class, 'pendingBookingsJson'])->name('core1.receptionist.online-appointments.pending');
     });
     
-    Route::prefix('billing')->middleware('role:billing')->group(function () {
+    Route::prefix('billing')->middleware('role:admin,admin_core1,billing_officer')->group(function () {
         Route::get('/dashboard', [BillingDashboardController::class, 'index'])->name('core1.billing.dashboard');
         Route::get('/overview', [BillingDashboardController::class, 'overview'])->name('core1.billing.overview');
+        Route::get('/dashboard/updates', [BillingDashboardController::class, 'updates'])->name('core1.billing.dashboard.updates');
+        // Route::post('/pay/{bill}', [BillingDashboardController::class, 'pay'])->name('core1.billing.dashboard.pay');
     });
     
     // Shared Feature Routes
-    Route::middleware('role:admin,doctor,nurse,head_nurse,receptionist')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,receptionist')->group(function () {
         // HIS Identity Routes (must be before wildcard {patient} routes)
         Route::get('/patients/check-duplicates', [PatientManagementController::class, 'checkDuplicates'])->name('core1.patients.check-duplicates');
         Route::post('/patients/merge', [PatientManagementController::class, 'mergePatients'])->name('core1.patients.merge');
@@ -81,7 +85,7 @@ Route::middleware([])->group(function () {
         Route::post('/patients/{patient}/assign-nurse', [PatientManagementController::class, 'assignNurse'])->name('core1.patients.assign-nurse');
     });
     
-    Route::middleware('role:admin,doctor,patient,receptionist')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,patient,receptionist')->group(function () {
         Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('core1.appointments.check-availability');
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('core1.appointments.index');
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('core1.appointments.create');
@@ -96,62 +100,72 @@ Route::middleware([])->group(function () {
         Route::post('/appointments/{appointment}/decline', [AppointmentController::class, 'decline'])->name('core1.appointments.decline');
     });
 
-    Route::middleware('role:admin,doctor,nurse,head_nurse')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse')->group(function () {
         Route::get('/inpatient', [InpatientController::class, 'index'])->name('core1.inpatient.index');
+        
+        // IPD ADT Routes — dashboard redirects to unified inpatient page
+        Route::get('/ipd/dashboard', function () {
+            return redirect()->route('core1.inpatient.index');
+        })->name('core1.ipd.dashboard');
+        Route::get('/admissions/create', [AdmissionController::class, 'create'])->name('core1.admissions.create');
+        Route::post('/admissions', [AdmissionController::class, 'store'])->name('core1.admissions.store');
+        Route::post('/admissions/{admission}/request-transfer', [AdmissionController::class, 'requestTransfer'])->name('core1.admissions.request-transfer');
+        Route::post('/admissions/{admission}/execute-transfer', [AdmissionController::class, 'executeTransfer'])->name('core1.admissions.execute-transfer');
+
+        Route::post('/admissions/{admission}/request-discharge', [AdmissionController::class, 'requestDischarge'])->name('core1.admissions.request-discharge');
+        Route::post('/admissions/{admission}/finalize-discharge', [AdmissionController::class, 'finalizeDischarge'])->name('core1.admissions.finalize-discharge');
     });
 
-    Route::middleware('role:admin,doctor')->group(function () {
+
+    Route::middleware('role:admin,admin_core1,doctor')->group(function () {
         Route::get('/outpatient', [OutpatientController::class, 'index'])->name('core1.outpatient.index');
         Route::get('/discharge', [DischargeController::class, 'index'])->name('core1.discharge.index');
+        Route::get('/discharge/logs', [DischargeController::class, 'logs'])->name('core1.discharge.logs');
+        Route::post('/discharge', [DischargeController::class, 'store'])->name('core1.discharge.store');
+        Route::post('/discharge/finalize', [DischargeController::class, 'finalize'])->name('core1.discharge.finalize');
+        
+        // OPD Encounters
+        Route::post('/encounters', [EncounterController::class, 'store'])->name('core1.encounters.store');
     });
 
-    Route::post('/patients/{patient}/move', 
-        [\App\Http\Controllers\user\Core\core1\PatientManagementController::class, 'move']
-    )->name('core1.patients.move');
+    Route::post('/patients/{patient}/move', [PatientManagementController::class, 'move'])->name('core1.patients.move');
     Route::patch('/inpatient/{patient}/deactivate', [InpatientController::class, 'deactivate'])->name('core1.inpatients.deactivate');
     Route::patch('/patients/{patient}/status', 
         [PatientManagementController::class, 'updateStatus']
     )->name('core1.patients.updateStatus');
-    Route::post('/outpatient/{id}/update-status',
-        [OutpatientController::class, 'updateStatus']
-    )->name('core1.outpatient.updateStatus');
-    Route::post('/core1/outpatient/{id}/triage',
-        [OutpatientController::class, 'saveTriage']
-    )->name('core1.outpatient.saveTriage');
-    // Prescriptions
-    Route::post('/outpatient/prescription/store', [OutpatientController::class, 'storePrescription'])
-        ->name('core1.outpatient.storePrescription');
+    Route::post('/outpatient/{id}/triage', [OutpatientController::class, 'saveTriage'])->name('core1.outpatient.saveTriage');
+    Route::post('/outpatient/{id}/consultation', [OutpatientController::class, 'saveConsultation'])->name('core1.outpatient.saveConsultation');
+    Route::post('/outpatient/{id}/start-consultation', [OutpatientController::class, 'startConsultation'])->name('core1.outpatient.startConsultation');
+    Route::post('/outpatient/{id}/complete', [OutpatientController::class, 'completeConsultation'])->name('core1.outpatient.complete');
+    Route::post('/outpatient/{id}/disposition', [OutpatientController::class, 'disposition'])->name('core1.outpatient.disposition');
 
-    Route::put('/outpatient/prescription/update/{id}', [OutpatientController::class, 'updatePrescription'])
-        ->name('core1.outpatient.updatePrescription');
-
-    Route::post('/core1/outpatient/store-lab-order',
-        [OutpatientController::class, 'storeLabOrder']
-    )->name('core1.outpatient.storeLabOrder');
-
-    Route::post('/outpatient/follow-up/store',
-        [OutpatientController::class,'storeFollowUp']
-    )->name('core1.outpatient.storeFollowUp');
-    Route::put('/outpatient/follow-up/{id}/update', [OutpatientController::class, 'updateFollowUp'])
-        ->name('core1.outpatient.updateFollowUp');
+    // Prescriptions & Lab Orders
+    Route::post('/outpatient/prescription', [OutpatientController::class, 'storePrescription'])->name('core1.outpatient.storePrescription');
+    Route::post('/outpatient/lab-order', [OutpatientController::class, 'storeLabOrder'])->name('core1.outpatient.storeLabOrder');
+    Route::post('/outpatient/surgery-order', [OutpatientController::class, 'storeSurgeryOrder'])->name('core1.outpatient.storeSurgeryOrder');
+    Route::post('/outpatient/diet-order', [OutpatientController::class, 'storeDietOrder'])->name('core1.outpatient.storeDietOrder');
+    Route::post('/outpatient/prescriptions/{prescription}/administer', [OutpatientController::class, 'administerMedication'])->name('core1.outpatient.administerMedication');
+    Route::post('/inpatient/encounters/{encounter}/administer-all', [InpatientController::class, 'administerAll'])->name('core1.inpatient.administerAll');
+    Route::get('/inpatient/encounters/{encounter}/prescriptions', [InpatientController::class, 'getPrescriptionsJson'])->name('core1.inpatient.getPrescriptions');
+    Route::get('/outpatient/diagnostic-orders/json', [OutpatientController::class, 'getDiagnosticOrdersJson'])->name('core1.outpatient.diagnosticOrders.json');
         
-    Route::middleware('role:admin,doctor,nurse,head_nurse,patient')->group(function () {
+    Route::middleware('role:admin,admin_core1,doctor,nurse,head_nurse,patient')->group(function () {
         Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('core1.medical-records.index');
         Route::get('/medical-records/{patient}', [MedicalRecordController::class, 'show'])->name('core1.medical-records.show');
     });
     
-    Route::middleware('role:admin,billing,patient')->group(function () {
+    Route::middleware('role:admin,admin_core1,billing_officer,patient')->group(function () {
         Route::get('/billing', [BillingController::class, 'index'])->name('core1.billing.index');
         Route::get('/billing/{bill}', [BillingController::class, 'show'])->name('core1.billing.show');
     });
     
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,admin_core1')->group(function () {
         Route::get('/staff', [StaffManagementController::class, 'index'])->name('core1.staff.index');
         Route::get('/staff/create', [StaffManagementController::class, 'create'])->name('core1.staff.create');
         Route::post('/staff', [StaffManagementController::class, 'store'])->name('core1.staff.store');
     });
     
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,admin_core1')->group(function () {
         Route::get('/reports', [ReportsController::class, 'index'])->name('core1.reports.index');
     });
     

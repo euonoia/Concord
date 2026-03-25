@@ -7,6 +7,9 @@ document.addEventListener('alpine:init', () => {
         loadingDoctors: false,
         selectedDoctor: config.selectedDoctor ?? '',
         selectedSpecialization: config.selectedSpecialization ?? '',
+        slots: [],
+        loadingSlots: false,
+        slotsMsg: '',
         showDetails: config.showDetails ?? false,
         showCancelConfirm: false,
         agreedToTerms: false,
@@ -25,6 +28,7 @@ document.addEventListener('alpine:init', () => {
         lookupUrl: config.lookupUrl ?? '',
         cancelUrlFormat: config.cancelUrlFormat ?? '',
         doctorsUrl: config.doctorsUrl ?? '',
+        checkAvailabilityUrl: config.checkAvailabilityUrl ?? '',
         csrfToken: config.csrfToken ?? '',
 
         async trackAppointment() {
@@ -118,7 +122,7 @@ document.addEventListener('alpine:init', () => {
                 .then(data => {
                     this.doctors = data.doctors || [];
                     if (this.selectedDoctor) {
-                        const doctorExists = this.doctors.find(d => d.name === this.selectedDoctor);
+                        const doctorExists = this.doctors.find(d => d.id == this.selectedDoctor);
                         if (!doctorExists) {
                             this.selectedDoctor = '';
                             this.selectedSpecialization = '';
@@ -138,8 +142,45 @@ document.addEventListener('alpine:init', () => {
             const selectedOption = event.target.selectedOptions[0];
             if (selectedOption) {
                 this.selectedSpecialization = selectedOption.dataset.specialization;
+                this.fetchSlots();
             } else {
                 this.selectedSpecialization = '';
+                this.slots = [];
+            }
+        },
+
+        async fetchSlots() {
+            const dateInput = document.getElementById('appointment_date');
+            if (!this.selectedDoctor || !dateInput.value) {
+                this.slots = [];
+                return;
+            }
+
+            this.loadingSlots = true;
+            this.slotsMsg = 'Checking availability...';
+
+            try {
+                const url = `${this.checkAvailabilityUrl}?doctor_id=${this.selectedDoctor}&date=${dateInput.value}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.slots = data.slots || [];
+                    if (this.slots.length === 0) {
+                        this.slotsMsg = data.message || 'No slots available for this date.';
+                    } else {
+                        this.slotsMsg = '';
+                    }
+                } else {
+                    this.slots = [];
+                    this.slotsMsg = 'Error checking slots.';
+                }
+            } catch (error) {
+                console.error('Error fetching slots:', error);
+                this.slots = [];
+                this.slotsMsg = 'Connection error.';
+            } finally {
+                this.loadingSlots = false;
             }
         }
     }));

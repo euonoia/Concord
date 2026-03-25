@@ -1,4 +1,4 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @section('title', 'Patient Details')
 
@@ -35,7 +35,7 @@
         <div class="core1-info-grid">
             <div class="core1-info-item">
                 <h3>Patient ID</h3>
-                <p>{{ $patient->patient_id ?? 'Not assigned' }}</p>
+                <p>{{ $patient->mrn ?? 'Not assigned' }}</p>
             </div>
             <div class="core1-info-item">
                 <h3>MRN</h3>
@@ -53,27 +53,31 @@
             </div>
             <div class="core1-info-item">
                 <h3>Name</h3>
-                <p>{{ $patient->name }}</p>
+                <p>{{ $patient->first_name }} {{ $patient->middle_name }} {{ $patient->last_name }}</p>
             </div>
             <div class="core1-info-item">
-                <h3>Date of Birth</h3>
+                <h3>Birth Date</h3>
                 <p>{{ $patient->date_of_birth->format('M d, Y') }}</p>
-            </div>
-            <div class="core1-info-item">
-                <h3>Age</h3>
-                <p>{{ $patient->age ?? 'N/A' }} years</p>
             </div>
             <div class="core1-info-item">
                 <h3>Gender</h3>
                 <p>{{ ucfirst($patient->gender) }}</p>
             </div>
             <div class="core1-info-item">
+                <h3>Email</h3>
+                <p>{{ $patient->email }}</p>
+            </div>
+            <div class="core1-info-item">
+                <h3>Age</h3>
+                <p>{{ $patient->age }} years</p>
+            </div>
+            <div class="core1-info-item">
                 <h3>Phone</h3>
                 <p>{{ $patient->phone }}</p>
             </div>
             <div class="core1-info-item">
-                <h3>Email</h3>
-                <p>{{ $patient->email }}</p>
+                <h3>Address</h3>
+                <p>{{ $patient->address ?? 'N/A' }}</p>
             </div>
             <div class="core1-info-item">
                 <h3>Assigned Nurse</h3>
@@ -87,24 +91,54 @@
                     </span>
                 </div>
             </div>
-            @if($patient->address)
-            <div class="core1-info-item core1-col-span-2">
-                <h3>Address</h3>
-                <p>{{ $patient->address }}</p>
+
+            {{-- 2. Medical Info --}}
+            <div class="core1-col-span-2 mt-4">
+                <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider border-b pb-2 mb-2">Medical Information</h4>
             </div>
-            @endif
-            @if($patient->blood_type)
             <div class="core1-info-item">
                 <h3>Blood Type</h3>
-                <p>{{ $patient->blood_type }}</p>
+                <p>{{ $patient->blood_type ?? 'Unknown' }}</p>
             </div>
-            @endif
-            @if($patient->allergies)
             <div class="core1-info-item">
                 <h3>Allergies</h3>
-                <p>{{ $patient->allergies }}</p>
+                <p>{{ $patient->allergies ?? 'None' }}</p>
             </div>
-            @endif
+            <div class="core1-info-item core1-col-span-2">
+                <h3>Medical History</h3>
+                <p>{{ $patient->medical_history ?? 'None' }}</p>
+            </div>
+
+            {{-- 3. Emergency Info --}}
+            <div class="core1-col-span-2 mt-4">
+                <h4 class="text-xs font-bold text-orange-600 uppercase tracking-wider border-b pb-2 mb-2">Emergency Contact</h4>
+            </div>
+            <div class="core1-info-item">
+                <h3>Contact Name</h3>
+                <p>{{ $patient->emergency_contact_name ?? '---' }}</p>
+            </div>
+            <div class="core1-info-item">
+                <h3>Relationship</h3>
+                <p>{{ $patient->emergency_contact_relation ?? '---' }}</p>
+            </div>
+            <div class="core1-info-item">
+                <h3>Phone</h3>
+                <p>{{ $patient->emergency_contact_phone ?? '---' }}</p>
+            </div>
+
+            {{-- 4. Insurance Info --}}
+            <div class="core1-col-span-2 mt-4">
+                <h4 class="text-xs font-bold text-purple-600 uppercase tracking-wider border-b pb-2 mb-2">Insurance Information</h4>
+            </div>
+            <div class="core1-info-item">
+                <h3>Provider</h3>
+                <p>{{ $patient->insurance_provider ?? '---' }}</p>
+            </div>
+            <div class="core1-info-item">
+                <h3>Policy Number</h3>
+                <p>{{ $patient->policy_number ?? '---' }}</p>
+            </div>
+            
             @if($patient->last_visit)
             <div class="core1-info-item">
                 <h3>Last Visit</h3>
@@ -115,6 +149,15 @@
     </div>
 
     <div class="core1-form-actions">
+        <form action="{{ route('core1.encounters.store') }}" method="POST" class="m-0" style="display:inline-block;">
+            @csrf
+            <input type="hidden" name="patient_id" value="{{ $patient->id }}">
+            <input type="hidden" name="type" value="IPD">
+            <button type="submit" class="core1-btn" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #7dd3fc;">
+                <i class="fas fa-procedures"></i>
+                <span class="pl-20">Recommend Admission (IPD)</span>
+            </button>
+        </form>
         <a href="{{ route('core1.appointments.create', ['patient_id' => $patient->id]) }}" class="core1-btn core1-btn-success">
             <i class="fas fa-calendar-plus"></i>
             <span class="pl-20">Book Appointment</span>

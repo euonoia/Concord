@@ -1,34 +1,127 @@
-﻿@extends('core.core1.layouts.app')
+@extends('core.core1.layouts.app')
 
 @push('styles')
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
 <style>
+    /* Premium FullCalendar Overrides */
     .fc {
         max-width: 100%;
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        background: var(--card-bg, #ffffff);
+        padding: 24px;
+        border-radius: 16px;
+        font-family: inherit;
+        color: var(--text-dark, #1f2937);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
+    
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: var(--border-color, #e5e7eb);
+    }
+
+    /* Enhanced Header */
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem !important;
+        font-weight: 700;
+        color: var(--text-dark, #1f2937);
+    }
+    
     .fc-header-toolbar {
-        margin-bottom: 2rem !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
     }
-    .fc-button-primary {
-        background-color: var(--primary-color, #2563eb) !important;
-        border-color: var(--primary-color, #2563eb) !important;
+
+    /* Premium Buttons */
+    .fc .fc-button-primary {
+        background-color: var(--bg, #f8fafc) !important;
+        border-color: var(--border-color, #e5e7eb) !important;
+        color: var(--text-dark, #4b5563) !important;
+        text-transform: capitalize;
+        font-weight: 500;
+        box-shadow: none !important;
+        transition: all 0.2s ease;
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
     }
+    .fc .fc-button-primary:hover {
+        background-color: var(--bg-hover, #f1f5f9) !important;
+        color: var(--primary, #0ea5e9) !important;
+        transform: translateY(-1px);
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: var(--primary-light, #e0f2fe) !important;
+        border-color: var(--primary, #0ea5e9) !important;
+        color: var(--primary-dark, #0369a1) !important;
+    }
+    .fc .fc-button-primary:focus {
+        box-shadow: 0 0 0 2px var(--primary-light, #bae6fd) !important;
+    }
+
+    /* Day Headers */
+    .fc-col-header-cell {
+        background: var(--bg, #f8fafc);
+        padding: 12px 0 !important;
+    }
+    .fc-col-header-cell-cushion {
+        font-weight: 600 !important;
+        color: var(--text-gray, #6b7280) !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Day Cells */
+    .fc-daygrid-day-number {
+        font-weight: 500;
+        color: var(--text-dark, #374151) !important;
+        padding: 8px !important;
+    }
+    .fc-day-today {
+        background-color: var(--primary-light-more, #f0f9ff) !important;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--primary, #0ea5e9) !important;
+        font-weight: 700;
+    }
+
+    /* Events Styling */
     .fc-event {
         cursor: pointer;
-        padding: 2px 5px;
-        border-radius: 4px;
+        padding: 4px 6px;
+        border-radius: 6px;
         border: none;
+        margin-bottom: 3px !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        z-index: 5;
     }
     .fc-event-title {
+        font-weight: 600;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    .fc-event-time {
+        font-size: 0.7rem;
+        opacity: 0.8;
         font-weight: 500;
-        font-size: 0.85rem;
     }
     .fc-daygrid-event {
         white-space: normal !important;
+    }
+    
+    /* Time Grid specifics */
+    .fc-timegrid-slot-label-cushion {
+        font-size: 0.75rem;
+        color: var(--text-gray, #6b7280);
+        font-weight: 500;
+    }
+    .fc-timegrid-event {
+        border-left-width: 3px !important;
     }
 </style>
 @endpush
@@ -36,78 +129,93 @@
 @section('title', 'Appointments')
 
 @section('content')
-    <link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('css/core1/example.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
 <div class="core1-container">
+
+    {{-- Page Header --}}
     <div class="core1-flex-between core1-header">
         <div>
             <h1 class="core1-title">Appointments</h1>
-            <p class="core1-subtitle">Manage and schedule appointments</p>
+            <p class="core1-subtitle">Manage and schedule patient appointments</p>
         </div>
-        @if(auth()->user()->role !== 'doctor')
-        <a href="{{ route('core1.appointments.create') }}" class="core1-btn core1-btn-primary">
-            <i class="fas fa-plus"></i>
-            <span class="pl-20">Book Appointment</span>
-        </a>
-        @endif
+        <div style="display:flex; align-items:center; gap: 10px;">
+            <div style="font-size: 12px; color: var(--text-gray); background: var(--bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="bi bi-clock" style="color: var(--primary);"></i>
+                <span>{{ now()->format('l, F j, Y') }}</span>
+            </div>
+            @if(auth()->user()->role !== 'doctor')
+            <a href="{{ route('core1.appointments.create') }}" class="core1-btn core1-btn-primary">
+                <i class="bi bi-plus-lg"></i> Book Appointment
+            </a>
+            @endif
+        </div>
     </div>
 
-    <!-- Calendar -->
-    <div class="core1-card" style="padding: 0; overflow: hidden;">
-        <div id="calendar"></div>
+    {{-- Calendar --}}
+    <div class="core1-card" style="padding: 0; overflow: hidden; border-radius: 12px; margin-bottom: 20px;">
+        <div class="core1-card-header" style="padding: 16px 22px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <div class="core1-icon-box" style="background: var(--primary-light); color: var(--primary); width:34px; height:34px; border-radius:7px; font-size:1rem; display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-calendar3"></i>
+            </div>
+            <h2 class="core1-title core1-section-title mb-0" style="font-size:15px;">Appointment Calendar</h2>
+        </div>
+        <div style="padding: 20px;">
+            <div id="calendar"></div>
+        </div>
     </div>
 
-    <!-- Appointment Table -->
-    <div class="core1-card mt-20">
-        <h3 class="core1-title">
-            {{ auth()->user()->role === 'doctor' ? 'My Appointments' : 'Appointments' }}
-        </h3>
+    {{-- Appointments Table --}}
+    <div class="core1-card no-hover has-header overflow-hidden" style="padding:0; border-radius: 12px;">
+        <div class="core1-card-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+            <div class="core1-icon-box" style="background: var(--info-light); color: var(--info); width:36px; height:36px; border-radius:8px; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <h2 class="core1-title core1-section-title mb-0" style="font-size:15px;">
+                {{ auth()->user()->role === 'doctor' ? 'My Appointments' : 'All Appointments' }}
+            </h2>
+        </div>
 
-        <table class="core1-table">
-            <thead>
-                <tr>
-                    <th>Date & Time</th>
-                    <th>Patient</th>
-                    @if(auth()->user()->role !== 'doctor')
-                        <th>Doctor</th>
-                    @endif
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th class="text-center">Actions</th>
-                </tr>
+        <div class="core1-table-container shadow-none">
+            <table class="core1-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Patient</th>
+                        @if(auth()->user()->role !== 'doctor')
+                            <th>Doctor</th>
+                        @endif
+                        <th>Department</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
                     @forelse($appointments as $appointment)
                         @if(auth()->user()->role !== 'doctor' || auth()->user()->id === $appointment->doctor_id)
                         <tr>
                             <td>
-                                <div class="core1-flex-gap-2">
-                                    <i class="fas fa-calendar text-gray"></i>
+                                <div style="display:flex; align-items:center; gap: 8px;">
+                                    <i class="bi bi-calendar-event" style="color: var(--primary); font-size: 0.9rem;"></i>
                                     <div>
-                                        <div class="text-sm font-medium text-dark">
-                                            {{ $appointment->appointment_date->format('M d, Y') }}
-                                        </div>
+                                        <div class="font-bold" style="font-size: 13px;">{{ $appointment->appointment_date->format('M d, Y') }}</div>
                                         <div class="text-xs text-gray">{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('H:i') }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div class="core1-flex-gap-2">
-                                    <i class="fas fa-user text-gray"></i>
-                                    <div>
-                                        <div class="text-sm font-medium text-dark">{{ $appointment->patient->name }}</div>
-                                        <div class="text-xs text-gray">{{ $appointment->patient->patient_id }}</div>
-                                    </div>
+                                <div>
+                                    <div class="font-bold text-blue" style="font-size: 13px;">{{ $appointment->patient->name ?? 'Unknown' }}</div>
+                                    <div class="text-xs text-gray">{{ $appointment->patient->mrn ?? 'N/A' }}</div>
                                 </div>
                             </td>
                             @if(auth()->user()->role !== 'doctor')
-                            <td>
-                                <div class="text-sm text-dark">{{ $appointment->doctor->name }}</div>
-                            </td>
+                            <td>{{ $appointment->doctor->name ?? 'No Doctor Assigned' }}</td>
                             @endif
-                            <td>
-                                <div class="text-sm text-dark">{{ $appointment->type }}</div>
-                            </td>
+                            <td>{{ $appointment->doctor->employee->department->name ?? 'N/A' }}</td>
+                            <td>{{ $appointment->type }}</td>
 
                             @php
                                 $displayStatus = match($appointment->status) {
@@ -116,56 +224,56 @@
                                     default => 'scheduled',
                                 };
                                 $badgeClass = match($displayStatus) {
-                                    'scheduled', 'pending', 'confirmed', 'completed' => 'core1-badge-active',
-                                    'cancelled', 'no-show' => 'core1-badge-inactive',
-                                    'declined' => 'core1-badge-warning',
-                                    default => 'core1-badge-active',
+                                    'scheduled', 'pending', 'confirmed' => 'core1-tag-recovering',
+                                    'completed' => 'core1-tag-stable',
+                                    'cancelled', 'no-show' => 'tag-pending',
+                                    'declined' => 'tag-red',
+                                    default => 'core1-tag-recovering',
                                 };
                             @endphp
 
                             <td>
-                                <span class="core1-badge {{ $badgeClass }}">
-                                    <span class="pl-20">{{ ucfirst($displayStatus) }}</span>
-                                </span>
+                                <span class="core1-status-tag {{ $badgeClass }}">{{ ucfirst($displayStatus) }}</span>
                             </td>
                             <td>
-                                <div class="d-flex items-center justify-center gap-2">
+                                <div style="display:flex; align-items:center; justify-content:center; gap: 8px;">
                                     @if(auth()->user()->role === 'doctor' && $appointment->status === 'pending')
-                                        <form action="{{ route('core1.appointments.accept', $appointment) }}" method="POST">
+                                        <form action="{{ route('core1.appointments.accept', $appointment) }}" method="POST" style="margin:0;">
                                             @csrf
-                                            <button type="submit" class="core1-btn core1-btn-primary">Accept</button>
-                                        </form>
-
-                                        <form action="{{ route('core1.appointments.decline', $appointment) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="core1-btn core1-btn-outline">Decline</button>
-                                        </form>
-                                    @elseif(auth()->user()->role === 'receptionist' && $appointment->status === 'pending')
-                                        <form action="{{ route('core1.receptionist.online-appointments.approve', $appointment->id) }}" method="POST" class="d-flex m-0 bg-transparent" onsubmit="return confirm('Approve this appointment?');">
-                                            @csrf
-                                            <button type="submit" class="btn-icon-action text-green-500" title="Approve">
-                                                <i class="fas fa-check"></i>
+                                            <button type="submit" class="core1-btn-sm core1-btn-primary" style="padding: 5px 12px; font-size:11px;">
+                                                <i class="bi bi-check-lg"></i> Accept
                                             </button>
                                         </form>
-
-                                        <form action="{{ route('core1.receptionist.online-appointments.reject', $appointment->id) }}" method="POST" class="d-flex m-0 bg-transparent" onsubmit="return confirm('Reject this appointment?');">
+                                        <form action="{{ route('core1.appointments.decline', $appointment) }}" method="POST" style="margin:0;">
                                             @csrf
-                                            <!-- sending a default rejection reason to bypass the modal for now in the calendar view, or just redirect to dashboard modal if needed -->
+                                            <button type="submit" class="core1-btn-sm core1-btn-outline" style="padding: 5px 12px; font-size:11px;">
+                                                <i class="bi bi-x-lg"></i> Decline
+                                            </button>
+                                        </form>
+                                    @elseif(auth()->user()->role === 'receptionist' && $appointment->status === 'pending')
+                                        <form action="{{ route('core1.receptionist.online-appointments.approve', $appointment->id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Approve this appointment?');">
+                                            @csrf
+                                            <button type="submit" class="core1-btn-sm core1-btn-primary" style="padding: 5px 10px; font-size:11px;" title="Approve">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('core1.receptionist.online-appointments.reject', $appointment->id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Reject this appointment?');">
+                                            @csrf
                                             <input type="hidden" name="rejection_reason" value="Rejected by receptionist from calendar view">
-                                            <button type="submit" class="btn-icon-action text-red-500" title="Reject">
-                                                <i class="fas fa-times"></i>
+                                            <button type="submit" style="padding: 5px 10px; font-size:11px; background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); border-radius: 7px; cursor: pointer;" title="Reject">
+                                                <i class="bi bi-x-lg"></i>
                                             </button>
                                         </form>
                                     @else
-                                        <a href="{{ route('core1.appointments.show', $appointment) }}" class="btn-icon-action text-blue-500" title="View">
-                                            <i class="fas fa-eye"></i>
+                                        <a href="{{ route('core1.appointments.show', $appointment) }}" class="core1-btn-sm core1-btn-outline" style="padding: 5px 10px; font-size:11px;" title="View">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                         @if($appointment->status !== 'cancelled' && $appointment->status !== 'completed' && $appointment->status !== 'declined')
-                                        <form action="{{ route('core1.appointments.destroy', $appointment) }}" method="POST" class="d-flex m-0 bg-transparent">
+                                        <form action="{{ route('core1.appointments.destroy', $appointment) }}" method="POST" style="margin:0;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn-icon-action text-red-500" title="Cancel" onclick="return confirm('Cancel appointment?')">
-                                                <i class="fas fa-times"></i>
+                                            <button type="submit" style="padding: 5px 10px; font-size:11px; background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); border-radius: 7px; cursor: pointer;" title="Cancel" onclick="return confirm('Cancel appointment?')">
+                                                <i class="bi bi-x-lg"></i>
                                             </button>
                                         </form>
                                         @endif
@@ -174,15 +282,17 @@
                             </td>
                         </tr>
                         @endif
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center p-40 text-gray">
-                            No appointments found
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center p-40">
+                                <i class="bi bi-calendar-x" style="font-size: 2rem; color: var(--text-light); display: block; margin-bottom: 8px;"></i>
+                                No appointments found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection
@@ -207,19 +317,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     ? $appointment->status
                     : 'scheduled';
                 $titleExtra = ' (' . $displayStatus . ')';
-                $title = auth()->user()->role === 'doctor' 
-                    ? $appointment->patient->name . ' - ' . $appointment->type . $titleExtra
-                    : $appointment->patient->name . ' - ' . ($appointment->doctor ? $appointment->doctor->name : 'No Doctor') . $titleExtra;
+                $title = auth()->user()->role === 'doctor'
+                    ? ($appointment->patient->name ?? 'Unknown') . ' - ' . $appointment->type . $titleExtra
+                    : ($appointment->patient->name ?? 'Unknown') . ' - ' . ($appointment->doctor ? $appointment->doctor->name : 'No Doctor') . $titleExtra;
             @endphp
         {
             id: '{{ $appointment->id }}',
             title: '{{ $title }}',
             start: '{{ $appointment->appointment_date->format("Y-m-d") }}T{{ \Carbon\Carbon::parse($appointment->appointment_time)->format("H:i:s") }}',
             end: '{{ $appointment->appointment_date->format("Y-m-d") }}T{{ \Carbon\Carbon::parse($appointment->appointment_time)->addMinutes(30)->format("H:i:s") }}',
-            backgroundColor: '{{ 
-                $displayStatus === "scheduled" ? "#10b981" : 
-                ($displayStatus === "declined" ? "#ef4444" : "#facc15")
-            }}',
+            backgroundColor: '{{ $displayStatus === "scheduled" ? "#10b981" : ($displayStatus === "declined" ? "#ef4444" : "#facc15") }}',
             borderColor: 'transparent'
         },
             @endif
@@ -229,7 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: initialView,
         initialDate: initialDate.includes('-') && initialDate.split('-').length === 2 ? initialDate + '-01' : initialDate,
-        headerToolbar: false,
+        headerToolbar: {
+            left: 'title',
+            right: 'prev,next today dayGridMonth,timeGridWeek,timeGridDay'
+        },
         themeSystem: 'standard',
         events: events,
         eventClick: function(info) {

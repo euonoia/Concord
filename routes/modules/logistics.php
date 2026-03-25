@@ -77,4 +77,13 @@ Route::prefix('vendor-portal')->name('vendor.portal.')->group(function () {
 
     Route::post('/delete/{id}', [AdminVendorPortalController::class, 'destroy'])->name('delete');
 });
+// Warehouse Purchase Orders (from Logistics1)
+Route::prefix('warehouse-purchase-orders')->name('purchase.')->group(function () {
+
+    Route::get('/', [App\Http\Controllers\admin\Logistics\Logistics2\AdminWarehousePurchaseOrdersController::class, 'index'])
+        ->name('index');
+
+    Route::post('/assign/{id}', [App\Http\Controllers\admin\Logistics\Logistics2\AdminWarehousePurchaseOrdersController::class, 'assignVehicle'])
+        ->name('assign');
+});
 });

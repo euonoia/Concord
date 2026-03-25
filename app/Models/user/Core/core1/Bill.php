@@ -14,6 +14,7 @@ class Bill extends Model
     protected $fillable = [
         'bill_number',
         'patient_id',
+        'encounter_id',
         'bill_date',
         'due_date',
         'items',
@@ -24,6 +25,7 @@ class Bill extends Model
         'status',
         'payment_method',
         'paid_at',
+        'validated_by',
     ];
 
     protected $casts = [
@@ -40,5 +42,15 @@ class Bill extends Model
     public function patient()
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function encounter()
+    {
+        return $this->belongsTo(\App\Models\core1\Encounter::class);
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(\App\Models\Employee::class, 'validated_by', 'employee_id');
     }
 }

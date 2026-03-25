@@ -161,6 +161,33 @@ CREATE TABLE IF NOT EXISTS `waiting_lists_core1` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `admissions_core1` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `encounter_id` bigint(20) NOT NULL,
+  `bed_id` bigint(20) NOT NULL,
+  `admission_date` timestamp NULL DEFAULT NULL,
+  `discharge_date` timestamp NULL DEFAULT NULL,
+  `status` enum('Admitted','Doctor Approved','Billing Cleared','Discharged') NOT NULL DEFAULT 'Admitted',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `discharges_core1` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `encounter_id` bigint(20) NOT NULL,
+  `clearing_doctor_id` bigint(20) DEFAULT NULL,
+  `discharge_summary` text DEFAULT NULL,
+  `final_diagnosis` text DEFAULT NULL,
+  `discharge_type` enum('Routine','DAMA','Transfer','Death') DEFAULT 'Routine',
+  `condition_on_discharge` enum('Recovered','Improved','Stable','Guarded','Critical') DEFAULT 'Improved',
+  `follow_up_instructions` text DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 

@@ -9,39 +9,60 @@ use Illuminate\Http\Request;
 
 class MedicalRecordController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $query = Patient::query();
 
-     if ($user->role_slug === 'doctor') {
-    $records = Patient::where('doctor_id', $user->id)
-        ->orWhereHas('appointments', function ($q) use ($user) {
-            $q->where('doctor_id', $user->id);
-        })
-        ->with([
-            'medicalRecords' => function ($q) {
-                $q->orderByDesc('record_date');
-            },
-            'appointments' => function ($q) use ($user) {
-                // Only load appointments belonging to this doctor
+        // Role-based scoping
+        if ($user->role_slug === 'doctor') {
+            $query->where(function ($q) use ($user) {
                 $q->where('doctor_id', $user->id)
-                  ->orderByDesc('appointment_date')
-                  ->orderByDesc('appointment_time');
-            },
-        ])
-        ->orderBy('name')
-        ->paginate(10);
-} else {
-    // Admin, Head Nurse, Nurse → show all patients
-    $records = Patient::with([
-        'medicalRecords' => function ($q) {
-            $q->orderByDesc('record_date');
-        },
-        'appointments' => function ($q) {
-            $q->orderByDesc('appointment_date')->orderByDesc('appointment_time');
+                  ->orWhereHas('appointments', function ($q2) use ($user) {
+                      $q2->where('doctor_id', $user->id);
+                  });
+            });
+            
+            $query->with([
+                'encounters' => function ($q) {
+                    $q->orderByDesc('created_at');
+                },
+                'appointments' => function ($q) use ($user) {
+                    $q->where('doctor_id', $user->id)
+                      ->orderByDesc('appointment_date')
+                      ->orderByDesc('appointment_time');
+                },
+            ]);
+        } else {
+            // Admin, Head Nurse, Nurse → show all patients
+            $query->with([
+                'encounters' => function ($q) {
+                    $q->orderByDesc('created_at');
+                },
+                'appointments' => function ($q) {
+                    $q->orderByDesc('appointment_date')->orderByDesc('appointment_time');
+                }
+            ]);
         }
-    ])->orderBy('name')->paginate(10);
-}
+
+        // Apply Search Filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('patient_id', 'like', "%{$search}%");
+            });
+        }
+
+        $records = $query->orderBy('last_name')
+                         ->orderBy('first_name')
+                         ->paginate(10)
+                         ->appends(['search' => $request->search]);
+
+        if ($request->ajax()) {
+            return view('core.core1.medical-records.partials.table', compact('records'))->render();
+        }
 
         return view('core.core1.medical-records.index', compact('records'));
     }
@@ -59,30 +80,36 @@ class MedicalRecordController extends Controller
         }
     }
 
-    // Get latest medical record if exists
-    $record = $patient->medicalRecords()->latest('record_date')->first();
+    // Fetch Encounters (IPD, OPD, OR)
+    $encounters = $patient->encounters()
+        ->with([
+            'doctor', 
+            'admission', 
+            'admission.bed.room.ward',
+            'triage',
+            'triage.creator',
+            'consultation',
+            'labOrders',
+            'prescriptions',
+            'prescriptions.administrations.administrator'
+        ])
+        ->orderByDesc('created_at')
+        ->get();
 
-    // If no record, create dummy object
-    if (!$record) {
-        $record = new MedicalRecord();
-        $record->patient = $patient;
-        $record->doctor = $patient->doctor ?? null;
-        $record->record_type = null;
-        $record->record_date = null;
-        $record->diagnosis = null;
-        $record->treatment = null;
-        $record->prescription = null;
-        $record->notes = null;
-    } else {
-        $record->load([
-            'patient',
-            'doctor',
-            'patient.appointments',
-            'patient.bills',
-            'patient.assignedNurse'
-        ]);
-    }
+    $patient->load([
+        'appointments',
+        'bills',
+        'assignedNurse',
+        'doctor'
+    ]);
 
-    return view('core.core1.medical-records.show', compact('record'));
+        // Detect active IPD encounter for quick clinical actions
+        $activeEncounter = $patient->encounters()
+            ->where('type', 'IPD')
+            ->where('status', '!=', 'Closed')
+            ->latest()
+            ->first();
+
+        return view('core.core1.medical-records.show', compact('patient', 'encounters', 'activeEncounter'));
 }
 }
