@@ -158,30 +158,34 @@ class AdminOnboardingAssessmentController extends Controller
             $autoRemarks = 'Insufficient performance — significant improvement required.';
         }
 
-        // Store one row per applicant with final level
+    $admin = DB::table('employees')->where('user_id', Auth::id())->first();
+    $adminId = $admin ? $admin->employee_id : 'ADMIN';
+
+    // Save each competency score into the scores table with application_id
+    foreach ($ratings as $competency => $score) {
         DB::table('onboarding_assessment_scores_hr1')->updateOrInsert(
             ['applicant_id' => $applicant->id],
             [
-                'application_id' => $applicant->application_id,
-                'competency'    => $level,
-                'rating'        => round($finalAverage, 2),
-                'remarks'       => $autoRemarks,
-                'assessed_by'   => $assessedBy,
-                'updated_at'    => now(),
-                'created_at'    => now(),
+                'applicant_id' => $applicant->id,
+                'competency'   => $competency,
+            ],
+            [
+                'application_id' => $applicant->application_id, 
+                'rating'         => $score,
+                'remarks'        => $remarks[$competency] ?? null,
+                'assessed_by'    => $adminId,
+                'created_at'     => now(),
+                'updated_at'     => now(),
             ]
         );
 
-        // Update applicant status
-        DB::table('onboarding_assessments_hr1')
-            ->where('id', $id)
-            ->update([
-                'assessment_status' => 'assessed',
-                'updated_at'        => now(),
-            ]);
-
-        return redirect()->route('onboarding.assessment.public')
-            ->with('success', 'Assessment submitted successfully. Final Level: ' . $level);
-    }
+    // Update the applicant status using application_id
+    DB::table('onboarding_assessments_hr1')
+        ->where('application_id', $applicant->application_id)
+        ->update([
+            'assessment_status' => 'assessed',
+            'assessed_by'       => $adminId,
+            'updated_at'        => now(),
+        ]);
 
 }

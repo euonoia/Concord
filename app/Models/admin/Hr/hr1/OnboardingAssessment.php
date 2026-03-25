@@ -28,6 +28,7 @@ class OnboardingAssessment extends Model
         'interview_date',
         'interviewer',
         'remarks',
+        'assessed_by',
         'is_validated',
         'validated_by'
     ];

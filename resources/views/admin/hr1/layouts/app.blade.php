@@ -46,15 +46,15 @@
                 <i class="bi bi-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="dropdown-container">
-                <a href="{{ route('hr1.training.performance.index') }}" 
-                   class="sub-link {{ request()->routeIs('hr1.training.performance.*') ? 'active' : '' }}">
-                    <i class="bi bi-journal-text"></i>
-                    <span>Training Performance</span>
-                </a>
                 <a href="{{ route('hr1.assessment.performance.index') }}" 
                    class="sub-link {{ request()->routeIs('hr1.assessment.performance.*') ? 'active' : '' }}">
                     <i class="bi bi-clipboard-check"></i>
                     <span>Assessment Scores</span>
+                </a>
+                <a href="{{ route('hr1.training.performance.index') }}" 
+                   class="sub-link {{ request()->routeIs('hr1.training.performance.*') ? 'active' : '' }}">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Training Performance</span>
                 </a>
             </div>
         </div>
