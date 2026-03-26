@@ -12,11 +12,6 @@ use App\Http\Controllers\admin\Logistics\Logistics2\AdminDocumentTrackingLabOrde
 use App\Http\Controllers\admin\Logistics\Logistics2\AdminVendorPortalController;
 
 
-// --- General Dashboard ---
-Route::get('/dashboard', function () { 
-    return view('admin._logistics2.dashboard'); 
-})->name('admin.logistics2.dashboard');
-
 // --- Logistics 1 Group ---
 Route::prefix('logistics1')->name('admin.logistics1.')->group(function () {
     Route::get('/warehouse', [AdminLogistics1WarehouseController::class, 'index'])->name('warehouse.index');
