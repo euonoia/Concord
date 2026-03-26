@@ -77,13 +77,6 @@
             Route::post('/newhires/{id}/status', [NewHireController::class, 'updateStatus'])->name('hr1.newhires.updateStatus');
             Route::post('/newhires/{applicant_id}/validate-assessment', [NewHireController::class, 'validateAssessment'])->name('hr1.newhires.validateAssessment');
             Route::post('/newhires/sync-hr4', [NewHireController::class, 'syncToHr4'])->name('hr1.newhires.syncHr4');
-
-
-           Route::get('/training-performance', [AdminTrainingPerformanceController::class, 'index'])
-                 ->name('hr1.training.performance.index');
-
-            Route::get('/training-performance/{employee_id}', [AdminTrainingPerformanceController::class, 'show'])
-                ->name('hr1.training.performance.show');
             
             // Recruitment (Job Postings)
             Route::get('/recruitment', [AdminRecruitmentController::class, 'index'])->name('hr1.recruitment.index');
