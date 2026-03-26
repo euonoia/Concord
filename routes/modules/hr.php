@@ -14,72 +14,24 @@ use App\Http\Controllers\user\Hr\hr2\UserPayrollController;
 use App\Http\Controllers\user\Hr\hr3\UserAttendanceController;
 use App\Http\Controllers\user\Hr\hr3\UserClaimsController;
 
+// Dashboard 
+Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('hr.dashboard');
 
-/*
-|--------------------------------------------------------------------------
-| USER DASHBOARD
-|--------------------------------------------------------------------------
-*/
-Route::get('/dashboard', [UserDashboardController::class, 'index'])
-    ->name('hr.dashboard');
+// --- START OF HR2 Department (Development & Planning) ---
+Route::post(
+'/my-competencies/complete/{competency_code}',
+[UserCompetencyController::class,'complete']
+)->name('user.competency.complete');
+Route::get('/my-competencies', [UserCompetencyController::class, 'index'])->name('user.competencies.index');
+Route::post('/competency/enroll/{competency_code}',[UserCompetencyController::class,'enroll'])->name('user.competency.enroll');
 
+Route::get('/my-training', [UserTrainingController::class, 'index'])->name('user.training.index');
+Route::get('/my-succession', [UserSuccessionController::class, 'index'])->name('user.succession.index');
+Route::get('/my-requests', [UserEssController::class, 'index'])->name('user.ess.index');
+Route::post('/my-requests/store', [UserEssController::class, 'store'])->name('user.ess.store');
+Route::prefix('learning')->middleware(['auth'])->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| HR2 - DEVELOPMENT & PLANNING
-|--------------------------------------------------------------------------
-*/
-
-// Competencies
-Route::get('/my-competencies', [UserCompetencyController::class, 'index'])
-    ->name('user.competencies.index');
-
-Route::post('/competency/enroll/{competency_code}', [UserCompetencyController::class, 'enroll'])
-    ->name('user.competency.enroll');
-
-Route::post('/my-competencies/complete/{competency_code}', [UserCompetencyController::class, 'complete'])
-    ->name('user.competency.complete');
-
-
-// Training & Succession
-Route::get('/my-training', [UserTrainingController::class, 'index'])
-    ->name('user.training.index');
-
-Route::get('/my-succession', [UserSuccessionController::class, 'index'])
-    ->name('user.succession.index');
-
-
-// ESS (Requests / Leave / Profile / etc.)
-Route::get('/ess', [UserEssController::class, 'index'])
-    ->name('user.ess.index');
-
-Route::post('/ess/store', [UserEssController::class, 'store'])
-    ->name('user.ess.store');
-
-Route::post('/user/request-shift/{id}', [UserEssController::class, 'requestShift'])
-    ->name('user.shift.request');
-
-
-// Payroll
-Route::get('/payroll', [UserPayrollController::class, 'index'])
-    ->name('user.payroll.index');
-
-Route::post('/payroll/store', [UserPayrollController::class, 'store'])
-    ->name('user.payroll.store');
-
-
-// ESS Payroll Requests
-Route::get('/ess-payroll', [UserEssController::class, 'payrollIndex'])
-    ->name('user.ess.payroll.index');
-
-Route::post('/ess-payroll/store', [UserEssController::class, 'payrollStore'])
-    ->name('user.ess.payroll.store');
-
-
-// Learning System
-Route::prefix('learning')->group(function () {
-
-    // Available Courses
+    // 1. Available Courses / Enrollment
     Route::get('/', [UserLearningController::class, 'index'])
         ->name('user.learning.index');
 
