@@ -85,10 +85,6 @@
             Route::get('/training-performance/{employee_id}', [AdminTrainingPerformanceController::class, 'show'])
                 ->name('hr1.training.performance.show');
             
-            // Fixed: Removed leading /admin/ as the prefix handles it
-            Route::post('/training-performance/{employee_id}/validate', [AdminTrainingPerformanceController::class, 'validateAndStore'])
-                ->name('hr1.training.performance.validate');
-
             // Recruitment (Job Postings)
             Route::get('/recruitment', [AdminRecruitmentController::class, 'index'])->name('hr1.recruitment.index');
             Route::get('/recruitment/{id}', [AdminRecruitmentController::class, 'show'])->name('hr1.recruitment.show');
