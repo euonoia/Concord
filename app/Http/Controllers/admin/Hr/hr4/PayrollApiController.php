@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin\Hr\hr4;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Employee;
 use App\Models\admin\Hr\hr4\DirectCompensation;
 use Carbon\Carbon;
@@ -16,6 +17,10 @@ class PayrollApiController extends Controller
      */
     public function submitPayrollRequest(Request $request)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         try {
             $validated = $request->validate([
                 'employee_id' => 'required|string',
@@ -92,6 +97,10 @@ class PayrollApiController extends Controller
      */
     public function getPayrollRequest($id)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         try {
             $payrollRequest = DB::table('payroll_request_hr2')->find($id);
 
@@ -135,6 +144,10 @@ class PayrollApiController extends Controller
      */
     public function getEmployeePayroll($employeeId)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         try {
             $employee = Employee::where('employee_id', $employeeId)->first();
 

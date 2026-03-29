@@ -10,10 +10,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminMaintenanceController extends Controller
 {
     /**
+     * Ensure user is Logistics1 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics1') {
+            abort(403, 'Unauthorized access to Logistics1 Maintenance.');
+        }
+    }
+
+    /**
      * Display fleet maintenance dashboard
      */
     public function index()
     {
+        $this->authorizeLogisticsAdmin();
+
         // Vehicles currently under maintenance
         $maintenanceFleet = DB::table('fleet_management_logistics2')
             ->where('status', 'maintenance')
@@ -43,6 +55,8 @@ class AdminMaintenanceController extends Controller
      */
     public function recordRepair(Request $request)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'vehicle_id'  => 'required|exists:fleet_management_logistics2,id',
             'repair_type' => 'required|string',

@@ -11,10 +11,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminBillsCollectionController extends Controller
 {
     /**
+     * Ensure only authorized Financials admins can access these methods
+     */
+    private function authorizeFinancialAdmin()
+    {
+        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_financials'])) {
+            abort(403, 'Unauthorized action for Financials.');
+        }
+    }
+
+    /**
      * List only bills that have been APPROVED by AR
      */
     public function index()
     {
+        $this->authorizeFinancialAdmin(); // enforce role check
+
         $bills = DB::table('bills_core1')
             ->leftJoin('patients_core1', 'bills_core1.patient_id', '=', 'patients_core1.id')
             ->select(
@@ -22,7 +34,6 @@ class AdminBillsCollectionController extends Controller
                 'patients_core1.first_name as patient_first_name',
                 'patients_core1.last_name as patient_last_name'
             )
-            // CRITICAL: Only show bills approved by the AR department
             ->where('bills_core1.status', 'approved') 
             ->orderBy('bill_date', 'desc')
             ->get();
@@ -35,6 +46,8 @@ class AdminBillsCollectionController extends Controller
      */
     public function show($id)
     {
+        $this->authorizeFinancialAdmin(); // enforce role check
+
         $bill = DB::table('bills_core1')
             ->leftJoin('patients_core1', 'bills_core1.patient_id', '=', 'patients_core1.id')
             ->select(
@@ -60,10 +73,11 @@ class AdminBillsCollectionController extends Controller
      */
     public function markAsPaid(Request $request, $id)
     {
-        // Ensure the bill exists AND is in the correct status to be paid
+        $this->authorizeFinancialAdmin(); // enforce role check
+
         $bill = DB::table('bills_core1')
             ->where('id', $id)
-            ->where('status', 'approved') // Safety check
+            ->where('status', 'approved') 
             ->first();
 
         if (!$bill) {
@@ -73,7 +87,6 @@ class AdminBillsCollectionController extends Controller
 
         $now = Carbon::now();
 
-        // Get logged-in employee info for the 'validated_by' field
         $loggedInEmployee = DB::table('employees')
             ->where('user_id', Auth::id())
             ->first();
@@ -82,10 +95,8 @@ class AdminBillsCollectionController extends Controller
             ? $loggedInEmployee->employee_id 
             : 'SYSTEM';
 
-        // Start Transaction to ensure both tables update or neither do
         DB::transaction(function () use ($id, $bill, $request, $now, $validatorIdOrName) {
             
-            // 1. Update the bill in bills_core1
             DB::table('bills_core1')->where('id', $id)->update([
                 'status' => 'paid',
                 'payment_method' => $request->payment_method ?? 'cash',
@@ -94,7 +105,6 @@ class AdminBillsCollectionController extends Controller
                 'updated_at' => $now,
             ]);
 
-            // 2. Insert into bills_ledger_financials (The General Ledger)
             DB::table('bills_ledger_financials')->insert([
                 'bill_number' => $bill->bill_number,
                 'patient_id' => $bill->patient_id,

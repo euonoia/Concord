@@ -215,7 +215,7 @@ class AdminDirectCompensationController extends Controller
         });
 
         // Fetch needed positions (active, required_count > 0)
-        $neededPositions = \DB::table('department_position_titles_hr2 as dpt')
+        $neededPositions = DB::table('department_position_titles_hr2 as dpt')
             ->join('departments_hr2 as d', 'dpt.department_id', '=', 'd.department_id')
             ->leftJoin('department_specializations_hr2 as ds', function($join) {
                 $join->on('dpt.specialization_name', '=', 'ds.specialization_name')

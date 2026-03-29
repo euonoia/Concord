@@ -10,10 +10,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminVendorController extends Controller
 {
     /**
+     * Ensure user is Logistics2 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics2') {
+            abort(403, 'Unauthorized access to Logistics2 Vendor operations.');
+        }
+    }
+
+    /**
      * Display all pending requests from Logistics1
      */
     public function index()
     {
+        $this->authorizeLogisticsAdmin();
+
         // Fetch pending purchase orders from Logistics1
         $incomingRequests = DB::table('purchase_orders_logistics1')
             ->select(
@@ -39,6 +51,8 @@ class AdminVendorController extends Controller
      */
     public function processRequest(Request $request, $id)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'plate_number' => 'required|exists:fleet_management_logistics2,plate_number',
         ]);

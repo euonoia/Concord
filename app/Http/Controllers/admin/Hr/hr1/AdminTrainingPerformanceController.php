@@ -12,11 +12,22 @@ use Illuminate\Support\Facades\DB;
 class AdminTrainingPerformanceController extends Controller
 {
     /**
+     * Authorize only HR1 Admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr1') {
+            abort(403);
+        }
+    }
+
+    /**
      * Display the list of employees for HR1 to review.
-     * This is the method the error says is missing.
      */
     public function index(Request $request)
     {
+        $this->authorizeHrAdmin();
+
         $departments = \App\Models\admin\Hr\hr2\Department::all();
 
         $query = Employee::query()
@@ -31,14 +42,20 @@ class AdminTrainingPerformanceController extends Controller
             $query->where('employees.specialization', $request->specialization);
         }
 
-        $employees = $query->select('employees.employee_id', 'employees.first_name', 'employees.last_name', 'employees.department_id', 'employees.specialization')
-                           ->paginate(15)
-                           ->withQueryString();
+        $employees = $query->select(
+                'employees.employee_id',
+                'employees.first_name',
+                'employees.last_name',
+                'employees.department_id',
+                'employees.specialization'
+            )
+            ->paginate(15)
+            ->withQueryString();
 
         $specializations = $request->filled('department')
             ? Employee::where('department_id', $request->department)
-                      ->distinct()
-                      ->pluck('specialization')
+                ->distinct()
+                ->pluck('specialization')
             : [];
 
         return view('admin.hr1.training_performance.index', compact('departments', 'specializations', 'employees'));
@@ -49,6 +66,8 @@ class AdminTrainingPerformanceController extends Controller
      */
     public function getSpecializations($dept)
     {
+        $this->authorizeHrAdmin();
+
         $specs = Employee::where('department_id', $dept)
             ->distinct()
             ->pluck('specialization');
@@ -61,6 +80,8 @@ class AdminTrainingPerformanceController extends Controller
      */
     public function show($employee_id)
     {
+        $this->authorizeHrAdmin();
+
         $scores = EmployeeTrainingScore::query()
             ->leftJoin('employees as evaluators', 'evaluators.employee_id', '=', 'employee_training_scores_hr2.evaluated_by')
             ->leftJoin('competency_hr2 as comp', 'comp.competency_code', '=', 'employee_training_scores_hr2.competency_code')
@@ -74,18 +95,20 @@ class AdminTrainingPerformanceController extends Controller
             ->where('employee_training_scores_hr2.employee_id', $employee_id)
             ->get();
 
-        // Check if validated
+        // Check if already validated
         $isValidated = DB::table('validated_training_performance_hr1')
             ->where('employee_id', $employee_id)
             ->where('status', 'completed')
             ->exists();
 
         $scores->transform(function ($item) {
-            $item->decoded_scores = is_string($item->scores) ? json_decode($item->scores, true) : $item->scores;
+            $item->decoded_scores = is_string($item->scores)
+                ? json_decode($item->scores, true)
+                : $item->scores;
             return $item;
         });
 
-        // Normalized Grade Calculation
+        // Normalized grade calculation
         $sumOfGrades = $scores->sum(fn($score) => $score->total_score / 4);
         $count = $scores->count();
         $weightedAverage = $count > 0 ? round($sumOfGrades / $count, 2) : 0;
@@ -98,10 +121,14 @@ class AdminTrainingPerformanceController extends Controller
      */
     public function validateAndStore(Request $request, $employee_id)
     {
+        $this->authorizeHrAdmin();
+
         $scores = EmployeeTrainingScore::where('employee_id', $employee_id)->get();
         $count = $scores->count();
 
-        if ($count === 0) return redirect()->back()->with('error', 'No scores to validate.');
+        if ($count === 0) {
+            return redirect()->back()->with('error', 'No scores to validate.');
+        }
 
         $totalPoints = $scores->sum('total_score');
         $maxPoints = $count * 400;
@@ -113,7 +140,7 @@ class AdminTrainingPerformanceController extends Controller
         DB::table('validated_training_performance_hr1')->updateOrInsert(
             ['employee_id' => $employee_id],
             [
-                'weighted_average' => round($finalGrade, 2), 
+                'weighted_average' => round($finalGrade, 2),
                 'status'           => 'completed',
                 'evaluated_by'     => $evaluatorId,
                 'evaluated_at'     => now(),
@@ -122,9 +149,7 @@ class AdminTrainingPerformanceController extends Controller
             ]
         );
 
-        // Connection 2: HR1 -> HR2 Grade Validation Sync
-        // The column employee_training_scores_hr2.status only supports 'pending' and 'completed'.
-        // It is already 'completed' since HR2 evaluation, so we can just update the timestamp or keep it 'completed'.
+        // Sync status back to HR2 scores table
         DB::table('employee_training_scores_hr2')
             ->where('employee_id', $employee_id)
             ->update([
@@ -133,6 +158,5 @@ class AdminTrainingPerformanceController extends Controller
             ]);
 
         return redirect()->back()->with('success', "Grade " . round($finalGrade, 2) . "% stored and validated to HR2 successfully.");
-
     }
 }

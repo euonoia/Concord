@@ -12,7 +12,7 @@ class AdminTrainingScheduleController extends Controller
 {
     private function authorizeHr3()
     {
-        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3', 'admin_ultra'])) {
+        if (!Auth::check() || !in_array(Auth::user()->role_slug, ['admin_hr3'])) {
             abort(403, 'Unauthorized.');
         }
     }

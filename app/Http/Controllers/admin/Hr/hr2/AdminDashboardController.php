@@ -16,11 +16,24 @@ use App\Models\admin\Hr\hr2\SuccessorCandidate;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
 {
+    /**
+     * Authorize only HR2 Admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
+            abort(403);
+        }
+    }
+
     public function index()
     {
+        $this->authorizeHrAdmin();
+
         // Total employees
         $totalEmployees = Employee::count();
 
@@ -47,7 +60,7 @@ class AdminDashboardController extends Controller
         // Recent training completions (last 30 days)
         $recentCompletions = EmployeeTrainingScore::where('created_at', '>=', now()->subDays(30))->count();
 
-        // Top performing employees with total score and weighted average
+        // Top performing employees
         $topPerformers = EmployeeTrainingScore::select(
                 'employee_training_scores_hr2.employee_id',
                 'employees.first_name',
@@ -72,7 +85,9 @@ class AdminDashboardController extends Controller
         // Training completion rate
         $totalEvaluations = EmployeeTrainingScore::count();
         $completedTrainings = EmployeeTrainingScore::where('status', 'completed')->count();
-        $trainingCompletionRate = $totalEvaluations > 0 ? round(($completedTrainings / $totalEvaluations) * 100, 2) : 0;
+        $trainingCompletionRate = $totalEvaluations > 0
+            ? round(($completedTrainings / $totalEvaluations) * 100, 2)
+            : 0;
 
         // Succession candidates pipeline
         $successionCandidates = SuccessorCandidate::count();
@@ -84,11 +99,12 @@ class AdminDashboardController extends Controller
             ->orderBy('emp_count', 'desc')
             ->limit(5)
             ->get();
+
         // Average performance score
         $avgPerformanceScore = EmployeeTrainingScore::where('status', 'completed')
             ->average('total_score');
 
-        // Performance distribution - calculate weighted average per employee first, then categorize by grade
+        // Performance distribution
         $performanceDistribution = DB::table(
             DB::raw('(SELECT 
                 employee_id,

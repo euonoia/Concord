@@ -10,11 +10,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminAssessmentPerformanceController extends Controller
 {
     /**
+     * Authorize only HR1 Admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr1') {
+            abort(403);
+        }
+    }
+
+    /**
      * Display a list of all onboarding assessments.
      */
     public function index()
     {
-        // We select from the assessments table directly as it contains the names/info
+        $this->authorizeHrAdmin();
+
         $applicants = DB::table('onboarding_assessments_hr1')
             ->select(
                 'id',
@@ -29,11 +40,22 @@ class AdminAssessmentPerformanceController extends Controller
             )
             ->paginate(15);
 
-        $totalPassed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'passed')->count();
-        $totalFailed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'failed')->count();
-        $totalAssessed = DB::table('onboarding_assessments_hr1')->where('assessment_status', 'assessed')->count();
+        $totalPassed = DB::table('onboarding_assessments_hr1')
+            ->where('assessment_status', 'passed')
+            ->count();
 
-        return view('admin.hr1.assessment_performance.index', compact('applicants', 'totalPassed', 'totalFailed', 'totalAssessed'));
+        $totalFailed = DB::table('onboarding_assessments_hr1')
+            ->where('assessment_status', 'failed')
+            ->count();
+
+        $totalAssessed = DB::table('onboarding_assessments_hr1')
+            ->where('assessment_status', 'assessed')
+            ->count();
+
+        return view(
+            'admin.hr1.assessment_performance.index',
+            compact('applicants', 'totalPassed', 'totalFailed', 'totalAssessed')
+        );
     }
 
     /**
@@ -41,14 +63,16 @@ class AdminAssessmentPerformanceController extends Controller
      */
     public function show($id)
     {
-        // Get the assessment master record
+        $this->authorizeHrAdmin();
+
         $applicant = DB::table('onboarding_assessments_hr1')->where('id', $id)->first();
 
         if (!$applicant) {
-            return redirect()->route('hr1.assessment.performance.index')->with('error', 'Assessment record not found.');
+            return redirect()
+                ->route('hr1.assessment.performance.index')
+                ->with('error', 'Assessment record not found.');
         }
 
-        // Get the individual competency scores using the applicant_id or application_id
         $scores = DB::table('onboarding_assessment_scores_hr1')
             ->leftJoin('employees as assessors', 'onboarding_assessment_scores_hr1.assessed_by', '=', 'assessors.employee_id')
             ->leftJoin('employees as validators', 'onboarding_assessment_scores_hr1.validated_by', '=', 'validators.employee_id')
@@ -60,15 +84,22 @@ class AdminAssessmentPerformanceController extends Controller
             )
             ->get();
 
-        // Calculate Average
+        // Calculate average
         $average = $scores->count() > 0 ? $scores->avg('rating') : 0;
 
-        return view('admin.hr1.assessment_performance.show', compact('applicant', 'scores', 'average'));
+        return view(
+            'admin.hr1.assessment_performance.show',
+            compact('applicant', 'scores', 'average')
+        );
     }
 
+    /**
+     * Validate final assessment result
+     */
     public function validateAssessment(Request $request, $id)
     {
-        // Get the assessment master record
+        $this->authorizeHrAdmin();
+
         $assessment = DB::table('onboarding_assessments_hr1')->where('id', $id)->first();
 
         if (!$assessment) {
@@ -76,10 +107,15 @@ class AdminAssessmentPerformanceController extends Controller
         }
 
         if ($assessment->assessment_status !== 'assessed') {
-            return redirect()->back()->with('error', 'Cannot validate: HR2 Assessment must be COMPLETED first (Current: ' . strtoupper($assessment->assessment_status) . ').');
+            return redirect()->back()->with(
+                'error',
+                'Cannot validate: HR2 Assessment must be COMPLETED first (Current: ' .
+                strtoupper($assessment->assessment_status) .
+                ').'
+            );
         }
 
-        // Fetch individual scores to calculate final grade
+        // Fetch individual scores
         $scores = DB::table('onboarding_assessment_scores_hr1')
             ->where('application_id', $assessment->application_id)
             ->get();
@@ -97,8 +133,10 @@ class AdminAssessmentPerformanceController extends Controller
         $adminName = Auth::user()->name;
 
         DB::beginTransaction();
+
         try {
-            // Update validation status in the onboarding_assessments_hr1 table
+
+            // Update main assessment record
             DB::table('onboarding_assessments_hr1')
                 ->where('id', $id)
                 ->update([
@@ -108,7 +146,7 @@ class AdminAssessmentPerformanceController extends Controller
                     'updated_at' => now(),
                 ]);
 
-            // Update scores tracking
+            // Update individual scores (who validated them)
             DB::table('onboarding_assessment_scores_hr1')
                 ->where('application_id', $assessment->application_id)
                 ->update([
@@ -125,7 +163,9 @@ class AdminAssessmentPerformanceController extends Controller
             return redirect()->back()->with('success', $msg);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return redirect()->back()->with('error', 'Validation failed: ' . $e->getMessage());
         }
     }

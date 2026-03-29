@@ -5,12 +5,25 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class AdminLearningEnrollController extends Controller
 {
+    /**
+     * Authorize only HR2 Admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
+            abort(403);
+        }
+    }
+
     public function index()
     {
+        $this->authorizeHrAdmin();
+
         $employees = DB::table('employees as e')
             ->leftJoin('departments_hr2 as d', 'e.department_id', '=', 'd.department_id')
             ->select('e.*', 'd.name as department_name') 
@@ -22,6 +35,8 @@ class AdminLearningEnrollController extends Controller
 
     public function showEnrollment($id)
     {
+        $this->authorizeHrAdmin();
+
         $employee = DB::table('employees as e')
             ->leftJoin('departments_hr2 as d', 'e.department_id', '=', 'd.department_id')
             ->select('e.*', 'd.name as department_name') 
@@ -38,7 +53,6 @@ class AdminLearningEnrollController extends Controller
             ->get();
 
         // 2. Fetch already enrolled module codes for this specific employee
-        // This prevents double enrollment
         $existingEnrollments = DB::table('course_enrolls_hr2')
             ->where('employee_id', $employee->employee_id)
             ->pluck('module_code')
@@ -58,72 +72,74 @@ class AdminLearningEnrollController extends Controller
     }
 
     public function assignModules(Request $request)
-{
-    $request->validate([
-        'employee_id' => 'required',
-        'module_codes' => 'required|array'
-    ]);
+    {
+        $this->authorizeHrAdmin();
 
-    $employee = DB::table('employees')->where('id', $request->employee_id)->first();
-    if (!$employee) {
-        return redirect()->back()->with('error', 'Employee not found.');
+        $request->validate([
+            'employee_id' => 'required',
+            'module_codes' => 'required|array'
+        ]);
+
+        $employee = DB::table('employees')->where('id', $request->employee_id)->first();
+
+        if (!$employee) {
+            return redirect()->back()->with('error', 'Employee not found.');
+        }
+
+        $count = 0;
+
+        foreach ($request->module_codes as $m_code) {
+
+            $module = DB::table('learning_modules_hr2')
+                ->where('module_code', $m_code)
+                ->first();
+
+            if (!$module) continue;
+
+            DB::table('course_enrolls_hr2')->updateOrInsert(
+                [
+                    'employee_id' => $employee->employee_id,
+                    'module_code' => $m_code
+                ],
+                [
+                    'status' => 'completed',
+                    'updated_at' => now(),
+                    'created_at' => now()
+                ]
+            );
+
+            DB::table('competency_enroll_hr2')->updateOrInsert(
+                [
+                    'employee_id' => $employee->employee_id,
+                    'competency_code' => $module->competency_code
+                ],
+                [
+                    'status' => 'completed',
+                    'enrolled_at' => now(),
+                    'updated_at' => now(),
+                    'created_at' => now()
+                ]
+            );
+
+            DB::table('employee_competency_completion_hr2')->updateOrInsert(
+                [
+                    'employee_id' => $employee->employee_id,
+                    'competency_code' => $module->competency_code
+                ],
+                [
+                    'status' => 'completed',
+                    'verified_by' => null,
+                    'verification_notes' => null,
+                    'updated_at' => now(),
+                    'created_at' => now()
+                ]
+            );
+
+            $count++;
+        }
+
+        return redirect()
+            ->route('hr2.learning.enroll')
+            ->with('success', "Successfully enrolled user in {$count} modules. Competencies are now pending verification.");
     }
-
-    $count = 0;
-
-    foreach ($request->module_codes as $m_code) {
-
-        $module = DB::table('learning_modules_hr2')
-            ->where('module_code', $m_code)
-            ->first();
-
-        if (!$module) continue;
-
-        DB::table('course_enrolls_hr2')->updateOrInsert(
-            [
-                'employee_id' => $employee->employee_id,
-                'module_code' => $m_code
-            ],
-            [
-                'status' => 'completed',
-                'updated_at' => now(),
-                'created_at' => now()
-            ]
-        );
-
-        DB::table('competency_enroll_hr2')->updateOrInsert(
-            [
-                'employee_id' => $employee->employee_id,
-                'competency_code' => $module->competency_code
-            ],
-            [
-                'status' => 'completed',
-                'enrolled_at' => now(),
-                'updated_at' => now(),
-                'created_at' => now()
-            ]
-        );
-
-      
-        DB::table('employee_competency_completion_hr2')->updateOrInsert(
-            [
-                'employee_id' => $employee->employee_id,
-                'competency_code' => $module->competency_code
-            ],
-            [
-                'status' => 'completed',
-                'verified_by' => null,
-                'verification_notes' => null,
-                'updated_at' => now(),
-                'created_at' => now()
-            ]
-        );
-
-        $count++;
-    }
-
-    return redirect()
-        ->route('hr2.learning.enroll')
-        ->with('success', "Successfully enrolled user in {$count} modules. Competencies are now pending verification.");
-}
 }
