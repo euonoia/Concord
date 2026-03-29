@@ -5,6 +5,8 @@ namespace App\Http\Controllers\admin\Hr\hr2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Employee;
 use App\Models\admin\Hr\hr2\Competency;
 use App\Models\admin\Hr\hr2\EmployeeTrainingScore;
@@ -12,10 +14,18 @@ use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentSpecialization;
 use App\Models\user\Hr\hr2\CompetencyEnroll;
 use App\Models\user\Hr\hr2\EmployeeCompetencyCompletion;
-use Illuminate\Support\Facades\DB;
 
 class AdminTrainingEvaluationController extends Controller
 {
+    /**
+     * Only HR2 admins allowed
+     */
+    private function authorizeHr2()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
+            abort(403, 'Unauthorized.');
+        }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -24,6 +34,8 @@ class AdminTrainingEvaluationController extends Controller
     */
     public function index()
     {
+        $this->authorizeHr2();
+
         $departments = Department::where('is_active', 1)->get();
         return view('admin.hr2.training_evaluation', compact('departments'));
     }
@@ -35,6 +47,8 @@ class AdminTrainingEvaluationController extends Controller
     */
     public function showEvaluation(Request $request)
     {
+        $this->authorizeHr2();
+
         $employee_id = $request->employee_id;
         $competency_code = $request->competency_code;
 
@@ -43,7 +57,7 @@ class AdminTrainingEvaluationController extends Controller
                 ->with('error', 'Missing parameters.');
         }
 
-        // BLOCK if no training schedule
+        // Block if no training schedule
         $trainingExists = DB::table('training_schedule_hr3')
             ->where('employee_id', $employee_id)
             ->where('competency_code', $competency_code)
@@ -54,7 +68,7 @@ class AdminTrainingEvaluationController extends Controller
                 ->with('error', 'Training must be scheduled first in HR3.');
         }
 
-        // BLOCK if already evaluated
+        // Block if already evaluated
         $alreadyEvaluated = EmployeeTrainingScore::where('employee_id', $employee_id)
             ->where('competency_code', $competency_code)
             ->exists();
@@ -77,13 +91,15 @@ class AdminTrainingEvaluationController extends Controller
     */
     public function storeEvaluation(Request $request)
     {
+        $this->authorizeHr2();
+
         $request->validate([
             'employee_id' => 'required',
             'competency_code' => 'required',
             'scores' => 'required|array'
         ]);
 
-        // BLOCK if no training schedule
+        // Block if no training schedule
         $trainingExists = DB::table('training_schedule_hr3')
             ->where('employee_id', $request->employee_id)
             ->where('competency_code', $request->competency_code)
@@ -145,16 +161,16 @@ class AdminTrainingEvaluationController extends Controller
     */
     public function getEligibleEmployees(Request $request)
     {
+        $this->authorizeHr2();
+
         $employees = EmployeeCompetencyCompletion::join('employees', 'employees.employee_id', '=', 'employee_competency_completion_hr2.employee_id')
             ->join('competency_hr2', 'competency_hr2.competency_code', '=', 'employee_competency_completion_hr2.competency_code')
 
-            // TRAINING SCHEDULE (HR3)
             ->leftJoin('training_schedule_hr3', function($join) {
                 $join->on('employees.employee_id', '=', 'training_schedule_hr3.employee_id')
                      ->on('competency_hr2.competency_code', '=', 'training_schedule_hr3.competency_code');
             })
 
-            // EVALUATION SCORE
             ->leftJoin('employee_training_scores_hr2', function($join) {
                 $join->on('employees.employee_id', '=', 'employee_training_scores_hr2.employee_id')
                      ->on('competency_hr2.competency_code', '=', 'employee_training_scores_hr2.competency_code');
@@ -169,13 +185,9 @@ class AdminTrainingEvaluationController extends Controller
                 'employees.employee_id',
                 'employees.first_name',
                 'employees.last_name',
-
-                // training schedule
                 'training_schedule_hr3.training_date',
                 'training_schedule_hr3.training_time',
                 'training_schedule_hr3.venue',
-
-                // evaluation
                 'employee_training_scores_hr2.total_score as training_score'
             )
             ->get();
@@ -190,6 +202,8 @@ class AdminTrainingEvaluationController extends Controller
     */
     public function getSpecializations($dept)
     {
+        $this->authorizeHr2();
+
         return response()->json(
             DepartmentSpecialization::where('dept_code', $dept)
                 ->where('is_active', 1)
@@ -199,6 +213,8 @@ class AdminTrainingEvaluationController extends Controller
 
     public function getCompetencies($dept, $spec)
     {
+        $this->authorizeHr2();
+
         return response()->json(
             Competency::where('department_id', $dept)
                 ->where('specialization_name', $spec)

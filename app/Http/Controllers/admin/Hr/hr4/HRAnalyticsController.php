@@ -9,6 +9,7 @@ use App\Models\admin\Hr\hr2\Department;
 use App\Models\admin\Hr\hr2\DepartmentPositionTitle;
 use App\Models\Payroll;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class HRAnalyticsController extends Controller
@@ -18,6 +19,10 @@ class HRAnalyticsController extends Controller
      */
     public function dashboard(Request $request)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $dashboardData = $this->getKPIData();
         $trends = $this->getHeadcountTrends();
         $departmentBreakdown = $this->getDepartmentBreakdown();
@@ -197,6 +202,10 @@ class HRAnalyticsController extends Controller
      */
     public function getKPIDataJson()
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $data = $this->getKPIData();
         $trends = $this->getHeadcountTrends();
         $departments = $this->getDepartmentBreakdown();
@@ -214,6 +223,10 @@ class HRAnalyticsController extends Controller
      */
     public function getDepartmentHealthScores()
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $departments = Department::where('status', 'active')->get();
 
         return $departments->map(function ($dept) {

@@ -10,10 +10,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminVendorPortalController extends Controller
 {
     /**
+     * Ensure user is Logistics2 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics2') {
+            abort(403, 'Unauthorized access to Logistics2 Vendor Portal.');
+        }
+    }
+
+    /**
      * Vendor List
      */
     public function index()
     {
+        $this->authorizeLogisticsAdmin();
+
         $vendors = DB::table('vendor_portal_logistics2')
             ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
@@ -46,6 +58,8 @@ class AdminVendorPortalController extends Controller
      */
     public function create()
     {
+        $this->authorizeLogisticsAdmin();
+
         $vendorCode = $this->generateVendorCode();
 
         return view('admin._logistics2.vendor_portal.create', compact('vendorCode'));
@@ -56,6 +70,8 @@ class AdminVendorPortalController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'vendor_name' => 'required|string|max:255',
             'email' => 'nullable|email',
@@ -93,6 +109,8 @@ class AdminVendorPortalController extends Controller
      */
     public function edit($id)
     {
+        $this->authorizeLogisticsAdmin();
+
         $vendor = DB::table('vendor_portal_logistics2')->where('id', $id)->first();
 
         return view('admin._logistics2.vendor_portal.edit', compact('vendor'));
@@ -103,6 +121,8 @@ class AdminVendorPortalController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->authorizeLogisticsAdmin();
+
         DB::table('vendor_portal_logistics2')
             ->where('id', $id)
             ->update([
@@ -129,6 +149,8 @@ class AdminVendorPortalController extends Controller
      */
     public function destroy($id)
     {
+        $this->authorizeLogisticsAdmin();
+
         DB::table('vendor_portal_logistics2')
             ->where('id', $id)
             ->update(['deleted_at' => now()]);

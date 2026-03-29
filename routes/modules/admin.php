@@ -23,7 +23,7 @@
         use App\Http\Controllers\admin\Hr\hr2\AdminOnboardingAssessmentController;
 
 
-        // use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
+        use App\Http\Controllers\admin\Hr\hr3\AdminTimesheetController;
         use App\Http\Controllers\admin\Hr\hr3\AdminShiftController;
         use App\Http\Controllers\admin\Hr\hr3\AdminInterviewScheduleController;
         use App\Http\Controllers\admin\Hr\hr3\AdminTrainingScheduleController;
@@ -201,8 +201,8 @@ use App\Http\Controllers\admin\Hr\hr2\AdminDashboardController;
 
         // --- HR3 Department ---
         Route::prefix('hr3')->group(function () {
-            // Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
-            // Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
+            Route::get('/timesheet', [AdminTimesheetController::class, 'index'])->name('timesheet.index');
+            Route::get('/timesheet/{employeeId}', [AdminTimesheetController::class, 'show'])->name('timesheet.show');
 
             Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
             Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');

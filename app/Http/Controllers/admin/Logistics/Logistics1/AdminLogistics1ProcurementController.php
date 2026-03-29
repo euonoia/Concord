@@ -9,8 +9,20 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminLogistics1ProcurementController extends Controller
 {
+    /**
+     * Ensure user is Logistics1 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics1') {
+            abort(403, 'Unauthorized access to Logistics1 Procurement.');
+        }
+    }
+
     public function index(Request $request)
     {
+        $this->authorizeLogisticsAdmin();
+
         // Inventory for items needing restock
         $inventoryQuery = DB::table('drug_inventory_core2')
             ->whereIn('status', ['Low Stock', 'Critical', 'Out of Stock']);
@@ -44,6 +56,8 @@ class AdminLogistics1ProcurementController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'drug_num' => 'required',
             'drug_name' => 'required',

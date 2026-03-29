@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\admin\Hr\hr4\DirectCompensation;
 use App\Models\admin\Hr\hr2\Department;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class PayrollAnalyticsController extends Controller
@@ -18,6 +19,10 @@ class PayrollAnalyticsController extends Controller
      */
     public function dashboard(Request $request)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $summaryData = $this->getPayrollSummary();
         $costByDepartment = $this->getCostByDepartment();
         $costByPosition = $this->getCostByPosition();
@@ -299,6 +304,10 @@ class PayrollAnalyticsController extends Controller
      */
     public function getSummaryJson()
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $summary = $this->getPayrollSummary();
         $costByDept = $this->getCostByDepartment();
         $costByPos = $this->getCostByPosition();
@@ -316,6 +325,10 @@ class PayrollAnalyticsController extends Controller
      */
     public function exportReport(Request $request)
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $summary = $this->getPayrollSummary();
         $costByDept = $this->getCostByDepartment();
 
@@ -371,6 +384,10 @@ class PayrollAnalyticsController extends Controller
      */
     public function getRevenueComparison()
     {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr4') {
+            abort(403, 'Unauthorized');
+        }
+
         $now = Carbon::now();
         $monthlyPayroll = Payroll::whereMonth('pay_date', $now->month)
             ->whereYear('pay_date', $now->year)

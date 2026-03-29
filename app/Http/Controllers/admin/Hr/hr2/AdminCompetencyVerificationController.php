@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\admin\Hr\hr2;
 
 use App\Http\Controllers\Controller;
@@ -10,9 +11,20 @@ use App\Models\admin\Hr\hr1\OnboardingAssessment;
 
 class AdminCompetencyVerificationController extends Controller
 {
+    /**
+     * Authorize only HR2 Admin
+     */
+    private function authorizeHrAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_hr2') {
+            abort(403);
+        }
+    }
+
     public function index(Request $request)
     {
-        // Start the query with the Join
+        $this->authorizeHrAdmin();
+
         $query = EmployeeCompetencyCompletion::leftJoin(
                 'employees',
                 'employees.employee_id',
@@ -27,7 +39,7 @@ class AdminCompetencyVerificationController extends Controller
                 'employees.specialization'
             );
 
-        // --- SCALING FEATURE: SEARCH ---
+        // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -37,7 +49,7 @@ class AdminCompetencyVerificationController extends Controller
             });
         }
 
-        // --- SCALING FEATURE: STATUS FILTER ---
+        // STATUS FILTER
         if ($request->filled('status')) {
             if ($request->status === 'verified') {
                 $query->whereNotNull('employee_competency_completion_hr2.verified_by');
@@ -46,34 +58,34 @@ class AdminCompetencyVerificationController extends Controller
             }
         }
 
-        // Use Paginate instead of Get (15 records per page)
         $completions = $query->orderBy('employee_competency_completion_hr2.created_at', 'desc')
                              ->paginate(15)
-                             ->withQueryString(); // Keeps search filters when clicking "Next Page"
+                             ->withQueryString();
 
         return view('admin.hr2.competency_verification.index', compact('completions'));
     }
 
     public function verify(Request $request, $id)
-{
+    {
+        $this->authorizeHrAdmin();
+
         $request->validate([
             'verification_notes' => 'nullable|string|max:1000'
         ]);
 
         $completion = EmployeeCompetencyCompletion::findOrFail($id);
-        
+
         $verifier = Employee::where('user_id', Auth::id())->first();
 
         if (!$verifier) {
-           
             return back()->with('error', 'Action failed: Your account is not linked to an Employee record.');
         }
 
         $completion->verified_by = $verifier->employee_id;
         $completion->verification_notes = $request->verification_notes;
         $completion->status = 'completed';
-        $completion->updated_at = now(); 
-        
+        $completion->updated_at = now();
+
         $saved = $completion->save();
 
         if ($saved) {

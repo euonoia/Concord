@@ -10,10 +10,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminVehicleReservationController extends Controller
 {
     /**
+     * Ensure user is Logistics2 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics2') {
+            abort(403, 'Unauthorized access to Logistics2 Vehicle Reservations.');
+        }
+    }
+
+    /**
      * Display the Vehicle Reservations & Shipments
      */
     public function index()
     {
+        $this->authorizeLogisticsAdmin();
+
         $reservations = DB::table('vehicle_reservations')
             ->leftJoin('vendor_logistics2', 'vehicle_reservations.vendor_log_id', '=', 'vendor_logistics2.id')
             ->leftJoin('purchase_orders_logistics1 as po', 'vendor_logistics2.procurement_id', '=', 'po.id')
@@ -35,6 +47,8 @@ class AdminVehicleReservationController extends Controller
      */
     public function startTransit(Request $request, $id)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'cost' => 'required|numeric|min:0'
         ]);
@@ -76,6 +90,8 @@ class AdminVehicleReservationController extends Controller
      */
     public function completeDelivery(Request $request, $id)
     {
+        $this->authorizeLogisticsAdmin();
+
         $employee = DB::table('employees')->where('user_id', Auth::id())->first();
         $handlerId = $employee ? $employee->employee_id : (string)Auth::id();
 
@@ -112,8 +128,7 @@ class AdminVehicleReservationController extends Controller
                 'updated_at' => now()
             ]);
 
-
-            // 6. Insert into Audit Log for delivery WITH stored cost and address
+            // 5. Insert into Audit Log for delivery WITH stored cost and address
             DB::table('audit_logistics2')->insert([
                 'reference_id' => $reservation->id,
                 'category' => 'Delivery',

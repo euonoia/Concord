@@ -5,17 +5,32 @@ namespace App\Http\Controllers\admin\Logistics\Logistics2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AdminFleetController extends Controller
 {
+    /**
+     * Ensure user is Logistics2 admin
+     */
+    private function authorizeLogisticsAdmin()
+    {
+        if (!Auth::check() || Auth::user()->role_slug !== 'admin_logistics2') {
+            abort(403, 'Unauthorized access to Logistics2 Fleet Management.');
+        }
+    }
+
     public function index()
     {
+        $this->authorizeLogisticsAdmin();
+
         $fleet = DB::table('fleet_management_logistics2')->get();
         return view('admin._logistics2.fleet.index', compact('fleet'));
     }
 
     public function store(Request $request)
     {
+        $this->authorizeLogisticsAdmin();
+
         $request->validate([
             'plate_number' => 'required|unique:fleet_management_logistics2,plate_number',
             'vehicle_type' => 'required',
@@ -36,6 +51,8 @@ class AdminFleetController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $this->authorizeLogisticsAdmin();
+
         // Allows manual toggle to 'maintenance' or 'available'
         DB::table('fleet_management_logistics2')->where('id', $id)->update([
             'status' => $request->status,
