@@ -31,7 +31,7 @@ The login process (`login` method) supports flexible authentication:
 
 ### Two-Factor Authentication 
 
-The codebase includes commented-out 2FA functionality:
+The codebase includes 2FA functionality:
 - OTP generation and email sending
 - OTP verification with attempt limiting (max 5 attempts)
 - Session-based 2FA flow
