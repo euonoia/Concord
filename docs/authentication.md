@@ -4,34 +4,6 @@
 
 The authentication system for the Concord application is implemented using Laravel's built-in authentication framework. It provides comprehensive user management including registration, login, logout, and role-based access control with automatic redirection to appropriate dashboards.
 
-## User Registration
-
-### Process Flow
-
-The registration process (`store` method) handles new user account creation with the following steps:
-
-1. **Input Validation**
-   - `username`: Required, string, max 50 characters, must be unique
-   - `email`: Required, valid email format, must be unique
-   - `password`: Required, minimum 8 characters, must be confirmed
-   - `role_slug`: Required, must be one of the predefined roles
-   - `first_name`: Required, string, max 255 characters
-   - `last_name`: Required, string, max 255 characters
-
-2. **User Type Determination**
-   - If `role_slug` contains 'patient': user_type = 'patient'
-   - Otherwise: user_type = 'staff'
-
-3. **Database Transaction**
-   - Creates a `User` record with:
-     - Hashed password using Laravel's Hash facade
-     - user_type, role_slug, is_active = 1
-   - For staff users: Creates an `Employee` record linked to the user
-   - For patient users: Creates a `Patient` record with auto-generated MRN
-
-4. **Post-Registration**
-   - Automatically logs in the new user
-   - Redirects to role-appropriate dashboard
 
 ## User Login
 
