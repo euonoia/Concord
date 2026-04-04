@@ -9,21 +9,17 @@
 <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
 @endpush
 
-@push('head_scripts')
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
-@endpush
-
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endpush
 
 @section('body_class', 'bg-gray-50 text-gray-800 font-sans antialiased')
 
-@section('body_attrs')
-data-page="landing/index"
-x-data="appointmentForm({ 
-    open: @json($errors->any() || session('success')),    showDoctor: {{ old('service_type') ? 'true' : 'false' }},
+
+@section('content')
+<div id="landing-app" data-page="landing/index" x-data="appointmentForm({ 
+    open: @json($errors->any() || session('success')),
+    showDoctor: {{ old('service_type') ? 'true' : 'false' }},
     selectedDoctor: '{{ old('doctor_name', '') }}',
     selectedSpecialization: '{{ old('specialization', '') }}',
     trackedAppointment: @json(session('tracked_appointment', null)),
@@ -33,10 +29,7 @@ x-data="appointmentForm({
     doctorsUrl: '{{ route('api.doctors.byServiceType') }}',
     checkAvailabilityUrl: '{{ route('api.appointments.checkAvailability') }}',
     csrfToken: '{{ csrf_token() }}'
-})"
-@endsection
-
-@section('content')
+})">
 <header>
     <div class="container">
         <nav>
@@ -215,4 +208,5 @@ x-data="appointmentForm({
         </p>
     </div>
 </footer>
+</div>
 @endsection
