@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\OTPController;
 use App\Http\Controllers\Api\LabSyncApiController;
 use App\Http\Controllers\Api\PharmacySyncApiController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\admin\Hr\hr4\PayrollApiController;
 Route::get('/cloudflare/ping', function () {
     return response()->json(['status' => 'ok']);
 });
+
+Route::get('/chatbot', [ChatbotController::class, 'respond']);
 
 // Route::post('/send-otp', [OTPController::class, 'send']);
 // Route::post('/verify-otp', [OTPController::class, 'verify']);

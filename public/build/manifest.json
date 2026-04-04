@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-D2aCIo9E.css",
+    "file": "assets/app-DrFNMr04.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -17,13 +17,17 @@
     "src": "resources/css/people.jpeg"
   },
   "resources/js/app.js": {
-    "file": "assets/app-C7_cfMKk.js",
+    "file": "assets/app-DJAy6cd4.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
       "resources/js/components/layout/sidebar.js",
-      "resources/js/pages/hr/hr3/station-scanner.js"
+      "resources/js/pages/hr/hr3/station-scanner.js",
+      "resources/js/pages/landing/appointmentForm.js",
+      "resources/js/pages/landing/chatbot.js",
+      "resources/js/pages/landing/index.js",
+      "resources/js/pages/landing/navigation.js"
     ]
   },
   "resources/js/components/layout/sidebar.js": {
@@ -36,6 +40,35 @@
     "file": "assets/station-scanner-VjZRBT4w.js",
     "name": "station-scanner",
     "src": "resources/js/pages/hr/hr3/station-scanner.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/pages/landing/appointmentForm.js": {
+    "file": "assets/appointmentForm-BqD1tYtU.js",
+    "name": "appointmentForm",
+    "src": "resources/js/pages/landing/appointmentForm.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/pages/landing/chatbot.js": {
+    "file": "assets/chatbot-Cbxl6Mgg.js",
+    "name": "chatbot",
+    "src": "resources/js/pages/landing/chatbot.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/pages/landing/index.js": {
+    "file": "assets/index-BKUhmxCu.js",
+    "name": "index",
+    "src": "resources/js/pages/landing/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/pages/landing/appointmentForm.js",
+      "resources/js/pages/landing/chatbot.js",
+      "resources/js/pages/landing/navigation.js"
+    ]
+  },
+  "resources/js/pages/landing/navigation.js": {
+    "file": "assets/navigation-CF1gWFNg.js",
+    "name": "navigation",
+    "src": "resources/js/pages/landing/navigation.js",
     "isDynamicEntry": true
   }
 }
