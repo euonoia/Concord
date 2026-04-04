@@ -1,45 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Concord Hospital</title>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    
-        <!-- Theme + Landing Styles -->
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-        tailwind.config = {
-            corePlugins: {
-                preflight: false,
-            }
-        }
-    </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+@extends('layouts.app')
 
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-</head>
-<body x-data="appointmentForm({ 
-    open: {{ $errors->any() || session()->has('success') ? 'true' : 'false' }}, 
-    showDoctor: {{ old('service_type') ? 'true' : 'false' }},
-    selectedDoctor: @json(old('doctor_name')),
-    selectedSpecialization: @json(old('specialization')),
-    showDetails: {{ session('tracked_appointment') ? 'true' : 'false' }},
-    trackedAppointment: @json(session('tracked_appointment')),
-    cancelSuccess: @json(session('cancel_success')) ?? '',
+@section('title', 'Concord Hospital')
+
+@section('app_nav')
+@endsection
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/landing.css') }}">
+@endpush
+
+@push('head_scripts')
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+@endpush
+
+@push('scripts')
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@endpush
+
+@section('body_class', 'bg-gray-50 text-gray-800 font-sans antialiased')
+
+@section('body_attrs')
+data-page="landing/index"
+x-data="appointmentForm({ 
+    open: @json($errors->any() || session('success')),    showDoctor: {{ old('service_type') ? 'true' : 'false' }},
+    selectedDoctor: '{{ old('doctor_name', '') }}',
+    selectedSpecialization: '{{ old('specialization', '') }}',
+    trackedAppointment: @json(session('tracked_appointment', null)),
+    cancelSuccess: '{{ session('cancel_success', '') }}',
     lookupUrl: '{{ route('appointments.lookup') }}',
     cancelUrlFormat: '{{ route('appointments.cancel', ':id') }}',
     doctorsUrl: '{{ route('api.doctors.byServiceType') }}',
     checkAvailabilityUrl: '{{ route('api.appointments.checkAvailability') }}',
     csrfToken: '{{ csrf_token() }}'
-})" class="bg-gray-50 text-gray-800 font-sans antialiased overflow-x-hidden"
-    :class="{ 'overflow-hidden': open }">
-<!-- Header -->
+})"
+@endsection
+
+@section('content')
 <header>
     <div class="container">
         <nav>
@@ -60,7 +57,6 @@
     </div>
 </header>
 
-<!-- Sub Navigation -->
 <div class="sub-nav">
     <div class="container">
         <a href="#home" class="sub-link">Home</a>
@@ -70,7 +66,6 @@
     </div>
 </div>
 
-<!-- Hero Section -->
 <section class="hero" id="home">
     <div class="container hero-content">
         <div class="hero-text">
@@ -87,9 +82,7 @@
     </div>
 </section>
 
-
 <section id="appointments" class="container appointments-section">
-
     <div class="appointments-header">
         <h2>Book an Appointment</h2>
         <p>Schedule your consultation with our specialists quickly and easily.</p>
@@ -99,499 +92,17 @@
         <button @click="open = true" class="btn btn-book px-8 py-4 text-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
             <i class="bi bi-calendar-check-fill mr-2"></i> Book Appointment Now
         </button>
-
-        <div class="appointment-lookup-divider">
-            <span>or</span>
-        </div>
-        <div class="appointment-tracking-header">
-            <p>Track your appointment or cancel it.</p>
-        </div>
-
-        <form @submit.prevent="trackAppointment()" class="appointment-lookup-form">
-            <div class="appointment-lookup-input-group">
-                <input type="text" x-model="trackingReference" placeholder="Enter your reference number" class="appointment-lookup-input" required>
-                <button type="submit" class="btn btn-track" :disabled="trackingLoading">
-                    <i x-show="!trackingLoading" class="bi bi-search mr-1"></i>
-                    <svg x-show="trackingLoading" style="display: none;" class="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Track Appointment
-                </button>
-            </div>
-            <p x-show="trackingError" x-text="trackingError" style="display: none;" class="appointment-lookup-error"></p>
-        </form>
+        
+        @include('landing.partials.appointment-tracking-form')
+        
     </div>
 
-    <!-- Appointment Modal -->
-    <div x-show="open" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <!-- Overlay -->
-        <div x-show="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="open = false"></div>
+    @include('landing.partials.appointment-booking-modal')
 
-        <!-- Panel -->
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div x-show="open" x-trap.noscroll="open" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-                
-                @if(session('success'))
-                    <div class="p-10 text-center">
-                        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-6">
-                            <i class="bi bi-check-lg text-4xl text-green-600"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Appointment Confirmed!</h3>
-                        <p class="text-gray-700 font-medium mb-4">{{ session('success') }}</p>
-                        <p class="text-gray-500 mb-8">We have sent a confirmation email to your inbox.</p>
-                        <button @click="open = false" class="w-full rounded-lg bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
-                            Close
-                        </button>
-                    </div>
-                @else
-                    <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="mb-6">
-                            <h3 class="text-2xl font-bold leading-6 text-gray-900" id="modal-title">Book an Appointment</h3>
-                            <p class="mt-2 text-sm text-gray-500">Please fill out the form below to schedule your visit.</p>
-                        </div>
-
-                        @if($errors->any())
-                            <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-                                <ul class="list-disc pl-5">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('appointments.store') }}" method="POST" class="space-y-6" id="booking-form"
-                            @submit="submitted = true">
-                            @csrf
-                            
-                            <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-                                <!-- Section 1: Patient Information -->
-                                <div class="col-span-2">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">1. Patient Information</h4>
-                                </div>
-
-                                <!-- First Name -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="first_name" id="first_name" value="{{ old('first_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="First Name" required>
-                                    <label for="first_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">First Name</label>
-                                    @error('first_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Middle Name -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="middle_name" id="middle_name" value="{{ old('middle_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Middle Name (Optional)">
-                                    <label for="middle_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Middle Name (Optional)</label>
-                                    @error('middle_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Last Name -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Last Name" required>
-                                    <label for="last_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Last Name</label>
-                                    @error('last_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Date of Birth -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date of Birth" required>
-                                    <label for="date_of_birth" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Date of Birth</label>
-                                    @error('date_of_birth') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Gender -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <select name="gender" id="gender" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
-                                        <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Select Gender</option>
-                                        <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
-                                        <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
-                                        <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
-                                    </select>
-                                    <label for="gender" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Gender</label>
-                                    @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Email -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="email" name="email" id="email" value="{{ old('email') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Email Address" required>
-                                    <label for="email" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Email Address</label>
-                                    @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Phone -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Phone Number" required>
-                                    <label for="phone" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Phone Number</label>
-                                    @error('phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Address Street -->
-                                <div class="relative col-span-2">
-                                    <input type="text" name="address_street" id="address_street" value="{{ old('address_street') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Street Address" required>
-                                    <label for="address_street" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Street Address</label>
-                                    @error('address_street') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Address City -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="address_city" id="address_city" value="{{ old('address_city') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="City" required>
-                                    <label for="address_city" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">City</label>
-                                    @error('address_city') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Address Zip -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="address_zip" id="address_zip" value="{{ old('address_zip') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Zip Code" required>
-                                    <label for="address_zip" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Zip Code</label>
-                                    @error('address_zip') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Section 2: Appointment Details -->
-                                <div class="col-span-2 mt-4">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">2. Appointment Details</h4>
-                                </div>
-
-                                <!-- Service Type -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <select name="service_type" id="service_type" 
-                                        @change="
-                                            selectedDoctor = '';
-                                            selectedSpecialization = '';
-                                            fetchDoctors($event.target.value);
-                                        " 
-                                        class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
-                                        <option value="" disabled {{ old('service_type') ? '' : 'selected' }} class="text-gray-500">Select Service Type</option>
-                                        <option value="general_consultation" {{ old('service_type') == 'general_consultation' ? 'selected' : '' }}>General Checkup</option>
-                                        <option value="acute_care" {{ old('service_type') == 'acute_care' ? 'selected' : '' }}>Sick Visit</option>
-                                        <option value="well_child" {{ old('service_type') == 'well_child' ? 'selected' : '' }}>Pedia / Baby Check</option>
-                                        <option value="followup" {{ old('service_type') == 'followup' ? 'selected' : '' }}>Follow-up</option>
-                                        <option value="prescription_refill" {{ old('service_type') == 'prescription_refill' ? 'selected' : '' }}>Refill</option>
-                                        <option value="diagnostic" {{ old('service_type') == 'diagnostic' ? 'selected' : '' }}>Lab / Test</option>
-                                        <option value="mental_health" {{ old('service_type') == 'mental_health' ? 'selected' : '' }}>Talk Therapy / Mental Health</option>
-                                    </select>
-                                    <label for="service_type" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">Service Type</label>
-                                    @error('service_type') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Doctor Selection (Conditional) -->
-                                <div x-show="showDoctor" x-transition class="relative col-span-2 sm:col-span-1">
-                                    <select name="doctor_name" id="doctor_name" 
-                                        :disabled="!showDoctor || loadingDoctors"
-                                        x-model="selectedDoctor"
-                                        @change="updateSpecialization($event)"
-                                        class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent disabled:opacity-50 disabled:cursor-not-allowed">
-                                        <template x-if="loadingDoctors">
-                                            <option value="" selected>Loading doctors...</option>
-                                        </template>
-                                        <template x-if="!loadingDoctors && doctors.length === 0">
-                                            <option value="" selected>No doctors available for this service</option>
-                                        </template>
-                                        <template x-if="!loadingDoctors && doctors.length > 0">
-                                            <option value="" selected>Select available doctor (Optional)</option>
-                                        </template>
-                                        <template x-for="doctor in doctors" :key="doctor.id">
-                                            <option :value="doctor.id" :data-specialization="doctor.specialization" x-text="doctor.name + ' - ' + doctor.specialization"></option>
-                                        </template>
-                                    </select>
-                                    <!-- Hidden field for specialization -->
-                                    <input type="hidden" name="specialization" :value="selectedSpecialization">
-                                    <label for="doctor_name" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">
-                                        <span x-show="!loadingDoctors">Select Doctor</span>
-                                        <span x-show="loadingDoctors" class="flex items-center gap-1">
-                                            <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Loading...
-                                        </span>
-                                    </label>
-                                    @error('doctor_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Date -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="date" name="appointment_date" id="appointment_date" value="{{ old('appointment_date') }}" 
-                                        @change="fetchSlots()"
-                                        class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Date" required>
-                                    <label for="appointment_date" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Appointment Date</label>
-                                    @error('appointment_date') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Time -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <select name="appointment_time" id="appointment_time" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm bg-transparent" required>
-                                        <option value="" disabled selected x-text="slots.length === 0 ? 'Select Date & Doctor First' : 'Select Time Slot'"></option>
-                                        <template x-for="slot in slots" :key="slot.time">
-                                            <option :value="slot.time" :disabled="slot.status === 'booked'" x-text="slot.time + ' (' + slot.status + ')'"></option>
-                                        </template>
-                                    </select>
-                                    <label for="appointment_time" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-focus:text-blue-600">
-                                        <span x-show="!loadingSlots">Preferred Time</span>
-                                        <span x-show="loadingSlots" class="flex items-center gap-1">Checking...</span>
-                                    </label>
-                                    <p x-show="slotsMsg" x-text="slotsMsg" class="mt-1 text-xs text-blue-600"></p>
-                                    @error('appointment_time') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Reason for Visit -->
-                                <div class="relative col-span-2">
-                                    <textarea name="reason_for_visit" id="reason_for_visit" rows="3" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Reason for Visit/Symptoms" required>{{ old('reason_for_visit') }}</textarea>
-                                    <label for="reason_for_visit" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Reason for Visit/Symptoms</label>
-                                    @error('reason_for_visit') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Section 3: Medical History & Insurance -->
-                                <div class="col-span-2 mt-4">
-                                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 border-b pb-1">3. Medical History & Insurance</h4>
-                                </div>
-
-                                <!-- Insurance Provider -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="insurance_provider" id="insurance_provider" value="{{ old('insurance_provider') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Insurance Provider">
-                                    <label for="insurance_provider" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Insurance Provider</label>
-                                    @error('insurance_provider') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Policy Number -->
-                                <div class="relative col-span-2 sm:col-span-1">
-                                    <input type="text" name="policy_number" id="policy_number" value="{{ old('policy_number') }}" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Policy/Member Number">
-                                    <label for="policy_number" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Policy/Member Number</label>
-                                    @error('policy_number') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <!-- Medical History Summary -->
-                                <div class="relative col-span-2">
-                                    <textarea name="medical_history_summary" id="medical_history_summary" rows="3" class="peer block w-full rounded-lg border-gray-300 px-3 pt-5 pb-2 text-gray-900 focus:border-blue-600 focus:ring-blue-600 placeholder-transparent sm:text-sm" placeholder="Medical History Summary (Allergies, Medications, etc.)">{{ old('medical_history_summary') }}</textarea>
-                                    <label for="medical_history_summary" class="absolute left-3 top-1 z-10 origin-[0] -translate-y-2 scale-75 transform text-base text-gray-500 bg-white px-1 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-placeholder-shown:bg-transparent peer-placeholder-shown:px-0 peer-focus:top-1 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:px-1">Medical History Summary</label>
-                                    @error('medical_history_summary') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                            
-
-                                <div class="col-span-2">
-                                    <div class="flex items-start">
-                                        <div class="flex h-5 items-center">
-                                            <input id="terms" name="terms" type="checkbox" 
-                                                class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
-                                                style="border: 2px solid #1e293b !important; appearance: checkbox !important; -webkit-appearance: checkbox !important; opacity: 1 !important; visibility: visible !important;"
-                                                x-model="agreedToTerms"
-                                                required>
-                                        </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="terms" class="font-medium text-gray-700">I agree to the cancellation policies and privacy notices.</label>
-                                            <p class="text-gray-500">By booking this appointment, you agree to our terms of service.</p>
-                                        </div>
-                                    </div>
-                                    @error('terms') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-
-                            <div x-show="agreedToTerms" x-transition>
-                                <div class="mt-8 flex justify-center">
-                                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                                </div>
-                                @error('g-recaptcha-response') <p class="mt-2 text-xs text-red-500 text-center">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="submit" class="w-full rounded-lg bg-[#1a3a5a] px-5 py-3 text-center text-sm font-semibold text-white shadow-md hover:bg-[#142d45] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitted">
-                                    <span x-show="!submitted">Confirm My Booking</span>
-                                    <span x-show="submitted" style="display: none;" class="flex items-center justify-center">
-                                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Processing...
-                                    </span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 rounded-b-2xl">
-                        <p class="text-xs text-center text-gray-500 flex items-center justify-center gap-1">
-                            <i class="bi bi-lock-fill"></i> Your data is secure and encrypted.
-                        </p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Appointment Details Modal -->
-    <template x-if="trackedAppointment">
-    <div x-show="showDetails" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-        <div x-show="showDetails" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="showDetails = false; showCancelConfirm = false"></div>
-
-        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-            <div x-show="showDetails" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
-
-                <!-- Details View -->
-                <div x-show="!showCancelConfirm">
-                    <div class="px-6 pt-6 pb-2">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-900">Appointment Details</h3>
-                                <p class="mt-1 text-sm text-gray-500">Reference: <strong x-text="trackedAppointment.appointment_no"></strong></p>
-                            </div>
-                            <span class="status-badge" :class="'status-' + trackedAppointment.status" x-text="trackedAppointment.status.charAt(0).toUpperCase() + trackedAppointment.status.slice(1)"></span>
-                        </div>
-
-                        <div x-show="cancelSuccess" style="display: none;" class="p-3 mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
-                            <i class="bi bi-check-circle-fill text-green-600"></i>
-                            <span x-text="cancelSuccess"></span>
-                        </div>
-
-                        <div x-show="cancelError" style="display: none;" class="p-3 mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-2">
-                            <i class="bi bi-exclamation-circle-fill text-red-600"></i>
-                            <span x-text="cancelError"></span>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-person-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Patient Name</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.name"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-calendar-heart"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Date of Birth</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.date_of_birth"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-gender-ambiguous"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Gender</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.gender"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-geo-alt-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Address</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.address || 'N/A'"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-heart-pulse-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Doctor</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.doctor_name || 'Not assigned'"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-calendar-event-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Date</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.appointment_date"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-clock-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Time</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.appointment_time"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-clipboard2-pulse-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Service Type</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.service_type"></span>
-                                </div>
-                            </div>
-                            <div class="appointment-detail-item col-span-1 sm:col-span-2">
-                                <div class="appointment-detail-icon"><i class="bi bi-chat-left-text-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Reason for Visit</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.reason_for_visit"></span>
-                                </div>
-                            </div>
-                            <template x-if="trackedAppointment.insurance_provider">
-                                <div class="appointment-detail-item">
-                                    <div class="appointment-detail-icon"><i class="bi bi-shield-check"></i></div>
-                                    <div>
-                                        <span class="appointment-detail-label">Insurance</span>
-                                        <span class="appointment-detail-value" x-text="trackedAppointment.insurance_provider + ' (' + trackedAppointment.policy_number + ')'"></span>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="trackedAppointment.medical_history_summary">
-                                <div class="appointment-detail-item col-span-1 sm:col-span-2">
-                                    <div class="appointment-detail-icon"><i class="bi bi-file-earmark-medical"></i></div>
-                                    <div>
-                                        <span class="appointment-detail-label">Medical History Summary</span>
-                                        <span class="appointment-detail-value" x-text="trackedAppointment.medical_history_summary"></span>
-                                    </div>
-                                </div>
-                            </template>
-                            <div class="appointment-detail-item">
-                                <div class="appointment-detail-icon"><i class="bi bi-info-circle-fill"></i></div>
-                                <div>
-                                    <span class="appointment-detail-label">Status</span>
-                                    <span class="appointment-detail-value" x-text="trackedAppointment.status.charAt(0).toUpperCase() + trackedAppointment.status.slice(1)"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div x-show="trackedAppointment.status === 'cancelled' && trackedAppointment.cancellation_reason" style="display: none;" class="p-3 mt-4 rounded-lg bg-gray-50 border border-gray-200">
-                            <p class="text-sm font-semibold text-gray-700 mb-1">Cancellation Reason</p>
-                            <p class="text-sm text-gray-500" x-text="trackedAppointment.cancellation_reason"></p>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 px-6 py-4 flex justify-between items-center rounded-b-2xl">
-                        <button @click="showDetails = false; showCancelConfirm = false" class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
-                            Close
-                        </button>
-                        <template x-if="['pending', 'approved', 'scheduled'].includes(trackedAppointment.status)">
-                            <button @click="showCancelConfirm = true" class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors flex items-center gap-1">
-                                <i class="bi bi-x-circle"></i> Cancel Appointment
-                            </button>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Cancel Confirmation Panel -->
-                <div x-show="showCancelConfirm" x-transition style="display: none;">
-                    <div class="p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                                <i class="bi bi-exclamation-triangle-fill text-red-600 text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Cancel Appointment</h3>
-                                <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-4">Are you sure you want to cancel appointment <strong x-text="trackedAppointment.appointment_no"></strong>?</p>
-                        <div>
-                            <label for="ajax_cancellation_reason" class="block text-sm font-medium text-gray-700 mb-1">Reason for cancellation (optional)</label>
-                            <textarea id="ajax_cancellation_reason" x-model="cancellationReason" rows="3" maxlength="1000" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-600 focus:ring-blue-600" placeholder="Let us know why you're cancelling..."></textarea>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
-                        <button type="button" @click="showCancelConfirm = false" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors" :disabled="cancelLoading">
-                            Keep Appointment
-                        </button>
-                        <button type="button" @click="cancelAppointment()" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors flex items-center gap-1" :disabled="cancelLoading">
-                            <svg x-show="cancelLoading" class="animate-spin h-4 w-4 mr-1 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span x-text="cancelLoading ? 'Cancelling...' : 'Yes, Cancel Appointment'"></span>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    </template>
-
+    @include('landing.partials.appointment-details-modal')
 </section>
 
-
 <section id="doctors" class="container doctors-section">
-
     <div class="doctors-header">
         <h2>Multi-awarded Doctors</h2>
         <p>Meet our top medical professionals who deliver excellence in healthcare.</p>
@@ -599,7 +110,7 @@
 
     <div class="doctors-list">
         <div class="doctor-card">
-            <img src="{{ asset('images/onboarding/robert.jpeg') }}" alt="Dr. Rober">
+            <img src="{{ asset('images/onboarding/robert.jpeg') }}" alt="Dr. Robert">
             <h4>Dr. Robert</h4>
             <p>Cardiology</p>
         </div>
@@ -610,7 +121,6 @@
             <p>Neurology</p>
         </div>
 
-        <!-- Highlighted Doctor in the middle -->
         <div class="doctor-card highlight">
             <img src="{{ asset('images/onboarding/kim.jpeg') }}" alt="Dr. Kim">
             <h4>Dr. Kim</h4>
@@ -629,67 +139,80 @@
             <p>Orthopedics</p>
         </div>
     </div>
-
 </section>
 
-
-   <section id="careers" class="container careers-section">
-
-    <!-- Section Title -->
+<section id="careers" class="container careers-section">
     <div class="careers-header">
         <h2>Careers</h2>
         <p>Join our dedicated healthcare team and make a real difference in patients' lives.</p>
     </div>
 
-    <!-- Image + Text -->
     <div class="careers-content">
         <div class="careers-image">
             <img src="{{ asset('images/career.jpeg') }}" alt="Careers at Concord Hospital">
         </div>
         <div class="careers-text">
             <h3>Why Work With Us?</h3>
-            <p>At Concord Hospital, we value compassion, excellence, and collaboration. We provide a supportive environment where healthcare professionals can grow, innovate, and deliver the best care to our patients.</p>
-            <p>We offer opportunities across clinical, administrative, and support roles, ensuring a fulfilling career path for everyone.</p>
+            <p>At Concord Hospital, we value compassion, excellence, and collaboration. We provide a supportive environment where healthcare professionals can grow and innovate.</p>
         </div>
     </div>
 
-        <div class="careers-cards">
-            <div class="career-card">
-                <i class="bi bi-person-badge"></i>
-                <h4>Consultancy</h4>
-                <p>Deliver compassionate patient care in a supportive environment.</p>
-            </div>
+    <div class="careers-cards">
+        <div class="career-card">
+            <i class="bi bi-person-badge"></i>
+            <h4>Consultancy</h4>
+            <p>Deliver compassionate patient care in a supportive environment.</p>
+        </div>
 
         <a href="{{ route('careers.residency') }}" class="text-decoration-none text-dark">
             <div class="career-card hover-card">
                 <i class="bi bi-clipboard2-pulse"></i>
                 <h4>Residency & Fellowship</h4>
-                <p>Apply for our 2026-2027 clinical tracks. Advance your specialization with elite mentorship and research opportunities.</p>
+                <p>Apply for our 2026-2027 clinical tracks. Advance your specialization with elite mentorship.</p>
             </div>
         </a>
-            <div class="career-card">
-                <i class="bi bi-journal-text"></i>
-                <h4>Internship</h4>
-                <p>Support hospital operations and ensure quality healthcare delivery.</p>
-            </div>
+
+        <div class="career-card">
+            <i class="bi bi-journal-text"></i>
+            <h4>Internship</h4>
+            <p>Support hospital operations and ensure quality healthcare delivery.</p>
         </div>
-
-
+    </div>
 </section>
 
+<div id="chatbot-wrapper">
+    <button id="chat-trigger" type="button" aria-label="Open chat">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
 
-<!-- Footer -->
+    <div id="chat-window" class="chat-hidden" role="dialog" aria-label="Concord chatbot">
+        <div class="chat-header">
+            <div class="header-info">
+                <i class="bi bi-person-circle"></i>
+                <span>Concord Assistant</span>
+            </div>
+            <button id="close-chat" aria-label="Close chat"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="chat-body" id="chat-messages">
+            <div class="message bot">
+                Hi there! I’m here to help. Ask me anything about appointments, doctors, or careers.
+            </div>
+            <div id="chat-suggestions" class="chat-suggestions"></div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="Type your message...">
+            <button id="send-btn"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+</div>
+
 <footer>
     <div class="container">
-        <p>&copy; 2025 CityCare Hospital. All rights reserved.</p>
+        <p>&copy; 2026 Concord Hospital. All rights reserved.</p>
         <p>
             <a href="#privacy">Privacy Policy</a> |
             <a href="#terms">Terms of Service</a>
         </p>
     </div>
 </footer>
-
-</footer>
-
-</body>
-</html>
+@endsection
