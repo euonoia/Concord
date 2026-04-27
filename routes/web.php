@@ -63,7 +63,6 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('portal')->group(function () {
     Route::get('/', fn() => view('authentication.login'))->name('portal.home');
     Route::get('/login', fn() => view('authentication.login'))->name('portal.login');
-    Route::get('/register', fn() => view('authentication.register'))->name('portal.register');
 
     Route::post('/login', [AuthController::class, 'login'])->name('portal.login.submit');
     Route::post('/register', [AuthController::class, 'store'])->name('portal.register.submit');
