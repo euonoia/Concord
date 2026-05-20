@@ -119,10 +119,6 @@ The Hospital Management System (HMS) is a web-based platform designed to streaml
 
 ---
 
-## Project Description
-
-This project is developed as a school-based Hospital Management System to demonstrate real-world system architecture using Laravel. The system integrates multiple modules handled by different development teams, including HR, logistics, patient care, and financial management.
----
 ## LEVEL 1 BPA
 ![BPM Project](public/images/bpa.png)
 ---
